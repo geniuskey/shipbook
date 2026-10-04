@@ -238,7 +238,9 @@ svg .f-acc2-soft { fill: var(--accent-2-soft); stroke: var(--accent-2); }
 .sim-controls { padding: 16px 18px; border-top: 1px solid var(--border); display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); align-content: start; }
 .sim-body.side .sim-controls { grid-template-columns: 1fr; }
 .ctrl { display: grid; gap: 6px; font-size: 14px; }
-.ctrl > span { display: flex; justify-content: space-between; gap: 8px; color: var(--text-dim); }
+.ctrl > span { display: block; color: var(--text-dim); }
+.ctrl > span::after { content: ""; display: table; clear: both; }
+.ctrl > span > output { float: right; margin-left: 8px; }
 .ctrl output { font-family: var(--mono); color: var(--text); font-weight: 600; font-size: 13px; }
 .ctrl select { font: inherit; font-size: 14px; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
 .ctrl-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }

@@ -231,7 +231,7 @@
           <label class="ctrl"><span>파장 λ <output id="m3-l-out"></output></span><input type="range" id="m3-l" min="50" max="450" step="10" value="160"></label>
           <label class="ctrl"><span>파 진행 방향 μ <output id="m3-m-out"></output></span><input type="range" id="m3-m" min="0" max="180" step="5" value="150"></label>
           <label class="ctrl"><span>선속 V <output id="m3-v-out"></output></span><input type="range" id="m3-v" min="0" max="25" step="1" value="12"></label>
-          <label class="ctrl"><span>롤 고유 주기 T<sub>φ</sub> <output id="m3-tr-out"></output></span><input type="range" id="m3-tr" min="8" max="28" step="0.5" value="18"></label>
+          <label class="ctrl"><span><span>롤 고유 주기 T<sub>φ</sub></span> <output id="m3-tr-out"></output></span><input type="range" id="m3-tr" min="8" max="28" step="0.5" value="18"></label>
           <label class="check"><input type="checkbox" id="m3-bk" checked> 빌지 킬 (롤 감쇠 증가)</label>
         </div>
       </div>
@@ -317,7 +317,7 @@
       <div class="sim-body side">
         <div class="sim-view"><canvas id="cv-param" style="touch-action:none"></canvas></div>
         <div class="sim-controls">
-          <label class="ctrl"><span>조우/롤 주파수 비 ω<sub>e</sub>/ω<sub>0</sub> <output id="pr-r-out"></output></span><input type="range" id="pr-r" min="0.4" max="3" step="0.01" value="2"></label>
+          <label class="ctrl"><span><span>조우/롤 주파수 비 ω<sub>e</sub>/ω<sub>0</sub></span> <output id="pr-r-out"></output></span><input type="range" id="pr-r" min="0.4" max="3" step="0.01" value="2"></label>
           <label class="ctrl"><span>GM 변동 h <output id="pr-h-out"></output></span><input type="range" id="pr-h" min="0" max="0.8" step="0.01" value="0.3"></label>
           <label class="ctrl"><span>감쇠비 ζ <output id="pr-z-out"></output></span><input type="range" id="pr-z" min="0" max="0.15" step="0.005" value="0.04"></label>
           <button class="btn primary" id="pr-run">다시 실행 (φ₀ = 1°)</button>
@@ -385,7 +385,7 @@
           <label class="check"><input type="checkbox" id="dp-fin"> 핀 안정기 (능동)</label>
           <label class="check"><input type="checkbox" id="dp-tank"> U형 안티롤 탱크</label>
           <label class="ctrl"><span>선속 V <output id="dp-v-out"></output></span><input type="range" id="dp-v" min="0" max="22" step="1" value="16"></label>
-          <label class="ctrl"><span>파/롤 주파수 비 ω/ω<sub>0</sub> <output id="dp-r-out"></output></span><input type="range" id="dp-r" min="0.5" max="1.8" step="0.01" value="1"></label>
+          <label class="ctrl"><span><span>파/롤 주파수 비 ω/ω<sub>0</sub></span> <output id="dp-r-out"></output></span><input type="range" id="dp-r" min="0.5" max="1.8" step="0.01" value="1"></label>
           <button class="btn" id="dp-reset">처음부터</button>
         </div>
       </div>
@@ -417,8 +417,8 @@
         <div class="sim-controls">
           <label class="ctrl"><span>유의파고 <output id="sl-hs-out"></output></span><input type="range" id="sl-hs" min="1" max="10" step="0.5" value="5"></label>
           <label class="ctrl"><span>선속 (선수파) <output id="sl-v-out"></output></span><input type="range" id="sl-v" min="0" max="24" step="1" value="14"></label>
-          <label class="ctrl"><span>선수 흘수 T<sub>b</sub> <output id="sl-tb-out"></output></span><input type="range" id="sl-tb" min="2" max="12" step="0.5" value="5"></label>
-          <label class="ctrl"><span>선수 건현 F<sub>b</sub> <output id="sl-fb-out"></output></span><input type="range" id="sl-fb" min="4" max="20" step="0.5" value="11"></label>
+          <label class="ctrl"><span><span>선수 흘수 T<sub>b</sub></span> <output id="sl-tb-out"></output></span><input type="range" id="sl-tb" min="2" max="12" step="0.5" value="5"></label>
+          <label class="ctrl"><span><span>선수 건현 F<sub>b</sub></span> <output id="sl-fb-out"></output></span><input type="range" id="sl-fb" min="4" max="20" step="0.5" value="11"></label>
           <label class="ctrl"><span>프로펠러 잠김 깊이 <output id="sl-pi-out"></output></span><input type="range" id="sl-pi" min="1" max="8" step="0.5" value="3"></label>
         </div>
       </div>
@@ -488,7 +488,7 @@
           <label class="ctrl"><span>폭풍 중심 파고 <output id="rt-s-out"></output></span><input type="range" id="rt-s" min="4" max="16" step="0.5" value="11"></label>
           <label class="ctrl"><span>폭풍 반경 <output id="rt-r-out"></output></span><input type="range" id="rt-r" min="200" max="900" step="25" value="500"></label>
           <label class="ctrl"><span>통과 가능 파고 한계 <output id="rt-l-out"></output></span><input type="range" id="rt-l" min="4" max="12" step="0.5" value="7"></label>
-          <label class="ctrl"><span>잔잔한 바다 선속 V<sub>0</sub> <output id="rt-v-out"></output></span><input type="range" id="rt-v" min="10" max="24" step="1" value="18"></label>
+          <label class="ctrl"><span><span>잔잔한 바다 선속 V<sub>0</sub></span> <output id="rt-v-out"></output></span><input type="range" id="rt-v" min="10" max="24" step="1" value="18"></label>
         </div>
       </div>
       <div class="legend"><span><i style="background:var(--text-dim)"></i>직선(최단 거리) 항로</span><span><i style="background:var(--accent-2)"></i>최단 시간 항로</span></div>
@@ -845,7 +845,8 @@
   const T3 = SB.three(el, { camera: [10, 6.5, 13], target: [0, 0, 0], minDistance: 6, maxDistance: 45 });
   if (!T3) return;
   const THREE = T3.THREE;
-  const sea = SB.sea3d(T3, { size: 44, seg: 110, opacity: 0.62, color: 0x2a78b8 });
+  const sea = SB.sea3d(T3, { size: 44, seg: 110, opacity: 0.8, color: 0x1d5f9c });
+  sea.mesh.material.roughness = 0.35; sea.mesh.material.metalness = 0.1;
   const ship = SB.ship3d(T3, { L: 10, B: 1.6, D: 0.9, T: 0.55, cargo: "container", full: 0.65 });
   const arrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 2.2, -4.5), 3, 0xff7a40, 0.7, 0.4);
   T3.scene.add(arrow);
@@ -1019,14 +1020,14 @@
     ctx.fillStyle = SB.color("accent-2-soft");
     for (let j = 0; j < map.NY; j++) for (let i = 0; i < map.NX; i++) if (map.m[j * map.NX + i]) ctx.fillRect(box.x + i * cw, box.y + box.h - (j + 1) * chh, cw + 0.5, chh + 0.5);
     ctx.fillStyle = P.accent2; ctx.font = "12px sans-serif"; ctx.textAlign = "left";
-    ctx.fillText("불안정", box.x + box.w * 0.62, box.y + 16);
+    ctx.fillText("불안정 영역", box.x + box.w * 0.72, box.y + box.h * 0.35);
     ctx.fillStyle = P.accent; ctx.beginPath(); ctx.arc(C.X(ratio), C.Y(hh), 6, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = P.text; ctx.lineWidth = 1.5; ctx.stroke();
     // 시계열
     const top = Math.round(h * 0.5) + 6, n = Math.min(series.length, Math.floor(reveal));
     const shown = series.slice(0, Math.max(2, n)), last = shown[shown.length - 1];
     SB.chart(ctx, { x: 50, y: top + 6, w: w - 66, h: h - top - 50 }, {
-      x: [0, 40], y: [-60, 60], xLabel: "시간 (롤 주기 단위)", yLabel: "φ (°)",
+      x: [0, 40], y: [-70, 70], xLabel: "시간 (롤 주기 단위)", yLabel: "φ (°)",
       series: [{ data: shown, color: P.accent2, width: 1.8 }], hlines: [{ y: 57.3, color: P.red, label: "복원력 소실" }, { y: -57.3, color: P.red }],
     });
     if (cap && n >= series.length) { ctx.fillStyle = P.red; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center"; ctx.fillText("전복!", 50 + ((w - 66) * last[0]) / 40, top + 30); }
