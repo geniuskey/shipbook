@@ -27,7 +27,7 @@
     { slug: "special",     num: "17", title: "특수선과 고속선",          desc: "활주선, 수중익선, 쌍동선, 쇄빙선, 잠수함, 해양 플랜트.", tags: ["선종", "sim"] },
     { slug: "electric",    num: "18", title: "선박 전력과 전기 추진",     desc: "발전기 병렬 운전, 배전, 디젤-전기 추진, 포드 추진, 배터리 하이브리드.", tags: ["기관·친환경", "sim"] },
     { slug: "green",       num: "19", title: "친환경 선박",              desc: "IMO 탄소 규제, 감속 운항, LNG·메탄올·암모니아·수소 연료, 풍력 보조, 공기 윤활.", tags: ["기관·친환경", "sim"] },
-    { slug: "navigation",  num: "20", title: "항해술",                   desc: "위도와 경도, 메르카토르 해도, 항정선과 대권, 추측 항법, 조류 보정, 조석, GNSS.", tags: ["항해·자율", "sim"] },
+    { slug: "navigation",  num: "20", title: "항해술",                   desc: "위도와 경도, 메르카토르 해도, 항정선과 대권, 추측 항법, 조류 보정, 조석, GNSS.", tags: ["항해·자율", "3d", "sim"] },
     { slug: "bridge",      num: "21", title: "선교 장비와 충돌 회피",     desc: "레이더와 ARPA, AIS, ECDIS, CPA·TCPA, 국제 해상 충돌 예방 규칙(COLREG).", tags: ["항해·자율", "sim"] },
     { slug: "autonomous",  num: "22", title: "자율운항선박과 DP",         desc: "MASS 자율 등급, 센서 융합, 경로 계획, 충돌 회피 알고리즘, 동적 위치 유지.", tags: ["항해·자율", "sim"] },
     { slug: "glossary",    num: "23", title: "용어집 & 종합 퀴즈",        desc: "핵심 용어를 검색하고, 전체 내용을 퀴즈로 점검한다.", tags: ["정리"] },
@@ -474,7 +474,7 @@
     // labels
     ctx.fillStyle = P.dim; ctx.font = "12px " + getComputedStyle(document.body).getPropertyValue("--font");
     if (opts.xLabel) { ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillText(opts.xLabel, box.x + box.w / 2, box.y + box.h + 40); }
-    if (opts.yLabel) { ctx.save(); ctx.translate(14, box.y + box.h / 2); ctx.rotate(-Math.PI / 2); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(opts.yLabel, 0, 0); ctx.restore(); }
+    if (opts.yLabel) { ctx.save(); ctx.translate(Math.max(14, box.x - 44), box.y + box.h / 2); ctx.rotate(-Math.PI / 2); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(opts.yLabel, 0, 0); ctx.restore(); }
     // clip plot area
     ctx.save(); ctx.beginPath(); ctx.rect(box.x, box.y - 2, box.w + 2, box.h + 4); ctx.clip();
     (opts.series || []).forEach((s, i) => {

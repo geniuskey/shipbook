@@ -7,6 +7,18 @@
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <title>특수선과 고속선 · ShipBook</title>
 <meta name="description" content="체적 프루드수와 활주, 사빗스키 방법과 포르포이징, 수중익선의 이륙, 쌍동선의 복원성과 파 간섭, 공기부양선, 쇄빙선의 쇄빙 저항과 램밍, 잠수함의 부력 조절 미니 게임, FPSO·반잠수식·잭업·부유식 해상풍력까지 특수선의 원리를 시뮬레이터로 배운다.">
+<link rel="canonical" href="https://shipbook.euiyun.com/chapters/special.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="ShipBook">
+<meta property="og:title" content="특수선과 고속선 · ShipBook">
+<meta property="og:description" content="체적 프루드수와 활주, 사빗스키 방법과 포르포이징, 수중익선의 이륙, 쌍동선의 복원성과 파 간섭, 공기부양선, 쇄빙선의 쇄빙 저항과 램밍, 잠수함의 부력 조절 미니 게임, FPSO·반잠수식·잭업·부유식 해상풍력까지 특수선의 원리를 시뮬레이터로 배운다.">
+<meta property="og:url" content="https://shipbook.euiyun.com/chapters/special.html">
+<meta property="og:image" content="https://shipbook.euiyun.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"특수선과 고속선","name":"특수선과 고속선 · ShipBook","url":"https://shipbook.euiyun.com/chapters/special.html","mainEntityOfPage":"https://shipbook.euiyun.com/chapters/special.html","inLanguage":"ko","isAccessibleForFree":true,"learningResourceType":"interactive textbook chapter","position":17,"image":"https://shipbook.euiyun.com/og.png","dateModified":"2026-10-04","isPartOf":{"@type":"Book","@id":"https://shipbook.euiyun.com/#book","name":"ShipBook — 인터랙티브 선박 교과서","url":"https://shipbook.euiyun.com/"},"publisher":{"@type":"Organization","name":"ShipBook","url":"https://shipbook.euiyun.com/"},"description":"체적 프루드수와 활주, 사빗스키 방법과 포르포이징, 수중익선의 이륙, 쌍동선의 복원성과 파 간섭, 공기부양선, 쇄빙선의 쇄빙 저항과 램밍, 잠수함의 부력 조절 미니 게임, FPSO·반잠수식·잭업·부유식 해상풍력까지 특수선의 원리를 시뮬레이터로 배운다."},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ShipBook","item":"https://shipbook.euiyun.com/"},{"@type":"ListItem","position":2,"name":"17 특수선과 고속선","item":"https://shipbook.euiyun.com/chapters/special.html"}]}]}</script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
@@ -219,8 +231,8 @@
       <div class="split2" style="border-top:1px solid var(--border)"><div><canvas id="cv-catwave"></canvas></div><div><canvas id="cv-catgz"></canvas></div></div>
       <div class="sim-readout">
         <div class="stat"><span class="k">KM</span><span class="v" id="ct-o-km">—</span></div>
-        <div class="stat"><span class="k">GM (쌍동 / 같은 Δ 단동)</span><span class="v" id="ct-o-gm">—</span></div>
-        <div class="stat"><span class="k">한쪽 선체 들림 각</span><span class="v" id="ct-o-lift">—</span></div>
+        <div class="stat"><span class="k">GM (쌍동 / 같은 Δ·폭 2b 단동)</span><span class="v" id="ct-o-gm">—</span></div>
+        <div class="stat"><span class="k">GZ 최대(한쪽 선체 들림) 각</span><span class="v" id="ct-o-lift">—</span></div>
         <div class="stat"><span class="k">선수파 도달 위치</span><span class="v" id="ct-o-wv">—</span></div>
       </div>
       <div class="sim-note">해볼 것: 선체 간격을 4 m에서 14 m로 늘리면 \(GM\)이 몇 배로 뛴다. 횡경사를 키워 바람 쪽 선체가 물 밖으로 나오는 각을 지나면 GZ가 줄기 시작한다. 왼쪽 아래 그림은 위에서 본 두 선체와 선수에서 퍼지는 켈빈 파의 경계선이다. 속력을 올리면 파 경계각이 좁아져 반대편 선체에 닿는 지점이 뒤로 밀린다. 선체 길이 30 m, 흘수 1.5 m, \(C_b\) 0.5로 두었고, 고속에서 파 경계각이 좁아지는 것은 경험적 근사(\(\theta \approx 0.17/Fn\))를 썼다.</div>
@@ -428,7 +440,7 @@
         <div class="stat"><span class="k">MBT 물 · 고압 공기</span><span class="v" id="sb-o-mbt">—</span></div>
         <div class="stat"><span class="k">임무</span><span class="v" id="sb-o-mis">—</span></div>
       </div>
-      <div class="sim-note">조종법: ① <b>벤트 열기</b>로 MBT에 물을 채우면 예비 부력이 사라지고 천천히 잠긴다. 수평타를 + 쪽으로 주면 선수가 숙여지며 빨리 내려간다. ② 깊어질수록 선체 압축으로 부력이 줄어 가라앉는 속도가 붙는다. <b>보상 탱크 배수</b>로 무게를 덜어 순부력을 0 근처로 맞추자. ③ 종경사가 생기면 <b>트림 펌프</b>로 물을 반대쪽으로 옮긴다. ④ 비상시에는 <b>블로</b>. 고압 공기는 한정되어 있다. 시험 심도 350 m, 압괴 심도 500 m(가상의 대표값), 수중 배수량 2,500 t, 예비 부력 12%, 압축률 차 \(\kappa = 3\times10^{-5}\)/m로 둔 단순 모델이며 시간은 3배속이다.</div>
+      <div class="sim-note">조종법: ① <b>벤트 열기</b>로 MBT에 물을 채우면 예비 부력이 사라지고 천천히 잠긴다. 수평타를 + 쪽으로 주면 선수가 숙여지며 빨리 내려간다. ② 깊어질수록 선체 압축으로 부력이 줄어 가라앉는 속도가 붙는다. <b>보상 탱크 배수</b>로 무게를 덜어 순부력을 0 근처로 맞추자. ③ 종경사가 생기면 <b>트림 펌프</b>로 물을 반대쪽으로 옮긴다. ④ 비상시에는 <b>블로</b>. 고압 공기는 한정되어 있다. 시험 심도 350 m, 압괴 심도 500 m(가상의 대표값), 수중 배수량 2,500 t, 예비 부력 12%, 압축률 차 \(\kappa = 3\times10^{-5}\)/m로 둔 단순 모델이며 시간은 5배속이다.</div>
     </div>
   </section>
 
@@ -494,7 +506,7 @@
           <label class="ctrl"><span>선체 중량 <output id="jk-w-out"></output></span><input type="range" id="jk-w" min="10000" max="30000" step="500" value="18000"></label>
           <label class="ctrl"><span>환경 수평력 <output id="jk-f-out"></output></span><input type="range" id="jk-f" min="0" max="25" step="0.5" value="8"></label>
           <label class="ctrl"><span>작용 높이(해저 기준) <output id="jk-hh-out"></output></span><input type="range" id="jk-hh" min="40" max="140" step="5" value="90"></label>
-          <label class="ctrl"><span>하중 방향 <output id="jk-dir-out"></output></span><input type="range" id="jk-dir" min="0" max="355" step="5" value="0"></label>
+          <label class="ctrl"><span>하중이 향하는 방향(북=0°) <output id="jk-dir-out"></output></span><input type="range" id="jk-dir" min="0" max="355" step="5" value="0"></label>
           <label class="ctrl"><span>레그 간격 <output id="jk-s-out"></output></span><input type="range" id="jk-s" min="40" max="80" step="1" value="60"></label>
         </div>
       </div>
@@ -698,7 +710,7 @@ window.__sbBoat = function (ctx, x, y, s, L, opt) {
     const tdat = []; for (let f = 0; f <= 6; f += 0.05) tdat.push([f, trim(f) / 30]);
     SB.chart(ctx, { x: 56, y: top + 14, w: w - 72, h: h - top - 58 }, { x: [0, 6], y: [0, 0.25], xLabel: "체적 프루드수 Fn∇", yLabel: "R/Δ", series: [{ data, color: P.accent, width: 2.5 }, { data: tdat, color: P.series[2], width: 1.5, dash: [5, 4] }],
       bands: [{ x0: 1, x1: 3, color: "rgba(184,147,10,0.08)" }], points: [{ x: Math.min(F, 6), y: rw(Math.min(F, 6)), color: P.accent2, r: 6 }], vlines: [{ x: 1, label: "1" }, { x: 3, label: "3" }] });
-    ctx.fillStyle = P.series[2]; ctx.font = "11px sans-serif"; ctx.textAlign = "right"; ctx.fillText("- - 트림(우측 눈금 0~7.5°)", w - 20, top + 18);
+    ctx.fillStyle = P.series[2]; ctx.font = "11px sans-serif"; ctx.textAlign = "right"; ctx.fillText("- - 트림(눈금 0.25 = 7.5°)", w - 20, top + 18);
     const reg = F < 1 ? "배수량형" : F < 3 ? "반활주" : "활주";
     SB.stat("rg-o-fn", F.toFixed(2)); SB.stat("rg-o-reg", reg);
     SB.stat("rg-o-sup", Math.round((1 - d) * 100) + " / " + Math.round(d * 100) + "<small>%</small>");
@@ -744,7 +756,7 @@ window.__sbBoat = function (ctx, x, y, s, L, opt) {
     if (r) {
       const xw0 = w * 0.45 - (Lh / 2) * s, wl = r.lam * b * s;
       ctx.strokeStyle = P.accent2; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(xw0, wy + 3); ctx.lineTo(xw0 + Math.min(wl, Lh * s), wy + 3); ctx.stroke();
-      ctx.fillStyle = P.accent2; ctx.font = "11px sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillText("평균 침수 길이 λb = " + (r.lam * b).toFixed(1) + " m", xw0, wy + 8);
+      ctx.fillStyle = P.accent2; ctx.font = "11px sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillText("평균 침수 길이 λb = " + (r.lam * b).toFixed(1) + " m", xw0, wy + 22);
     }
     ctx.fillStyle = P.text; ctx.font = "600 13px sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillText("선체 길이 " + Lh.toFixed(1) + " m · 트림 " + tau.toFixed(1) + "°", 10, 8);
     if (tau > tl) { ctx.fillStyle = P.bad; ctx.fillText("포르포이징!", 10, 26); }
@@ -848,8 +860,9 @@ window.__sbBoat = function (ctx, x, y, s, L, opt) {
     const vh = L * b * T * CB, Ah = CW * L * b, i0 = 0.045 * L * b * b * b;
     const IT = 2 * (i0 + Ah * (s / 2) * (s / 2)), BM = IT / (2 * vh), KB = 0.58 * T, GM = KB + BM - KG;
     const BMm = (0.045 * L * Math.pow(2 * b, 3)) / (2 * vh), GMm = KB + BMm - KG;
-    const pe = Math.atan((2 * T) / s);
     const GZ = (p) => Math.min(GM * Math.sin(p), (s / 2) * Math.cos(p) - (KG - KB) * Math.sin(p));
+    let lo = 0, hi = SB.rad(60); for (let i = 0; i < 40; i++) { const q = (lo + hi) / 2; GM * Math.sin(q) < (s / 2) * Math.cos(q) - (KG - KB) * Math.sin(q) ? (lo = q) : (hi = q); }
+    const pe = lo;
     return { s, b, KG, KB, BM, GM, GMm, KM: KB + BM, pe, GZ };
   }
   function rd() { cv && (cv.redraw(), cw.redraw(), cg.redraw()); }
@@ -970,15 +983,16 @@ window.__sbBoat = function (ctx, x, y, s, L, opt) {
     const P = SB.palette(), narrow = w < 560, phi = gp(), hh = gh();
     const iw = narrow ? w : w * 0.34, ih = narrow ? h * 0.36 : h;
     // 선수 그림
-    const wy = ih * 0.55, sc = Math.min(iw / 26, ih / 16), bx = iw * 0.55;
+    const wy = ih * 0.5, sc = Math.min(iw / 30, ih / 14), bx = iw * 0.42, tp = Math.tan(SB.rad(phi));
     ctx.fillStyle = SB.color("water-soft"); ctx.fillRect(0, wy, iw, ih - wy);
-    ctx.fillStyle = SB.isDark() ? "#dfe6ef" : "#e6edf5"; ctx.strokeStyle = P.border;
-    ctx.fillRect(bx, wy - hh * 0.1 * sc, iw - bx, hh * sc); ctx.strokeRect(bx, wy - hh * 0.1 * sc, iw - bx, hh * sc);
-    const tp = Math.tan(SB.rad(phi));
-    ctx.fillStyle = "#c8443a"; ctx.beginPath();
-    ctx.beginPath(); ctx.moveTo(0, wy - 5 * sc); ctx.lineTo(bx + (5 / tp) * sc, wy - 5 * sc); ctx.lineTo(bx - (6 / tp) * sc, wy + 6 * sc); ctx.lineTo(0, wy + 6 * sc); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = SB.color("water"); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, wy); ctx.lineTo(iw, wy); ctx.stroke();
-    ctx.strokeStyle = P.accent; ctx.beginPath(); ctx.arc(bx - (6 / tp) * sc, wy + 6 * sc, 26, -Math.PI / 2 + 0, -SB.rad(phi), true); ctx.stroke();
+    ctx.fillStyle = SB.isDark() ? "#dfe6ef" : "#e6edf5"; ctx.strokeStyle = P.dim; ctx.lineWidth = 1;
+    const ix = bx - (hh * 0.9 / tp) * sc;
+    ctx.fillRect(ix, wy - hh * 0.1 * sc, iw - ix, hh * sc); ctx.strokeRect(ix, wy - hh * 0.1 * sc, iw - ix, hh * sc);
+    ctx.fillStyle = "#c8443a"; ctx.globalAlpha = 0.92; ctx.beginPath();
+    ctx.moveTo(0, wy - 4 * sc); ctx.lineTo(bx + (4 / tp) * sc, wy - 4 * sc); ctx.lineTo(bx - (7 / tp) * sc, wy + 7 * sc); ctx.lineTo(0, wy + 7 * sc); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = SB.color("water"); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, wy); ctx.lineTo(ix, wy); ctx.stroke();
+    ctx.setLineDash([3, 3]); ctx.strokeStyle = P.text; ctx.beginPath(); ctx.moveTo(bx - (7 / tp) * sc, wy + 7 * sc); ctx.lineTo(bx - (7 / tp) * sc + 60, wy + 7 * sc); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = P.text; ctx.font = "12px sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "bottom"; ctx.fillText("φ", bx - (7 / tp) * sc + 30, wy + 7 * sc - 2);
     ctx.fillStyle = P.text; ctx.font = "600 12px sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillText("스템 각 φ = " + phi + "°, 얼음 " + hh.toFixed(2) + " m", 8, 6);
     // 차트
     const box = narrow ? { x: 52, y: ih + 12, w: w - 64, h: h - ih - 56 } : { x: iw + 52, y: 14, w: w - iw - 64, h: h - 58 };
@@ -1055,10 +1069,10 @@ window.__sbBoat = function (ctx, x, y, s, L, opt) {
 
 /* ---------- 17-H 잠수함 미니 게임 ---------- */
 (function () {
-  const RHO = SB.RHO, B0 = 2.5e6, MH = 2.2e6, MM = 3e5, H = 8, KAP = 3e-5, BG = 0.4, I = 7.6e8, KD = 3.8e5, LEV = 15, TEST = 350, CRUSH = 500;
+  const RHO = SB.RHO, B0 = 2.5e6, MH = 2.203e6, MM = 3e5, H = 8, KAP = 3e-5, BG = 0.4, I = 7.6e8, KD = 7.6e5, LEV = 15, TEST = 350, CRUSH = 500;
   const gpl = SB.range("sb-pl", (v) => (v > 0 ? "+" : "") + v + "°"), gv = SB.range("sb-v", (v) => v + " kn");
   let S;
-  function reset() { S = { z: 3.04, w: 0, th: 0, q: 0, f: 0, vb: 0, tm: 0, air: 100, vent: false, blow: false, dead: false, tgt: null, tin: 0, ok: false, t: 0, bub: [] }; btns(); }
+  function reset() { S = { z: 3.05, w: 0, th: 0, q: 0, f: 0, vb: 0, tm: 0, air: 100, vent: false, blow: false, dead: false, tgt: null, tin: 0, ok: false, t: 0, bub: [] }; btns(); }
   const vbtn = document.getElementById("sb-vent"), bbtn = document.getElementById("sb-blow");
   function btns() { vbtn.classList.toggle("on", S.vent); bbtn.classList.toggle("on", S.blow); vbtn.textContent = S.vent ? "벤트 닫기" : "벤트 열기(주수)"; bbtn.textContent = S.blow ? "블로 정지" : "블로(고압 공기)"; }
   vbtn.addEventListener("click", () => { S.vent = !S.vent; if (S.vent) S.blow = false; btns(); });
@@ -1109,7 +1123,7 @@ window.__sbBoat = function (ctx, x, y, s, L, opt) {
     [-1, 1].forEach((sd) => { const tx = sd * Lh * 0.36; ctx.fillRect(tx - 4 * sc, Hh / 2 - Hh * S.f, 8 * sc, Hh * S.f); });
     ctx.globalAlpha = 1; ctx.strokeStyle = P.faint; ctx.lineWidth = 1; [-1, 1].forEach((sd) => ctx.strokeRect(sd * Lh * 0.36 - 4 * sc, -Hh / 2, 8 * sc, Hh));
     ctx.save(); ctx.translate(-Lh / 2 + 2 * sc, 0); ctx.rotate(-SB.rad(gpl())); ctx.fillStyle = P.warn; ctx.fillRect(-5 * sc, -1, 5 * sc, 3); ctx.restore();
-    ctx.fillStyle = "rgba(255,255,255,0.7)"; S.bub.forEach((b) => { ctx.beginPath(); ctx.arc(b[0] * 10 * sc + (b[2] ? Lh * 0.36 : -Lh * 0.36), -Hh / 2 - b[1] * sc, 2, 0, 7); ctx.fill(); });
+    ctx.fillStyle = "rgba(255,255,255,0.7)"; S.bub.forEach((b) => { ctx.beginPath(); ctx.arc(b[0] * 10 * sc + (b[0] > 0 ? Lh * 0.36 : -Lh * 0.36), -Hh / 2 - b[1] * sc, 2, 0, 7); ctx.fill(); });
     ctx.restore();
     // 깊이 게이지
     const gx = vw + 20, gy0 = 14, gh = h - 28, GZ = (z) => gy0 + (Math.max(0, z) / 600) * gh;
@@ -1133,7 +1147,7 @@ window.__sbBoat = function (ctx, x, y, s, L, opt) {
     SB.stat("sb-o-mis", S.tgt == null ? "—" : S.ok ? '<span class="ok-t">성공</span>' : S.tgt + "<small>m ±5 · " + S.tin.toFixed(0) + "/30 s</small>");
   }, { aspect: 0.62, maxHeight: 460, minHeight: 340 });
   reset();
-  SB.loop(cv.canvas, (dt) => { const D = dt * 3; for (let i = 0; i < 6; i++) step(D / 6); btns(); cv.redraw(); });
+  SB.loop(cv.canvas, (dt) => { const D = dt * 5; for (let i = 0; i < 10; i++) step(D / 10); btns(); cv.redraw(); });
 })();
 
 /* ---------- 17-I FPSO 웨더베이닝 ---------- */
@@ -1264,7 +1278,7 @@ window.__sbBoat = function (ctx, x, y, s, L, opt) {
     const P = SB.palette(), ser = [];
     if (iso.checked) [0.5, 1, 2, 3, 5].forEach((F) => { const d = []; for (let e = 0; e <= 5.7; e += 0.1) { const m = Math.pow(10, e); d.push([m, SB.kn(F * Math.sqrt(SB.G * Math.cbrt(m / 1.025)))]); } ser.push({ data: d, color: P.faint, width: 1, dash: [4, 4] }); });
     ch = SB.chart(ctx, { x: 52, y: 14, w: w - 66, h: h - 58 }, { x: [1, 500000], y: [0, 70], logX: true, xLabel: "배수량 (t, 로그)", yLabel: "속력 (kn)", xFmt: (v) => (v >= 1000 ? v / 1000 + "k" : String(v)), series: ser });
-    if (iso.checked) { ctx.fillStyle = P.dim; ctx.font = "10px " + SB.color("mono"); ctx.textAlign = "left"; [0.5, 1, 2, 3, 5].forEach((F) => { const m = 2; const v = SB.kn(F * Math.sqrt(SB.G * Math.cbrt(m / 1.025))); if (v < 68) ctx.fillText("Fn∇=" + F, ch.X(m), ch.Y(v) - 4); }); }
+    if (iso.checked) { ctx.fillStyle = P.dim; ctx.font = "10px " + SB.color("mono"); ctx.textAlign = "left"; [0.5, 1, 2, 3, 5].forEach((F) => { const m = 1.15; const v = SB.kn(F * Math.sqrt(SB.G * Math.cbrt(m / 1.025))); if (v < 68) ctx.fillText("Fn∇=" + F, ch.X(m), ch.Y(v) - 4); }); }
     const col = { "부력": P.accent, "부력(중성)": P.accent, "부력+동적 양력": P.ok, "공기 쿠션": P.series[2], "날개 양력": P.accent2, "동적 양력": P.bad };
     ctx.font = "11.5px sans-serif";
     D.forEach((d, i) => {
