@@ -289,6 +289,31 @@
     </div>
     <p>제어기가 요구한 \((X, Y, N)\)을 여러 스러스터의 추력과 방향으로 나누는 것이 <span class="term">스러스터 할당</span><span class="en">(Thrust Allocation)</span>이다. 스러스터 \(i\)의 힘 \(\mathbf{f}_i\)와 위치 \((l_{x,i}, l_{y,i})\)로 \(\boldsymbol\tau = B\mathbf{f}\)를 세우고, 가중 최소 제곱 해 \(\mathbf{f} = W^{-1}B^\mathsf{T}(BW^{-1}B^\mathsf{T})^{-1}\boldsymbol\tau\)로 연료(추력 제곱 합)를 최소로 하는 배분을 구한다. 아래 배는 선수 터널 스러스터 2기(옆 방향만)와 선미 아지무스 스러스터 2기(모든 방향)를 가졌다.</p>
 
+    <figure class="diagram">
+      <svg viewBox="0 0 760 300" role="img" aria-label="DP 선박의 외력과 스러스터 배치">
+        <path d="M120 150 Q120 110 160 110 L520 110 Q600 110 660 150 Q600 190 520 190 L160 190 Q120 190 120 150 Z" class="f-surface" stroke-width="1.5"/>
+        <text x="380" y="155" class="t" text-anchor="middle">해양 지원선 (위에서 본 모습, 선수 →)</text>
+        <rect x="560" y="140" width="14" height="20" rx="2" class="f-acc-soft"/><rect x="590" y="140" width="14" height="20" rx="2" class="f-acc-soft"/>
+        <line x1="567" y1="140" x2="567" y2="86" class="s-acc" marker-end="url(#au-ah-a)"/><line x1="597" y1="140" x2="597" y2="96" class="s-acc" marker-end="url(#au-ah-a)"/>
+        <text x="585" y="70" class="t-acc" text-anchor="middle">터널 스러스터 T1·T2</text>
+        <circle cx="150" cy="128" r="9" class="f-acc-soft"/><circle cx="150" cy="172" r="9" class="f-acc-soft"/>
+        <line x1="150" y1="128" x2="196" y2="98" class="s-acc" marker-end="url(#au-ah-a)"/><line x1="150" y1="172" x2="200" y2="196" class="s-acc" marker-end="url(#au-ah-a)"/>
+        <text x="40" y="236" class="t-acc">아지무스 A1·A2 (360° 회전)</text>
+        <g stroke="var(--accent-2)" stroke-width="2.5">
+          <line x1="300" y1="20" x2="300" y2="96" marker-end="url(#au-ah-b)"/>
+          <line x1="420" y1="20" x2="420" y2="96" marker-end="url(#au-ah-b)"/>
+        </g>
+        <text x="360" y="18" class="t" text-anchor="middle" fill="var(--accent-2)">바람 · 파랑 표류력 · 조류</text>
+        <circle cx="380" cy="235" r="34" fill="none" stroke="var(--warn)" stroke-dasharray="5 4"/>
+        <circle cx="380" cy="235" r="3" fill="var(--warn)"/>
+        <text x="425" y="240" class="t-dim">목표점과 허용 원(수 m)</text>
+        <path d="M650 230 A 40 40 0 0 1 700 270" fill="none" stroke="var(--text-dim)" stroke-width="1.5" marker-end="url(#au-ah)"/>
+        <text x="610" y="292" class="t-dim">yaw N = Σ (lₓF_y − l_yFₓ)</text>
+        <text x="40" y="276" class="t-dim">surge X = ΣFₓ, sway Y = ΣF_y</text>
+      </svg>
+      <figcaption><b>그림 22-3.</b> DP 선박의 스러스터 배치와 외력. 선수 터널 스러스터는 옆 방향 힘만 내지만 무게중심에서 멀어 선수각 제어에 효과적이고, 선미 아지무스 스러스터는 어느 방향으로든 힘을 낸다. 제어기는 세 성분 (X, Y, N)을 요구하고, 할당 알고리즘이 이를 스러스터마다 나눈다.</figcaption>
+    </figure>
+
     <div class="table-wrap"><table>
       <thead><tr><th>DP 등급 (IMO MSC/Circ.1580)</th><th>요구 사항</th><th>쓰임</th></tr></thead>
       <tbody>
@@ -473,7 +498,7 @@ window.AU = (function () {
     SB.shipSide(ctx, sx, sea, s, { L: 200, D: 18, T: 10, cargo: "container" });
     // 선원
     const crew = lv === 1 ? 14 : lv === 2 ? 6 : 0;
-    for (let i = 0; i < crew; i++) person(ctx, sx - 200 * s * 0.38 + (i % 7) * 9, sea - 18 * s - 36 * s - 4 - Math.floor(i / 7) * 16, P.accent);
+    for (let i = 0; i < crew; i++) person(ctx, sx - 200 * s * 0.4 + (i % 7) * 9, sea - 31 * s - 4 - Math.floor(i / 7) * 16, P.accent);
     if (!crew) AU.text(ctx, "무인", sx - 200 * s * 0.3, sea - 18 * s - 40 * s, { align: "center", bold: true, color: P.dim, size: 13 });
     if (lv >= 3) { ctx.fillStyle = P.accent2; ctx.fillRect(sx - 200 * s * 0.36, sea - 18 * s - 34 * s, 22, 14); AU.text(ctx, "AI", sx - 200 * s * 0.36 + 11, sea - 18 * s - 23 * s - 0, { align: "center", size: 10, bold: true, color: "#fff" }); }
     // 육상 관제 센터
@@ -611,7 +636,7 @@ window.AU = (function () {
     AU.text(ctx, "■ AIS", zx + 72, zy + zh - 26, { size: 11, color: P.ok, bold: true });
     AU.text(ctx, "─ 추정·2σ", zx + 8, zy + zh - 10, { size: 11, color: P.accent, bold: true });
     // --- 오차 그래프
-    const by = narrow ? mainH + zh : mainH, box = { x: 48, y: by + 10, w: w - 64, h: h - by - 46 };
+    const by = narrow ? mainH + zh : mainH, box = { x: 48, y: by + 10, w: w - 64, h: h - by - 54 };
     const ymax = Math.max(40, ...S.err.map((p) => p[1]).slice(-300)) * 1.1;
     SB.chart(ctx, box, { x: [0, TEND], y: [0, Math.min(ymax, 400)], xLabel: "시간 (s)", yLabel: "오차 m", series: [{ data: S.err, color: P.accent2, width: 1.5 }], vlines: [{ x: 280, color: P.faint, label: "변침" }] });
     // readouts
@@ -1066,7 +1091,7 @@ window.AU = (function () {
     SB.stat("o-dp-l", Math.round(mx * 100) + "%"); AU.setCls("o-dp-l", mx > 0.95 ? "bad" : mx > 0.7 ? "warn" : "ok");
     const stat = e > 5 ? "위치 상실(적색)" : e > 3 || mx > 0.95 ? "경고(황색)" : "위치 유지";
     SB.stat("o-dp-s", stat); AU.setCls("o-dp-s", e > 5 ? "bad" : e > 3 || mx > 0.95 ? "warn" : "ok");
-  }, { aspect: 0.7, minHeight: 440, maxHeight: 560 });
+  }, { aspect: 0.95, minHeight: 460, maxHeight: 620 });
   let tacc = 0;
   SB.loop(document.getElementById("sim-dp"), (dt) => {
     const T = dt * 5, n = Math.ceil(T / 0.1);

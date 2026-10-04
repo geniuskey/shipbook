@@ -69,7 +69,7 @@
         <line x1="60" y1="260" x2="720" y2="260" class="s-axis"/>
         <path d="M60 260 C150 290 300 296 390 294 C500 292 620 286 720 260" fill="none" stroke="var(--accent-2)" stroke-width="2.4"/>
         <text x="24" y="264" class="t-mono">M</text>
-        <text x="390" y="286" class="t-dim" text-anchor="middle">최대 굽힘 모멘트는 중앙 근처, 전단력이 0인 곳</text>
+        <text x="390" y="246" class="t-dim" text-anchor="middle">최대 굽힘 모멘트는 중앙 근처, 전단력이 0인 곳</text>
         <text x="66" y="150" class="t-dim">양 끝에서 V = 0</text>
         <text x="714" y="246" class="t-dim" text-anchor="end">양 끝에서 M = 0</text>
       </svg>
@@ -93,7 +93,7 @@
         <div class="stat"><span class="k">최대 굽힘 모멘트</span><span class="v" id="o-bm-m">—</span></div>
         <div class="stat"><span class="k">끝단 잔차 V, M</span><span class="v" id="o-bm-res">—</span></div>
       </div>
-      <div class="sim-note">길이 200 m, 폭 32 m, 깊이 18 m 벌크선(경하 중량 8,800 t, 기관실은 선미). 화물 블록의 가운데를 끌면 이동, 좌우 끝을 끌면 길이, 윗면을 끌면 단위 길이당 무게(t/m)가 바뀐다. 해볼 것: ① '격창'은 무거운 광석을 한 칸씩 건너 싣는 방식이다. 굽힘 모멘트는 작지만 화물창 경계마다 전단력이 크게 튄다. ② '빈 배'는 선미 기관실과 가벼운 중앙부 때문에 호깅이 된다. ③ 블록 하나를 중앙으로 몰아 새깅을 만들어 보자. 어떤 경우에도 오른쪽 끝의 V와 M은 0으로 돌아온다.</div>
+      <div class="sim-note">길이 200 m, 폭 32 m, 깊이 18 m 벌크선(경하 중량 8,800 t, 기관실은 선미). 화물 블록의 가운데를 끌면 이동, 좌우 끝을 끌면 길이, 윗면을 끌면 단위 길이당 무게(t/m)가 바뀐다. 해볼 것: ① '격창'은 무거운 광석을 한 칸씩 건너 싣는 방식이다. 화물창 경계마다 전단력이 크게 튀어 균일 적재의 몇 배가 된다. 벌크선의 전단력 한계가 보통 이 적재에서 결정된다. ② '빈 배'는 선미 기관실과 가벼운 중앙부 때문에 호깅이 된다. ③ 블록 하나를 중앙으로 몰아 새깅을 만들어 보자. 어떤 경우에도 오른쪽 끝의 V와 M은 0으로 돌아온다.</div>
     </div>
   </section>
 
@@ -568,7 +568,7 @@
     }
     function draw(ctx, w, h) {
       const P = SB.palette(), showQ = $("bm-q").checked, padL = 54, padR = 14, s = (w - padL - padR) / (GL + 10), X = (x) => padL + (x + GL / 2 + 4) * s;
-      const shipTop = 26, shipH = Math.min(h * 0.2, 0.2 * (w - padL)), sv = shipH / GD, base = shipTop + shipH;
+      const shipTop = 34, shipH = Math.min(h * 0.2, 0.2 * (w - padL)), sv = shipH / GD, base = shipTop + shipH;
       const ex = Math.pow(10, gex()), ymax = Math.max(...res.y.map(Math.abs));
       const dfl = (x) => { const j = SB.clamp(Math.round(x + GL / 2), 0, NS); return res.y[j] * ex * sv; };
       const map = (x, z, d) => [X(x), base - z * sv - d];
@@ -819,7 +819,7 @@
     const gT = new THREE.Group(); T.scene.add(gT);
     let nT = 0;
     for (let x = -LB / 2 + 0.04; x < LB / 2; x += 0.08) {
-      box(gT, mFrame, 0.015, DD - HDB, 0.06, x, (DD + HDB) / 2, BB / 2 - 0.03); box(gT, mFrame, 0.015, DD - HDB, 0.06, x, (DD + HDB) / 2, -BB / 2 + 0.03);
+      box(gT, mFrame, 0.015, DD - HDB, 0.04, x, (DD + HDB) / 2, BB / 2 - 0.02); box(gT, mFrame, 0.015, DD - HDB, 0.04, x, (DD + HDB) / 2, -BB / 2 + 0.02);
       box(gT, mFrame, 0.015, 0.05, dw, x, DD - 0.025, BB / 2 - dw / 2); box(gT, mFrame, 0.015, 0.05, dw, x, DD - 0.025, -BB / 2 + dw / 2);
       box(gT, mFrame, 0.015, HDB - TP, BB - 0.05, x, HDB / 2, 0);
       nT += 5;
