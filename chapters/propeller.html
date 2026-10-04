@@ -704,7 +704,7 @@
       seg(ctx, ox, oy, ox + Math.cos(b.phi) * L, oy - Math.sin(b.phi) * L); ctx.setLineDash([]);
       txt(ctx, "피치선 φ " + SB.deg(b.phi).toFixed(1) + "°", ox + Math.cos(b.phi) * 70 + 4, oy - Math.sin(b.phi) * 70 - 10, P.accent2, "left", 11, 600);
       // 날개 단면(피치각으로 놓음) - 삼각형 중앙 근처
-      const cx = ox + (Ex - ox) * 0.62, cyy = oy + (Ey - oy) * 0.62 - 26;
+      const cx = ox + (Ex - ox) * 0.36, cyy = Math.min(top * 0.3, oy + (Ey - oy) * 0.36 - 60);
       const ch = Math.min(110, w * 0.2);
       ctx.save(); ctx.translate(cx, cyy); ctx.rotate(-b.phi);
       ctx.beginPath();
@@ -713,7 +713,7 @@
       ctx.closePath(); ctx.fillStyle = "#c9a227"; ctx.fill(); ctx.strokeStyle = P.dim; ctx.lineWidth = 1; ctx.stroke();
       ctx.restore();
       // 힘: 양력은 W에 수직, 항력은 W와 나란(날개가 받는 상대 흐름 방향 = -W)
-      const Fs = 70 / Math.max(Math.abs(b.CL), 0.4);
+      const Fs = 62 / Math.max(Math.abs(b.CL), 0.25);
       const wx = Math.cos(b.bi), wy = -Math.sin(b.bi); // 화면 방향(W 방향)
       const Lx = -wy * b.CL * Fs * -1, Ly = wx * b.CL * Fs * -1; // W를 반시계 90° 회전(앞쪽/위)
       const Dx = -wx * b.CD * Fs * 6, Dy = -wy * b.CD * Fs * 6; // 항력: 흐름 방향(상대 유입은 -W로 들어옴) → -W 쪽으로 과장 6배
@@ -724,10 +724,10 @@
       SB.arrow(ctx, cx, cyy, cx, cyy + Fy, P.ok, 2);
       SB.arrow(ctx, cx, cyy, cx + Fx, cyy, P.warn, 2);
       ctx.setLineDash([]);
-      txt(ctx, "양력", cx + Lx + 4, cyy + Ly - 6, P.accent, "left", 11, 700);
-      txt(ctx, "항력×6", cx + Dx - 4, cyy + Dy + 10, P.bad, "right", 10);
-      txt(ctx, Fy < 0 ? "추력" : "역추력", cx + 4, cyy + Fy + (Fy < 0 ? -8 : 10), P.ok, "left", 11, 700);
-      txt(ctx, "토크 저항", cx + Fx + (Fx < 0 ? -4 : 4), cyy + 14, P.warn, Fx < 0 ? "right" : "left", 10, 600);
+      txt(ctx, "양력", cx + Lx - 6, cyy + Ly - 4, P.accent, "right", 11, 700);
+      txt(ctx, "항력×6", cx + Dx - 2, cyy + Dy + 14, P.bad, "right", 10);
+      txt(ctx, Fy < 0 ? "추력" : "역추력", cx + 6, cyy + Fy + (Fy < 0 ? 4 : 10), P.ok, "left", 11, 700);
+      txt(ctx, "토크 저항", cx + Fx + (Fx < 0 ? -4 : 4), cyy - 9, P.warn, Fx < 0 ? "right" : "left", 10, 600);
       txt(ctx, "r = " + (gR() * 3.5).toFixed(2) + " m 단면 · 선수 = 위", 8, 12, P.dim, "left", 11);
       // 반경별 추력 분포
       const box = { x: 58, y: top + 12, w: w - 58 - 16, h: h - top - 12 - 40 };
@@ -744,7 +744,7 @@
   /* =================================================== Sim 3: 피치와 슬립 */
   sim("slip", function () {
     let cv = null, t = 0, run = true;
-    const D = 7, R = 3.5, SLOW = 0.25;
+    const D = 7, R = 3.5, SLOW = 0.4;
     const gP = SB.range("sl-p", (v) => v.toFixed(2), upd);
     const gN = SB.range("sl-n", (v) => v + " rpm", upd);
     const gV = SB.range("sl-v", (v) => v.toFixed(1) + " m/s", upd);
@@ -1069,7 +1069,7 @@
       const ch = SB.chart(ctx, null, { x: [0.05, 2.5], y: [0.03, 1], logX: true, logY: true, xLabel: "σ_0.7R", yLabel: "τ_c", series,
         xTicks: [0.05, 0.1, 0.2, 0.5, 1, 2], yTicks: [0.05, 0.1, 0.2, 0.5, 1], xFmt: (v) => String(v), yFmt: (v) => String(v),
         points: [{ x: SB.clamp(c.sig, 0.05, 2.5), y: SB.clamp(c.tau, 0.03, 1), color: c.pct > 5 ? P.bad : P.ok, r: 7, label: "운전점" }] });
-      LINES.forEach(([p, k], i) => { const s = 2.2, y = k * Math.pow(s, EXP); txt(ctx, p + "%" + (p === 5 ? " 상선 상한" : ""), ch.X(s) - 4, ch.Y(y) - 9, cols[i], "right", 11, p === 5 ? 700 : 400); });
+      LINES.forEach(([p, k], i) => { const s = [0.07, 0.11, 0.17, 0.26, 0.4][i], y = k * Math.pow(s, EXP); txt(ctx, p + "%" + (p === 5 ? " 상선 상한" : ""), ch.X(s), ch.Y(y) - 10, cols[i], "left", 11, p === 5 ? 700 : 600); });
     }
     cv = SB.canvas($("cv-burrill"), draw, { aspect: 0.66, minHeight: 320, maxHeight: 440 });
     upd();
@@ -1305,7 +1305,7 @@
         ctx.fillRect(ch.X(f) - 4, ch.Y(Math.min(1.15, a)), 8, ch.Y(0) - ch.Y(Math.min(1.15, a)));
         txt(ctx, lb, ch.X(f), ch.Y(Math.min(1.15, a)) - 8, res ? P.bad : P.accent, "center", 10, 700);
       });
-      if (b.d < 0.1) txt(ctx, "⚠ 공진 위험: " + b.e.name + " ≈ " + b.m.name, box.x + box.w - 6, box.y + 12, P.bad, "right", 12, 700);
+      if (b.d < 0.1) { ctx.fillStyle = rgba(P.bg, 0.85); ctx.fillRect(w - 230, top - 30, 224, 22); txt(ctx, "⚠ 공진 위험: " + b.e.name + " ≈ " + b.m.name, w - 10, top - 19, P.bad, "right", 12, 700); }
     }
     cv = SB.canvas($("cv-bpf"), draw, { aspect: 0.8, minHeight: 400, maxHeight: 520 });
     upd();

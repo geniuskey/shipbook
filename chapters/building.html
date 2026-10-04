@@ -211,6 +211,24 @@
     </div>
     <p>용접 금속은 녹았다가 식으면서 수축한다. 이 수축이 판을 끌어당겨 <span class="term">각 변형</span>(판이 V자로 꺾임)과 <span class="term">횡수축</span>(판 폭이 줄어듦)을 만든다. 한쪽 면에서만 여러 패스를 쌓으면 각 변형이 계속 누적되지만, X형 개선으로 양면을 번갈아 용접하면 앞면의 굽힘을 뒷면이 되돌려 변형이 상쇄된다. 이것이 <span class="term">대칭 용접</span>의 원리이며, 블록 전체에서도 중앙에서 바깥으로, 좌우 대칭으로 용접 순서를 정한다.</p>
 
+    <figure class="diagram">
+      <svg viewBox="0 0 760 220" role="img" aria-label="용접 이음과 변형">
+        <g font-size="13">
+          <path d="M20 120 L120 120 L120 100 L105 70 L20 70 Z" class="f-dim-soft"/><path d="M220 120 L130 120 L130 100 L145 70 L220 70 Z" class="f-dim-soft"/>
+          <path d="M105 70 L120 100 L130 100 L145 70 Z" fill="var(--warn)"/>
+          <text x="120" y="150" class="t" text-anchor="middle">V형 맞대기</text><text x="120" y="170" class="t-dim" text-anchor="middle">한쪽에서 여러 패스</text>
+          <path d="M260 120 L355 120 L340 95 L355 70 L260 70 Z" class="f-dim-soft"/><path d="M460 120 L365 120 L380 95 L365 70 L460 70 Z" class="f-dim-soft"/>
+          <path d="M355 70 L340 95 L355 120 L365 120 L380 95 L365 70 Z" fill="var(--warn)"/>
+          <text x="360" y="150" class="t" text-anchor="middle">X형 맞대기</text><text x="360" y="170" class="t-dim" text-anchor="middle">양면 교대 → 변형 상쇄</text>
+          <rect x="500" y="105" width="200" height="16" class="f-dim-soft"/><rect x="592" y="40" width="16" height="65" class="f-dim-soft"/>
+          <path d="M592 105 L580 105 L592 93 Z M608 105 L620 105 L608 93 Z" fill="var(--warn)"/>
+          <text x="600" y="150" class="t" text-anchor="middle">필릿 (T 이음)</text><text x="600" y="170" class="t-dim" text-anchor="middle">보강재·론지 부착</text>
+        </g>
+        <text x="380" y="205" class="t-dim" text-anchor="middle">주황: 용착 금속. 식으며 수축해 판을 끌어당긴다 → 각 변형(꺾임) + 횡수축(폭 감소)</text>
+      </svg>
+      <figcaption><b>그림 15-2.</b> 대표적인 용접 이음. 선체 외판의 판 잇기는 주로 맞대기(SAW), 보강재 부착은 필릿(FCAW·로봇) 용접이다. 두꺼운 판은 X형 개선으로 양면을 번갈아 용접한다.</figcaption>
+    </figure>
+
     <div class="sim" id="sim-weld">
       <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>입열량 계산기와 용접 변형</h3></div>
       <div class="sim-body side">
@@ -262,7 +280,7 @@
           <text x="670" y="225" class="t" text-anchor="middle">육상 건조 + 바지선</text><text x="670" y="243" class="t-dim" text-anchor="middle">스키드 → 반잠수 바지</text>
         </g>
       </svg>
-      <figcaption><b>그림 15-2.</b> 진수 방법. 오늘날 대형 상선은 대부분 건조 도크에서 물을 채워 띄우고, 도크가 부족한 조선소는 플로팅 도크나 육상 건조 후 반잠수 바지선으로 옮긴다. 경사 선대는 중소형 조선소와 군함 건조에 남아 있다.</figcaption>
+      <figcaption><b>그림 15-3.</b> 진수 방법. 오늘날 대형 상선은 대부분 건조 도크에서 물을 채워 띄우고, 도크가 부족한 조선소는 플로팅 도크나 육상 건조 후 반잠수 바지선으로 옮긴다. 경사 선대는 중소형 조선소와 군함 건조에 남아 있다.</figcaption>
     </figure>
 
     <p>경사 선대 진수는 가장 극적이고 가장 위험하다. 1/15~1/25의 경사를 가진 활주대(웨이) 위에서 배가 미끄러지기 시작하면, 선미가 물에 잠기며 부력이 점점 커진다. 부력이 선수 쪽 받침(포어 포펫, fore poppet)에 대해 만드는 모멘트가 무게의 모멘트를 넘는 순간 선미가 떠오르며 배가 포어 포펫을 축으로 회전한다. 이것이 <span class="term">피벗팅</span><span class="en">(Pivoting)</span>이다. 반대로 피벗팅 전에 무게중심이 활주대 끝을 지나 버리면, 활주대 끝을 축으로 선미가 떨어지는 <span class="term">티핑</span><span class="en">(Tipping)</span>이 일어나 선체가 손상된다.</p>
@@ -1244,7 +1262,8 @@
     // 런별 막대
     const cb = { x: 56, y: h * 0.56, w: w - 76, h: h * 0.44 - 36 };
     const ymin = gV() - 3.2, ymax = gV() + 3.2;
-    const ch = SB.chart(ctx, cb, { x: [0.4, 6.6], y: [ymin, ymax], xTicks: [], yLabel: "kn", hlines: [{ y: gV(), color: P.ok, label: "실제 대수 속력" }] });
+    const ch = SB.chart(ctx, cb, { x: [0.4, 6.6], y: [ymin, ymax], xTicks: [], yLabel: "kn", hlines: [{ y: gV(), color: P.ok }] });
+    ctx.fillStyle = P.ok; ctx.font = ff(11); ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillText("점선: 실제 대수 속력", cb.x + 6, cb.y + 2);
     const lbl = ["런1 →", "런2 ←", "런3 →", "런4 ←", "1·2 평균", "평균의 평균"];
     const m2 = (R[0].sog + R[1].sog) / 2, mm = (R[0].sog + 3 * R[1].sog + 3 * R[2].sog + R[3].sog) / 8;
     const vals = R.map((r) => r.sog).concat([m2, mm]);

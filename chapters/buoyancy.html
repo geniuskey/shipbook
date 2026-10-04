@@ -788,8 +788,9 @@
       if (!m.sunk && gC() > 0) { const ch = Math.min(bh - th - 2, ((gC() / (2.5 * m.L * m.B)) * s) + 2); ctx.fillStyle = "#c69a5a"; ctx.fillRect(bx + th + 2, top + bh - th - ch, bw - 2 * th - 4, ch); }
       if (m.sunk) { ctx.fillStyle = "rgba(47,143,208,0.3)"; ctx.fillRect(bx + th, top, bw - 2 * th, bh - th); label(ctx, "물이 넘쳐 침몰!", bx + bw / 2, top - 12, P.bad, "center", 13, 700); }
       else {
-        ctx.strokeStyle = P.accent2; ctx.lineWidth = 1.2; seg(ctx, bx + bw + 6, wy, bx + bw + 6, top + bh); label(ctx, "T " + m.T.toFixed(2) + " m", bx + bw + 10, (wy + top + bh) / 2, P.accent2, "left", 11, 700);
-        if (bx + bw + 70 > w) label(ctx, "T " + m.T.toFixed(2) + " m", bx + bw / 2, top + bh + 14, P.accent2, "center", 11, 700);
+        ctx.strokeStyle = P.accent2; ctx.lineWidth = 1.2; seg(ctx, bx + bw + 6, wy, bx + bw + 6, top + bh);
+        if (bx + bw + 70 <= w) label(ctx, "T " + m.T.toFixed(2) + " m", bx + bw + 10, (wy + top + bh) / 2, P.accent2, "left", 11, 700);
+        else label(ctx, "T " + m.T.toFixed(2) + " m", bx + bw / 2, top + bh + 14, P.accent2, "center", 11, 700);
       }
       label(ctx, "같은 강철로 만든 상자 (" + m.L + " × " + m.B.toFixed(1) + " × " + m.H.toFixed(2) + " m)", rx + rw / 2, 14, P.text, "center", 12, 700);
       label(ctx, "판 두께는 축척대로(" + gT() + " mm)", rx + rw / 2, 30, P.dim, "center", 10.5);
@@ -828,7 +829,7 @@
     const cv = SB.canvas($("cv-gt"), (ctx, w, h) => {
       const P = SB.palette(), V = Math.pow(10, gV()), r = calc(V, gVc(), gDD(), gN());
       const data = []; for (let e = 2; e <= 6.3; e += 0.05) { const v = Math.pow(10, e); data.push([v, K1(v) * v]); }
-      const pts = Object.keys(PRE).map((k) => { const p = PRE[k]; return { x: p.V, y: K1(p.V) * p.V, color: P.dim, r: 3.5, label: p.name }; });
+      const pts = Object.keys(PRE).map((k) => { const p = PRE[k]; return { x: p.V, y: K1(p.V) * p.V, color: P.dim, r: 3.5, label: k === gP() ? p.name : "" }; });
       pts.push({ x: V, y: r.GT, color: P.accent2, r: 6 });
       const ch = SB.chart(ctx, null, { x: [100, 2e6], y: [20, 8e5], logX: true, logY: true, xLabel: "밀폐 공간 부피 V (m³)", yLabel: "총톤수 GT",
         series: [{ data, color: P.accent, width: 2 }, { data: data.map(([v]) => [v, 0.3 * v]), color: P.faint, width: 1, dash: [4, 4] }], points: pts,
@@ -961,7 +962,7 @@
       SB.stat("o-hy-kb", sm(at(H, "kb", T).toFixed(2), "m")); SB.stat("o-hy-km", sm(at(H, "km", T).toFixed(2), "m"));
       const f = (v) => (v >= 0 ? "+" : "") + v.toFixed(1);
       SB.stat("o-hy-lc", f(at(H, "lcb", T)) + "<small> / " + f(at(H, "lcf", T)) + " m</small>");
-      SB.stat("o-hy-cb", at(H, "cb", T).toFixed(3) + "<small> / " + at(H, "cwp", T).toFixed(3) + "</small>");
+      SB.stat("o-hy-cb", at(H, "cb", T).toFixed(3) + "<small>/" + at(H, "cwp", T).toFixed(3) + "</small>");
       cv && cv.redraw();
     }
     let cv = null;
@@ -970,14 +971,14 @@
       const P = SB.palette(), H = hydro(Number(gF())), T = gT(), c = gC();
       const ser = (key, k0) => { const d = []; for (let k = k0 || 1; k <= 160; k++) d.push([H[key][k], k * DZ]); return d; };
       let o;
-      if (c === "disp") o = { x: [0, 80000], series: [{ data: ser("disp"), color: P.accent }], xLabel: "배수량 Δ (t)", keys: [["disp", P.accent, "Δ"]], xFmt: (v) => SB.fmt(v, 2) };
+      if (c === "disp") o = { x: [0, 76000], series: [{ data: ser("disp"), color: P.accent }], xLabel: "배수량 Δ (t)", keys: [["disp", P.accent, "Δ"]], xFmt: (v) => SB.fmt(v, 2) };
       else if (c === "tpc") o = { x: [0, 70], series: [{ data: ser("tpc"), color: P.ok }], xLabel: "TPC (t/cm)", keys: [["tpc", P.ok, "TPC"]] };
       else if (c === "kb") o = { x: [0, 40], series: [{ data: ser("kb"), color: P.accent }, { data: ser("km", 5), color: P.accent2 }], xLabel: "KB, KM (m)", keys: [["kb", P.accent, "KB"], ["km", P.accent2, "KM"]] };
       else if (c === "lc") o = { x: [-12, 12], series: [{ data: ser("lcb"), color: P.accent }, { data: ser("lcf"), color: P.warn }], xLabel: "중앙 기준 위치 (m, + 선수)", keys: [["lcb", P.accent, "LCB"], ["lcf", P.warn, "LCF"]] };
       else o = { x: [0.4, 1], series: [{ data: ser("cb", 3), color: P.accent }, { data: ser("cwp"), color: P.accent2 }], xLabel: "계수", keys: [["cb", P.accent, "C_b"], ["cwp", P.accent2, "C_wp"]] };
       const pts = o.keys.map(([k, col, lb]) => ({ x: SB.clamp(at(H, k, T), o.x[0], o.x[1]), y: T, color: col, r: 5, label: lb }));
       SB.chart(ctx, null, { x: o.x, y: [0, 16], xLabel: o.xLabel, yLabel: "흘수 T (m)", series: o.series, points: pts, xFmt: o.xFmt,
-        hlines: [{ y: T, color: P.dim, label: "T = " + T.toFixed(2) + " m" }, { y: 11, color: P.faint, dash: [2, 4], label: "계획 흘수" }] });
+        hlines: [{ y: T, color: P.dim, label: "T = " + T.toFixed(2) + " m" }, { y: 11, color: P.faint, dash: [2, 4], label: Math.abs(T - 11) > 0.8 ? "계획 흘수" : "" }] });
     }, { aspect: 0.66, minHeight: 300, maxHeight: 420 });
   });
 
@@ -1023,8 +1024,9 @@
         ctx.fillText(txt, x0 + pw / 2, yb);
       }
       waterBox(ctx, x0, w, mid, h);
-      label(ctx, "선수 흘수 표지", x0 + pw / 2, 12, P.text, "center", 11, 700);
-      label(ctx, "T = " + T.toFixed(2) + " m", x0 + pw / 2, mid + 14, P.accent, "center", 12, 700);
+      ctx.fillStyle = P.surface; ctx.fillRect(x0 + 1, 0, pw, 22); label(ctx, "선수 흘수 표지", x0 + pw / 2, 11, P.text, "center", 11, 700);
+      ctx.strokeStyle = P.accent2; ctx.lineWidth = 2; seg(ctx, x0, mid, x0 + 10, mid);
+      label(ctx, "T = " + T.toFixed(2) + " m", sw - 4, 14, P.accent, "right", 12, 700);
     }, { aspect: 0.5, minHeight: 260, maxHeight: 360 });
     SB.loop(cvs, (dt) => { const Tt = draftFor(H, g0() + gW()); if (st.Td == null) st.Td = Tt; if (Math.abs(Tt - st.Td) > 1e-4) { st.Td += (Tt - st.Td) * Math.min(1, dt * 3); cv.redraw(); } });
     readout();
@@ -1051,7 +1053,7 @@
       const P = SB.palette(), D = gD(), rho = rhoAt(st.p), T = draftFor(H, D, rho / 1000);
       const wy = h * 0.36;
       // 하구: 밀도 띠
-      for (let i = 0; i < 40; i++) { const p = 1 - i / 40, r = rhoAt(p), t = (1025 - r) / 25; ctx.fillStyle = `rgba(${Math.round(60 + 90 * t)},${Math.round(140 - 10 * t)},${Math.round(200 - 110 * t)},0.22)`; ctx.fillRect((i / 40) * w, wy, w / 40 + 1, h - wy); }
+      for (let i = 0; i < 40; i++) { const p = 1 - i / 40, r = rhoAt(p), t = (1025 - r) / 25, xa = Math.floor((i * w) / 40), xb = Math.floor(((i + 1) * w) / 40); ctx.fillStyle = `rgba(${Math.round(60 + 90 * t)},${Math.round(140 - 10 * t)},${Math.round(200 - 110 * t)},0.22)`; ctx.fillRect(xa, wy, xb - xa, h - wy); }
       ctx.strokeStyle = cssv("--water"); ctx.lineWidth = 1.6; seg(ctx, 0, wy, w, wy);
       ctx.fillStyle = P.dim; ctx.fillRect(0, wy - 18, w * 0.12, 18); label(ctx, "부두", 6, wy - 28, P.dim, "left", 11, 600);
       const s = (w * 0.3) / 215, x = SB.lerp(w * 0.8, w * 0.3, st.p);
@@ -1123,7 +1125,7 @@
         mkEls[kk].forEach((e) => e.setAttribute("class", (e.tagName === "text" ? "mkt" : "mk") + (cls ? " " + cls : "")));
       });
       const yw = Y(Tm); water.setAttribute("y", yw); water.setAttribute("height", 560 - yw); wline.setAttribute("y1", yw); wline.setAttribute("y2", yw);
-      wT.setAttribute("y", yw - 8); wT.textContent = "수면 " + (Tm / 1000).toFixed(3) + " m";
+      wT.setAttribute("y", yw + 22); wT.textContent = "수면 " + (Tm / 1000).toFixed(3) + " m";
       const ya = Y(allow); allowL.setAttribute("y1", ya); allowL.setAttribute("y2", ya); allowT.setAttribute("y", ya - 6); allowT.textContent = "허용 " + (allow / 1000).toFixed(3) + " m";
       const margin = allow - Tm;
       SB.stat("o-ld-allow", sm((allow / 1000).toFixed(3), "m"));

@@ -704,7 +704,7 @@
       for (let i = 0; i < nb; i++) {
         const r = ((i + 0.5) / nb) * R, x = ca * r, y = cb * r;
         let v = 0.12 * -Math.log(Math.random() + 1e-9) * 0.5;
-        v += sea * sea * 2.2 * (X ? 1 : 0.55) * Math.exp(-r / 1.1) * Math.pow(Math.random(), 2.5) * 3;
+        v += sea * sea * 2.2 * (X ? 1 : 0.55) * Math.exp(-r / 1.0) * Math.pow(Math.random(), 3) * 2.2;
         const dr = Math.hypot(x - RAIN.x, y - RAIN.y);
         if (dr < RAIN.r) v += (X ? 0.9 : 0.22) * (1 - (dr / RAIN.r) ** 2) * (0.5 + 0.5 * Math.random());
         if (inPoly(x, y, ISL)) v += 1.6 + 0.4 * Math.random();
@@ -800,11 +800,13 @@
         txt(ctx, k === 0 ? "옆으로(방위 방향) 붙은 두 배 — 간격 " + sep + " m" : "앞뒤로(거리 방향) 붙은 두 배 — 간격 " + sep + " m", 10, y0 + 8, P.dim, "left", 11, 600);
         const merged = k === 0 ? sep < A : sep < Rr;
         const pts = k === 0 ? [[-sep / 2, 0], [sep / 2, 0]] : [[0, -sep / 2], [0, sep / 2]];
+        ctx.save(); ctx.beginPath(); ctx.rect(8, y0 + 18, w - 16, ph - 24); ctx.clip();
         ctx.fillStyle = "rgba(90,255,150,0.55)";
         pts.forEach(([dx, dy]) => { // 메아리: 가로 = 빔폭 A, 세로(거리) = 펄스 Rr + 배 길이 20 m (위가 먼 쪽)
           const ew = Math.max(4, (A + 15) * s), eh = Math.max(4, (Rr + 20) * s);
           ctx.beginPath(); ctx.ellipse(cx + dx * s, cy - dy * s - eh / 2 + 10 * s, ew / 2, eh / 2, 0, 0, Math.PI * 2); ctx.fill();
         });
+        ctx.restore();
         ctx.fillStyle = "#fff"; pts.forEach(([dx, dy]) => { ctx.beginPath(); ctx.arc(cx + dx * s, cy - dy * s, 2.5, 0, 7); ctx.fill(); });
         txt(ctx, merged ? "하나로 합쳐짐" : "두 개로 분리", w - 14, y0 + ph - 14, merged ? P.bad : P.ok, "right", 12, 700);
       });
@@ -1093,3 +1095,249 @@
     }
     upd();
   });
+
+  /* =================================================== 8: COLREG 판정기 */
+  run(function () {
+    const TYPE = { pd: "동력선", sail: "범선", fish: "어로 종사선", ram: "조종 제한선", nuc: "조종 불능선" };
+    let rng = 4, view = null, cv = null;
+    const gB = SB.range("cl-brg", fmtB, upd), gC = SB.range("cl-crs", fmtB, upd), gS = SB.range("cl-spd", (v) => v + " kn", upd), gO = SB.range("cl-os", (v) => v + " kn", upd);
+    $("cl-type").addEventListener("change", upd);
+    function judge() {
+      const b = gB(), c = gC(), type = $("cl-type").value;
+      const r = [rng * Math.sin(b * D2R), rng * Math.cos(b * D2R)], vo = vel(0, gO()), vt = vel(c, gS()), vr = [vt[0] - vo[0], vt[1] - vo[1]], cp = cpaOf(r, vr);
+      const g = wrap360(b + 180 - c), inStern = (a) => a >= 112.5 && a <= 247.5;
+      const risk = cp.tcpa > 0 && cp.cpa < 2 && cp.tcpa < 1.5;
+      let sit, own, tgt;
+      if (!risk) { sit = "충돌 위험 낮음"; own = "경계 유지·방위 변화 관찰(Rule 5·7)"; tgt = "경계 유지"; }
+      else if (inStern(g)) { sit = "추월 (Rule 13) — 자선이 추월선"; own = "피항: 끝까지 상대 진로를 피한다. 좁은 수로면 장음 2+단음으로 의사 표시"; tgt = "유지선: 침로·속력 유지"; }
+      else if (inStern(b)) { sit = "추월 (Rule 13) — 상대가 추월선"; own = "유지선: 침로·속력 유지(Rule 17), 위험하면 최선의 동작"; tgt = "피항: 추월선이 끝까지 피한다"; }
+      else if (type !== "pd") { sit = "선박 간 책임 (Rule 18)"; own = "피항: 동력선은 " + TYPE[type] + "의 진로를 피한다. 일찍·크게, 상대 선미 쪽으로"; tgt = "가능하면 침로·속력 유지"; }
+      else if (Math.abs(wrap180(b)) <= 6 && Math.abs(wrap180(g)) <= 6) { sit = "마주침 (Rule 14)"; own = "우현으로 크게 변침(단음 1회), 좌현 대 좌현 통과"; tgt = "역시 우현 변침"; }
+      else if (b > 0 && b < 112.5) { sit = "횡단 (Rule 15) — 자선이 피항선"; own = "일찍 크게 우현 변침 또는 감속해 상대 선미 쪽으로. 상대 선수 앞 횡단 금지"; tgt = "유지선: 침로·속력 유지(Rule 17)"; }
+      else { sit = "횡단 (Rule 15) — 자선이 유지선"; own = "침로·속력 유지. 상대가 안 피하면 단음 5회, 이어 스스로 회피(좌현 쪽 상대를 피하려 좌현 변침 금지)"; tgt = "피항선: 우현 변침·감속으로 자선 선미 쪽 통과"; }
+      return { r, vo, vt, vr, cp, sit, own, tgt, risk };
+    }
+    cv = SB.canvas($("cv-col"), (ctx, w, h) => {
+      const P = SB.palette(), J = judge(), s = Math.min(w, h) / 14, cx = w / 2, cy = h / 2 + s;
+      const X = (x) => cx + x * s, Y = (y) => cy - y * s; view = { s, cx, cy };
+      const wedge = (a0, a1, col) => { ctx.fillStyle = col; ctx.globalAlpha = 0.13; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, 3 * s, (a0 - 90) * D2R, (a1 - 90) * D2R); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1; };
+      wedge(0, 112.5, GREEN); wedge(247.5, 360, RED); wedge(112.5, 247.5, P.dim);
+      ctx.strokeStyle = P.grid; ctx.lineWidth = 1; for (let k = 1; k <= 7; k++) { ctx.beginPath(); ctx.arc(cx, cy, k * s, 0, Math.PI * 2); ctx.stroke(); }
+      ctx.strokeStyle = P.faint; ctx.setLineDash([3, 4]); [112.5, 247.5].forEach((a) => seg(ctx, cx, cy, cx + Math.sin(a * D2R) * 7 * s, cy - Math.cos(a * D2R) * 7 * s)); ctx.setLineDash([]);
+      txt(ctx, "정횡 후 22.5°", cx + Math.sin(112.5 * D2R) * 4.5 * s + 4, cy - Math.cos(112.5 * D2R) * 4.5 * s + 10, P.faint, "left", 10);
+      const T = 0.2;
+      ctx.strokeStyle = P.warn; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]); seg(ctx, X(J.r[0]), Y(J.r[1]), X(J.r[0] + J.vr[0] * 1.2), Y(J.r[1] + J.vr[1] * 1.2)); ctx.setLineDash([]);
+      if (J.cp.tcpa > 0) { ctx.fillStyle = J.risk ? P.bad : P.dim; ctx.beginPath(); ctx.arc(X(J.cp.pt[0]), Y(J.cp.pt[1]), 4, 0, 7); ctx.fill(); }
+      SB.arrow(ctx, cx, cy, X(J.vo[0] * T), Y(J.vo[1] * T), P.accent, 2.4);
+      SB.arrow(ctx, X(J.r[0]), Y(J.r[1]), X(J.r[0] + J.vt[0] * T), Y(J.r[1] + J.vt[1] * T), P.accent2, 2.4);
+      SB.shipTop(ctx, cx, cy, -Math.PI / 2, { len: 26, color: P.accent });
+      SB.shipTop(ctx, X(J.r[0]), Y(J.r[1]), (gC() - 90) * D2R, { len: 26, color: P.accent2 });
+      txt(ctx, TYPE[$("cl-type").value], X(J.r[0]) + 14, Y(J.r[1]) - 14, P.accent2, "left", 11, 700);
+      txt(ctx, J.sit, 8, 12, J.risk ? P.bad : P.dim, "left", 12, 700);
+      txt(ctx, "링 1 NM · 벡터 12분", 8, h - 10, P.faint, "left", 10);
+    }, { aspect: 0.85, maxHeight: 480, minHeight: 300 });
+    SB.drag($("cv-col"), {
+      down(p) { this.move(p); },
+      move(p) { if (!view) return; const x = (p.x - view.cx) / view.s, y = -(p.y - view.cy) / view.s; rng = SB.clamp(Math.hypot(x, y), 0.5, 6.5); gB.set(Math.round(wrap360(Math.atan2(x, y) * R2D)) % 360); },
+    });
+    function upd() {
+      const J = judge();
+      SB.stat("o-cl-sit", '<span style="font-size:15px;color:var(' + (J.risk ? "--bad" : "--text") + ')">' + J.sit + "</span>");
+      SB.stat("o-cl-own", J.own); SB.stat("o-cl-tgt", J.tgt);
+      SB.stat("o-cl-cpa", sm(J.cp.cpa.toFixed(2), "NM") + " / " + (J.cp.tcpa > 0 ? sm((J.cp.tcpa * 60).toFixed(0), "분") : sm("지남", "")));
+      if (cv) cv.redraw();
+    }
+    upd();
+  });
+
+  /* =================================================== 9: 항해등 퀴즈 */
+  run(function () {
+    let cv = null, quizA = 0, answered = false, score = 0, total = 0;
+    const mode = SB.seg("lt-mode", (v) => { $("lt-quiz").hidden = v !== "quiz"; $("lt-asp-wrap").hidden = v === "quiz"; $("lt-day-wrap").hidden = v === "quiz"; if (v === "quiz") next(); else upd(); });
+    const gA = SB.range("lt-asp", (v) => (v > 0 ? "우현 " : v < 0 ? "좌현 " : "") + Math.abs(v) + "°", upd);
+    $("lt-day").addEventListener("change", upd); $("lt-long").addEventListener("change", upd);
+    const asp = () => (mode() === "quiz" ? quizA : gA());
+    const cat = (a) => (Math.abs(a) < 15 ? "head" : Math.abs(a) > 150 ? "away" : a > 0 ? "l2r" : "r2l");
+    const NAME = { head: "나를 향해 정면", away: "나에게서 멀어짐", l2r: "왼쪽 → 오른쪽", r2l: "오른쪽 → 왼쪽" };
+    function next() {
+      const c = ["head", "away", "l2r", "r2l"][Math.floor(Math.random() * 4)];
+      quizA = c === "head" ? SB.lerp(-8, 8, Math.random()) : c === "away" ? (Math.random() < 0.5 ? 1 : -1) * SB.lerp(155, 180, Math.random()) : (c === "l2r" ? 1 : -1) * SB.lerp(22, 100, Math.random());
+      answered = false; document.querySelectorAll("#lt-quiz .quiz-ans .btn").forEach((b) => b.classList.remove("right", "wrong"));
+      upd();
+    }
+    $("lt-next").addEventListener("click", next);
+    document.querySelectorAll("#lt-quiz .quiz-ans .btn").forEach((b) => b.addEventListener("click", () => {
+      if (answered) return; answered = true; total++;
+      const ok = b.dataset.a === cat(quizA); if (ok) score++;
+      b.classList.add(ok ? "right" : "wrong");
+      if (!ok) document.querySelector('#lt-quiz .quiz-ans .btn[data-a="' + cat(quizA) + '"]').classList.add("right");
+      upd();
+    }));
+    function lights(a) {
+      const long = $("lt-long").checked, L = [];
+      const mh = Math.abs(a) <= 112.5;
+      if (mh) { L.push({ n: "앞 마스트등", u: 0.3, v: 0, z: 0.34, c: "#fffbe8" }); if (long) L.push({ n: "뒤 마스트등", u: -0.18, v: 0, z: 0.5, c: "#fffbe8" }); }
+      if (a >= -1.5 && a <= 112.5) L.push({ n: "우현등(초록)", u: 0.02, v: 0.085, z: 0.2, c: GREEN });
+      if (a <= 1.5 && a >= -112.5) L.push({ n: "좌현등(빨강)", u: 0.02, v: -0.085, z: 0.2, c: RED });
+      if (Math.abs(a) >= 112.5) L.push({ n: "선미등", u: -0.5, v: 0, z: 0.12, c: "#fffbe8" });
+      return L;
+    }
+    cv = SB.canvas($("cv-light"), (ctx, w, h) => {
+      const a = asp(), hz = h * 0.6, k = Math.min(w * 0.55, h * 0.9);
+      const g = ctx.createLinearGradient(0, 0, 0, h); g.addColorStop(0, "#03060c"); g.addColorStop(0.6, "#0a1426"); g.addColorStop(0.61, "#040a14"); g.addColorStop(1, "#02050a");
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = "rgba(120,150,190,0.25)"; seg(ctx, 0, hz, w, hz);
+      for (let i = 0; i < 40; i++) { const x = (i * 97) % w, y = (i * 53) % (hz * 0.8); ctx.fillStyle = "rgba(255,255,255," + (0.2 + (i % 5) * 0.08) + ")"; ctx.fillRect(x, y, 1.2, 1.2); }
+      const ar = a * D2R, hx = Math.sin(ar), hy = -Math.cos(ar), sx = hy, sy = -hx; // 진행 방향(화면 x, 깊이 y), 우현 방향
+      const P2 = (u, v, z) => [w / 2 + (u * hx + v * sx) * k, hz - z * k - (u * hy + v * sy) * k * 0.08];
+      const reveal = mode() === "see" ? $("lt-day").checked : answered;
+      if (reveal) {
+        ctx.fillStyle = "rgba(150,170,200,0.22)"; ctx.strokeStyle = "rgba(170,190,220,0.5)"; ctx.lineWidth = 1;
+        const hull = [[0.5, 0], [0.36, 0.08], [-0.5, 0.08], [-0.5, -0.08], [0.36, -0.08]];
+        ctx.beginPath(); hull.forEach(([u, v], i) => { const p = P2(u, v, 0.1); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }); hull.slice().reverse().forEach(([u, v]) => { const p = P2(u, v, 0); ctx.lineTo(p[0], p[1]); }); ctx.closePath(); ctx.fill(); ctx.stroke();
+        const m1 = P2(0.3, 0, 0.1), m1t = P2(0.3, 0, 0.34), m2 = P2(-0.18, 0, 0.1), m2t = P2(-0.18, 0, 0.5), hs = P2(-0.35, 0, 0.1), ht = P2(-0.35, 0, 0.3);
+        seg(ctx, m1[0], m1[1], m1t[0], m1t[1]); seg(ctx, m2[0], m2[1], m2t[0], m2t[1]); ctx.lineWidth = 8; ctx.globalAlpha = 0.5; seg(ctx, hs[0], hs[1], ht[0], ht[1]); ctx.globalAlpha = 1;
+        const bow = P2(0.62, 0, 0.05); ctx.fillStyle = "rgba(170,190,220,0.8)"; ctx.font = font(11, false, 600); ctx.textAlign = "center"; ctx.fillText("선수", bow[0], bow[1] - 8);
+      }
+      lights(a).forEach((L) => {
+        const [x, y] = P2(L.u, L.v, L.z), r = Math.max(10, k * 0.05);
+        const gr = ctx.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, L.c); gr.addColorStop(0.25, L.c); gr.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x, y, 2.2, 0, 7); ctx.fill();
+      });
+      ctx.fillStyle = "rgba(150,170,200,0.6)"; ctx.font = font(11); ctx.textAlign = "left"; ctx.fillText("자선 선교에서 본 상대선 (밤)", 8, 16);
+    }, { aspect: 0.7, maxHeight: 420, minHeight: 240 });
+    function upd() {
+      const a = asp(), q = mode() === "quiz", hide = q && !answered;
+      SB.stat("o-lt-vis", lights(a).map((l) => l.n).join(", "));
+      const dir = Math.abs(a) < 10 ? "정면으로 다가옴" : Math.abs(a) > 170 ? "정선미 — 멀어짐" : (a > 0 ? "왼쪽 → 오른쪽" : "오른쪽 → 왼쪽") + (Math.abs(a) < 90 ? ", 다가오는 쪽" : ", 멀어지는 쪽");
+      SB.stat("o-lt-dir", hide ? "?" : q ? NAME[cat(a)] + sm(" (" + dir + ")", "") : dir);
+      SB.stat("o-lt-sc", total ? sm(score + " / " + total, "") : "—");
+      if (cv) cv.redraw();
+    }
+    upd();
+  });
+
+  /* =================================================== 10: 회피 조종 게임 */
+  run(function () {
+    const SC = {
+      head: [{ x: 0.15, y: 9.5, c: 180, v: 14 }],
+      cross: [{ x: 6, y: 7, c: 270, v: 12 }, { x: -8, y: 9, c: 90, v: 12 }],
+      busy: [{ x: 0.3, y: 11, c: 180, v: 12 }, { x: 7, y: 8.2, c: 262, v: 13 }, { x: -0.2, y: 2.6, c: 0, v: 6 }, { x: -9, y: 5.3, c: 80, v: 15 }],
+    };
+    const GOAL = [0, 10.5];
+    let st, running = false, cv = null;
+    const sc = SB.seg("gm-sc", () => reset());
+    const gSp = SB.range("gm-spd", (v) => v + " kn");
+    function reset() {
+      st = { x: 0, y: 0, hdg: 0, cmd: 0, spd: gSp(), t: 0, tg: SC[sc()].map((o) => Object.assign({}, o)), trail: [], minD: 99, viol: 0, over: null, msg: "", msgT: 0, rec: 0 };
+      running = false; $("gm-run").textContent = "출항"; $("gm-crs-out").textContent = "000°"; upd(); if (cv) cv.redraw();
+    }
+    function risky() {
+      const vo = vel(st.hdg, st.spd);
+      return st.tg.map((t) => { const r = [t.x - st.x, t.y - st.y], vt = vel(t.c, t.v), c = cpaOf(r, [vt[0] - vo[0], vt[1] - vo[1]]); return { t, r, c, d: Math.hypot(r[0], r[1]), b: wrap360(Math.atan2(r[0], r[1]) * R2D - st.hdg) }; });
+    }
+    document.querySelectorAll("#sim-game .game-keys .btn").forEach((b) => b.addEventListener("click", () => {
+      if (st.over) return;
+      const d = +b.dataset.d;
+      if (d < 0) {
+        const bad = risky().find((o) => o.c.tcpa > 0 && o.c.tcpa < 0.5 && o.c.cpa < 1.5 && (o.b < 112.5 || o.b > 354));
+        if (bad && Math.abs(wrap180(bad.t.c - st.hdg)) > 90) { st.viol++; st.msg = "좌현 변침 경고: 마주침·횡단 피항선은 우현으로 (Rule 14/15)"; st.msgT = 4; }
+      }
+      st.cmd = wrap360(st.cmd + d); $("gm-crs-out").textContent = brgS(st.cmd);
+    }));
+    $("gm-run").addEventListener("click", () => { if (st.over) reset(); running = !running; $("gm-run").textContent = running ? "일시정지" : "계속"; });
+    $("gm-reset").addEventListener("click", reset);
+    cv = SB.canvas($("cv-game"), (ctx, w, h) => {
+      if (!st) return;
+      const P = SB.palette(), s = Math.min(w / 13, h / 13), X = (x) => w / 2 + x * s, Y = (y) => h - 0.8 * s - (y + 0.4) * s;
+      ctx.fillStyle = cssv("--water-soft"); ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = P.grid; ctx.lineWidth = 1; for (let g = -6; g <= 6; g += 2) seg(ctx, X(g), 0, X(g), h); for (let g = 0; g <= 12; g += 2) seg(ctx, 0, Y(g), w, Y(g));
+      ctx.strokeStyle = P.ok; ctx.lineWidth = 2; seg(ctx, X(GOAL[0]), Y(GOAL[1]), X(GOAL[0]), Y(GOAL[1]) - 24); ctx.fillStyle = P.ok; ctx.beginPath(); ctx.moveTo(X(GOAL[0]), Y(GOAL[1]) - 24); ctx.lineTo(X(GOAL[0]) + 16, Y(GOAL[1]) - 18); ctx.lineTo(X(GOAL[0]), Y(GOAL[1]) - 12); ctx.fill();
+      ctx.strokeStyle = P.ok; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(X(GOAL[0]), Y(GOAL[1]), 0.5 * s, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = P.accent; st.trail.forEach((p) => { ctx.beginPath(); ctx.arc(X(p[0]), Y(p[1]), 1.5, 0, 7); ctx.fill(); });
+      const R = risky();
+      R.forEach((o) => {
+        const t = o.t, vt = vel(t.c, t.v), danger = o.c.tcpa > 0 && o.c.cpa < 1;
+        SB.arrow(ctx, X(t.x), Y(t.y), X(t.x + vt[0] * 0.1), Y(t.y + vt[1] * 0.1), danger ? P.bad : P.accent2, 2);
+        SB.shipTop(ctx, X(t.x), Y(t.y), (t.c - 90) * D2R, { len: 20, color: danger ? P.bad : P.accent2 });
+        txt(ctx, o.c.tcpa > 0 ? o.c.cpa.toFixed(1) : "—", X(t.x) + 12, Y(t.y) - 12, danger ? P.bad : P.dim, "left", 11, 700, true);
+      });
+      const vo = vel(st.hdg, st.spd);
+      ctx.strokeStyle = P.bad; ctx.globalAlpha = 0.4; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.arc(X(st.x), Y(st.y), s, 0, 7); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+      SB.arrow(ctx, X(st.x), Y(st.y), X(st.x + vo[0] * 0.1), Y(st.y + vo[1] * 0.1), P.accent, 2.4);
+      SB.shipTop(ctx, X(st.x), Y(st.y), (st.hdg - 90) * D2R, { len: 22, color: P.accent });
+      if (st.msgT > 0) txt(ctx, st.msg, w / 2, 16, P.bad, "center", 12, 700);
+      if (st.over) { ctx.fillStyle = "rgba(0,0,0,0.45)"; ctx.fillRect(0, h / 2 - 30, w, 60); txt(ctx, st.over, w / 2, h / 2, "#fff", "center", 16, 700); }
+      txt(ctx, "격자 2 NM · 벡터 6분 · 점선 원 1 NM", 8, h - 10, P.faint, "left", 10);
+    }, { aspect: 0.95, maxHeight: 520, minHeight: 320 });
+    SB.loop($("cv-game"), (dt) => {
+      if (!st) return;
+      if (st.msgT > 0) st.msgT -= dt;
+      if (running && !st.over) {
+        const dh = dt / 60, dm = dt; // 실제 1초 = 1분
+        const dif = wrap180(st.cmd - st.hdg), turn = 30 * dm; st.hdg = wrap360(st.hdg + SB.clamp(dif, -turn, turn));
+        st.spd += SB.clamp(gSp() - st.spd, -1 * dm, 1 * dm);
+        const vo = vel(st.hdg, st.spd); st.x += vo[0] * dh; st.y += vo[1] * dh; st.t += dm;
+        st.tg.forEach((t) => { const v = vel(t.c, t.v); t.x += v[0] * dh; t.y += v[1] * dh; });
+        st.rec += dm; if (st.rec > 1) { st.rec = 0; st.trail.push([st.x, st.y]); }
+        risky().forEach((o) => { st.minD = Math.min(st.minD, o.d); if (o.d < 0.3) st.over = "충돌! 다시 해 보라"; });
+        if (!st.over && Math.hypot(st.x - GOAL[0], st.y - GOAL[1]) < 0.5) st.over = "도착! " + Math.round(st.t) + "분 · 최소 거리 " + st.minD.toFixed(2) + " NM · 경고 " + st.viol + "회";
+        if (st.over) { running = false; $("gm-run").textContent = "다시 시작"; }
+        upd();
+      }
+      cv.redraw();
+    });
+    function upd() {
+      if (!st) return;
+      SB.stat("o-gm-t", sm(Math.floor(st.t), "분"));
+      const R = risky().filter((o) => o.c.tcpa > 0).sort((a, b) => a.c.cpa - b.c.cpa)[0];
+      SB.stat("o-gm-cpa", R ? '<span style="color:var(' + (R.c.cpa < 1 ? "--bad" : "--ok") + ')">' + R.c.cpa.toFixed(2) + "</span>" + sm("NM / " + Math.round(R.c.tcpa * 60) + "분", "") : "—");
+      SB.stat("o-gm-min", st.minD < 90 ? sm(st.minD.toFixed(2), "NM") : "—");
+      SB.stat("o-gm-st", st.over ? st.over : R && R.c.cpa < 1 ? '<span style="color:var(--bad)">CPA 경보 — 회피 필요</span>' : st.viol ? '<span style="color:var(--warn)">경고 ' + st.viol + "회</span>" : running ? "항해 중" : "대기");
+    }
+    reset();
+  });
+
+  /* =================================================== 11: 기적 신호 */
+  run(function () {
+    let actx = null, t0 = -1, cv = null;
+    const pat = () => { const s = $("sd-sel").value, out = []; let t = 0; for (const ch of s) { const d = ch === "L" ? 5 : 1; out.push([t, t + d, ch]); t += d + 1; } return { out, T: Math.max(t - 1, 1) }; };
+    $("sd-sel").addEventListener("change", () => { t0 = -1; cv.redraw(); });
+    $("sd-play").addEventListener("click", () => {
+      const p = pat();
+      if ($("sd-audio").checked) {
+        try {
+          actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+          const now = actx.currentTime + 0.05;
+          p.out.forEach(([a, b]) => {
+            [220, 330].forEach((f, i) => {
+              const o = actx.createOscillator(), g = actx.createGain(); o.type = "sawtooth"; o.frequency.value = f;
+              g.gain.setValueAtTime(0, now + a); g.gain.linearRampToValueAtTime(i ? 0.05 : 0.08, now + a + 0.06); g.gain.setValueAtTime(i ? 0.05 : 0.08, now + b - 0.08); g.gain.linearRampToValueAtTime(0, now + b);
+              o.connect(g).connect(actx.destination); o.start(now + a); o.stop(now + b + 0.05);
+            });
+          });
+        } catch (e) { console.warn(e); }
+      }
+      t0 = performance.now();
+    });
+    cv = SB.canvas($("cv-snd"), (ctx, w, h) => {
+      const P = SB.palette(), p = pat(), x0 = 20, x1 = w - 20, sx = (x1 - x0) / Math.max(p.T, 8), yc = h * 0.5;
+      const el = t0 < 0 ? -1 : (performance.now() - t0) / 1000;
+      ctx.strokeStyle = P.axis; seg(ctx, x0, yc + 26, x1, yc + 26);
+      for (let s = 0; s <= Math.max(p.T, 8); s++) { const x = x0 + s * sx; seg(ctx, x, yc + 22, x, yc + 30); if (s % 2 === 0) txt(ctx, s + "s", x, yc + 42, P.faint, "center", 10, null, true); }
+      p.out.forEach(([a, b, ch]) => {
+        const on = el >= a && el <= b;
+        ctx.fillStyle = on ? P.warn : P.accent; ctx.globalAlpha = on ? 1 : 0.75;
+        ctx.fillRect(x0 + a * sx, yc - 14, (b - a) * sx, 28); ctx.globalAlpha = 1;
+        txt(ctx, ch === "L" ? "장음" : "단음", x0 + ((a + b) / 2) * sx, yc - 26, P.dim, "center", 10, 600);
+      });
+      if (el >= 0 && el <= p.T + 0.5) { ctx.strokeStyle = P.text; ctx.lineWidth = 2; seg(ctx, x0 + el * sx, yc - 40, x0 + el * sx, yc + 30); }
+      txt(ctx, $("sd-sel").selectedOptions[0].textContent, 10, 14, P.text, "left", 12, 700);
+    }, { aspect: 0.4, maxHeight: 240, minHeight: 170 });
+    SB.loop($("cv-snd"), () => { if (t0 >= 0) { cv.redraw(); if ((performance.now() - t0) / 1000 > pat().T + 1) t0 = -1; } });
+  });
+})();
+</script>
+</body>
+</html>
