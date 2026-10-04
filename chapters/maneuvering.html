@@ -1,0 +1,1551 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<title>조종성과 계류 · ShipBook</title>
+<meta name="description" content="타의 양력과 피벗 포인트, 노모토 모델과 선회 시험, 지그재그·나선 시험, 크래시 스톱 정지 거리, 직접 조종 게임, 스쿼트와 천수 효과, 뱅크 효과, 앵커 체인 카테너리와 계류줄 장력을 시뮬레이터로 배운다.">
+<link rel="canonical" href="https://shipbook.euiyun.com/chapters/maneuvering.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="ShipBook">
+<meta property="og:title" content="조종성과 계류 · ShipBook">
+<meta property="og:description" content="타의 양력과 피벗 포인트, 노모토 모델과 선회 시험, 지그재그·나선 시험, 크래시 스톱 정지 거리, 직접 조종 게임, 스쿼트와 천수 효과, 뱅크 효과, 앵커 체인 카테너리와 계류줄 장력을 시뮬레이터로 배운다.">
+<meta property="og:url" content="https://shipbook.euiyun.com/chapters/maneuvering.html">
+<meta property="og:image" content="https://shipbook.euiyun.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"조종성과 계류","name":"조종성과 계류 · ShipBook","url":"https://shipbook.euiyun.com/chapters/maneuvering.html","mainEntityOfPage":"https://shipbook.euiyun.com/chapters/maneuvering.html","inLanguage":"ko","isAccessibleForFree":true,"learningResourceType":"interactive textbook chapter","position":12,"image":"https://shipbook.euiyun.com/og.png","dateModified":"2026-10-04","isPartOf":{"@type":"Book","@id":"https://shipbook.euiyun.com/#book","name":"ShipBook — 인터랙티브 선박 교과서","url":"https://shipbook.euiyun.com/"},"publisher":{"@type":"Organization","name":"ShipBook","url":"https://shipbook.euiyun.com/"},"description":"타의 양력과 피벗 포인트, 노모토 모델과 선회 시험, 지그재그·나선 시험, 크래시 스톱 정지 거리, 직접 조종 게임, 스쿼트와 천수 효과, 뱅크 효과, 앵커 체인 카테너리와 계류줄 장력을 시뮬레이터로 배운다."},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ShipBook","item":"https://shipbook.euiyun.com/"},{"@type":"ListItem","position":2,"name":"12 조종성과 계류","item":"https://shipbook.euiyun.com/chapters/maneuvering.html"}]}]}</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../css/style.css">
+<script src="../js/common.js"></script>
+<style>
+  .sim-view canvas:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .mv-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .mv-pad .btn { padding: 8px 6px; font-size: 13px; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+  .mv-pad .btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .mv-tele { display: flex; flex-wrap: wrap; gap: 4px; }
+  .mv-tele button { flex: 1 1 auto; font: inherit; font-size: 12px; padding: 5px 4px; border-radius: 7px; border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); cursor: pointer; min-width: 42px; }
+  .mv-tele button.on { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 700; }
+  @media (max-width: 640px) { #sim-game .hint { display: none; } }
+  .v.ok { color: var(--ok); } .v.bad { color: var(--bad); } .v.warn { color: var(--warn); }
+</style>
+</head>
+<body data-chapter="maneuvering">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <marker id="mv-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--text-dim)"/></marker>
+  <marker id="mv-ah-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--accent)"/></marker>
+  <marker id="mv-ah-b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--accent-2)"/></marker>
+</defs></svg>
+<main class="chapter">
+  <header class="chapter-hero">
+    <div class="eyebrow">Chapter 12</div>
+    <h1>조종성과 계류</h1>
+    <p class="lead">길이 300 m, 무게 30만 톤의 배에는 브레이크가 없다. 방향을 바꾸는 수단은 선미에 달린 문짝만 한 타 하나뿐이고, 기관을 후진으로 걸어도 배는 몇 킬로미터를 더 간다. 이 장은 작은 타가 어떻게 거대한 배를 돌리는지에서 출발해, 선회와 지그재그 시험으로 조종 성능을 재는 법, 멈추는 데 걸리는 거리, 얕은 물과 좁은 수로에서 생기는 이상한 힘, 그리고 닻과 계류줄로 배를 한자리에 붙잡아 두는 법까지 다룬다.</p>
+    <ul class="objectives">
+      <li>타의 양력이 타각·유속·종횡비에 따라 어떻게 변하는지, 실속이 왜 생기는지 설명한다.</li>
+      <li>타력이 선미를 밀어 배가 도는 과정과 피벗 포인트, 편류각의 의미를 안다.</li>
+      <li>노모토 모델 \(T\dot r + r = K\delta\)로 선회권의 전진거리·횡거·선회 지름을 계산하고 해석한다.</li>
+      <li>지그재그 시험과 나선 시험으로 침로 안정성과 오버슈트를 평가하는 방법을 안다.</li>
+      <li>크래시 스톱의 정지 거리를 운동 방정식으로 추정하고, 선박의 관성을 직접 조종하며 체험한다.</li>
+      <li>스쿼트·천수 효과·뱅크 효과·선박 간 상호작용의 원인과 위험을 설명한다.</li>
+      <li>앵커 체인의 카테너리 형상과 스코프, 계류줄 장력을 계산한다.</li>
+    </ul>
+  </header>
+
+  <!-- =============================================================== 1 -->
+  <section id="intro">
+    <h2>조종성이란 무엇인가</h2>
+    <p><span class="term">조종성</span><span class="en">(Manoeuvrability)</span>은 배가 원하는 대로 방향을 바꾸고, 원하는 침로를 지키고, 필요할 때 멈출 수 있는 능력이다. 자동차는 타이어가 노면을 붙잡아 방향을 바꾸지만, 배는 물이라는 미끄러운 유체 속에서 <b>선체 자체를 비스듬히 미끄러뜨려</b> 생기는 양력으로 돈다. 그래서 배의 조종에는 세 가지 성질이 서로 얽혀 있다.</p>
+    <ul>
+      <li><b>선회성</b><span class="en">(Turning Ability)</span>: 타를 크게 쓰면 얼마나 작은 원을 그리며 도는가.</li>
+      <li><b>침로 안정성</b><span class="en">(Course Stability)</span>: 타를 중앙에 두면 배가 스스로 직진을 유지하는가, 아니면 한쪽으로 돌아 버리는가.</li>
+      <li><b>변침·보침성</b><span class="en">(Yaw Checking)</span>: 돌기 시작한 배를 반대 타로 얼마나 빨리 멈춰 세울 수 있는가.</li>
+    </ul>
+    <p>선회성과 침로 안정성은 서로 반대 방향으로 당기는 성질이다. 잘 도는 배는 직진을 지키기 어렵고, 직진을 잘 지키는 배는 잘 돌지 않는다. 비대한 탱커(\(C_b\) 0.8 이상)는 잘 돌지만 침로가 불안정하기 쉽고, 날씬한 컨테이너선은 반대다. 국제해사기구(IMO)는 이 균형을 확인하려고 실선 시운전에서 몇 가지 표준 시험을 하도록 정해 두었다.</p>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 400" role="img" aria-label="선회권의 정의">
+        <line x1="60" y1="330" x2="700" y2="330" class="s-axis" stroke-dasharray="5 4"/>
+        <text x="66" y="350" class="t-dim">처음 침로</text>
+        <path d="M60 330 L250 330 C 330 330 380 312 420 280 C 470 240 500 190 505 140 C 510 80 470 40 410 32 C 350 24 300 50 280 100 C 262 148 275 200 310 236 C 350 276 410 286 455 262 C 500 238 520 190 515 150" class="s-acc" stroke-width="3" fill="none"/>
+        <circle cx="250" cy="330" r="6" class="f-acc"/>
+        <text x="250" y="316" class="t" text-anchor="middle">타 사용 시점</text>
+        <!-- advance -->
+        <line x1="250" y1="372" x2="505" y2="372" class="s-line" marker-start="url(#mv-ah)" marker-end="url(#mv-ah)"/>
+        <line x1="505" y1="140" x2="505" y2="380" class="s-line" stroke-dasharray="3 3"/>
+        <text x="378" y="392" class="t" text-anchor="middle">전진거리 (Advance, 90° 변침 시)</text>
+        <!-- transfer -->
+        <line x1="560" y1="330" x2="560" y2="140" class="s-line" marker-start="url(#mv-ah)" marker-end="url(#mv-ah)"/>
+        <line x1="505" y1="140" x2="580" y2="140" class="s-line" stroke-dasharray="3 3"/>
+        <text x="568" y="236" class="t">횡거</text><text x="568" y="254" class="t-dim">(Transfer, 90°)</text>
+        <!-- tactical -->
+        <line x1="640" y1="330" x2="640" y2="30" class="s-line" marker-start="url(#mv-ah)" marker-end="url(#mv-ah)"/>
+        <line x1="410" y1="30" x2="660" y2="30" class="s-line" stroke-dasharray="3 3"/>
+        <text x="648" y="166" class="t">선회 지름</text><text x="648" y="184" class="t-dim">(Tactical</text><text x="648" y="200" class="t-dim">Diameter, 180°)</text>
+        <!-- steady circle -->
+        <circle cx="395" cy="158" r="122" fill="none" stroke="var(--accent-2)" stroke-dasharray="6 5" stroke-width="1.5"/>
+        <line x1="395" y1="158" x2="281" y2="114" stroke="var(--accent-2)" stroke-width="1.5"/>
+        <text x="300" y="160" class="t-dim" fill="var(--accent-2)">정상 선회 반지름 R</text>
+        <!-- ship with drift angle -->
+        <g transform="translate(505,150) rotate(-105)">
+          <path d="M-26 -6 L20 -6 L30 0 L20 6 L-26 6 Z" class="f-hull" opacity="0.85"/>
+        </g>
+        <line x1="505" y1="150" x2="498" y2="88" stroke="var(--text)" stroke-width="1.5" marker-end="url(#mv-ah)"/>
+        <line x1="505" y1="150" x2="517" y2="92" stroke="var(--accent-2)" stroke-width="1.5" marker-end="url(#mv-ah-b)"/>
+        <text x="520" y="86" class="t-dim">β 편류각</text>
+        <text x="96" y="60" class="t-dim">선수가 원의 안쪽을 향하고</text>
+        <text x="96" y="78" class="t-dim">배는 비스듬히 미끄러지며 돈다</text>
+      </svg>
+      <figcaption><b>그림 12-1.</b> 선회권. 타를 쓴 뒤 배는 잠시 처음 침로를 따라 나아가다 돈다. 선수 방향이 90° 바뀌었을 때까지 처음 침로 방향으로 간 거리가 전진거리, 옆으로 간 거리가 횡거, 180° 바뀌었을 때의 옆 거리가 선회 지름(tactical diameter)이다. 선체 축과 실제 진행 방향 사이의 각이 편류각 β다.</figcaption>
+    </figure>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>IMO 조종성 기준(MSC.137(76))</th><th>시험</th><th>기준</th></tr></thead>
+      <tbody>
+        <tr><td>선회성</td><td>35° 선회 시험</td><td>전진거리 ≤ 4.5 L, 선회 지름 ≤ 5 L</td></tr>
+        <tr><td>초기 선회성</td><td>타각 10°</td><td>선수가 10° 바뀌기까지 항주 거리 ≤ 2.5 L</td></tr>
+        <tr><td>변침·보침성</td><td>10°/10° 지그재그</td><td>1차 오버슈트 ≤ 10°(L/V &lt; 10 s) ~ 20°(L/V ≥ 30 s), 2차 ≤ 1차 기준 + 15°</td></tr>
+        <tr><td></td><td>20°/20° 지그재그</td><td>1차 오버슈트 ≤ 25°</td></tr>
+        <tr><td>정지 성능</td><td>전속 전진 중 전속 후진</td><td>진출 거리(track reach) ≤ 15 L (대형선은 주관청이 20 L까지 완화 가능)</td></tr>
+      </tbody>
+    </table></div>
+    <p>여기서 L은 수선간 길이, V는 시험 속력(m/s)이다. 기준이 모두 L의 배수로 되어 있다는 점이 중요하다. 조종 운동은 배 길이로 무차원화하면 크기가 다른 배끼리도 비교할 수 있다. 이 장의 시뮬레이터들도 대부분 결과를 L의 배수로 함께 보여 준다.</p>
+  </section>
+
+  <!-- =============================================================== 2 -->
+  <section id="rudder">
+    <h2>타: 작은 날개가 큰 배를 돌린다</h2>
+    <p><span class="term">타</span><span class="en">(Rudder)</span>는 물속에 세운 대칭 날개다. 흐름에 대해 각도 \(\alpha\)(받음각)로 놓이면 비행기 날개처럼 흐름에 수직한 <b>양력</b>과 흐름 방향의 <b>항력</b>을 받는다. 상선의 타 면적은 대략 \(A_R \approx LT/60\)(수선 아래 측면적의 1.5~2%)이다. 길이 200 m, 흘수 11 m인 배라면 약 37 m², 대략 가로 5 m·세로 7.5 m짜리 판이다.</p>
+    <div class="formula">$$L_R = \tfrac{1}{2}\rho A_R V_R^2\, C_L(\alpha), \qquad C_L \approx \frac{2\pi\Lambda}{\Lambda+2}\,\sin\alpha\cos\alpha + C_{DC}\sin^2\!\alpha\cos\alpha$$
+      <div class="where">\(V_R\)는 타에 들어오는 유속, \(\Lambda = h^2/A_R\)는 종횡비(타 높이²/면적, 상선 1.5~2.5), \(C_{DC}\approx 0.8\)은 큰 각에서 판 전체가 흐름을 막아 생기는 직교류 항력 계수다. 첫 항은 유한 날개의 양력선 이론, 둘째 항은 소종횡비 날개의 비선형 양력이다.</div>
+    </div>
+    <p>받음각을 키우면 양력이 늘지만 끝없이 늘지는 않는다. 어느 각을 넘으면 날개 뒷면(흡입면)의 흐름이 떨어져 나가며 양력이 갑자기 줄어드는 <span class="term">실속</span><span class="en">(Stall)</span>이 생긴다. 비행기 날개의 실속각은 15° 안팎이지만, 종횡비가 작은 타는 끝단 와류가 흐름을 붙잡아 주어 실속각이 35° 안팎으로 크다. 그래서 대부분의 상선은 최대 타각을 35°로 정한다.</p>
+    <p>타는 프로펠러 바로 뒤에 있다. 프로펠러는 물을 가속해 뒤로 밀어내므로 타는 선속보다 빠른 <b>후류</b><span class="en">(Slipstream)</span> 속에서 일한다. 운동량 이론(<a href="propeller.html">7장</a>)에 따르면 추력 \(T\)를 내는 프로펠러 원판 면적 \(A_0\)의 후류 속도는 다음과 같다.</p>
+    <div class="formula">$$V_R^2 \approx V_A^2 + k\,\frac{2T}{\rho A_0}, \qquad V_A = (1-w)V$$
+      <div class="where">\(V_A\)는 반류를 고려한 프로펠러 유입 속도(반류율 \(w\approx 0.3\)), \(k\approx 0.75\)는 타 위치에서 후류가 덜 가속된 정도를 나타내는 계수다. 배가 거의 멈춰 있어도 \(T\)만 있으면 \(V_R\)이 생긴다. 항구에서 "기관을 잠깐 전진으로 차고(kick ahead) 타를 쓰는" 조선법의 원리다.</div>
+    </div>
+
+    <div class="sim" id="sim-rudder">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>타 단면의 유동과 힘</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-rudder"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>타각 δ <output id="rd-ang-out"></output></span><input type="range" id="rd-ang" min="0" max="50" value="15" step="1"></label>
+          <label class="ctrl"><span>선속 <output id="rd-v-out"></output></span><input type="range" id="rd-v" min="0" max="22" value="12" step="0.5"></label>
+          <label class="ctrl"><span>프로펠러 추력 (설계 추력 대비) <output id="rd-t-out"></output></span><input type="range" id="rd-t" min="0" max="150" value="100" step="5"></label>
+          <label class="ctrl"><span>종횡비 Λ <output id="rd-ar-out"></output></span><input type="range" id="rd-ar" min="0.8" max="3" value="1.6" step="0.1"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">타 유입 속도 V<sub>R</sub></span><span class="v" id="o-rd-vr">—</span></div>
+        <div class="stat"><span class="k">양력계수 C<sub>L</sub></span><span class="v" id="o-rd-cl">—</span></div>
+        <div class="stat"><span class="k">양력 / 항력</span><span class="v" id="o-rd-ld">—</span></div>
+        <div class="stat"><span class="k">횡력(배 옆 방향)</span><span class="v" id="o-rd-fy">—</span></div>
+        <div class="stat"><span class="k">선회 모멘트</span><span class="v" id="o-rd-n">—</span></div>
+      </div>
+      <div class="sim-note">위에서 본 타 단면(NACA 0018)과 유선이다. 길이 200 m 일반 화물선, 타 면적 37 m², 프로펠러 지름 6.5 m를 가정했다. 해볼 것: ① 타각을 40° 넘게 키워 실속을 일으켜 보자. 양력이 떨어지고 흡입면 뒤에 소용돌이가 생긴다. ② 선속을 0으로 두고 추력만 걸어 보자. 배가 멈춰 있어도 후류 덕분에 타가 일한다. ③ 종횡비를 키우면 기울기는 가파르지만 실속각이 작아진다.</div>
+    </div>
+
+    <p>타의 횡력은 배 중앙에서 약 \(L/2\) 떨어진 선미에서 작용하므로 큰 모멘트를 만든다. 하지만 횡력 자체는 <b>배가 돌려는 방향의 반대쪽</b>으로 작용한다는 점에 주의하자. 우현 타(타 뒷날을 우현으로)를 쓰면 타는 선미를 좌현으로 민다. 선미가 좌현으로 밀리면 배는 비스듬히 서게 되고, 이제 <b>선체 전체가 커다란 날개</b>가 되어 비스듬한 흐름으로부터 훨씬 큰 양력을 받는다. 배를 실제로 원 궤도에 올려놓는 힘은 타가 아니라 이 선체 양력이다. 타는 선체를 비스듬히 세우는 '방아쇠'다.</p>
+
+    <h3>피벗 포인트와 편류각</h3>
+    <p>회전하는 배의 한 점에서 옆 방향 속도는 \(v + x\,r\)이다(\(v\)는 중앙의 횡속도, \(r\)은 선회 각속도, \(x\)는 중앙에서 선수 쪽 거리). 이 값이 0인 점, 즉 배 위에서 보면 옆으로 미끄러지지 않고 회전의 중심처럼 보이는 점을 <span class="term">피벗 포인트</span><span class="en">(Pivot Point)</span>라 한다.</p>
+    <div class="formula">$$x_P = -\frac{v}{r} = R\sin\beta$$
+      <div class="where">\(\beta\)는 편류각, \(R\)은 선회 반지름. 전진 선회 중인 상선의 피벗 포인트는 대략 선수에서 \(L/5\sim L/4\) 지점이다. 선교에서 보면 배가 이 점을 중심으로 도는 것처럼 보이고, 선미는 선수보다 훨씬 크게 바깥으로 휩쓸린다.</div>
+    </div>
+
+    <div class="sim" id="sim-pivot">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>타를 쓰는 순간: 선미가 밀리고 배가 돈다</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-pivot"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>타각 (+ 우현) <output id="pv-d-out"></output></span><input type="range" id="pv-d" min="-35" max="35" value="35" step="1"></label>
+          <div class="ctrl-row"><button class="btn primary" id="pv-run">타 사용</button><button class="btn" id="pv-reset">리셋</button></div>
+          <label class="check"><input type="checkbox" id="pv-vec" checked> 선체 각 점의 횡속도</label>
+          <label class="check"><input type="checkbox" id="pv-cam" checked> 카메라가 배를 따라감</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">경과 시간</span><span class="v" id="o-pv-t">—</span></div>
+        <div class="stat"><span class="k">선수각 변화</span><span class="v" id="o-pv-psi">—</span></div>
+        <div class="stat"><span class="k">편류각 β</span><span class="v" id="o-pv-b">—</span></div>
+        <div class="stat"><span class="k">피벗 포인트(선수에서)</span><span class="v" id="o-pv-x">—</span></div>
+      </div>
+      <div class="sim-note">길이 200 m, 15 kn의 배를 선형 2자유도(횡동요 v, 선수동요 r) 운동 방정식으로 계산한다. 화살표는 선체 각 점이 옆으로 미끄러지는 속도, 주황 점은 피벗 포인트다. 해볼 것: 타를 쓴 직후 처음 몇 초를 보자. 배는 돌기 전에 먼저 타력 방향(돌려는 방향의 반대)으로 살짝 밀린다. 그다음 선미가 크게 바깥으로 휩쓸리며 피벗 포인트가 선수 쪽으로 자리 잡는다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 3 -->
+  <section id="nomoto">
+    <h2>노모토 모델과 선회 시험</h2>
+    <p>배의 수평면 운동은 전후동요(surge) \(u\), 좌우동요(sway) \(v\), 선수동요(yaw) \(r\)의 3자유도다. 속력이 거의 일정하다고 보고 \(v\)와 \(r\)의 선형 운동 방정식 두 개를 세운 뒤 \(v\)를 소거하면 \(r\)에 대한 2차 방정식이 남는다. 일본의 노모토 겐스케(野本謙作)는 1957년 이 식의 느린 모드만 남겨 다음 1차 모델로 줄였다.</p>
+    <div class="formula">$$T\,\dot r + r = K\,\delta \qquad\Longrightarrow\qquad r(t) = K\delta\left(1 - e^{-t/T}\right)$$
+      <div class="where">\(K\)(1/s)는 <b>선회력 지수</b>: 타각 1 rad당 정상 선회 각속도. \(T\)(s)는 <b>추종성 지수</b>: 타를 쓴 뒤 선회가 자리 잡기까지의 시정수. 무차원 지수 \(K' = KL/V\), \(T' = TV/L\)로 쓰면 배 크기와 속력에 거의 무관하다. 상선은 대략 \(K'\) 1~3, \(T'\) 1~5다.</div>
+    </div>
+    <p>정상 선회 반지름은 \(R = V/r = V/(K\delta)\), 즉 무차원으로 \(R/L = 1/(K'\delta)\)다. \(K'\)가 크면 작은 원을 그리고, \(T'\)가 크면 처음 반응이 굼떠 선회권이 앞으로 길게 늘어난다(전진거리 증가). 이 식은 원래 작은 타각의 선형 모델이므로 35° 같은 큰 타각에서는 유효 \(K'\)가 작아진다. 아래 시뮬레이터의 기본값은 35°에서 선회 지름이 약 3 L이 되도록 잡았다. 선회 중에는 선체가 비스듬히 미끄러지며 저항이 커져 속력이 20~40% 떨어지는데, 이것도 근사적으로 넣었다.</p>
+
+    <div class="sim" id="sim-turn">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>선회 시험: 노모토 모델로 선회권 그리기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-turn"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>선형</span><div class="seg" id="tc-ship"><button data-value="gen" class="on">일반 화물선</button><button data-value="ctr">컨테이너선</button><button data-value="vlcc">VLCC</button></div></div>
+          <label class="ctrl"><span>타각 δ <output id="tc-d-out"></output></span><input type="range" id="tc-d" min="5" max="35" value="35" step="1"></label>
+          <label class="ctrl"><span>접근 속력 <output id="tc-v-out"></output></span><input type="range" id="tc-v" min="4" max="24" value="15" step="0.5"></label>
+          <label class="ctrl"><span>K' (선회력) <output id="tc-k-out"></output></span><input type="range" id="tc-k" min="0.5" max="3" value="1.1" step="0.05"></label>
+          <label class="ctrl"><span>T' (추종성) <output id="tc-tt-out"></output></span><input type="range" id="tc-tt" min="0.5" max="6" value="2" step="0.1"></label>
+          <div class="ctrl-row"><button class="btn primary" id="tc-run">시험 시작</button><button class="btn" id="tc-inst">즉시 계산</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">전진거리</span><span class="v" id="o-tc-adv">—</span></div>
+        <div class="stat"><span class="k">횡거</span><span class="v" id="o-tc-tr">—</span></div>
+        <div class="stat"><span class="k">선회 지름</span><span class="v" id="o-tc-td">—</span></div>
+        <div class="stat"><span class="k">정상 선회 지름</span><span class="v" id="o-tc-sd">—</span></div>
+        <div class="stat"><span class="k">90° 변침 시간</span><span class="v" id="o-tc-t90">—</span></div>
+        <div class="stat"><span class="k">정상 선회 속력</span><span class="v" id="o-tc-vs">—</span></div>
+      </div>
+      <div class="sim-note">눈금 한 칸은 배 길이 L이다. 회색 점선은 IMO 기준(전진거리 4.5 L, 선회 지름 5 L)이다. 해볼 것: ① 속력만 바꿔 보자. 무차원 지수가 일정하면 선회권의 크기(L 단위)는 속력과 거의 무관하고, 걸리는 시간만 달라진다. ② T'를 크게 하면 선회 지름은 그대로인데 전진거리만 늘어난다. ③ VLCC를 고르면 K'가 커서 원이 작다. 비대선이 잘 도는 이유다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 4 -->
+  <section id="zigzag">
+    <h2>지그재그 시험과 침로 안정성</h2>
+    <p><span class="term">지그재그 시험</span><span class="en">(Zig-zag / Kempf Test)</span>은 타를 좌우로 번갈아 써서 배가 얼마나 빨리 반응하고 얼마나 넘쳐 도는지를 본다. 10°/10° 시험의 절차는 이렇다. 직진 중 타를 우현 10°로 쓴다. 선수가 10° 돌면 즉시 타를 좌현 10°로 바꾼다. 배는 관성 때문에 조금 더 돌다가(이 초과분이 <b>오버슈트</b>) 되돌아온다. 선수가 좌현 10°가 되면 다시 타를 우현으로 바꾼다. 이를 몇 번 되풀이한다. 타를 돌리는 데도 시간이 걸린다. SOLAS는 조타기가 한쪽 35°에서 반대쪽 30°까지 28초 안에 돌리도록 요구하므로, 타각 속도는 약 2.3°/s다.</p>
+
+    <div class="sim" id="sim-zz">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>지그재그 시험: 타각과 선수각의 시계열</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-zz"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>시험</span><div class="seg" id="zz-mode"><button data-value="10" class="on">10°/10°</button><button data-value="20">20°/20°</button></div></div>
+          <label class="ctrl"><span>K' <output id="zz-k-out"></output></span><input type="range" id="zz-k" min="0.5" max="3" value="1.6" step="0.05"></label>
+          <label class="ctrl"><span>T' <output id="zz-t-out"></output></span><input type="range" id="zz-t" min="0.5" max="8" value="2.5" step="0.1"></label>
+          <label class="ctrl"><span>L/V (s) <output id="zz-lv-out"></output></span><input type="range" id="zz-lv" min="8" max="45" value="26" step="1"></label>
+          <label class="ctrl"><span>조타 속도 <output id="zz-rr-out"></output></span><input type="range" id="zz-rr" min="1" max="6" value="2.3" step="0.1"></label>
+          <button class="btn primary" id="zz-run">애니메이션 재생</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">1차 오버슈트</span><span class="v" id="o-zz-o1">—</span></div>
+        <div class="stat"><span class="k">2차 오버슈트</span><span class="v" id="o-zz-o2">—</span></div>
+        <div class="stat"><span class="k">IMO 1차 기준</span><span class="v" id="o-zz-lim">—</span></div>
+        <div class="stat"><span class="k">초기 선회 시간(첫 10°)</span><span class="v" id="o-zz-ti">—</span></div>
+      </div>
+      <div class="sim-note">파랑 실선은 선수각 ψ, 주황 계단 모양은 타각 δ다. L/V는 길이 200 m 배가 15 kn이면 약 26 s. 해볼 것: ① T'를 키워 보자. 반응이 굼뜬 배는 반대 타를 써도 한참 더 돌아 오버슈트가 커진다. ② 조타 속도를 늦춰도 오버슈트가 커진다. ③ 20°/20°로 바꾸면 오버슈트의 각도는 커지지만 기준(25°)도 넉넉해진다.</div>
+    </div>
+
+    <p>지그재그 시험의 결과는 노모토 지수를 거꾸로 구하는 데도 쓰인다. 첫 반응의 기울기에서 \(K\)를, 오버슈트의 크기와 주기에서 \(T\)를 맞춘다. 실선 시운전에서는 이렇게 구한 \(K, T\)로 오토파일럿의 게인을 정한다(<a href="autonomous.html">22장</a>).</p>
+
+    <h3>나선 시험: 이 배는 스스로 직진하는가</h3>
+    <p>노모토 식에서 \(T\)가 음수라면, 즉 작은 선회가 스스로 커지는 배라면 타를 중앙에 두어도 배가 한쪽으로 돌기 시작한다. 이런 배를 <b>침로 불안정</b>하다고 한다. 실제 선체의 선회 감쇠는 \(r\)에 대해 비선형이어서, 노모토 모델을 다음처럼 확장한다.</p>
+    <div class="formula">$$T\,\dot r + n_1 r + n_3 r^3 = K\delta$$
+      <div class="where">\(n_1 > 0\)이면 안정, \(n_1 < 0\)이면 불안정이다. 정상 상태 \(\dot r = 0\)에서 \(\delta = (n_1 r + n_3 r^3)/K\)인데, \(n_1<0\)이면 이 곡선이 S자로 꺾여 한 타각에 정상 선회가 세 개 생긴다(가운데 것은 불안정).</div>
+    </div>
+    <p><span class="term">나선 시험</span><span class="en">(Dieudonné Spiral Test)</span>은 타각을 우현 큰 값에서 조금씩 줄여 좌현까지 갔다가 다시 되돌아오며, 각 타각에서 정상 선회율을 기록한다. 안정한 배는 \(r\)–\(\delta\) 곡선이 원점을 지나는 하나의 선이지만, 불안정한 배는 원점 근처에서 <b>이력 고리</b><span class="en">(Hysteresis Loop)</span>가 나타난다. 고리 안의 타각으로는 배가 반대로 돌 수 없다. 고리 폭이 넓을수록 자동 조타기가 더 바쁘게 일해야 한다.</p>
+
+    <div class="sim" id="sim-spiral">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>나선 시험과 이력 고리</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-spiral"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>n₁ (선형 감쇠) <output id="sp-n1-out"></output></span><input type="range" id="sp-n1" min="-0.6" max="1" value="-0.3" step="0.05"></label>
+          <label class="ctrl"><span>타각 변화 간격 <output id="sp-step-out"></output></span><input type="range" id="sp-step" min="1" max="5" value="2" step="1"></label>
+          <div class="ctrl-row"><button class="btn primary" id="sp-run">시험 시작</button><button class="btn" id="sp-reset">지우기</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">현재 타각</span><span class="v" id="o-sp-d">—</span></div>
+        <div class="stat"><span class="k">현재 r'</span><span class="v" id="o-sp-r">—</span></div>
+        <div class="stat"><span class="k">이력 고리 폭(타각)</span><span class="v" id="o-sp-w">—</span></div>
+        <div class="stat"><span class="k">판정</span><span class="v" id="o-sp-j">—</span></div>
+      </div>
+      <div class="sim-note">회색 곡선은 정상 상태 해 \(\delta = (n_1 r' + n_3 r'^3)/K'\) (\(K'=1, n_3=2\)), 점은 시험에서 타각마다 충분히 기다린 뒤 측정한 선회율이다. 해볼 것: n₁을 음수로 두고 시험하면, 타각을 줄여도 선회 방향이 그대로 유지되다가 어느 순간 반대편 가지로 '뛰어내린다'. n₁을 양수로 바꾸면 고리가 사라진다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 5 -->
+  <section id="stopping">
+    <h2>정지 거리: 브레이크 없는 배</h2>
+    <p>배를 멈추는 유일한 방법은 프로펠러를 거꾸로 돌리는 것이다. 저속 2행정 디젤(<a href="engine.html">9장</a>)은 기어 없이 프로펠러와 직결되어 있어서, 후진하려면 연료를 끊고, 물살에 돌던 프로펠러(윈드밀링)가 충분히 느려지길 기다렸다가, 압축 공기로 엔진을 반대 방향으로 시동해야 한다. 이 <b>역전 시간</b>만 1~3분이고, 그동안 배는 거의 처음 속력으로 계속 나아간다. 후진 추력은 프로펠러 형상이 전진에 맞춰져 있어 전진 추력의 절반 안팎이다.</p>
+    <div class="formula">$$(m + m_x)\frac{dU}{dt} = -R_0\left(\frac{U}{U_0}\right)^2 + T(t)$$
+      <div class="where">\(m_x\)는 전후 방향 부가 질량(배수량의 5~10%), \(R_0\)는 처음 속력 \(U_0\)에서의 저항, \(T(t)\)는 시간에 따라 전진 → 0 → 후진으로 바뀌는 추력이다. 후진 추력 \(T_a\)가 일정한 구간에서는 정지 거리가 해석적으로 \(s = \frac{(m+m_x)U_1^2}{2R_0/U_0^2}\ln\!\left(1 + \frac{R_0 U_1^2/U_0^2}{T_a}\right)\)이다(\(U_1\)은 후진 추력이 걸리는 순간의 속력).</div>
+    </div>
+    <p>저항은 속력의 제곱에 비례하므로 빠를 때는 저항이 브레이크 역할을 크게 하지만, 느려지면 거의 후진 추력 하나로 감속해야 한다. 그래서 마지막 몇 노트를 줄이는 데 오래 걸린다. 또 오른쪽으로 도는(우회전) 프로펠러를 후진으로 돌리면 프로펠러 날개가 바닥 쪽 더 밀도 높은 흐름을 차는 <b>편압 효과</b><span class="en">(Paddle-wheel / Transverse Thrust Effect)</span>로 선미가 좌현으로 밀리고 선수는 우현으로 돈다. 타는 거의 듣지 않으므로 크래시 스톱 중인 배는 진로를 지킬 수 없다.</p>
+
+    <div class="sim" id="sim-stop">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>크래시 스톱: 전속 전진에서 전속 후진</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-stop"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>선박</span><div class="seg" id="cs-ship"><button data-value="gen" class="on">일반 화물선</button><button data-value="ctr">컨테이너선</button><button data-value="vlcc">VLCC</button></div></div>
+          <div class="ctrl"><span>방법</span><div class="seg" id="cs-mode"><button data-value="crash" class="on">크래시 스톱</button><button data-value="coast">기관 정지(타력)</button></div></div>
+          <label class="ctrl"><span>처음 속력 <output id="cs-v-out"></output></span><input type="range" id="cs-v" min="4" max="24" value="15" step="0.5"></label>
+          <label class="ctrl"><span>후진 추력 / 전진 추력 <output id="cs-a-out"></output></span><input type="range" id="cs-a" min="20" max="90" value="50" step="5"></label>
+          <label class="ctrl"><span>기관 역전 시간 <output id="cs-tr-out"></output></span><input type="range" id="cs-tr" min="20" max="240" value="90" step="10"></label>
+          <button class="btn primary" id="cs-run">재생</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">진출 거리(head reach)</span><span class="v" id="o-cs-x">—</span></div>
+        <div class="stat"><span class="k">배 길이의 배수</span><span class="v" id="o-cs-l">—</span></div>
+        <div class="stat"><span class="k">정지 시간</span><span class="v" id="o-cs-t">—</span></div>
+        <div class="stat"><span class="k">진로 이탈</span><span class="v" id="o-cs-y">—</span></div>
+        <div class="stat"><span class="k">배수량</span><span class="v" id="o-cs-m">—</span></div>
+      </div>
+      <div class="sim-note">위: 위에서 본 정지 궤적(눈금 1 L). 아래: 속력(파랑)과 추력(주황) 시간 이력. 진로 이탈은 편압 효과를 경험적으로 넣은 근사다. 기관 정지(타력)는 2 kn까지 줄어드는 거리로 잰다. 해볼 것: ① VLCC를 고르면 15 L 기준을 넘기기도 한다. 그래서 대형선은 20 L까지 완화해 준다. ② 역전 시간을 늘리면 그 시간 동안 거의 처음 속력으로 가는 거리가 고스란히 더해진다. ③ 타력 정지와 비교해 보자. 저항만으로는 느려질수록 감속이 거의 없어진다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 6 -->
+  <section id="thrusters">
+    <h2>스러스터와 예인선, 그리고 직접 조종</h2>
+    <p>타는 배가 움직일 때만 듣는다. 속력이 2~3 kn 아래로 떨어지면 타력이 거의 없어지므로, 항구 안의 저속 조종에는 다른 도구가 필요하다.</p>
+    <ul>
+      <li><b>바우 스러스터</b><span class="en">(Bow Thruster)</span>: 선수 수선 아래를 가로지르는 터널 속의 프로펠러. 선수를 옆으로 직접 민다. 정지 상태에서 가장 잘 듣고, 속력이 4~5 kn을 넘으면 터널 출구 흐름이 선체 흐름에 휩쓸려 효과가 급격히 줄어든다.</li>
+      <li><b>아지무스 스러스터·포드 추진기</b><span class="en">(Azimuth Thruster, Pod)</span>: 프로펠러 자체를 360° 돌려 추력 방향을 바꾼다. 타가 따로 필요 없고 저속 조종 성능이 뛰어나 크루즈선·해양 지원선에 쓰인다(<a href="electric.html">18장</a>).</li>
+      <li><b>고양력 타</b>: 플랩 타(Becker), 쇼텔 타 등은 같은 면적에서 양력을 50% 이상 키운다.</li>
+      <li><b>예인선</b><span class="en">(Tug)</span>: 대형선은 접안 때 예인선 2~4척의 도움을 받는다. 예인선은 선체를 직접 밀거나 줄로 당겨 옆 방향 힘을 낸다. 항만 예인선의 견인력(bollard pull)은 대략 50~80톤이다.</li>
+    </ul>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 250" role="img" aria-label="저속 조종 장치 배치">
+        <path d="M70 125 L560 125" stroke="var(--border)"/>
+        <path d="M90 95 L560 95 Q640 95 690 125 Q640 155 560 155 L90 155 Q70 155 70 140 L70 110 Q70 95 90 95 Z" class="f-surface" stroke-width="1.5"/>
+        <rect x="600" y="104" width="16" height="42" rx="3" class="f-acc-soft"/>
+        <line x1="608" y1="125" x2="608" y2="40" class="s-acc" marker-end="url(#mv-ah-a)"/>
+        <text x="618" y="52" class="t-acc">바우 스러스터</text>
+        <text x="618" y="70" class="t-dim">선수를 옆으로 직접 민다</text>
+        <rect x="60" y="114" width="14" height="22" rx="2" fill="var(--text-dim)"/>
+        <text x="40" y="190" class="t-dim">타 + 프로펠러</text>
+        <line x1="66" y1="160" x2="66" y2="176" class="s-line"/>
+        <!-- tug -->
+        <path d="M150 205 L230 205 Q250 205 250 215 L250 225 Q250 235 230 235 L150 235 Q140 235 140 220 Q140 205 150 205 Z" fill="var(--accent-2)" opacity="0.75"/>
+        <line x1="195" y1="203" x2="195" y2="160" stroke="var(--accent-2)" stroke-width="2.5" marker-end="url(#mv-ah-b)"/>
+        <text x="262" y="226" class="t" fill="var(--accent-2)">예인선 밀기(push)</text>
+        <path d="M470 20 L550 20 Q570 20 570 30 L570 40 Q570 50 550 50 L470 50 Q460 50 460 35 Q460 20 470 20 Z" fill="var(--accent-2)" opacity="0.75"/>
+        <line x1="440" y1="95" x2="490" y2="50" stroke="var(--text-dim)" stroke-width="1.5"/>
+        <line x1="440" y1="90" x2="470" y2="62" stroke="var(--accent-2)" stroke-width="2.5" marker-end="url(#mv-ah-b)"/>
+        <text x="300" y="38" class="t" fill="var(--accent-2)">예인선 당기기(pull)</text>
+        <circle cx="430" cy="125" r="5" fill="var(--warn)"/>
+        <text x="380" y="118" class="t-dim">무게중심</text>
+      </svg>
+      <figcaption><b>그림 12-2.</b> 저속 조종 장치. 선미의 타·프로펠러와 선수의 바우 스러스터를 함께 쓰거나, 예인선을 선수·선미에 배치하면 배를 제자리에서 돌리거나 옆으로 평행 이동할 수 있다.</figcaption>
+    </figure>
+
+    <p>이제 직접 몰아 보자. 아래 게임의 배는 길이 120 m, 배수량 약 1만 톤의 작은 화물선이다. 기관 명령(텔레그래프)을 바꿔도 프로펠러 회전수가 바뀌고 배가 가속되기까지 수십 초가 걸리고, 타를 써도 배가 돌기 시작하기까지 한참이 걸린다. 화면 속 시간은 실제보다 3배 빠르게 흐른다.</p>
+
+    <div class="sim" id="sim-game">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>미니 게임: 좁은 수로 통과와 부두 접안</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-game" tabindex="0" style="touch-action:none"></canvas><span class="hint">캔버스를 누르고 키보드: ←→ 타, ↑↓ 기관, Q/E 바우 스러스터, Z/C 예인선</span></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>과제</span><div class="seg" id="gm-level"><button data-value="canal" class="on">수로 통과</button><button data-value="berth">부두 접안</button></div></div>
+          <label class="ctrl"><span>타각 (+ 우현) <output id="gm-rud-out"></output></span><input type="range" id="gm-rud" min="-35" max="35" value="0" step="5"></label>
+          <div class="ctrl"><span>기관 텔레그래프</span><div class="mv-tele" id="gm-tele"></div></div>
+          <div class="ctrl"><span>바우 스러스터 / 선미 예인선 (누르고 있기, ◀ 좌현·▶ 우현으로 밂)</span>
+            <div class="mv-pad">
+              <button class="btn" id="gm-bt-p">◀ 선수</button><span style="text-align:center;font-size:12px;align-self:center;color:var(--text-dim)">스러스터</span><button class="btn" id="gm-bt-s">선수 ▶</button>
+              <button class="btn" id="gm-tg-p">◀ 선미</button><span style="text-align:center;font-size:12px;align-self:center;color:var(--text-dim)">예인선</span><button class="btn" id="gm-tg-s">선미 ▶</button>
+            </div>
+          </div>
+          <button class="btn primary" id="gm-reset">다시 시작</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">속력</span><span class="v" id="o-gm-v">—</span></div>
+        <div class="stat"><span class="k">선회율</span><span class="v" id="o-gm-r">—</span></div>
+        <div class="stat"><span class="k">프로펠러 / 명령</span><span class="v" id="o-gm-n">—</span></div>
+        <div class="stat"><span class="k">상태</span><span class="v" id="o-gm-st">—</span></div>
+      </div>
+      <div class="sim-note">수로 통과: 굽은 수로를 둑에 닿지 않고 오른쪽 끝(초록 선)까지 가면 성공. 부두 접안: 위쪽 부두의 노란 선석에 배를 나란히 붙이되, 접촉 순간 속력 0.3 kn(약 0.15 m/s) 이하이면 성공. 바우 스러스터는 4 kn 이상에서는 거의 듣지 않는다. 해볼 것: 타를 쓰고 몇 초 기다려야 배가 도는지, 기관을 후진으로 걸고 얼마나 가서 서는지 느껴 보자. 접안할 때는 미리 속력을 줄이고, 마지막에는 바우 스러스터와 예인선으로 옆으로 붙인다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 7 -->
+  <section id="shallow">
+    <h2>얕은 물: 스쿼트와 천수 효과</h2>
+    <p>배가 얕은 물을 지나면 선체 아래로 빠져나가야 하는 물이 좁은 틈으로 몰려 빨라진다. 베르누이 정리에 따라 빨라진 물은 압력이 낮아지고, 배 주변 수면이 내려앉으며 배 전체가 가라앉는다. 이것이 <span class="term">스쿼트</span><span class="en">(Squat)</span>다. 정지해 있을 때 2 m였던 여유 수심이 12 kn에서는 거의 0이 될 수 있어, 좌초 사고의 흔한 원인이다.</p>
+    <div class="formula">$$S_{max} \approx \frac{C_b\, V^2}{100}\ \text{(open water)}, \qquad S_{max} \approx \frac{C_b\, V^2}{50}\ \text{(confined channel)}$$
+      <div class="where">Barrass의 근사식. \(S_{max}\)는 최대 침하량(m), \(V\)는 대수 속력(노트), \(C_b\)는 방형 계수. 수심/흘수 비 \(h/T\) 1.1~1.4 범위에서 쓰는 경험식이다. 스쿼트는 대략 \(V^2\)에 비례하므로 속력을 절반으로 줄이면 스쿼트는 1/4이 된다. \(C_b > 0.7\)인 비대선은 선수가, \(C_b < 0.7\)인 날씬한 배는 선미가 더 많이 가라앉는다.</div>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 250" role="img" aria-label="스쿼트의 원리">
+        <path d="M0 80 Q 160 80 230 92 Q 380 108 530 92 Q 600 80 760 80" class="s-water"/>
+        <path d="M0 80 L760 80" stroke="var(--water)" stroke-dasharray="4 4" opacity="0.6"/>
+        <text x="610" y="70" class="t-dim">정지 시 수면</text>
+        <text x="300" y="72" class="t-dim">항주 중 수면이 내려앉음</text>
+        <path d="M150 50 L600 50 L620 70 Q 640 90 625 120 Q 600 170 560 172 L190 172 Q 160 172 152 140 Z" class="f-hull" opacity="0.85"/>
+        <rect x="150" y="40" width="470" height="12" fill="var(--text-dim)"/>
+        <rect x="0" y="205" width="760" height="45" class="f-dim-soft"/>
+        <text x="20" y="232" class="t-dim">해저</text>
+        <g stroke="var(--accent)" stroke-width="2" fill="none">
+          <line x1="40" y1="190" x2="110" y2="190" marker-end="url(#mv-ah-a)"/>
+          <line x1="250" y1="188" x2="370" y2="188" marker-end="url(#mv-ah-a)"/>
+          <line x1="400" y1="188" x2="520" y2="188" marker-end="url(#mv-ah-a)"/>
+          <line x1="640" y1="190" x2="710" y2="190" marker-end="url(#mv-ah-a)"/>
+        </g>
+        <text x="300" y="203" class="t-acc">좁은 틈: 유속↑ 압력↓</text>
+        <g stroke="var(--accent-2)" stroke-width="2.5">
+          <line x1="300" y1="110" x2="300" y2="150" marker-end="url(#mv-ah-b)"/>
+          <line x1="450" y1="110" x2="450" y2="150" marker-end="url(#mv-ah-b)"/>
+        </g>
+        <text x="320" y="135" class="t" fill="#fff">배 전체가 가라앉고 기운다</text>
+        <line x1="700" y1="172" x2="700" y2="205" class="s-line" marker-start="url(#mv-ah)" marker-end="url(#mv-ah)"/>
+        <text x="708" y="192" class="t-dim">UKC</text>
+      </svg>
+      <figcaption><b>그림 12-3.</b> 스쿼트의 원리. 배에 대해 상대적으로 뒤로 흐르는 물이 선체와 해저 사이의 좁은 틈에서 빨라지고 압력이 낮아진다. 배 주위 수면이 내려앉고 배는 그만큼 가라앉으며, 압력 분포가 앞뒤로 다르면 트림도 생긴다. 여유 수심(UKC, Under Keel Clearance)이 그만큼 줄어든다.</figcaption>
+    </figure>
+
+    <div class="sim" id="sim-squat">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>스쿼트와 여유 수심(UKC)</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-squat"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>수역</span><div class="seg" id="sq-mode"><button data-value="open" class="on">개방 수역</button><button data-value="conf">좁은 수로</button></div></div>
+          <label class="ctrl"><span>속력 <output id="sq-v-out"></output></span><input type="range" id="sq-v" min="0" max="16" value="10" step="0.5"></label>
+          <label class="ctrl"><span>수심/흘수 h/T <output id="sq-h-out"></output></span><input type="range" id="sq-h" min="1.05" max="2" value="1.2" step="0.01"></label>
+          <label class="ctrl"><span>방형 계수 C<sub>b</sub> <output id="sq-cb-out"></output></span><input type="range" id="sq-cb" min="0.55" max="0.85" value="0.82" step="0.01"></label>
+          <label class="ctrl"><span>흘수 T <output id="sq-t-out"></output></span><input type="range" id="sq-t" min="8" max="22" value="15" step="0.5"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">최대 스쿼트</span><span class="v" id="o-sq-s">—</span></div>
+        <div class="stat"><span class="k">선수 / 선미 침하</span><span class="v" id="o-sq-fa">—</span></div>
+        <div class="stat"><span class="k">정지 시 UKC</span><span class="v" id="o-sq-u0">—</span></div>
+        <div class="stat"><span class="k">항주 중 UKC</span><span class="v" id="o-sq-u">—</span></div>
+        <div class="stat"><span class="k">선회 지름 배율(근사)</span><span class="v" id="o-sq-td">—</span></div>
+      </div>
+      <div class="sim-note">옆에서 본 모습(수직 방향은 과장). 점선 윤곽은 정지 시 위치다. 아래 그래프는 얕은 물에서 선회 지름이 깊은 물보다 몇 배 커지는지 보여 주는 근사 곡선이다. 해볼 것: VLCC(C<sub>b</sub> 0.82, T 15 m 이상)로 h/T 1.2인 수로를 12 kn으로 지나 보자. 여유 수심이 사라진다. 속력을 줄이면 빠르게 회복된다.</div>
+    </div>
+    <p>얕은 물에서는 조종성도 변한다. 선체 아래로 물이 빠져나가기 어려우니 선체가 옆으로 미끄러질 때 받는 힘(\(Y_v\))과 회전을 막는 힘(\(N_r\))이 모두 커진다. 그 결과 배는 침로가 더 안정해지지만 잘 돌지 않아, \(h/T\)가 1.2 정도면 선회 지름이 깊은 물의 2배 가까이 된다. 부가 질량도 커져서 정지 거리가 늘어난다. 얕은 물에서 저항이 커지고 파형이 바뀌는 현상은 <a href="waves.html">10장</a>의 천수파와 같은 뿌리다.</p>
+  </section>
+
+  <!-- =============================================================== 8 -->
+  <section id="bank">
+    <h2>뱅크 효과와 선박 간 상호작용</h2>
+    <p>좁은 수로에서 배가 한쪽 둑에 가깝게 달리면, 배와 둑 사이의 좁은 틈으로 물이 빨리 흐르며 압력이 떨어진다. 이 저압이 특히 선미 쪽에서 강해 <b>선미가 둑으로 빨려 들고</b>, 반대로 선수 앞에 쌓인 물(선수 압력파)은 선수를 둑에서 <b>밀어낸다</b>. 이것이 <span class="term">뱅크 효과</span><span class="en">(Bank Effect: Bank Suction & Bank Cushion)</span>다. 배는 둑에서 멀어지는 쪽으로 머리를 돌리므로, 이를 막으려면 둑 쪽으로 타를 써야 한다. 이 힘은 속력의 제곱에 비례하고, 둑까지 거리와 수심이 작을수록 급격히 커진다.</p>
+    <p>두 배가 가까이 나란히 지나갈 때도 같은 일이 생긴다(<span class="term">선박 간 상호작용</span><span class="en">(Ship-to-ship Interaction)</span>). 선수 주변은 고압, 선체 중앙 옆은 저압, 선미 주변은 다시 고압이다. 추월하는 배의 선수가 앞 배의 선미에 다가가면 두 배가 밀어내고, 나란히 서면 서로 끌어당기며, 이 과정에서 선수를 돌리는 모멘트가 방향을 몇 번 바꾼다. 1911년 올림픽호와 순양함 호크의 충돌, 좁은 수로에서의 수많은 추월 사고가 이 현상으로 설명된다.</p>
+
+    <div class="sim" id="sim-bank">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>뱅크 효과와 추월 상호작용(개념 모델)</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-bank"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>상황</span><div class="seg" id="bk-mode"><button data-value="bank" class="on">둑 옆 항주</button><button data-value="pass">추월</button></div></div>
+          <label class="ctrl"><span>속력 <output id="bk-v-out"></output></span><input type="range" id="bk-v" min="2" max="14" value="8" step="0.5"></label>
+          <label class="ctrl"><span>둑·상대선까지 간격 (B 배수) <output id="bk-d-out"></output></span><input type="range" id="bk-d" min="0.3" max="3" value="0.8" step="0.05"></label>
+          <label class="check"><input type="checkbox" id="bk-p" checked> 압력 영역 표시</label>
+          <button class="btn" id="bk-play">일시정지</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">횡력(+ 끌림)</span><span class="v" id="o-bk-y">—</span></div>
+        <div class="stat"><span class="k">선수 회두 모멘트</span><span class="v" id="o-bk-n">—</span></div>
+        <div class="stat"><span class="k">상쇄에 필요한 타각</span><span class="v" id="o-bk-d">—</span></div>
+      </div>
+      <div class="sim-note">경향을 보여 주는 정성 모델이다(힘 ∝ V², 간격이 줄면 급증). 빨강은 저압, 파랑은 고압 영역. 해볼 것: ① 둑 옆 항주에서 간격을 0.3 B로 좁히고 속력을 올리면 필요한 타각이 금방 35°에 닿는다. ② 추월에서는 두 배의 상대 위치에 따라 회두 모멘트 화살표가 방향을 바꾸는 것을 보자.</div>
+    </div>
+    <div class="callout warn"><strong>좁은 수로의 조선 원칙</strong><p>뱅크 효과와 스쿼트는 모두 속력의 제곱에 비례한다. 좁은 수로·운하에서는 속력을 낮추는 것이 거의 모든 위험을 동시에 줄이는 방법이다. 수에즈·파나마 운하가 엄격한 속력 제한을 두는 이유다. 2021년 수에즈 운하에서 좌초한 초대형 컨테이너선 사고의 원인 분석에서도 강풍과 함께 뱅크 효과가 거론되었다.</p></div>
+  </section>
+
+  <!-- =============================================================== 9 -->
+  <section id="anchor">
+    <h2>앵커와 계류</h2>
+    <p>항구 밖에서 대기하는 배는 닻을 내린다. 흔히 무거운 닻이 배를 붙잡는다고 생각하지만, 실제로 배를 붙잡는 것은 <b>해저에 누운 체인의 무게와 마찰</b>, 그리고 닻의 갈고리(fluke)가 해저 흙을 파고드는 힘이다. 닻이 제 힘을 내려면 닻 바로 앞의 체인이 해저에 평평하게 누워 있어야 한다. 체인이 닻을 위로 당기면 갈고리가 흙에서 빠져 닻이 끌린다(<span class="term">주묘</span><span class="en">(Dragging Anchor)</span>).</p>
+    <p>수중에서 늘어진 체인은 <span class="term">카테너리</span><span class="en">(Catenary)</span>를 이룬다. 체인의 단위 길이당 수중 무게를 \(w\), 수평 장력을 \(H\)라 하면 형상과 필요한 길이가 정해진다.</p>
+    <div class="formula">$$y = a\left(\cosh\frac{x}{a} - 1\right),\quad a = \frac{H}{w},\qquad s = \sqrt{h^2 + 2ah},\qquad T_{top} = H + w h$$
+      <div class="where">\(h\)는 해저에서 호스파이프(체인이 선체를 빠져나오는 구멍)까지의 높이, \(s\)는 해저에서 들려 있는 체인 길이, \(T_{top}\)은 호스파이프에서의 장력이다. 체인 전체 길이가 \(s\)보다 길면 나머지는 해저에 누워 닻을 수평으로 당긴다. 체인 길이는 <b>섀클</b><span class="en">(Shackle, 27.5 m)</span> 단위로 센다. 강철의 수중 무게는 공기 중의 약 0.87배, 스터드 링크 체인의 공기 중 무게는 대략 \(0.0219\,d^2\) kg/m(\(d\): 지름 mm)다.</div>
+    </div>
+
+    <div class="sim" id="sim-anchor">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>앵커 체인 카테너리와 주묘 위험</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-anchor"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>수심 <output id="an-h-out"></output></span><input type="range" id="an-h" min="10" max="80" value="30" step="1"></label>
+          <label class="ctrl"><span>체인 길이 <output id="an-n-out"></output></span><input type="range" id="an-n" min="2" max="14" value="7" step="0.5"></label>
+          <label class="ctrl"><span>체인 지름 <output id="an-d-out"></output></span><input type="range" id="an-d" min="50" max="120" value="76" step="2"></label>
+          <label class="ctrl"><span>수평력 H (바람·조류) <output id="an-f-out"></output></span><input type="range" id="an-f" min="20" max="1500" value="300" step="10"></label>
+          <label class="ctrl"><span>닻 무게 <output id="an-w-out"></output></span><input type="range" id="an-w" min="3" max="25" value="9" step="0.5"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">스코프(체인 길이/수심)</span><span class="v" id="o-an-sc">—</span></div>
+        <div class="stat"><span class="k">해저에 누운 체인</span><span class="v" id="o-an-ly">—</span></div>
+        <div class="stat"><span class="k">닻 쪽 체인 각도</span><span class="v" id="o-an-ang">—</span></div>
+        <div class="stat"><span class="k">호스파이프 장력</span><span class="v" id="o-an-top">—</span></div>
+        <div class="stat"><span class="k">파주력(닻+체인)</span><span class="v" id="o-an-hp">—</span></div>
+        <div class="stat"><span class="k">판정</span><span class="v" id="o-an-j">—</span></div>
+      </div>
+      <div class="sim-note">호스파이프는 수면 위 5 m에 있다고 가정했다. 파주력은 고파주력(HHP) 닻의 파주 계수 7(닻 무게의 7배)과 해저 체인 마찰 계수 0.75의 근사다. 해볼 것: 수평력을 키워 보자. 해저에 누운 체인이 점점 들리고, 닻 쪽 각도가 0°를 넘으면 주묘 위험이 커진다. 체인을 더 내면(스코프 증가) 다시 안전해진다. 선원들의 경험칙 "수심의 3~4배(악천후 6배 이상)"를 확인해 보자.</div>
+    </div>
+
+    <h3>부두 계류: 계류줄과 외력</h3>
+    <p>부두에 댄 배는 여러 가닥의 계류줄로 붙잡는다. 선수·선미에서 멀리 뻗는 <b>선수줄·선미줄</b>(head/stern line), 부두에 수직으로 붙잡는 <b>브레스트 라인</b>(breast line), 앞뒤 이동을 막는 <b>스프링 라인</b>(spring line)이 각자 역할을 나눈다. 외력은 바람과 조류다.</p>
+    <div class="formula">$$F_{wind} = \tfrac{1}{2}\rho_a C_{w} A_{w} U_w^2, \qquad F_{cur} = \tfrac{1}{2}\rho C_{c} A_{c} U_c^2$$
+      <div class="where">\(A_w\)는 수면 위 투영 면적, \(A_c\)는 수면 아래 투영 면적(\(\approx L T\)), \(C_w\approx 0.9\), \(C_c\)는 깊은 물에서 약 0.7이지만 선저 여유가 작으면 3~5배까지 커진다. 물의 밀도가 공기의 약 840배이므로 조류 1 kn이 풍속 약 15 m/s에 맞먹는 힘을 낸다.</div>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 250" role="img" aria-label="계류줄 배치">
+        <rect x="0" y="170" width="760" height="80" class="f-dim-soft"/>
+        <text x="16" y="236" class="t-dim">부두(안벽)</text>
+        <path d="M150 110 L560 110 Q 640 110 690 140 Q 640 170 560 170 L150 170 Q 120 170 120 140 Q 120 110 150 110 Z" class="f-surface" stroke-width="1.5"/>
+        <text x="380" y="146" class="t" text-anchor="middle">선체 (선수 →)</text>
+        <g stroke-width="2.2" fill="none">
+          <line x1="675" y1="150" x2="745" y2="190" stroke="var(--accent)"/>
+          <line x1="640" y1="165" x2="640" y2="195" stroke="var(--accent-2)"/>
+          <line x1="560" y1="170" x2="430" y2="195" stroke="var(--ok)"/>
+          <line x1="230" y1="170" x2="340" y2="195" stroke="var(--ok)"/>
+          <line x1="150" y1="168" x2="150" y2="195" stroke="var(--accent-2)"/>
+          <line x1="125" y1="150" x2="40" y2="190" stroke="var(--accent)"/>
+        </g>
+        <g fill="var(--text)"><circle cx="745" cy="190" r="4"/><circle cx="640" cy="195" r="4"/><circle cx="430" cy="195" r="4"/><circle cx="340" cy="195" r="4"/><circle cx="150" cy="195" r="4"/><circle cx="40" cy="190" r="4"/></g>
+        <text x="700" y="80" class="t-acc" text-anchor="middle">선수줄</text><line x1="700" y1="86" x2="705" y2="160" class="s-line" stroke-dasharray="2 3"/>
+        <text x="600" y="60" class="t" fill="var(--accent-2)" text-anchor="middle">브레스트 라인</text><line x1="610" y1="66" x2="638" y2="178" class="s-line" stroke-dasharray="2 3"/>
+        <text x="420" y="60" class="t" fill="var(--ok)" text-anchor="middle">스프링 라인</text><line x1="430" y1="66" x2="495" y2="180" class="s-line" stroke-dasharray="2 3"/><line x1="410" y1="66" x2="290" y2="180" class="s-line" stroke-dasharray="2 3"/>
+        <text x="80" y="80" class="t-acc" text-anchor="middle">선미줄</text><line x1="80" y1="86" x2="85" y2="168" class="s-line" stroke-dasharray="2 3"/>
+        <text x="200" y="40" class="t-dim">브레스트: 배를 부두 쪽으로 · 스프링: 앞뒤 이동 억제 · 선수/선미줄: 둘 다 조금씩</text>
+      </svg>
+      <figcaption><b>그림 12-4.</b> 대표적인 계류 배치. 줄은 짧고 부두에 수직일수록 옆 방향 하중을 많이 맡는다. 같은 재질이라도 짧은 줄은 강성이 커서 하중이 몰리므로, 같은 역할의 줄은 길이와 각도를 비슷하게 맞추는 것이 원칙이다.</figcaption>
+    </figure>
+
+    <div class="sim" id="sim-moor">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>계류줄 장력 계산기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-moor"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>선박</span><div class="seg" id="mr-ship"><button data-value="ctr" class="on">컨테이너선(공선)</button><button data-value="tank">탱커(만재)</button></div></div>
+          <label class="ctrl"><span>풍속 <output id="mr-w-out"></output></span><input type="range" id="mr-w" min="0" max="35" value="18" step="1"></label>
+          <label class="ctrl"><span>풍향 (0° 선수, 90° 부두 쪽에서) <output id="mr-wa-out"></output></span><input type="range" id="mr-wa" min="0" max="355" value="90" step="5"></label>
+          <label class="ctrl"><span>조류 <output id="mr-c-out"></output></span><input type="range" id="mr-c" min="0" max="3" value="1" step="0.1"></label>
+          <label class="ctrl"><span>조류 방향 <output id="mr-ca-out"></output></span><input type="range" id="mr-ca" min="0" max="355" value="0" step="5"></label>
+          <label class="ctrl"><span>계류줄 파단 하중 MBL <output id="mr-mbl-out"></output></span><input type="range" id="mr-mbl" min="40" max="150" value="80" step="5"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">바람 하중</span><span class="v" id="o-mr-fw">—</span></div>
+        <div class="stat"><span class="k">조류 하중</span><span class="v" id="o-mr-fc">—</span></div>
+        <div class="stat"><span class="k">최대 줄 장력</span><span class="v" id="o-mr-tmax">—</span></div>
+        <div class="stat"><span class="k">MBL 대비</span><span class="v" id="o-mr-pct">—</span></div>
+        <div class="stat"><span class="k">펜더 반력</span><span class="v" id="o-mr-fd">—</span></div>
+      </div>
+      <div class="sim-note">위에서 본 계류 배치(줄 8가닥 + 펜더). 배를 작은 변위(앞뒤·옆·회전)로 움직였을 때 늘어난 줄만 당기는 탄성 모델로 각 줄의 장력을 푼다. 줄 굵기와 색이 장력을, 회색은 느슨한 줄을 뜻한다. 해볼 것: ① 풍향 90°(부두 쪽에서 바다 쪽으로 부는 바람)이면 브레스트 라인이 가장 힘들다. ② 풍향 270°면 배가 펜더로 밀려 줄은 느슨해진다. ③ 공선 컨테이너선은 수면 위 면적이 커서 바람에 특히 약하다. OCIMF 지침은 정상 운영 중 줄 장력을 MBL의 50% 이하로 둘 것을 권한다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== summary -->
+  <section class="keypoints" id="summary">
+    <h2>핵심 정리</h2>
+    <ol>
+      <li>타는 소종횡비 날개여서 실속각이 35° 안팎이다. 타력은 \(\tfrac12\rho A_R V_R^2 C_L\)이고, 프로펠러 후류가 \(V_R\)을 키워 저속에서도 타가 듣게 한다.</li>
+      <li>타력은 선미를 바깥으로 밀어 선체를 비스듬히 세우는 방아쇠이고, 배를 원 궤도로 끄는 힘은 편류각으로 생긴 선체 양력이다. 피벗 포인트는 선수에서 약 L/5~L/4 지점이다.</li>
+      <li>노모토 모델 \(T\dot r + r = K\delta\)에서 \(K'\)는 선회 지름(\(R/L = 1/K'\delta\))을, \(T'\)는 반응의 굼뜸(전진거리, 오버슈트)을 정한다. IMO 기준은 전진거리 4.5 L, 선회 지름 5 L 이하다.</li>
+      <li>지그재그 시험은 오버슈트로 변침·보침성을, 나선 시험은 이력 고리로 침로 안정성을 평가한다.</li>
+      <li>크래시 스톱의 진출 거리는 기관 역전 시간 동안 간 거리와 후진 추력에 의한 감속 거리의 합이며, 대형선은 10~15 L에 이른다. 편압 효과로 진로도 크게 벗어난다.</li>
+      <li>스쿼트는 \(C_b V^2/100\)(개방 수역) 정도이고 속력의 제곱에 비례한다. 얕은 물에서는 선회 지름과 정지 거리가 커진다.</li>
+      <li>둑 가까이에서는 선미가 빨려 들고 선수가 밀려나며, 나란히 지나는 두 배는 끌어당기고 회두 모멘트가 방향을 바꾼다. 해법은 감속과 간격 확보다.</li>
+      <li>닻을 붙잡는 것은 해저에 누운 체인이다. 카테너리 \(s = \sqrt{h^2 + 2ah}\)보다 체인이 길어야 닻이 수평으로 당겨진다. 계류줄 장력은 바람·조류 하중을 줄의 강성 비율로 나눠 갖는다.</li>
+    </ol>
+  </section>
+
+  <!-- =============================================================== quiz -->
+  <section class="quiz-sec" id="quiz">
+    <h2>확인 퀴즈</h2>
+    <div class="quiz">
+      <div class="quiz-q"><p>Q1. 우현 타를 쓴 직후, 배의 선미는 어느 쪽으로 밀리는가?</p><div class="opts">
+        <button class="opt">우현 쪽</button><button class="opt" data-correct>좌현 쪽</button><button class="opt">밀리지 않는다</button><button class="opt">아래쪽</button>
+      </div><div class="quiz-exp">우현 타는 타 뒷날을 우현으로 돌린 것이고, 타의 양력은 선미를 좌현으로 민다. 선미가 좌현으로 가면 선수는 우현을 향하고, 비스듬해진 선체가 받는 양력이 배를 우현 선회 궤도로 끈다.</div></div>
+
+      <div class="quiz-q"><p>Q2. 노모토 지수 \(K' = 1.2\)인 배가 타각 20°(0.349 rad)로 정상 선회한다. 정상 선회 지름은 배 길이의 약 몇 배인가?</p><div class="opts">
+        <button class="opt">약 2.4 L</button><button class="opt">약 3.6 L</button><button class="opt" data-correct>약 4.8 L</button><button class="opt">약 9.5 L</button>
+      </div><div class="quiz-exp">\(R/L = 1/(K'\delta) = 1/(1.2 \times 0.349) = 2.39\), 지름은 그 두 배인 약 4.8 L이다.</div></div>
+
+      <div class="quiz-q"><p>Q3. 노모토 지수 T'만 크게 하면 선회 시험 결과는 어떻게 바뀌는가?</p><div class="opts">
+        <button class="opt">정상 선회 지름이 커진다</button><button class="opt" data-correct>정상 선회 지름은 거의 같고 전진거리가 늘어난다</button><button class="opt">전진거리가 줄어든다</button><button class="opt">선회 방향이 바뀐다</button>
+      </div><div class="quiz-exp">정상 선회율 \(K\delta\)는 T와 무관하다. T가 크면 선회율이 자리 잡는 데 오래 걸려 그동안 처음 침로로 더 나아가므로 전진거리가 늘어난다.</div></div>
+
+      <div class="quiz-q"><p>Q4. 나선 시험에서 원점 근처에 이력 고리가 나타났다. 이것이 뜻하는 것은?</p><div class="opts">
+        <button class="opt">타의 실속</button><button class="opt">선회성이 매우 나쁘다</button><button class="opt" data-correct>침로 불안정: 타 중앙에서도 배가 한쪽으로 돈다</button><button class="opt">조타기 고장</button>
+      </div><div class="quiz-exp">\(n_1 &lt; 0\)이면 정상 해 곡선이 S자가 되어 한 타각에 선회 방향이 다른 해가 둘 생긴다. 타를 0으로 두어도 배는 어느 한쪽으로 계속 돈다.</div></div>
+
+      <div class="quiz-q"><p>Q5. 크래시 스톱에서 정지 거리를 가장 크게 늘리는 요인 중 하나는?</p><div class="opts">
+        <button class="opt">타 면적이 작은 것</button><button class="opt" data-correct>기관 역전에 걸리는 시간 동안 거의 처음 속력으로 진행하는 것</button><button class="opt">해수 밀도</button><button class="opt">바우 스러스터가 없는 것</button>
+      </div><div class="quiz-exp">역전 시간이 90 s이면 15 kn(7.7 m/s)인 배는 그동안 약 700 m를 간다. 여기에 후진 추력에 의한 감속 거리가 더해진다.</div></div>
+
+      <div class="quiz-q"><p>Q6. \(C_b = 0.8\)인 배가 개방된 얕은 수역을 10 kn으로 지날 때 Barrass 근사의 최대 스쿼트는?</p><div class="opts">
+        <button class="opt">0.4 m</button><button class="opt" data-correct>0.8 m</button><button class="opt">1.6 m</button><button class="opt">8 m</button>
+      </div><div class="quiz-exp">\(S = C_b V^2/100 = 0.8 \times 100/100 = 0.8\) m. 좁은 수로라면 2배인 1.6 m가 된다. 비대선이므로 선수가 더 가라앉는다.</div></div>
+
+      <div class="quiz-q"><p>Q7. 배가 우현 둑에 가깝게 직진할 때 뱅크 효과로 일어나는 일은?</p><div class="opts">
+        <button class="opt">선미가 둑에서 멀어지고 선수가 둑으로 향한다</button><button class="opt" data-correct>선미가 둑으로 빨려 들고 선수는 둑에서 멀어진다(좌현으로 회두)</button><button class="opt">배 전체가 둑에서 밀려난다</button><button class="opt">아무 일도 없다</button>
+      </div><div class="quiz-exp">둑과 선미 사이 좁은 틈의 저압이 선미를 끌고, 선수 앞의 압력파가 선수를 밀어낸다. 이를 막으려면 둑 쪽(우현)으로 타를 써야 한다.</div></div>
+
+      <div class="quiz-q"><p>Q8. 수심 30 m에서 닻이 끌리기 시작했다. 가장 먼저 시도할 만한 조치는?</p><div class="opts">
+        <button class="opt">체인을 감아 짧게 한다</button><button class="opt" data-correct>체인을 더 내어 스코프를 늘린다</button><button class="opt">닻을 들어 올린다</button><button class="opt">밸러스트를 뺀다</button>
+      </div><div class="quiz-exp">체인을 더 내면 해저에 눕는 길이가 늘어 닻이 수평으로 당겨지고 체인 마찰이 더해진다. 그래도 안 되면 두 번째 닻을 내리거나 기관을 써서 장력을 줄인다.</div></div>
+    </div>
+  </section>
+</main>
+<script>
+/* ---------- 공통 지역 헬퍼 (12장) ---------- */
+window.MV = (function () {
+  const font = () => getComputedStyle(document.body).getPropertyValue("--font");
+  const mono = () => getComputedStyle(document.body).getPropertyValue("--mono");
+  function text(ctx, s, x, y, o = {}) {
+    ctx.save();
+    ctx.font = (o.bold ? "700 " : "") + (o.size || 12) + "px " + (o.mono ? mono() : font());
+    ctx.fillStyle = o.color || SB.palette().text; ctx.textAlign = o.align || "left"; ctx.textBaseline = o.base || "alphabetic";
+    if (o.bg) { const m = ctx.measureText(s), pw = m.width + 8, ph = (o.size || 12) + 6; let bx = x - 4; if (o.align === "center") bx = x - pw / 2; else if (o.align === "right") bx = x - pw + 4; ctx.fillStyle = o.bg; ctx.fillRect(bx, y - (o.size || 12) - 1, pw, ph); ctx.fillStyle = o.color || SB.palette().text; }
+    ctx.fillText(s, x, y); ctx.restore();
+  }
+  function lineSeg(ctx, x1, y1, x2, y2, color, w = 1, dash) { ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = w; if (dash) ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.restore(); }
+  function grid(ctx, w, h, ox, oy, step, color) { ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.beginPath(); let x0 = ((ox % step) + step) % step, y0 = ((oy % step) + step) % step; for (let x = x0; x <= w; x += step) { ctx.moveTo(x, 0); ctx.lineTo(x, h); } for (let y = y0; y <= h; y += step) { ctx.moveTo(0, y); ctx.lineTo(w, y); } ctx.stroke(); ctx.restore(); }
+  function setCls(id, cls) { const el = document.getElementById(id); if (!el) return; el.classList.remove("ok", "bad", "warn"); if (cls) el.classList.add(cls); }
+  return { text, lineSeg, grid, setCls, font, mono };
+})();
+</script>
+<script>
+/* ---------- 1. 타 단면 유동과 힘 ---------- */
+(function () {
+  const ang = SB.range("rd-ang", (v) => v + "°", () => cv.redraw());
+  const vel = SB.range("rd-v", (v) => v + " kn", () => cv.redraw());
+  const thr = SB.range("rd-t", (v) => v + " %", () => cv.redraw());
+  const ar = SB.range("rd-ar", (v) => v.toFixed(1), () => cv.redraw());
+  const A_R = 37, D_P = 6.5, A0 = Math.PI * D_P * D_P / 4, T_NOM = 1.2e6, Lship = 200;
+  function stallDeg(L) { return 22 + 15 / L; }
+  function coef(aDeg, L) {
+    const a = SB.rad(Math.abs(aDeg)), slope = (2 * Math.PI * L) / (L + 2), as = stallDeg(L);
+    const pre = (x) => slope * Math.sin(x) * Math.cos(x) + 0.8 * Math.sin(x) ** 2 * Math.cos(x);
+    let CL, CD;
+    if (Math.abs(aDeg) <= as) { CL = pre(a); CD = 0.012 + (CL * CL) / (Math.PI * L * 0.9); }
+    else {
+      const CLs = pre(SB.rad(as)), ex = Math.abs(aDeg) - as;
+      CL = CLs * (0.62 + 0.38 * Math.max(0, 1 - ex / 2)) * Math.cos(SB.rad(ex) * 0.8);
+      CD = 0.1 + 1.15 * Math.sin(a) ** 2;
+    }
+    return { CL: CL * Math.sign(aDeg || 1), CD, stalled: Math.abs(aDeg) > as };
+  }
+  function flow() {
+    const V = SB.ms(vel()), VA = 0.7 * V, T = (thr() / 100) * T_NOM;
+    const VR2 = VA * VA + 0.75 * (2 * T) / (SB.RHO * A0);
+    return { V, VA, VR: Math.sqrt(VR2), VR2 };
+  }
+  // 입자
+  const parts = []; for (let i = 0; i < 160; i++) parts.push({ x: Math.random(), y: Math.random(), age: Math.random() * 3 });
+  let tAnim = 0;
+  const cv = SB.canvas("#cv-rudder", (ctx, w, h) => {
+    const P = SB.palette(), narrow = w < 560;
+    const fw = narrow ? w : w * 0.6, fh = narrow ? h * 0.6 : h;
+    const d = ang(), Lam = ar(), c = coef(d, Lam), f = flow();
+    // ---- 유동 영역
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, fw, fh); ctx.clip();
+    ctx.fillStyle = SB.color("water-soft"); ctx.fillRect(0, 0, fw, fh);
+    const cx = fw * 0.5, cy = fh * 0.5, chord = Math.min(fw * 0.42, fh * 0.9);
+    const th = SB.rad(-d);  // 우현 타 = 뒷날이 위(우현)로
+    const qx = cx - Math.cos(th) * chord * 0.25, qy = cy - Math.sin(th) * chord * 0.25; // 1/4 시위점(앞날 쪽)
+    const Gam = c.stalled ? 0.5 * chord * c.CL * 0.85 : 0.5 * chord * c.CL; // 순환(유속 1 기준, px)
+    // 부호: 양력이 아래(좌현)면 하류 흐름이 위로 꺾인다
+    const sgn = c.CL >= 0 ? 1 : -1;
+    const vfield = (x, y) => {
+      const dx = x - qx, dy = y - qy, r2 = dx * dx + dy * dy + chord * chord * 0.01, k = Math.abs(Gam) / (2 * Math.PI) * sgn;
+      return [1 + (k * dy) / r2, (-k * dx) / r2];
+    };
+    // 유선
+    ctx.strokeStyle = SB.color("water"); ctx.globalAlpha = 0.55; ctx.lineWidth = 1.1;
+    const nS = 13;
+    for (let i = 0; i < nS; i++) {
+      let x = 0, y = (fh * (i + 0.5)) / nS;
+      ctx.beginPath(); ctx.moveTo(x, y);
+      for (let k = 0; k < 400 && x < fw; k++) { const [u, v] = vfield(x, y), m = Math.hypot(u, v) || 1; x += (u / m) * 4; y += (v / m) * 4; ctx.lineTo(x, y); }
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    // 입자
+    ctx.fillStyle = P.accent;
+    const spd = 0.12 + f.VR / 12;
+    parts.forEach((p) => {
+      const px = p.x * fw, py = p.y * fh, [u, v] = vfield(px, py);
+      ctx.globalAlpha = 0.7; ctx.beginPath(); ctx.arc(px, py, 1.6, 0, Math.PI * 2); ctx.fill();
+      p._u = u; p._v = v;
+    });
+    ctx.globalAlpha = 1;
+    // 실속 소용돌이(흡입면 = 양력 반대쪽이 아니라 양력 쪽 표면 뒤)
+    if (c.stalled) {
+      const nx = -Math.sin(th) * sgn, ny = Math.cos(th) * sgn; // 양력 방향 = 흡입면 쪽
+      const tex = cx + Math.cos(th) * chord * 0.5, tey = cy + Math.sin(th) * chord * 0.5;
+      for (let i = 0; i < 7; i++) {
+        const s = i / 6, ex = cx + (tex - cx) * s + nx * chord * 0.2 * (1 - 0.4 * s) + s * 0.45 * chord, ey = cy + (tey - cy) * s + ny * chord * 0.2 * (1 - 0.4 * s);
+        const rr = chord * (0.05 + 0.03 * i);
+        ctx.strokeStyle = P.bad; ctx.globalAlpha = 0.65 - i * 0.06; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(ex, ey, rr, tAnim * 3 * sgn + i, tAnim * 3 * sgn + i + 4.6); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+    // 타 단면 NACA 0018
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(th);
+    ctx.beginPath();
+    const N = 40, tt = 0.18;
+    const yt = (xx) => 5 * tt * (0.2969 * Math.sqrt(xx) - 0.126 * xx - 0.3516 * xx * xx + 0.2843 * xx ** 3 - 0.1015 * xx ** 4);
+    for (let i = 0; i <= N; i++) { const xx = (1 - Math.cos((Math.PI * i) / N)) / 2; ctx.lineTo((xx - 0.5) * chord, -yt(xx) * chord); }
+    for (let i = N; i >= 0; i--) { const xx = (1 - Math.cos((Math.PI * i) / N)) / 2; ctx.lineTo((xx - 0.5) * chord, yt(xx) * chord); }
+    ctx.closePath(); ctx.fillStyle = P.dim; ctx.fill(); ctx.strokeStyle = P.text; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = P.text; ctx.beginPath(); ctx.arc(-0.25 * chord, 0, 3, 0, Math.PI * 2); ctx.fill(); // 타축
+    ctx.restore();
+    // 힘 화살표 (양력: 흐름에 수직, 항력: 흐름 방향)
+    const Fsc = (Math.min(fh * 0.42, chord * 0.8)) / 1.6;
+    SB.arrow(ctx, qx, qy, qx, qy + c.CL * Fsc, P.accent2, 3);
+    SB.arrow(ctx, qx, qy, qx + c.CD * Fsc, qy, P.warn, 2.5);
+    MV.text(ctx, "양력 " + Math.abs(c.CL).toFixed(2), qx + 8, qy + c.CL * Fsc - 4, { color: P.accent2, bold: true, bg: SB.color("canvas-bg") });
+    MV.text(ctx, "항력", qx + c.CD * Fsc + 6, qy + 14, { color: P.warn, size: 11, bold: true });
+    // 방위 표시
+    MV.text(ctx, "← 선수 쪽 (흐름 →)", 8, 16, { color: P.dim, size: 11 });
+    MV.text(ctx, "우현 ↑", fw - 8, 16, { color: P.dim, size: 11, align: "right" });
+    MV.text(ctx, "좌현 ↓", fw - 8, fh - 8, { color: P.dim, size: 11, align: "right" });
+    if (c.stalled) MV.text(ctx, "실속!", 8, fh - 10, { color: P.bad, bold: true, size: 14 });
+    ctx.restore();
+    // ---- C_L 곡선
+    const box = narrow ? { x: 48, y: fh + 14, w: w - 64, h: h - fh - 50 } : { x: fw + 46, y: 18, w: w - fw - 60, h: h - 64 };
+    const sCL = [], sCD = [];
+    for (let a = 0; a <= 50; a += 0.5) { const q = coef(a, Lam); sCL.push([a, q.CL]); sCD.push([a, q.CD]); }
+    SB.chart(ctx, box, { x: [0, 50], y: [0, 2], xLabel: "받음각 α (°)", yLabel: narrow ? "" : "계수", xTicks: [0, 10, 20, 30, 40, 50],
+      series: [{ data: sCL, color: P.accent, width: 2.2 }, { data: sCD, color: P.warn, width: 1.5, dash: [5, 4] }],
+      vlines: [{ x: stallDeg(Lam), color: P.bad, label: "실속" }], points: [{ x: Math.abs(d), y: Math.abs(c.CL), color: P.accent2, r: 5 }] });
+    MV.text(ctx, "C_L", box.x + 6, box.y + 14, { color: P.accent, bold: true, size: 11, mono: true });
+    MV.text(ctx, "C_D", box.x + 40, box.y + 14, { color: P.warn, bold: true, size: 11, mono: true });
+    // readouts
+    const q = 0.5 * SB.RHO * A_R * f.VR2, Lf = q * Math.abs(c.CL), Df = q * c.CD;
+    SB.stat("o-rd-vr", SB.fmt(f.VR, 3) + "<small>m/s</small>");
+    SB.stat("o-rd-cl", Math.abs(c.CL).toFixed(2));
+    SB.stat("o-rd-ld", Math.round(Lf / 1000) + " / " + Math.round(Df / 1000) + "<small>kN</small>");
+    SB.stat("o-rd-fy", Math.round(Lf / 1000) + "<small>kN (" + (Lf / 9810).toFixed(0) + " t)</small>");
+    SB.stat("o-rd-n", SB.fmt((Lf * Lship * 0.5) / 1e6, 3) + "<small>MN·m</small>");
+    cv._fw = fw; cv._fh = fh; cv._vf = vfield; cv._spd = spd;
+  }, { aspect: 0.6, minHeight: 360, maxHeight: 460 });
+  SB.loop(document.getElementById("sim-rudder"), (dt) => {
+    tAnim += dt;
+    if (!cv._vf) return;
+    const fw = cv._fw, fh = cv._fh;
+    parts.forEach((p) => {
+      const px = p.x * fw, py = p.y * fh, [u, v] = cv._vf(px, py);
+      p.x += (u * cv._spd * dt * 300) / fw; p.y += (v * cv._spd * dt * 300) / fh;
+      if (p.x > 1 || p.y < 0 || p.y > 1 || !isFinite(p.x)) { p.x = Math.random() * 0.05; p.y = Math.random(); }
+    });
+    cv.redraw();
+  });
+})();
+</script>
+<script>
+/* ---------- 2. 피벗 포인트: 선형 2자유도 조종 운동 ---------- */
+(function () {
+  // 무차원 계수(½ρL²U, ½ρL³U 기준) — 대표적인 일반 화물선을 흉내 낸 값
+  const C = { m: 0.0123, Mv: 0.0243, Mr: 0.00137, Yv: -0.0344, Yr: 0.005, Nv: -0.011, Nr: -0.004, Yd: -0.002, Nd: 0.001 };
+  const L = 200, U = SB.ms(15), TS = 8; // 실제 1 s = 배 시간 8 s
+  const dsl = SB.range("pv-d", (v) => (v > 0 ? "우현 " : v < 0 ? "좌현 " : "") + Math.abs(v) + "°");
+  const vecOn = () => document.getElementById("pv-vec").checked;
+  const camOn = () => document.getElementById("pv-cam").checked;
+  let st;
+  function reset() { st = { x: 0, y: 0, psi: 0, v: 0, r: 0, d: 0, dcmd: 0, t: 0, trail: [], running: false }; cv.redraw(); upd(); }
+  document.getElementById("pv-run").onclick = () => { if (!st.running) { st.dcmd = SB.rad(dsl()); st.running = true; } };
+  document.getElementById("pv-reset").onclick = () => reset();
+  document.getElementById("pv-vec").onchange = () => cv.redraw();
+  document.getElementById("pv-cam").onchange = () => cv.redraw();
+  function step(dt) { // dt: 배 시간 s
+    const tp = (dt * U) / L, rate = SB.rad(2.32) * dt;
+    st.d += SB.clamp(st.dcmd - st.d, -rate, rate);
+    const vd = (C.Yv * st.v + (C.Yr - C.m) * st.r + C.Yd * st.d) / C.Mv;
+    const rd = (C.Nv * st.v + C.Nr * st.r + C.Nd * st.d) / C.Mr;
+    st.v += vd * tp; st.r += rd * tp;
+    const u = U, vv = st.v * U, rr = (st.r * U) / L;
+    st.x += (u * Math.cos(st.psi) - vv * Math.sin(st.psi)) * dt;
+    st.y += (u * Math.sin(st.psi) + vv * Math.cos(st.psi)) * dt;
+    st.psi += rr * dt; st.t += dt;
+  }
+  function upd() {
+    SB.stat("o-pv-t", st.t.toFixed(0) + "<small>s</small>");
+    SB.stat("o-pv-psi", SB.deg(st.psi).toFixed(1) + "°");
+    SB.stat("o-pv-b", SB.deg(Math.atan2(-st.v, 1)).toFixed(1) + "°");
+    const xp = Math.abs(st.r) > 0.02 ? -st.v / st.r : NaN;
+    SB.stat("o-pv-x", isFinite(xp) && Math.abs(xp) < 3 ? ((0.5 - xp) * L).toFixed(0) + "<small>m (" + (0.5 - xp).toFixed(2) + " L)</small>" : "—");
+  }
+  const cv = SB.canvas("#cv-pivot", (ctx, w, h) => {
+    if (!st) return;
+    const P = SB.palette(), follow = camOn();
+    const sc = follow ? (w * 0.5) / L : Math.min(w, h) / (L * 6);
+    const cx = follow ? w / 2 - st.x * sc : w * 0.18, cy = follow ? h / 2 - st.y * sc : h * 0.15;
+    const X = (x) => cx + x * sc, Y = (y) => cy + y * sc;
+    ctx.fillStyle = SB.color("water-soft"); ctx.fillRect(0, 0, w, h);
+    MV.grid(ctx, w, h, cx, cy, follow ? sc * 50 : sc * L, P.grid);
+    // 궤적
+    ctx.strokeStyle = P.accent; ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]); ctx.beginPath();
+    st.trail.forEach((p, i) => (i ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1])))); ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle = P.accent2; ctx.globalAlpha = 0.5; ctx.beginPath();
+    st.trail.forEach((p, i) => { const sx = p[0] - Math.cos(p[2]) * L / 2, sy = p[1] - Math.sin(p[2]) * L / 2; i ? ctx.lineTo(X(sx), Y(sy)) : ctx.moveTo(X(sx), Y(sy)); }); ctx.stroke(); ctx.globalAlpha = 1;
+    // 배
+    const len = L * sc;
+    SB.shipTop(ctx, X(st.x), Y(st.y), st.psi, { len, wid: len * 0.16, color: SB.color("hull"), rudder: st.d * 1.5 });
+    const c = Math.cos(st.psi), s = Math.sin(st.psi);
+    // 타력 화살표 (선미를 미는 방향)
+    if (Math.abs(st.d) > 0.01) {
+      const sx = X(st.x - c * L * 0.5), sy = Y(st.y - s * L * 0.5), F = -Math.sign(st.d) * Math.min(1, Math.abs(st.d) / 0.6) * len * 0.22;
+      SB.arrow(ctx, sx, sy, sx - s * F, sy + c * F, P.bad, 3);
+      if (follow) MV.text(ctx, "타력", sx - s * F + 4, sy + c * F + 12, { color: P.bad, bold: true, size: 11 });
+    }
+    // 횡속도 화살표
+    if (vecOn()) {
+      for (let k = -4; k <= 4; k++) {
+        const xr = k / 8.5, lv = st.v + xr * st.r; // 무차원 횡속도
+        const px = X(st.x + c * xr * L), py = Y(st.y + s * xr * L), a = lv * len * 1.2;
+        ctx.fillStyle = P.text; ctx.beginPath(); ctx.arc(px, py, 2, 0, Math.PI * 2); ctx.fill();
+        if (Math.abs(a) > 2) SB.arrow(ctx, px, py, px - s * a, py + c * a, P.accent, 1.8);
+      }
+    }
+    const xp = Math.abs(st.r) > 0.02 ? -st.v / st.r : NaN;
+    if (isFinite(xp) && Math.abs(xp) < 0.7) {
+      const px = X(st.x + c * xp * L), py = Y(st.y + s * xp * L);
+      ctx.fillStyle = P.warn; ctx.strokeStyle = P.text; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(px, py, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      if (follow) MV.text(ctx, "피벗 포인트", px + 10, py - 10, { color: P.text, size: 12, bold: true, bg: SB.color("bg-elev") });
+    }
+    MV.text(ctx, follow ? "격자 50 m" : "격자 1 L = 200 m", 8, h - 8, { color: P.dim, size: 11 });
+    if (!st.running) MV.text(ctx, "‘타 사용’을 누르면 시작", w / 2, 22, { align: "center", color: P.dim, size: 13 });
+  }, { aspect: 0.62, minHeight: 300, maxHeight: 460 });
+  reset();
+  let acc = 0;
+  SB.loop(document.getElementById("sim-pivot"), (dt) => {
+    if (!st.running) return;
+    const T = dt * TS, n = Math.ceil(T / 0.25);
+    for (let i = 0; i < n; i++) step(T / n);
+    acc += T; if (acc > 2) { acc = 0; st.trail.push([st.x, st.y, st.psi]); if (st.trail.length > 600) st.trail.shift(); }
+    if (st.t > 900) st.running = false;
+    cv.redraw(); upd();
+  });
+})();
+</script>
+<script>
+/* ---------- 3. 선회 시험 (노모토 1차 모델) ---------- */
+(function () {
+  const PRE = { gen: { L: 200, V: 15, K: 1.1, T: 2.0 }, ctr: { L: 350, V: 22, K: 0.85, T: 1.5 }, vlcc: { L: 320, V: 15, K: 1.6, T: 3.0 } };
+  const dS = SB.range("tc-d", (v) => v + "°", () => compute(true));
+  const vS = SB.range("tc-v", (v) => v + " kn", () => compute(true));
+  const kS = SB.range("tc-k", (v) => v.toFixed(2), () => compute(true));
+  const tS = SB.range("tc-tt", (v) => v.toFixed(1), () => compute(true));
+  let L = 200;
+  const ship = SB.seg("tc-ship", (v) => { const p = PRE[v]; L = p.L; vS.set(p.V); kS.set(p.K); tS.set(p.T); compute(true); });
+  let tr = null, show = 0, anim = false;
+  function compute(instant) {
+    const U0 = SB.ms(vS()), Kp = kS(), Tp = tS(), dmax = SB.rad(dS());
+    let x = -1.0 * L, y = 0, psi = 0, r = 0, U = U0, d = 0, t = 0;
+    const out = [], dt = 0.5; let adv = NaN, trn = NaN, tac = NaN, t90 = NaN;
+    const rate = SB.rad(2.32);
+    // 1 L 직진 후 타 사용
+    while (x < 0) { out.push([x, y, psi, 0, t]); x += U * dt; t += dt; }
+    const t0 = t, x0 = x, y0 = y;
+    for (let i = 0; i < 20000; i++) {
+      d = Math.min(dmax, d + rate * dt);
+      const K = (Kp * U) / L, T = (Tp * L) / U;
+      r += ((K * d - r) / T) * dt;
+      const rp = (r * L) / U, Uss = U0 / (1 + 1.2 * rp * rp);
+      U += ((Uss - U) / (2.5 * L / U0)) * dt;
+      const beta = 0.27 * rp, crs = psi - beta;
+      x += U * Math.cos(crs) * dt; y += U * Math.sin(crs) * dt; psi += r * dt; t += dt;
+      out.push([x, y, psi, d, t]);
+      if (isNaN(adv) && psi >= Math.PI / 2) { adv = x - x0; trn = y - y0; t90 = t - t0; }
+      if (isNaN(tac) && psi >= Math.PI) tac = y - y0;
+      if (psi > 2 * Math.PI + 0.3) break;
+    }
+    const Ufin = U, Rss = Ufin / r;
+    tr = { pts: out, adv, trn, tac, t90, D: 2 * Rss, Ufin, U0 };
+    show = instant ? out.length : 0; anim = !instant;
+    SB.stat("o-tc-adv", fmtL(adv, 4.5)); SB.stat("o-tc-tr", fmtL(trn)); SB.stat("o-tc-td", fmtL(tac, 5));
+    SB.stat("o-tc-sd", fmtL(tr.D)); SB.stat("o-tc-t90", isFinite(t90) ? (t90 / 60).toFixed(1) + "<small>분</small>" : "—");
+    SB.stat("o-tc-vs", SB.kn(Ufin).toFixed(1) + "<small>kn (" + Math.round((Ufin / U0) * 100) + "%)</small>");
+    MV.setCls("o-tc-adv", adv / L > 4.5 ? "bad" : "ok"); MV.setCls("o-tc-td", tac / L > 5 ? "bad" : "ok");
+    cv.redraw();
+  }
+  const fmtL = (v, lim) => (isFinite(v) ? Math.round(v) + "<small>m · " + (v / L).toFixed(2) + " L</small>" : "—");
+  document.getElementById("tc-run").onclick = () => { compute(false); };
+  document.getElementById("tc-inst").onclick = () => compute(true);
+  const cv = SB.canvas("#cv-turn", (ctx, w, h) => {
+    if (!tr) return;
+    const P = SB.palette();
+    let xmin = -1.2 * L, xmax = 5 * L, ymin = -0.8 * L, ymax = 5.5 * L;
+    tr.pts.forEach((p) => { xmin = Math.min(xmin, p[0]); xmax = Math.max(xmax, p[0]); ymax = Math.max(ymax, p[1]); });
+    const pad = 22, sc = Math.min((w - 2 * pad) / (xmax - xmin), (h - 2 * pad) / (ymax - ymin));
+    const ox = pad - xmin * sc + ((w - 2 * pad) - (xmax - xmin) * sc) / 2, oy = pad - ymin * sc;
+    const X = (x) => ox + x * sc, Y = (y) => oy + y * sc;
+    ctx.fillStyle = SB.color("water-soft"); ctx.fillRect(0, 0, w, h);
+    MV.grid(ctx, w, h, X(0), Y(0), L * sc, P.grid);
+    // IMO 기준선
+    MV.lineSeg(ctx, X(4.5 * L), 0, X(4.5 * L), h, P.faint, 1.2, [6, 5]);
+    MV.lineSeg(ctx, 0, Y(5 * L), w, Y(5 * L), P.faint, 1.2, [6, 5]);
+    MV.text(ctx, "전진거리 4.5L", X(4.5 * L) + 4, 14, { color: P.dim, size: 11 });
+    MV.text(ctx, "선회 지름 5L", 6, Y(5 * L) - 5, { color: P.dim, size: 11 });
+    MV.lineSeg(ctx, X(0), 0, X(0), h, P.axis, 1, [2, 4]);
+    MV.text(ctx, "타 사용", X(0) + 4, Y(0) - 8, { color: P.dim, size: 11 });
+    // 궤적
+    const n = Math.min(show, tr.pts.length);
+    ctx.strokeStyle = P.accent; ctx.lineWidth = 2.2; ctx.beginPath();
+    for (let i = 0; i < n; i++) { const p = tr.pts[i]; i ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1])); }
+    ctx.stroke();
+    // 측정 표시 (완료 부분만)
+    const done = n >= tr.pts.length - 1;
+    if (done && isFinite(tr.adv)) {
+      ctx.fillStyle = P.accent2;
+      ctx.beginPath(); ctx.arc(X(tr.adv), Y(tr.trn), 4, 0, 7); ctx.fill();
+      MV.lineSeg(ctx, X(0), Y(-0.35 * L), X(tr.adv), Y(-0.35 * L), P.accent2, 1.5);
+      MV.text(ctx, "전진거리 " + (tr.adv / L).toFixed(2) + "L", X(tr.adv / 2), Y(-0.35 * L) - 5, { align: "center", color: P.accent2, size: 11, bold: true });
+      if (isFinite(tr.tac)) {
+        const xt = Math.max(X(tr.adv) + 30, X(4.5 * L) - 40);
+        MV.lineSeg(ctx, xt, Y(0), xt, Y(tr.tac), P.accent2, 1.5);
+        MV.text(ctx, "선회 지름 " + (tr.tac / L).toFixed(2) + "L", xt + 4, Y(tr.tac / 2), { color: P.accent2, size: 11, bold: true });
+      }
+    }
+    // 배 (몇 개 잔상 + 현재)
+    const len = Math.max(14, L * sc);
+    const stepG = Math.max(1, Math.floor(tr.pts.length / 9)); for (let i = stepG; i < n - stepG / 2; i += stepG) { const p = tr.pts[i]; SB.shipTop(ctx, X(p[0]), Y(p[1]), p[2], { len, color: P.faint, alpha: 0.3, house: false }); }
+    const p = tr.pts[Math.max(0, n - 1)];
+    SB.shipTop(ctx, X(p[0]), Y(p[1]), p[2], { len, color: SB.color("hull"), rudder: p[3] * 1.5 });
+    MV.text(ctx, "격자 1 L = " + L + " m", w - 8, h - 8, { align: "right", color: P.dim, size: 11 });
+  }, { aspect: 0.75, minHeight: 300, maxHeight: 560 });
+  compute(true);
+  SB.loop(document.getElementById("sim-turn"), (dt) => {
+    if (!anim || !tr) return;
+    show += Math.max(2, tr.pts.length / 360);
+    if (show >= tr.pts.length) { show = tr.pts.length; anim = false; }
+    cv.redraw();
+  });
+})();
+</script>
+<script>
+/* ---------- 4. 지그재그 시험 ---------- */
+(function () {
+  const mode = SB.seg("zz-mode", () => run(true));
+  const kS = SB.range("zz-k", (v) => v.toFixed(2), () => run(true));
+  const tS = SB.range("zz-t", (v) => v.toFixed(1), () => run(true));
+  const lv = SB.range("zz-lv", (v) => v + " s", () => run(true));
+  const rr = SB.range("zz-rr", (v) => v.toFixed(1) + "°/s", () => run(true));
+  let res = null, show = 0, anim = false;
+  function run(instant) {
+    const A = Number(mode()), LV = lv(), K = kS() / LV, T = tS() * LV, rate = rr();
+    let psi = 0, r = 0, d = 0, cmd = A, t = 0; const dt = 0.1, out = [];
+    const os = []; let ext = 0, ti = NaN, lastSwitch = -1, nsw = 0;
+    const tEnd = LV * 14;
+    while (t < tEnd) {
+      if (cmd > 0 && psi >= A) { cmd = -A; nsw++; if (nsw > 1) os.push(ext); ext = psi; if (isNaN(ti)) ti = t; }
+      else if (cmd < 0 && psi <= -A) { cmd = A; nsw++; os.push(ext); ext = psi; }
+      if (cmd < 0) ext = Math.max(ext, psi); else if (nsw) ext = Math.min(ext, psi);
+      d += SB.clamp(cmd - d, -rate * dt, rate * dt);
+      r += ((K * d - r) / T) * dt; psi += r * dt; t += dt;
+      out.push([t, psi, d]);
+    }
+    const o1 = os[0] != null ? Math.abs(os[0]) - A : NaN, o2 = os[1] != null ? Math.abs(os[1]) - A : NaN;
+    let lim1 = A === 10 ? (LV < 10 ? 10 : LV >= 30 ? 20 : 5 + LV / 2) : 25, lim2 = A === 10 ? lim1 + 15 : NaN;
+    res = { out, A, o1, o2, lim1, lim2, ti, tEnd };
+    show = instant ? out.length : 0; anim = !instant;
+    SB.stat("o-zz-o1", isFinite(o1) ? o1.toFixed(1) + "°" : "—"); SB.stat("o-zz-o2", isFinite(o2) ? o2.toFixed(1) + "°" : "—");
+    SB.stat("o-zz-lim", lim1.toFixed(1) + "°" + (A === 10 ? "<small> / 2차 " + lim2.toFixed(0) + "°</small>" : ""));
+    SB.stat("o-zz-ti", isFinite(ti) ? ti.toFixed(0) + "<small>s (" + (ti / LV).toFixed(2) + " L/V)</small>" : "—");
+    MV.setCls("o-zz-o1", o1 > lim1 ? "bad" : "ok"); MV.setCls("o-zz-o2", A === 10 && o2 > lim2 ? "bad" : A === 10 ? "ok" : "");
+    cv.redraw();
+  }
+  document.getElementById("zz-run").onclick = () => run(false);
+  const cv = SB.canvas("#cv-zz", (ctx, w, h) => {
+    if (!res) return;
+    const P = SB.palette(), ymax = Math.ceil((Math.max(res.A * 2.2, res.A + (res.o1 || 0) + 5, res.A + res.lim1 + 4)) / 5) * 5;
+    const n = Math.min(Math.floor(show), res.out.length);
+    const sub = res.out.slice(0, n);
+    const ch = SB.chart(ctx, { x: 52, y: 14, w: w - 70, h: h - 60 }, { x: [0, res.tEnd], y: [-ymax, ymax], xLabel: "시간 (s)", yLabel: "각도 (°)",
+      hlines: [{ y: res.A, color: P.faint }, { y: -res.A, color: P.faint }, { y: res.A + res.lim1, color: P.bad, label: "IMO 1차 기준", dash: [3, 4] }],
+      series: [{ data: sub.map((p) => [p[0], p[2]]), color: P.accent2, width: 1.8 }, { data: sub.map((p) => [p[0], p[1]]), color: P.accent, width: 2.4 }] });
+    // 오버슈트 표시
+    if (n >= res.out.length && isFinite(res.o1)) {
+      const p1 = res.out.reduce((m, p) => (p[0] < res.ti + res.tEnd * 0.4 && p[1] > m[1] ? p : m), [0, -1e9]);
+      MV.text(ctx, "1차 오버슈트 " + res.o1.toFixed(1) + "°", ch.X(p1[0]) + 6, ch.Y(p1[1]) - 4, { color: P.accent, bold: true, size: 11, bg: SB.color("canvas-bg") });
+    }
+    MV.text(ctx, "ψ 선수각", 60, 28, { color: P.accent, bold: true, size: 12 });
+    MV.text(ctx, "δ 타각", 130, 28, { color: P.accent2, bold: true, size: 12 });
+    // 작은 배 아이콘
+    if (n > 0) { const p = res.out[n - 1]; const bx = w - 46, by = 52; ctx.fillStyle = SB.color("water-soft"); ctx.beginPath(); ctx.arc(bx, by, 34, 0, 7); ctx.fill(); SB.shipTop(ctx, bx, by, SB.rad(p[1]) - Math.PI / 2, { len: 52, color: SB.color("hull"), rudder: SB.rad(p[2]) * 2 }); }
+  }, { aspect: 0.55, minHeight: 280, maxHeight: 420 });
+  run(true);
+  SB.loop(document.getElementById("sim-zz"), () => {
+    if (!anim) return; show += res.out.length / 420; if (show >= res.out.length) { show = res.out.length; anim = false; } cv.redraw();
+  });
+})();
+</script>
+<script>
+/* ---------- 5. 나선 시험 ---------- */
+(function () {
+  const n1S = SB.range("sp-n1", (v) => v.toFixed(2), () => { pts = []; cur = null; running = false; cv.redraw(); stat(); });
+  const stS = SB.range("sp-step", (v) => v + "°");
+  const K = 1, n3 = 2, Tp = 2;
+  let pts = [], cur = null, running = false, seq = [], idx = 0, r = 0, tIn = 0;
+  const H = (r) => n1S() * r + n3 * r * r * r;
+  function stat() {
+    const n1 = n1S();
+    let wdt = 0; if (n1 < 0) { const rc = Math.sqrt(-n1 / (3 * n3)); wdt = 2 * SB.deg(Math.abs(H(rc)) / K); }
+    SB.stat("o-sp-w", n1 < 0 ? "±" + (wdt / 2).toFixed(1) + "°" : "없음");
+    SB.stat("o-sp-j", n1 < 0 ? "침로 불안정" : "침로 안정"); MV.setCls("o-sp-j", n1 < 0 ? "bad" : "ok");
+    SB.stat("o-sp-d", cur ? cur[0].toFixed(0) + "°" : "—"); SB.stat("o-sp-r", cur ? cur[1].toFixed(3) : "—");
+  }
+  document.getElementById("sp-run").onclick = () => {
+    const s = stS(); seq = [];
+    for (let d = 20; d >= -20; d -= s) seq.push(d);
+    for (let d = -20 + s; d <= 20; d += s) seq.push(d);
+    pts = []; idx = 0; r = 0.5; tIn = 0; running = true;
+  };
+  document.getElementById("sp-reset").onclick = () => { pts = []; cur = null; running = false; cv.redraw(); stat(); };
+  const cv = SB.canvas("#cv-spiral", (ctx, w, h) => {
+    const P = SB.palette(), curve = [], curveU = [];
+    for (let rr = -0.9; rr <= 0.9001; rr += 0.005) { const d = SB.deg(H(rr) / K); const slope = n1S() + 3 * n3 * rr * rr; (slope >= 0 ? curve : curveU).push([d, rr]); }
+    // 안정 가지를 연속 선으로 그리기 위해 분리
+    const left = curve.filter((p) => p[1] < 0), right = curve.filter((p) => p[1] >= 0);
+    const ch = SB.chart(ctx, null, { x: [-25, 25], y: [-0.8, 0.8], xLabel: "타각 δ (°)  · + 우현", yLabel: "무차원 선회율 r'",
+      vlines: [{ x: 0, color: P.axis, dash: [2, 3] }], hlines: [{ y: 0, color: P.axis, dash: [2, 3] }],
+      series: [{ data: left, color: P.faint, width: 2 }, { data: right, color: P.faint, width: 2 }, { data: curveU, color: P.faint, width: 1.5, dash: [4, 4] }] });
+    pts.forEach((p) => { ctx.fillStyle = p[2] ? P.accent : P.accent2; ctx.beginPath(); ctx.arc(ch.X(p[0]), ch.Y(p[1]), 3.6, 0, 7); ctx.fill(); });
+    if (cur) { ctx.strokeStyle = P.text; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(ch.X(cur[0]), ch.Y(cur[1]), 7, 0, 7); ctx.stroke(); }
+    MV.text(ctx, "● 타각 줄이는 중", ch.box.x + 8, ch.box.y + 14, { color: P.accent, size: 11, bold: true });
+    MV.text(ctx, "● 타각 늘리는 중", ch.box.x + 8, ch.box.y + 30, { color: P.accent2, size: 11, bold: true });
+    MV.text(ctx, "점선: 불안정한 정상 해", ch.box.x + ch.box.w - 6, ch.box.y + ch.box.h - 8, { align: "right", color: P.dim, size: 11 });
+  }, { aspect: 0.62, minHeight: 280, maxHeight: 420 });
+  stat();
+  SB.loop(document.getElementById("sim-spiral"), (dt) => {
+    if (!running) return;
+    const d = SB.rad(seq[idx]);
+    for (let k = 0; k < 40; k++) { r += ((K * d - H(r)) / Tp) * 0.05; }
+    tIn += dt; cur = [seq[idx], r];
+    if (tIn > 0.22) { pts.push([seq[idx], r, idx < seq.length / 2]); idx++; tIn = 0; if (idx >= seq.length) running = false; }
+    cv.redraw(); stat();
+  });
+})();
+</script>
+<script>
+/* ---------- 6. 크래시 스톱 ---------- */
+(function () {
+  const SH = { gen: { L: 200, disp: 50500, Vd: 15, Rd: 0.9e6 }, ctr: { L: 350, disp: 178000, Vd: 22, Rd: 3.6e6 }, vlcc: { L: 320, disp: 339000, Vd: 15, Rd: 2.2e6 } };
+  const ship = SB.seg("cs-ship", (v) => { vS.set(SH[v].Vd); });
+  const mode = SB.seg("cs-mode", () => run(true));
+  const vS = SB.range("cs-v", (v) => v + " kn", () => run(true));
+  const aS = SB.range("cs-a", (v) => v + " %", () => run(true));
+  const tS = SB.range("cs-tr", (v) => v + " s", () => run(true));
+  let res = null, show = 0, anim = false;
+  function run(instant) {
+    const S = SH[ship()], U0 = SB.ms(vS()), Ud = SB.ms(S.Vd), M = S.disp * 1000 * 1.07;
+    const R = (U) => S.Rd * (U / Ud) * Math.abs(U / Ud);
+    const Tfull = S.Rd, T0 = R(U0), Ta = (aS() / 100) * Tfull, trev = tS(), crash = mode() === "crash";
+    const kappa = 1.2e-3 * (200 / S.L);
+    let t = 0, U = U0, x = 0, y = 0, psi = 0; const dt = 0.5, out = [];
+    const thrust = (t) => {
+      if (t < 10) return T0 * (1 - t / 10);
+      if (!crash || t < trev) return 0;
+      return -Ta * Math.min(1, (t - trev) / 20);
+    };
+    while (t < 7200) {
+      const T = thrust(t);
+      U += ((T - R(U)) / M) * dt;
+      if (T < 0 && U > 0.2) psi += kappa * (-T / Tfull) * dt;
+      x += U * Math.cos(psi) * dt; y += U * Math.sin(psi) * dt; t += dt;
+      out.push([t, x, y, psi, SB.kn(U), T / Tfull]);
+      if (crash && U <= 0) break;
+      if (!crash && SB.kn(U) <= 2) break;
+    }
+    res = { out, L: S.L, t, x, y, U0, crash, disp: S.disp, ok: t < 7200 };
+    show = instant ? out.length : 0; anim = !instant;
+    SB.stat("o-cs-x", res.ok ? (x / 1000).toFixed(2) + "<small>km · " + (x / SB.NM).toFixed(2) + " nm</small>" : "—");
+    SB.stat("o-cs-l", res.ok ? (x / S.L).toFixed(1) + "<small> L</small>" : "—");
+    MV.setCls("o-cs-l", res.ok && crash ? (x / S.L > 15 ? "bad" : "ok") : "");
+    SB.stat("o-cs-t", res.ok ? (t / 60).toFixed(1) + "<small>분</small>" : "2시간 넘게");
+    SB.stat("o-cs-y", Math.round(y) + "<small>m 우현 · 선수 " + SB.deg(psi).toFixed(0) + "°</small>");
+    SB.stat("o-cs-m", (S.disp / 1000).toFixed(0) + "<small>천 톤</small>");
+    cv.redraw();
+  }
+  document.getElementById("cs-run").onclick = () => run(false);
+  const cv = SB.canvas("#cv-stop", (ctx, w, h) => {
+    if (!res) return;
+    const P = SB.palette(), L = res.L, ht = h * 0.48;
+    const n = Math.min(Math.floor(show), res.out.length), last = res.out[Math.max(0, n - 1)];
+    // --- 궤적
+    let xmax = Math.max(16 * L, res.x * 1.05), ymax = Math.max(3 * L, res.y * 1.3);
+    const sc = Math.min((w - 40) / (xmax + 2 * L), (ht - 30) / (ymax + 1.5 * L));
+    const ox = 20 + 1.2 * L * sc, oy = 18 + 0.8 * L * sc;
+    const X = (x) => ox + x * sc, Y = (y) => oy + y * sc;
+    ctx.fillStyle = SB.color("water-soft"); ctx.fillRect(0, 0, w, ht);
+    MV.grid(ctx, w, ht, ox, oy, L * sc, P.grid);
+    MV.lineSeg(ctx, X(15 * L), 0, X(15 * L), ht, P.bad, 1.2, [6, 5]);
+    MV.text(ctx, "IMO 15 L", X(15 * L) - 4, 14, { color: P.bad, size: 11, align: "right" });
+    MV.lineSeg(ctx, X(0), Y(0), X(xmax), Y(0), P.axis, 1, [2, 4]);
+    ctx.strokeStyle = P.accent; ctx.lineWidth = 2; ctx.beginPath();
+    for (let i = 0; i < n; i++) { const p = res.out[i]; i ? ctx.lineTo(X(p[1]), Y(p[2])) : ctx.moveTo(X(p[1]), Y(p[2])); }
+    ctx.stroke();
+    if (n) SB.shipTop(ctx, X(last[1]), Y(last[2]), last[3], { len: Math.max(16, L * sc), color: SB.color("hull") });
+    MV.text(ctx, "격자 1 L = " + L + " m", w - 8, ht - 8, { align: "right", color: P.dim, size: 11 });
+    ctx.fillStyle = P.border; ctx.fillRect(0, ht, w, 1);
+    // --- 시간 이력
+    const tmax = res.out[res.out.length - 1][0] * 1.02, U0k = SB.kn(res.U0);
+    const box = { x: 50, y: ht + 14, w: w - 100, h: h - ht - 56 };
+    const sub = res.out.slice(0, n);
+    const ch = SB.chart(ctx, box, { x: [0, tmax / 60], y: [-U0k * 0.6, U0k * 1.1], xLabel: "시간 (분)", yLabel: "속력 (kn)",
+      hlines: [{ y: 0, color: P.axis, dash: [2, 3] }],
+      series: [{ data: sub.map((p) => [p[0] / 60, p[4]]), color: P.accent, width: 2.4 }, { data: sub.map((p) => [p[0] / 60, p[5] * U0k]), color: P.accent2, width: 1.6, dash: [5, 3] }] });
+    // 오른쪽 축: 추력 %
+    ctx.save(); ctx.fillStyle = P.accent2; ctx.font = "11px " + MV.mono(); ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    [-0.5, 0, 0.5, 1].forEach((f) => { const yy = ch.Y(f * U0k); if (yy >= box.y - 2 && yy <= box.y + box.h + 2) ctx.fillText(Math.round(f * 100) + "%", box.x + box.w + 6, yy); });
+    ctx.restore();
+    MV.text(ctx, "속력", box.x + 8, box.y + 14, { color: P.accent, bold: true, size: 11 });
+    MV.text(ctx, "추력(전진 전속 대비, 오른쪽 축)", box.x + 44, box.y + 14, { color: P.accent2, bold: true, size: 11 });
+  }, { aspect: 0.72, minHeight: 380, maxHeight: 560 });
+  run(true);
+  SB.loop(document.getElementById("sim-stop"), () => { if (!anim) return; show += res.out.length / 360; if (show >= res.out.length) { show = res.out.length; anim = false; } cv.redraw(); });
+})();
+</script>
+<script>
+/* ---------- 7. 직접 조종 미니 게임 ---------- */
+(function () {
+  const L = 120, B = 20, TSC = 3;
+  const TELE = [["후진 전속", -1], ["후진 반속", -0.6], ["후진 미속", -0.3], ["정지", 0], ["전진 미속", 0.3], ["전진 반속", 0.6], ["전진 전속", 1]];
+  const teleEl = document.getElementById("gm-tele");
+  TELE.forEach(([lab, v], i) => { const b = document.createElement("button"); b.textContent = lab; b.dataset.i = i; b.onclick = () => { setTele(i); }; teleEl.appendChild(b); });
+  const rud = SB.range("gm-rud", (v) => (v > 0 ? "우현 " : v < 0 ? "좌현 " : "") + Math.abs(v) + "°");
+  const level = SB.seg("gm-level", () => reset());
+  const hold = { bp: 0, bs: 0, tp: 0, ts: 0 };
+  [["gm-bt-p", "bp"], ["gm-bt-s", "bs"], ["gm-tg-p", "tp"], ["gm-tg-s", "ts"]].forEach(([id, k]) => {
+    const el = document.getElementById(id);
+    const on = (e) => { e.preventDefault(); hold[k] = 1; el.classList.add("on"); };
+    const off = () => { hold[k] = 0; el.classList.remove("on"); };
+    el.addEventListener("pointerdown", on); el.addEventListener("pointerup", off); el.addEventListener("pointerleave", off); el.addEventListener("pointercancel", off);
+  });
+  let st, teleI = 4;
+  function setTele(i) { teleI = SB.clamp(i, 0, TELE.length - 1); [...teleEl.children].forEach((b, k) => b.classList.toggle("on", k === teleI)); }
+  // 지도
+  const CANAL = { W: 1600, H: 760, pts: [[-50, 380], [300, 380], [560, 240], [860, 240], [1120, 500], [1650, 500]], hw: 70 };
+  const BERTH = { W: 1000, H: 620, pier: { x0: 430, x1: 1000, y0: 0, y1: 150 }, bx0: 640, bx1: 860 };
+  function distSeg(px, py, a, b) { const dx = b[0] - a[0], dy = b[1] - a[1], t = SB.clamp(((px - a[0]) * dx + (py - a[1]) * dy) / (dx * dx + dy * dy), 0, 1); return Math.hypot(px - a[0] - t * dx, py - a[1] - t * dy); }
+  function reset() {
+    const lv = level();
+    st = lv === "canal" ? { x: 40, y: 380, psi: 0, u: 3, v: 0, r: 0, n: 0.3, d: 0, t: 0, msg: "", over: false, trail: [] }
+      : { x: 90, y: 430, psi: 0, u: 3, v: 0, r: 0, n: 0.3, d: 0, t: 0, msg: "", over: false, trail: [] };
+    setTele(4); rud.set(0); cv.redraw();
+  }
+  function hull() { // 선체 윤곽 표본점(월드)
+    const c = Math.cos(st.psi), s = Math.sin(st.psi), out = [];
+    [[0.5, 0], [0.4, -0.5], [0.4, 0.5], [0, -0.5], [0, 0.5], [-0.45, -0.5], [-0.45, 0.5], [-0.5, 0]].forEach(([a, b]) => {
+      const ax = a * L, by = b * B; out.push([st.x + c * ax - s * by, st.y + s * ax + c * by, ax, by]);
+    });
+    return out;
+  }
+  function physics(dt) {
+    const ncmd = TELE[teleI][1];
+    st.n += SB.clamp(ncmd - st.n, -dt / 30, dt / 30);
+    st.d += SB.clamp(SB.rad(rud()) - st.d, -SB.rad(2.32) * dt, SB.rad(2.32) * dt);
+    const u = st.u, n = st.n;
+    const T = n >= 0 ? 0.05 * n * n : -0.03 * n * n;
+    const du = T - 0.0013889 * u * Math.abs(u);
+    const VR2 = (u > 0 ? u * u : 0.15 * u * u) + (n > 0 ? 30 * n * n : 0);
+    const eff = Math.max(0, 1 - Math.abs(u) / 2.3);
+    const abt = 0.012 * eff * (hold.bs - hold.bp), atg = 0.02 * (hold.ts - hold.tp);
+    const dr = 6.8e-5 * VR2 * Math.sin(st.d) - 0.00625 * (Math.abs(u) + 0.4) * st.r - 4.44 * st.r * Math.abs(st.r) + (abt * 50) / 900 + (atg * -48) / 900;
+    const dv = -0.03 * (Math.abs(u) + 0.5) * (st.v + 32 * st.r * Math.sign(u || 1)) - 0.083 * st.v * Math.abs(st.v) + abt + atg;
+    st.u += du * dt; st.v += dv * dt; st.r += dr * dt;
+    const c = Math.cos(st.psi), s = Math.sin(st.psi);
+    st.x += (st.u * c - st.v * s) * dt; st.y += (st.u * s + st.v * c) * dt; st.psi += st.r * dt; st.t += dt;
+  }
+  function check() {
+    const lv = level(), H = hull();
+    if (lv === "canal") {
+      for (const p of H) {
+        let dmin = 1e9; for (let i = 0; i < CANAL.pts.length - 1; i++) dmin = Math.min(dmin, distSeg(p[0], p[1], CANAL.pts[i], CANAL.pts[i + 1]));
+        if (dmin > CANAL.hw) { st.over = true; st.msg = "좌초! 둑에 닿았다"; st.res = "bad"; return; }
+      }
+      if (st.x > CANAL.W - 40) { st.over = true; st.msg = "통과 성공! " + Math.round(st.t / 60) + "분 " + Math.round(st.t % 60) + "초"; st.res = "ok"; }
+    } else {
+      const pr = BERTH.pier;
+      for (const p of H) {
+        if (p[0] >= pr.x0 && p[1] <= pr.y1) {
+          const vy = st.u * Math.sin(st.psi) + st.v * Math.cos(st.psi) + st.r * (p[0] - st.x);
+          const vx = st.u * Math.cos(st.psi) - st.v * Math.sin(st.psi) - st.r * (p[1] - st.y);
+          const sp = Math.hypot(vx, vy), h0 = Math.abs(((SB.deg(st.psi) % 360) + 540) % 360 - 180), head = Math.min(h0, 180 - h0);
+          const inBerth = st.x - L / 2 > BERTH.bx0 - 25 && st.x + L / 2 < BERTH.bx1 + 25;
+          st.over = true;
+          if (sp > 0.15) { st.msg = "충돌! 접촉 속력 " + SB.kn(sp).toFixed(2) + " kn"; st.res = "bad"; }
+          else if (!inBerth || head > 10) { st.msg = "선석 밖 접촉(위치·자세 불량)"; st.res = "warn"; }
+          else { st.msg = "접안 성공! " + SB.kn(sp).toFixed(2) + " kn, " + Math.floor(st.t / 60) + "분"; st.res = "ok"; }
+          return;
+        }
+      }
+      if (st.x < -100 || st.x > BERTH.W + 50 || st.y > BERTH.H + 60 || st.y < -60) { st.over = true; st.msg = "구역 이탈"; st.res = "warn"; }
+    }
+  }
+  const cv = SB.canvas("#cv-game", (ctx, w, h) => {
+    if (!st) return;
+    const P = SB.palette(), lv = level(), M = lv === "canal" ? CANAL : BERTH;
+    const sc = Math.min(w / M.W, h / M.H), ox = (w - M.W * sc) / 2, oy = (h - M.H * sc) / 2;
+    const X = (x) => ox + x * sc, Y = (y) => oy + y * sc;
+    const land = SB.isDark() ? "#3a3426" : "#e6dcc3", water = SB.color("water");
+    ctx.fillStyle = land; ctx.fillRect(0, 0, w, h);
+    if (lv === "canal") {
+      ctx.save(); ctx.strokeStyle = SB.isDark() ? "#16324a" : "#bcdcf2"; ctx.lineWidth = 2 * CANAL.hw * sc; ctx.lineJoin = "round"; ctx.lineCap = "butt";
+      ctx.beginPath(); CANAL.pts.forEach((p, i) => (i ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1])))); ctx.stroke();
+      ctx.strokeStyle = water; ctx.globalAlpha = 0.5; ctx.lineWidth = 1; ctx.setLineDash([6, 6]); ctx.stroke(); ctx.restore();
+      MV.lineSeg(ctx, X(CANAL.W - 40), Y(500 - 70), X(CANAL.W - 40), Y(500 + 70), P.ok, 4);
+    } else {
+      ctx.fillStyle = SB.isDark() ? "#16324a" : "#bcdcf2"; ctx.fillRect(0, Y(0), w, h);
+      const pr = BERTH.pier; ctx.fillStyle = SB.isDark() ? "#4a4f5c" : "#b9bec9"; ctx.fillRect(X(pr.x0), 0, X(pr.x1) - X(pr.x0) + 50, Y(pr.y1));
+      ctx.fillStyle = "#f0c419"; ctx.fillRect(X(BERTH.bx0), Y(pr.y1) - 4, (BERTH.bx1 - BERTH.bx0) * sc, 4);
+      MV.text(ctx, "선석", X((BERTH.bx0 + BERTH.bx1) / 2), Y(pr.y1) - 10, { align: "center", color: P.text, bold: true, size: 12 });
+      for (let bx = pr.x0 + 30; bx < pr.x1; bx += 60) { ctx.fillStyle = P.text; ctx.beginPath(); ctx.arc(X(bx), Y(pr.y1 - 8), 2.2, 0, 7); ctx.fill(); }
+    }
+    // 50 m 축척
+    MV.lineSeg(ctx, 10, h - 12, 10 + 100 * sc, h - 12, P.text, 2); MV.text(ctx, "100 m", 14 + 100 * sc, h - 8, { size: 11, color: P.text });
+    // 항적
+    ctx.fillStyle = P.accent; st.trail.forEach((p) => { ctx.globalAlpha = 0.35; ctx.fillRect(X(p[0]) - 1, Y(p[1]) - 1, 2, 2); }); ctx.globalAlpha = 1;
+    // 배
+    const len = L * sc, c = Math.cos(st.psi), s = Math.sin(st.psi);
+    SB.shipTop(ctx, X(st.x), Y(st.y), st.psi, { len, wid: B * sc, color: SB.color("hull"), rudder: st.d * 1.5 });
+    const eff = Math.max(0, 1 - Math.abs(st.u) / 2.3), btDir = hold.bs - hold.bp, tgDir = hold.ts - hold.tp;
+    if (btDir) { const bx = X(st.x + c * 0.42 * L), by = Y(st.y + s * 0.42 * L), a = btDir * (8 + 22 * eff); SB.arrow(ctx, bx, by, bx - s * a, by + c * a, eff > 0.1 ? P.accent : P.faint, 2.5); }
+    if (tgDir) { const tx = X(st.x - c * 0.4 * L), ty = Y(st.y - s * 0.4 * L), a = tgDir * 26; SB.arrow(ctx, tx - s * -a * 0.2, ty + c * -a * 0.2, tx - s * a, ty + c * a, P.accent2, 3); ctx.fillStyle = P.accent2; ctx.beginPath(); ctx.arc(tx - s * -a * 0.55, ty + c * -a * 0.55, 5, 0, 7); ctx.fill(); }
+    // 속도 벡터
+    const vx = st.u * c - st.v * s, vy = st.u * s + st.v * c;
+    SB.arrow(ctx, X(st.x), Y(st.y), X(st.x) + vx * 8, Y(st.y) + vy * 8, P.ok, 1.6);
+    if (st.over) MV.text(ctx, st.msg, w / 2, 30, { align: "center", bold: true, size: 16, color: st.res === "ok" ? P.ok : st.res === "bad" ? P.bad : P.warn, bg: SB.color("bg-elev") });
+    else if (st.t < 4) MV.text(ctx, "캔버스를 누르면 키보드로 조종할 수 있다", w / 2, 24, { align: "center", size: 12, color: P.text, bg: SB.color("bg-elev") });
+  }, { aspect: 0.8, minHeight: 300, maxHeight: 540 });
+  reset();
+  // 키보드
+  const box = document.getElementById("sim-game"), canvasEl = document.getElementById("cv-game");
+  canvasEl.addEventListener("pointerdown", () => canvasEl.focus());
+  const keyMap = { q: "bp", e: "bs", z: "tp", c: "ts" };
+  box.addEventListener("keydown", (e) => {
+    const k = e.key.toLowerCase();
+    if (e.key === "ArrowLeft") { rud.set(SB.clamp(rud() - 5, -35, 35)); e.preventDefault(); }
+    else if (e.key === "ArrowRight") { rud.set(SB.clamp(rud() + 5, -35, 35)); e.preventDefault(); }
+    else if (e.key === "ArrowUp") { setTele(teleI + 1); e.preventDefault(); }
+    else if (e.key === "ArrowDown") { setTele(teleI - 1); e.preventDefault(); }
+    else if (keyMap[k]) { hold[keyMap[k]] = 1; }
+  });
+  box.addEventListener("keyup", (e) => { const k = e.key.toLowerCase(); if (keyMap[k]) hold[keyMap[k]] = 0; });
+  document.getElementById("gm-reset").onclick = () => reset();
+  let tr = 0;
+  SB.loop(box, (dt) => {
+    if (!st.over) {
+      const T = dt * TSC, n = Math.ceil(T / 0.05);
+      for (let i = 0; i < n; i++) physics(T / n);
+      tr += T; if (tr > 4) { tr = 0; st.trail.push([st.x, st.y]); if (st.trail.length > 500) st.trail.shift(); }
+      check();
+    }
+    SB.stat("o-gm-v", SB.kn(st.u).toFixed(1) + "<small>kn</small>");
+    SB.stat("o-gm-r", (SB.deg(st.r) * 60).toFixed(0) + "<small>°/분</small>");
+    SB.stat("o-gm-n", Math.round(st.n * 100) + "% / " + Math.round(TELE[teleI][1] * 100) + "%");
+    SB.stat("o-gm-st", st.over ? st.msg.split("!")[0] : "항해 중"); MV.setCls("o-gm-st", st.over ? st.res : "");
+    cv.redraw();
+  });
+})();
+</script>
+<script>
+/* ---------- 8. 스쿼트 ---------- */
+(function () {
+  const mode = SB.seg("sq-mode", () => cv.redraw());
+  const vS = SB.range("sq-v", (v) => v + " kn", () => cv.redraw());
+  const hS = SB.range("sq-h", (v) => v.toFixed(2), () => cv.redraw());
+  const cbS = SB.range("sq-cb", (v) => v.toFixed(2), () => cv.redraw());
+  const tS = SB.range("sq-t", (v) => v + " m", () => cv.redraw());
+  const tdRatio = (ht) => 1 + 0.2 / Math.pow(Math.max(ht - 1, 0.02), 1.2);
+  const cv = SB.canvas("#cv-squat", (ctx, w, h) => {
+    const P = SB.palette(), V = vS(), Cb = cbS(), T = tS(), ht = hS(), depth = ht * T;
+    const S = (Cb * V * V) / (mode() === "conf" ? 50 : 100);
+    const f = SB.clamp((Cb - 0.7) / 0.15, -1, 1);
+    const sb = S * Math.min(1, 1 + 0.5 * f), ss = S * Math.min(1, 1 - 0.5 * f);
+    const L = 300, ukc0 = depth - T, ukc = depth - T - Math.max(sb, ss);
+    // --- 옆모습
+    const hv = h * 0.6, sx = (w - 40) / (L * 1.25), zTop = 14;
+    const yWL = Math.max(hv * 0.3, 70), sz = (hv - 18 - yWL) / depth; // 수직 과장
+    const ex = sz / sx, xc = w / 2;
+    ctx.fillStyle = SB.color("water-soft"); ctx.fillRect(0, yWL, w, depth * sz);
+    // 수면 강하
+    ctx.strokeStyle = SB.color("water"); ctx.lineWidth = 1.6; ctx.beginPath();
+    for (let x = 0; x <= w; x += 4) { const xi = (x - xc) / (L * sx / 2), dip = Math.abs(xi) < 1.2 ? (S * 0.6) * Math.cos(xi * Math.PI / 2.4) ** 2 : 0; const yy = yWL + dip * sz; x ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy); }
+    ctx.stroke();
+    // 해저
+    const yBed = yWL + depth * sz;
+    ctx.fillStyle = SB.isDark() ? "#4a3f2c" : "#d8c9a3"; ctx.fillRect(0, yBed, w, hv - yBed);
+    MV.lineSeg(ctx, 0, yBed, w, yBed, P.dim, 1.5);
+    // 정지 시 배(유령)과 항주 중 배
+    const pitch = Math.atan(((sb - ss) * sz) / (L * sx));
+    ctx.save(); ctx.translate(xc, yWL); ctx.scale(1, ex);
+    SB.shipSide(ctx, 0, 0, sx, { L, D: T + 6, T, ghost: true, color: P.dim, cargo: "tanker", house: false });
+    ctx.restore();
+    ctx.save(); ctx.translate(xc, yWL + ((sb + ss) / 2) * sz); ctx.rotate(pitch); ctx.scale(1, ex);
+    SB.shipSide(ctx, 0, 0, sx, { L, D: T + 6, T, color: "#2b3445", cargo: "tanker", house: false });
+    ctx.restore();
+    const keelF = yWL + (T + sb) * sz, keelA = yWL + (T + ss) * sz;
+    const xF = xc + (L / 2) * sx * 0.9, xA = xc - (L / 2) * sx * 0.85;
+    MV.lineSeg(ctx, xF, keelF, xF, yBed, ukc < 0 ? P.bad : P.ok, 2); MV.lineSeg(ctx, xA, keelA, xA, yBed, ukc < 0 ? P.bad : P.ok, 2);
+    MV.text(ctx, "선수 침하 " + sb.toFixed(2) + " m", xF - 6, yBed - 6, { align: "right", size: 11, color: P.text, bold: true, bg: SB.color("bg-elev") });
+    MV.text(ctx, "선미 침하 " + ss.toFixed(2) + " m", xA + 6, yBed - 6, { size: 11, color: P.text, bold: true, bg: SB.color("bg-elev") });
+    MV.text(ctx, "수직 과장 ×" + ex.toFixed(1), 8, hv - 6, { size: 11, color: P.dim });
+    if (ukc < 0) MV.text(ctx, "좌초!", w / 2, yBed - 8, { align: "center", bold: true, size: 16, color: P.bad, bg: SB.color("bg-elev") });
+    // --- 선회 지름 배율 곡선
+    const box = { x: 54, y: hv + 12, w: w - 74, h: h - hv - 54 };
+    const data = []; for (let r = 1.08; r <= 3; r += 0.02) data.push([r, tdRatio(r)]);
+    SB.chart(ctx, box, { x: [1, 3], y: [1, 3.5], xLabel: "수심/흘수 h/T", yLabel: "D/D∞", series: [{ data, color: P.accent, width: 2 }],
+      bands: [{ x0: 1.1, x1: 1.4, color: SB.color("accent-soft") }], points: [{ x: ht, y: Math.min(3.5, tdRatio(ht)), color: P.accent2, r: 5 }] });
+    MV.text(ctx, "Barrass 식 적용 범위", box.x + ((1.25 - 1) / 2) * box.w, box.y + 14, { align: "center", size: 11, color: P.accent });
+    // readouts
+    SB.stat("o-sq-s", S.toFixed(2) + "<small>m</small>");
+    SB.stat("o-sq-fa", sb.toFixed(2) + " / " + ss.toFixed(2) + "<small>m</small>");
+    SB.stat("o-sq-u0", ukc0.toFixed(2) + "<small>m</small>");
+    SB.stat("o-sq-u", ukc.toFixed(2) + "<small>m</small>");
+    MV.setCls("o-sq-u", ukc < 0 ? "bad" : ukc < Math.max(0.5, 0.1 * T) ? "warn" : "ok");
+    SB.stat("o-sq-td", "×" + tdRatio(ht).toFixed(2));
+  }, { aspect: 0.7, minHeight: 380, maxHeight: 540 });
+})();
+</script>
+<script>
+/* ---------- 9. 뱅크 효과와 추월 상호작용 (정성 모델) ---------- */
+(function () {
+  const mode = SB.seg("bk-mode", () => {});
+  const vS = SB.range("bk-v", (v) => v + " kn");
+  const dS = SB.range("bk-d", (v) => v.toFixed(2) + " B");
+  const L = 200, B = 32, T = 11, hDepth = 1.4 * T;
+  let t = 0, playing = true;
+  document.getElementById("bk-play").onclick = (e) => { playing = !playing; e.target.textContent = playing ? "일시정지" : "재생"; };
+  function shallow(V) { const F = V / Math.sqrt(SB.G * hDepth); return 1 / Math.max(0.15, 1 - F * F); }
+  const g = (d) => 1 / ((d + 0.2) * (d + 0.2));
+  function rudderPerRad(V) { const VR = V * 0.9 + 1.5; return 0.5 * SB.RHO * 37 * VR * VR * 2.79 * (L / 2); }
+  function blob(ctx, x, y, rx, ry, rot, col, a) { ctx.save(); ctx.translate(x, y); ctx.rotate(rot); const gr = ctx.createRadialGradient(0, 0, 0, 0, 0, rx); gr.addColorStop(0, col); gr.addColorStop(1, "rgba(0,0,0,0)"); ctx.globalAlpha = a; ctx.scale(1, ry / rx); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0, 0, rx, 0, 7); ctx.fill(); ctx.restore(); }
+  const cv = SB.canvas("#cv-bank", (ctx, w, h) => {
+    const P = SB.palette(), V = SB.ms(vS()), d = dS(), q = 0.5 * SB.RHO * V * V, sh = shallow(V), showP = document.getElementById("bk-p").checked;
+    const sc = (w * 0.62) / L, lowC = "rgba(230,60,50,0.9)", highC = "rgba(40,120,230,0.9)";
+    ctx.fillStyle = SB.color("water-soft"); ctx.fillRect(0, 0, w, h);
+    let Y = 0, N = 0;
+    if (mode() === "bank") {
+      const yBank = h * 0.2, ys = yBank + (d * B + B / 2) * sc, xs = w / 2;
+      // 둑 (흘러가는 질감)
+      ctx.fillStyle = SB.isDark() ? "#3a3426" : "#e6dcc3"; ctx.fillRect(0, 0, w, yBank);
+      ctx.strokeStyle = P.dim; ctx.lineWidth = 1; for (let x = -((t * V * sc * 3) % 40); x < w; x += 40) { ctx.beginPath(); ctx.moveTo(x, yBank - 2); ctx.lineTo(x + 14, yBank - 14); ctx.stroke(); }
+      MV.lineSeg(ctx, 0, yBank, w, yBank, P.text, 2);
+      MV.text(ctx, "둑 (좌현 쪽)", 8, 16, { size: 12, color: P.text, bold: true });
+      Y = q * L * T * 0.004 * g(d) * sh; N = q * L * L * T * 3.0e-3 * g(d) * sh;
+      if (showP) {
+        const a = SB.clamp(0.25 + 0.35 * g(d) / 4, 0.25, 0.85);
+        blob(ctx, xs - L * 0.2 * sc, (yBank + ys - B * sc / 2) / 2, L * 0.38 * sc, Math.max(10, (ys - yBank) * 0.6), 0, lowC, a);
+        blob(ctx, xs + L * 0.55 * sc, ys, L * 0.16 * sc, B * 1.4 * sc, 0, highC, a);
+        MV.text(ctx, "저압(빠른 흐름)", xs - L * 0.2 * sc, yBank + 16, { align: "center", size: 11, color: P.bad, bold: true });
+      }
+      SB.shipTop(ctx, xs, ys, Math.PI * 0, { len: L * sc, wid: B * sc, color: SB.color("hull") });
+      // 흐름 입자
+      ctx.fillStyle = SB.color("water");
+      for (let i = 0; i < 40; i++) { const yy = yBank + 6 + ((i * 37) % Math.max(10, h - yBank - 10)); const fast = yy < ys - B * sc / 2 ? 1 + 0.6 * g(d) / 4 : 1; const xx = w - ((t * V * sc * 3 * fast + i * 53) % (w + 20)); ctx.fillRect(xx, yy, 6, 1.5); }
+      const k = Math.min(1, Y / 4e5);
+      SB.arrow(ctx, xs - L * 0.42 * sc, ys, xs - L * 0.42 * sc, ys - (20 + 50 * k), P.bad, 3);
+      SB.arrow(ctx, xs + L * 0.42 * sc, ys, xs + L * 0.42 * sc, ys + (14 + 36 * k), P.accent, 3);
+      MV.text(ctx, "선미가 둑으로 끌림", xs - L * 0.42 * sc, ys + B * sc + 16, { align: "center", size: 11, color: P.bad, bold: true });
+      MV.text(ctx, "선수가 밀려남", xs + L * 0.42 * sc, ys - B * sc - 6, { align: "center", size: 11, color: P.accent, bold: true });
+    } else {
+      // 추월: A(자선, 아래)를 기준으로 B가 뒤에서 앞으로
+      const cycle = 14, ph = ((t % cycle) / cycle), xi = -1.7 + 3.4 * ph;
+      const xA = w / 2, yA = h * 0.62, yB = yA - (d * B + B) * sc, xB = xA + xi * L * sc;
+      const att = 1.0 * Math.exp(-((xi / 0.55) ** 2)) - 0.35 * Math.exp(-(((Math.abs(xi) - 1) / 0.3) ** 2));
+      const mom = (xi / 0.6) * Math.exp(-((xi / 0.7) ** 2));
+      const F0 = q * L * T * 0.003 * g(d) * sh;
+      Y = F0 * att; N = F0 * 0.35 * L * mom;
+      if (showP) {
+        [[xA, yA], [xB, yB]].forEach(([x, y]) => { blob(ctx, x + L * 0.52 * sc, y, L * 0.12 * sc, B * 1.2 * sc, 0, highC, 0.5); blob(ctx, x - L * 0.52 * sc, y, L * 0.1 * sc, B * 1.1 * sc, 0, highC, 0.4); blob(ctx, x, (yA + yB) / 2, L * 0.3 * sc, Math.max(8, (yA - yB) * 0.35), 0, lowC, 0.25 + 0.4 * Math.exp(-((xi / 0.8) ** 2)) * Math.min(1, g(d) / 3)); });
+      }
+      SB.shipTop(ctx, xA, yA, 0, { len: L * sc, wid: B * sc, color: SB.color("hull") });
+      SB.shipTop(ctx, xB, yB, 0, { len: L * sc, wid: B * sc, color: P.accent });
+      MV.text(ctx, "자선 A", xA, yA + B * sc + 16, { align: "center", size: 12, bold: true, color: P.text });
+      MV.text(ctx, "추월선 B", xB, yB - B * sc - 6, { align: "center", size: 12, bold: true, color: P.accent });
+      const k = SB.clamp(Y / 3e5, -1, 1), km = SB.clamp(N / 3e7, -1, 1);
+      SB.arrow(ctx, xA, yA, xA, yA - 40 * k, k >= 0 ? P.bad : P.accent, 3);
+      SB.arrow(ctx, xB, yB, xB, yB + 40 * k, k >= 0 ? P.bad : P.accent, 3);
+      // 회두 모멘트(곡선 화살표)
+      const rr = L * sc * 0.3; ctx.strokeStyle = P.warn; ctx.lineWidth = 2.5; ctx.beginPath();
+      const a0 = -Math.PI / 2, a1 = a0 + km * 1.6; ctx.arc(xA, yA, rr, Math.min(a0, a1), Math.max(a0, a1)); ctx.stroke();
+      if (Math.abs(km) > 0.05) { const ex = xA + rr * Math.cos(a1), ey = yA + rr * Math.sin(a1); SB.arrow(ctx, ex - Math.sin(a1) * km * -4, ey + Math.cos(a1) * km * -4, ex, ey, P.warn, 2.5); }
+      MV.text(ctx, xi < -0.3 ? "B 선수가 A 선미에 접근" : xi < 0.3 ? "나란히: 서로 끌어당김" : "B 선미가 A 선수 옆: A 선수가 B 쪽으로", w / 2, 18, { align: "center", size: 12, bold: true, color: P.text, bg: SB.color("bg-elev") });
+    }
+    const dreq = SB.deg(Math.abs(N) / rudderPerRad(V));
+    SB.stat("o-bk-y", (Y / 1000).toFixed(0) + "<small>kN</small>");
+    SB.stat("o-bk-n", (N / 1e6).toFixed(1) + "<small>MN·m</small>");
+    SB.stat("o-bk-d", dreq > 35 ? "35° 초과!" : dreq.toFixed(1) + "°"); MV.setCls("o-bk-d", dreq > 35 ? "bad" : dreq > 15 ? "warn" : "ok");
+  }, { aspect: 0.6, minHeight: 300, maxHeight: 440 });
+  SB.loop(document.getElementById("sim-bank"), (dt) => { if (playing) t += dt; cv.redraw(); });
+})();
+</script>
+<script>
+/* ---------- 10. 앵커 체인 카테너리 ---------- */
+(function () {
+  const SHK = 27.5, HAWSE = 5;
+  const hS = SB.range("an-h", (v) => v + " m", () => cv.redraw());
+  const nS = SB.range("an-n", (v) => v + " 섀클 (" + Math.round(v * SHK) + " m)", () => cv.redraw());
+  const dS = SB.range("an-d", (v) => v + " mm", () => cv.redraw());
+  const fS = SB.range("an-f", (v) => v + " kN", () => cv.redraw());
+  const wS = SB.range("an-w", (v) => v + " t", () => cv.redraw());
+  function solve() {
+    const h = hS() + HAWSE, ell = nS() * SHK, d = dS(), w = 0.0219 * d * d * 0.87 * SB.G, H = fS() * 1000, a = H / w;
+    if (ell <= h * 1.001) return { fail: true, h, ell };
+    const s = Math.sqrt(h * h + 2 * a * h);
+    if (ell >= s) {
+      const xs = a * Math.asinh(s / a), lay = ell - s, pts = [];
+      pts.push([-lay, 0]);
+      for (let i = 0; i <= 60; i++) { const x = (xs * i) / 60; pts.push([x, a * (Math.cosh(x / a) - 1)]); }
+      return { h, ell, w, H, a, s, lay, u0: 0, pts, X: xs, xA: -lay, Ttop: H + w * h, Vtop: w * s };
+    }
+    // 체인 전체가 들림: 닻 쪽 기울기 u0를 구한다
+    const f = (u) => a * (Math.sqrt(1 + (ell / a + u) ** 2) - Math.sqrt(1 + u * u)) - h;
+    let lo = 0, hi = 1; while (f(hi) < 0 && hi < 1e6) hi *= 2;
+    for (let i = 0; i < 80; i++) { const m = (lo + hi) / 2; f(m) < 0 ? (lo = m) : (hi = m); }
+    const u0 = (lo + hi) / 2, x0 = a * Math.asinh(u0), X = a * Math.asinh(ell / a + u0) - x0, pts = [];
+    for (let i = 0; i <= 60; i++) { const x = (X * i) / 60; pts.push([x, a * (Math.cosh((x + x0) / a) - Math.cosh(x0 / a))]); }
+    const V = w * (ell + a * u0);
+    return { h, ell, w, H, a, s, lay: 0, u0, pts, X, xA: 0, Ttop: Math.hypot(H, V), Vtop: V };
+  }
+  const cv = SB.canvas("#cv-anchor", (ctx, w, h) => {
+    const P = SB.palette(), R = solve(), depth = hS();
+    if (R.fail) {
+      ctx.fillStyle = SB.color("water-soft"); ctx.fillRect(0, 0, w, h);
+      MV.text(ctx, "체인이 수심보다 짧다", w / 2, h / 2, { align: "center", bold: true, size: 16, color: P.bad });
+      ["o-an-sc", "o-an-ly", "o-an-ang", "o-an-top", "o-an-hp"].forEach((id) => SB.stat(id, "—")); SB.stat("o-an-j", "불가"); MV.setCls("o-an-j", "bad"); return;
+    }
+    const xMin = R.xA - 20, xMax = R.X + 60, sx = (w - 30) / (xMax - xMin);
+    const top = 30, bot = h - 34, sy = (bot - top) / (R.h + 4), ex = sy / sx;
+    const X = (x) => 15 + (x - xMin) * sx, Yc = (y) => bot - y * sy; // y: 해저 기준 높이
+    const yW = Yc(R.h - HAWSE);
+    ctx.fillStyle = SB.color("water-soft"); ctx.fillRect(0, yW, w, bot - yW);
+    MV.lineSeg(ctx, 0, yW, w, yW, SB.color("water"), 1.6);
+    ctx.fillStyle = SB.isDark() ? "#4a3f2c" : "#d8c9a3"; ctx.fillRect(0, bot, w, h - bot);
+    MV.lineSeg(ctx, 0, bot, w, bot, P.dim, 1.5);
+    // 배(선수 부분)
+    const hx = X(R.X), hy = Yc(R.h);
+    ctx.fillStyle = "#2b3445"; ctx.beginPath(); ctx.moveTo(hx - 10, hy - 14); ctx.lineTo(w + 5, hy - 14); ctx.lineTo(w + 5, Yc(R.h - HAWSE - 12)); ctx.lineTo(hx + 22, Yc(R.h - HAWSE - 12)); ctx.quadraticCurveTo(hx - 4, Yc(R.h - HAWSE - 6), hx - 10, hy - 14); ctx.fill();
+    SB.arrow(ctx, w - 50, yW + 22, w - 8, yW + 22, P.accent2, 2.5);
+    MV.text(ctx, "H", w - 30, yW + 40, { align: "center", bold: true, color: P.accent2 });
+    // 체인
+    ctx.strokeStyle = P.text; ctx.lineWidth = 3; ctx.setLineDash([5, 2]); ctx.beginPath();
+    R.pts.forEach((p, i) => (i ? ctx.lineTo(X(p[0]), Yc(p[1])) : ctx.moveTo(X(p[0]), Yc(p[1])))); ctx.stroke(); ctx.setLineDash([]);
+    if (R.lay > 0) { MV.lineSeg(ctx, X(R.xA), bot - 2, X(0), bot - 2, P.ok, 4); MV.text(ctx, "해저에 누운 체인 " + R.lay.toFixed(0) + " m", (X(R.xA) + X(0)) / 2, bot + 18, { align: "center", size: 11, color: P.ok, bold: true }); }
+    // 닻
+    const angR = Math.atan(R.u0 * ex), ax = X(R.xA), ay = bot;
+    ctx.save(); ctx.translate(ax, ay - 4); ctx.rotate(-angR); ctx.strokeStyle = P.accent2; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-18, 0); ctx.moveTo(-18, 0); ctx.lineTo(-26, -9); ctx.moveTo(-18, 0); ctx.lineTo(-26, 6); ctx.stroke(); ctx.restore();
+    const angDeg = SB.deg(Math.atan(R.u0));
+    // 판정
+    const wAnc = wS(), hold = wAnc * 1000 * SB.G * 7 * Math.max(0, 1 - angDeg / 12) + 0.75 * R.w * R.lay;
+    const scope = R.ell / depth;
+    MV.text(ctx, "수직 과장 ×" + ex.toFixed(1) + " (각도는 실제 값으로 표시)", 8, 18, { size: 11, color: P.dim });
+    SB.stat("o-an-sc", scope.toFixed(1) + " : 1");
+    SB.stat("o-an-ly", R.lay.toFixed(0) + "<small>m</small>");
+    SB.stat("o-an-ang", angDeg.toFixed(1) + "°");
+    SB.stat("o-an-top", (R.Ttop / 1000).toFixed(0) + "<small>kN</small>");
+    SB.stat("o-an-hp", (hold / 1000).toFixed(0) + "<small>kN</small>");
+    let j = "안전", cls = "ok";
+    if (R.H > hold) { j = "주묘!"; cls = "bad"; } else if (angDeg > 0.05) { j = "닻이 들림"; cls = "warn"; } else if (R.lay < 0.15 * R.ell) { j = "여유 적음"; cls = "warn"; }
+    SB.stat("o-an-j", j); MV.setCls("o-an-j", cls);
+    MV.setCls("o-an-ang", angDeg > 0.05 ? "bad" : "ok");
+    if (cls === "bad") MV.text(ctx, "닻이 끌린다", ax + 10, ay - 26, { size: 13, bold: true, color: P.bad, bg: SB.color("bg-elev") });
+  }, { aspect: 0.55, minHeight: 280, maxHeight: 440 });
+})();
+</script>
+<script>
+/* ---------- 11. 계류줄 장력 ---------- */
+(function () {
+  const SHIPS = { ctr: { L: 300, B: 48, Aw: 9000, Awf: 1500, Ac: 3000, Acf: 480, kc: 1.5 }, tank: { L: 320, B: 60, Aw: 3900, Awf: 1140, Ac: 6720, Acf: 1260, kc: 3.0 } };
+  const ship = SB.seg("mr-ship", () => cv.redraw());
+  const wS = SB.range("mr-w", (v) => v + " m/s", () => cv.redraw());
+  const waS = SB.range("mr-wa", (v) => v + "°", () => cv.redraw());
+  const cS = SB.range("mr-c", (v) => v.toFixed(1) + " kn", () => cv.redraw());
+  const caS = SB.range("mr-ca", (v) => v + "°", () => cv.redraw());
+  const mblS = SB.range("mr-mbl", (v) => v + " t", () => cv.redraw());
+  const NAMES = ["선수줄", "선수줄", "선수 브레스트", "선수 스프링", "선미 스프링", "선미 브레스트", "선미줄", "선미줄"];
+  function layout(S) {
+    const L = S.L, B = S.B, yq = B / 2, yb = yq + 12;
+    return { yq, lines: [
+      [[0.48 * L, 0.3 * B], [0.48 * L + 55, yb]], [[0.46 * L, 0.35 * B], [0.46 * L + 38, yb]],
+      [[0.38 * L, B / 2], [0.38 * L, yb + 10]], [[0.3 * L, B / 2], [0.1 * L, yb]],
+      [[-0.3 * L, B / 2], [-0.1 * L, yb]], [[-0.38 * L, B / 2], [-0.38 * L, yb + 10]],
+      [[-0.46 * L, 0.35 * B], [-0.46 * L - 38, yb]], [[-0.48 * L, 0.3 * B], [-0.48 * L - 55, yb]]],
+      fenders: [[0.25 * L, B / 2], [-0.25 * L, B / 2], [0, B / 2]] };
+  }
+  function loads(S) {
+    const Uw = wS(), th = SB.rad(waS()), Uc = SB.ms(cS()), tc = SB.rad(caS());
+    const qa = 0.5 * SB.RHO_AIR * Uw * Uw, qc = 0.5 * SB.RHO * Uc * Uc;
+    const Fwx = -qa * S.Awf * 0.8 * Math.cos(th), Fwy = -qa * S.Aw * 0.9 * Math.sin(th);
+    const Fcx = -qc * S.Acf * 0.1 * Math.cos(tc), Fcy = -qc * S.Ac * 0.7 * S.kc * Math.sin(tc);
+    const Nw = Fwy * 0.15 * S.L * Math.cos(th), Nc = Fcy * 0.12 * S.L * Math.cos(tc);
+    return { F: [(Fwx + Fcx) / 1000, (Fwy + Fcy) / 1000, (Nw + Nc) / 1000], Fw: Math.hypot(Fwx, Fwy) / 1000, Fc: Math.hypot(Fcx, Fcy) / 1000 };
+  }
+  function solve(S, Lay, F, MBLkN) {
+    const EA = MBLkN / 0.1, pre = 0.05 * MBLkN, kf = 2500;
+    const mem = Lay.lines.map(([a, b]) => { const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy), e = [dx / l, dy / l]; return { a, b, l, k: EA / l, g: [e[0], e[1], a[0] * e[1] - a[1] * e[0]] }; });
+    const fen = Lay.fenders.map((p) => ({ p, g: [0, 1, p[0]] }));
+    let q = [0, 0, 0];
+    const dot = (g, q) => g[0] * q[0] + g[1] * q[1] + g[2] * q[2];
+    for (let it = 0; it < 60; it++) {
+      const R = [F[0], F[1], F[2]], J = [[1, 0, 0], [0, 1, 0], [0, 0, 1e3]];
+      mem.forEach((m) => { const T = pre + m.k * -dot(m.g, q); m.T = Math.max(0, T); if (T > 0) { for (let i = 0; i < 3; i++) { R[i] += T * m.g[i]; for (let j = 0; j < 3; j++) J[i][j] += m.k * m.g[i] * m.g[j]; } } });
+      fen.forEach((f) => { const c = kf * dot(f.g, q); f.C = Math.max(0, c); if (c > 0) { for (let i = 0; i < 3; i++) { R[i] -= c * f.g[i]; for (let j = 0; j < 3; j++) J[i][j] += kf * f.g[i] * f.g[j]; } } });
+      // J dq = R  (J는 강성 행렬, R은 불평형력)
+      const dq = solve3(J, R);
+      let mx = Math.max(Math.abs(dq[0]), Math.abs(dq[1]), Math.abs(dq[2] * 150)); const sc = mx > 2 ? 2 / mx : 1;
+      q = [q[0] + dq[0] * sc, q[1] + dq[1] * sc, q[2] + dq[2] * sc];
+      if (mx < 1e-6) break;
+    }
+    return { q, mem, fen };
+  }
+  function solve3(A, b) {
+    const M = A.map((r, i) => [...r, b[i]]);
+    for (let c = 0; c < 3; c++) { let p = c; for (let r = c + 1; r < 3; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r; [M[c], M[p]] = [M[p], M[c]]; for (let r = 0; r < 3; r++) if (r !== c) { const f = M[r][c] / M[c][c]; for (let k = c; k < 4; k++) M[r][k] -= f * M[c][k]; } }
+    return [M[0][3] / M[0][0], M[1][3] / M[1][1], M[2][3] / M[2][2]];
+  }
+  const cv = SB.canvas("#cv-moor", (ctx, w, h) => {
+    const P = SB.palette(), S = SHIPS[ship()], Lay = layout(S), LD = loads(S), MBL = mblS() * SB.G, R = solve(S, Lay, LD.F, MBL);
+    const sc = Math.min((w - 40) / (S.L + 150), (h - 50) / (S.B + 70)), cx = w / 2, cy = h * 0.42;
+    const X = (x) => cx + x * sc, Y = (y) => cy + y * sc;
+    ctx.fillStyle = SB.color("water-soft"); ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = SB.isDark() ? "#4a4f5c" : "#b9bec9"; ctx.fillRect(0, Y(Lay.yq), w, h - Y(Lay.yq));
+    MV.text(ctx, "부두 (우현 쪽)", 8, h - 10, { size: 12, color: P.text, bold: true });
+    // 변위(과장 ×4)
+    const EXG = 4, dx = R.q[0] * EXG, dy = R.q[1] * EXG, dpsi = R.q[2] * EXG;
+    const shipPt = (p) => [p[0] - dpsi * p[1] + dx, p[1] + dpsi * p[0] + dy];
+    SB.shipTop(ctx, X(dx), Y(dy), dpsi, { len: S.L * sc, wid: S.B * sc, color: SB.color("hull"), full: 0.8 });
+    // 펜더
+    R.fen.forEach((f) => { const p = shipPt(f.p); ctx.fillStyle = f.C > 1 ? P.warn : P.dim; ctx.fillRect(X(p[0]) - 5, Y(Lay.yq) - 4, 10, 6); });
+    // 줄
+    let tmax = 0;
+    R.mem.forEach((m, i) => {
+      const a = shipPt(m.a), ratio = m.T / MBL; tmax = Math.max(tmax, m.T);
+      ctx.strokeStyle = m.T < 1 ? P.faint : ratio > 0.8 ? P.bad : ratio > 0.5 ? P.warn : P.ok;
+      ctx.lineWidth = 1 + Math.min(5, ratio * 6); if (m.T < 1) ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.moveTo(X(a[0]), Y(a[1])); ctx.lineTo(X(m.b[0]), Y(m.b[1])); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = P.text; ctx.beginPath(); ctx.arc(X(m.b[0]), Y(m.b[1]), 3, 0, 7); ctx.fill();
+      if (w > 480 || i % 2 === 0) MV.text(ctx, (m.T / SB.G).toFixed(0) + "t", X(m.b[0]), Y(m.b[1]) + 15 + (i % 2) * 12, { align: "center", size: 10, color: P.text, mono: true });
+    });
+    // 외력 화살표
+    const drawWind = (ang, label, col, x0, y0) => { const th = SB.rad(ang), ux = -Math.cos(th), uy = -Math.sin(th); SB.arrow(ctx, x0 - ux * 22, y0 - uy * 22, x0 + ux * 22, y0 + uy * 22, col, 3); MV.text(ctx, label, x0, y0 - 28, { align: "center", size: 11, color: col, bold: true }); };
+    if (wS() > 0) drawWind(waS(), "바람", P.accent2, 50, 50);
+    if (cS() > 0) drawWind(caS(), "조류", SB.color("water"), 130, 50);
+    MV.text(ctx, "→ 선수", w - 10, 18, { align: "right", size: 11, color: P.dim });
+    MV.text(ctx, "배 변위 ×4 과장", w - 10, 34, { align: "right", size: 11, color: P.dim });
+    const fd = R.fen.reduce((s, f) => s + f.C, 0);
+    SB.stat("o-mr-fw", LD.Fw.toFixed(0) + "<small>kN</small>");
+    SB.stat("o-mr-fc", LD.Fc.toFixed(0) + "<small>kN</small>");
+    SB.stat("o-mr-tmax", (tmax / SB.G).toFixed(1) + "<small>t</small>");
+    SB.stat("o-mr-pct", Math.round((tmax / MBL) * 100) + "%"); MV.setCls("o-mr-pct", tmax / MBL > 0.8 ? "bad" : tmax / MBL > 0.5 ? "warn" : "ok");
+    SB.stat("o-mr-fd", (fd / SB.G).toFixed(0) + "<small>t</small>");
+  }, { aspect: 0.78, minHeight: 300, maxHeight: 480 });
+})();
+</script>
+
+</body>
+</html>

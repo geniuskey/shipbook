@@ -1,0 +1,1153 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<title>부력과 배수량 · ShipBook</title>
+<meta name="description" content="아르키메데스의 원리와 정수압, 강철 배가 뜨는 이유, 배수량·재화중량·총톤수, 형상 계수와 수치 적분, 정수압 곡선과 TPC, 담수 여유(FWA), 만재 흘수선 표지를 시뮬레이터로 배운다.">
+<link rel="canonical" href="https://shipbook.euiyun.com/chapters/buoyancy.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="ShipBook">
+<meta property="og:title" content="부력과 배수량 · ShipBook">
+<meta property="og:description" content="아르키메데스의 원리와 정수압, 강철 배가 뜨는 이유, 배수량·재화중량·총톤수, 형상 계수와 수치 적분, 정수압 곡선과 TPC, 담수 여유(FWA), 만재 흘수선 표지를 시뮬레이터로 배운다.">
+<meta property="og:url" content="https://shipbook.euiyun.com/chapters/buoyancy.html">
+<meta property="og:image" content="https://shipbook.euiyun.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"부력과 배수량","name":"부력과 배수량 · ShipBook","url":"https://shipbook.euiyun.com/chapters/buoyancy.html","mainEntityOfPage":"https://shipbook.euiyun.com/chapters/buoyancy.html","inLanguage":"ko","isAccessibleForFree":true,"learningResourceType":"interactive textbook chapter","position":2,"image":"https://shipbook.euiyun.com/og.png","dateModified":"2026-10-04","isPartOf":{"@type":"Book","@id":"https://shipbook.euiyun.com/#book","name":"ShipBook — 인터랙티브 선박 교과서","url":"https://shipbook.euiyun.com/"},"publisher":{"@type":"Organization","name":"ShipBook","url":"https://shipbook.euiyun.com/"},"description":"아르키메데스의 원리와 정수압, 강철 배가 뜨는 이유, 배수량·재화중량·총톤수, 형상 계수와 수치 적분, 정수압 곡선과 TPC, 담수 여유(FWA), 만재 흘수선 표지를 시뮬레이터로 배운다."},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ShipBook","item":"https://shipbook.euiyun.com/"},{"@type":"ListItem","position":2,"name":"02 부력과 배수량","item":"https://shipbook.euiyun.com/chapters/buoyancy.html"}]}]}</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../css/style.css">
+<script src="../js/common.js"></script>
+<style>
+  .sim-view canvas.grab { cursor: grab; touch-action: none; }
+  .sim-view canvas.grab:active { cursor: grabbing; }
+  .fig-lg svg .t, .fig-lg svg .t-acc { font-size: 15px; }
+  .fig-lg svg .t-dim { font-size: 13.5px; }
+  .fig-lg svg .t-mono { font-size: 12.5px; }
+  .sim-svg { padding: 6px 4px 0; }
+  .sim-svg svg { display: block; width: 100%; height: auto; }
+  .sim-svg .mk { fill: var(--text); }
+  .sim-svg .mk.on { fill: var(--accent-2); }
+  .sim-svg .mk.na { fill: var(--text-faint); }
+  .sim-svg .mkt { font-family: var(--font); font-size: 15px; font-weight: 700; fill: var(--text); }
+  .sim-svg .mkt.on { fill: var(--accent-2); }
+  .sim-svg .mkt.na { fill: var(--text-faint); }
+  .stat .v.txt { font-family: var(--font); font-size: 14.5px; font-weight: 500; line-height: 1.55; }
+</style>
+</head>
+<body data-chapter="buoyancy">
+<main class="chapter">
+  <header class="chapter-hero">
+    <div class="eyebrow">Chapter 02</div>
+    <h1>부력과 배수량</h1>
+    <p class="lead">밀도가 물의 8배 가까운 강철로 만든 배가 왜 뜰까? 답은 2,200년 전 아르키메데스가 찾았다. 이 장에서는 물이 배를 떠받치는 힘이 어디서 오는지 정수압에서 출발해 이해하고, 배의 무게와 크기를 나타내는 배수량·재화중량·총톤수를 구별한다. 이어서 선체의 '뚱뚱한 정도'를 숫자로 나타내는 형상 계수, 곡선으로 된 선체의 면적과 부피를 구하는 수치 적분, 흘수에 따른 선체 성질을 모은 정수압 곡선을 다루고, 마지막으로 짐을 실을 때와 강으로 들어갈 때 흘수가 얼마나 변하는지, 그리고 얼마까지 실어도 되는지를 정한 만재 흘수선을 살펴본다.</p>
+    <ul class="objectives">
+      <li>아르키메데스의 원리를 정수압 분포로 설명하고, 물체의 평형 흘수를 밀도 비로 계산한다.</li>
+      <li>강철 배가 뜨는 이유를 평균 밀도로 설명한다.</li>
+      <li>배수량 Δ = ρ∇, 경하중량·재화중량의 관계, 부피 기반의 총톤수·순톤수를 구별한다.</li>
+      <li>C<sub>b</sub>, C<sub>m</sub>, C<sub>p</sub>, C<sub>wp</sub>를 정의하고 선종별 대표 값을 안다.</li>
+      <li>사다리꼴 법칙과 심프슨 제1법칙으로 수선면 면적을 계산하고 오차를 비교한다.</li>
+      <li>정수압 곡선을 읽고 TPC로 적재에 따른 흘수 변화, FWA로 담수 진입 시 침하량을 계산한다.</li>
+      <li>만재 흘수선 표지(TF, F, T, S, W, WNA)의 의미를 알고 수역·계절별 허용 흘수를 판단한다.</li>
+    </ul>
+  </header>
+
+  <!-- =============================================================== 1 -->
+  <section id="archimedes">
+    <h2>아르키메데스의 원리</h2>
+    <p>유체에 잠긴 물체는 <b>자신이 밀어낸 유체의 무게만큼</b> 위로 미는 힘을 받는다. 이것이 <span class="term">아르키메데스의 원리</span><span class="en">(Archimedes' Principle)</span>이고, 그 힘이 <span class="term">부력</span><span class="en">(Buoyancy)</span>이다. 잠긴 부피를 \(\nabla\)(나블라, 배수 용적)라 쓰면</p>
+    <div class="formula">$$F_B = \rho\, g\, \nabla$$
+      <div class="where">\(\rho\): 유체 밀도(해수 약 1,025 kg/m³, 담수 1,000 kg/m³), \(g\): 중력 가속도 9.81 m/s², \(\nabla\): 물에 잠긴 부피(m³).</div>
+    </div>
+    <p>물체를 물에 놓으면 처음에는 무게가 부력보다 커서 가라앉기 시작한다. 잠길수록 \(\nabla\)가 커져 부력이 늘고, 부력이 무게와 같아지는 깊이에서 멈춘다. 이것이 <b>떠 있다</b>는 상태다. 위아래로 같은 단면을 가진 기둥(높이 \(a\), 밀도 \(\rho_b\))이라면 평형 흘수는 바로 밀도 비로 정해진다.</p>
+    <div class="formula">$$\rho_b\, g\, A\, a = \rho\, g\, A\, T \quad\Longrightarrow\quad \frac{T}{a} = \frac{\rho_b}{\rho}$$
+      <div class="where">\(A\): 수평 단면적. 밀도 비가 1보다 크면 \(T > a\)가 되어 다 잠겨도 부력이 모자라므로 가라앉는다. 얼음(917 kg/m³)은 바닷물에서 약 89%가 잠긴다.</div>
+    </div>
+
+    <div class="sim" id="sim-arch">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>수조에 물체 밀어 넣기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-arch" class="grab"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>물체 밀도 ρ<sub>b</sub> <output id="ar-rho-out"></output></span><input type="range" id="ar-rho" min="50" max="8000" step="10" value="600"></label>
+          <div class="ctrl"><span>재질 예</span><div class="ctrl-row"><button class="btn" data-rho="240">코르크</button><button class="btn" data-rho="600">소나무</button><button class="btn" data-rho="917">얼음</button><button class="btn" data-rho="2400">콘크리트</button><button class="btn" data-rho="7850">강철</button></div></div>
+          <div class="ctrl"><span>액체</span><div class="seg" id="ar-liq"><button data-value="1000">담수</button><button data-value="1025" class="on">해수</button><button data-value="1240">사해</button><button data-value="850">기름</button></div></div>
+          <div class="ctrl-row"><button class="btn primary" id="ar-push">물속으로 밀었다 놓기</button><button class="btn" id="ar-reset">공중에서 놓기</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">무게 W</span><span class="v" id="o-ar-w">—</span></div>
+        <div class="stat"><span class="k">부력 F<sub>B</sub></span><span class="v" id="o-ar-b">—</span></div>
+        <div class="stat"><span class="k">잠긴 비율</span><span class="v" id="o-ar-sub">—</span></div>
+        <div class="stat"><span class="k">평형 예측 ρ<sub>b</sub>/ρ</span><span class="v" id="o-ar-eq">—</span></div>
+        <div class="stat"><span class="k">수위 상승</span><span class="v" id="o-ar-rise">—</span></div>
+      </div>
+      <div class="sim-note">1 m × 1 m × 1 m 정육면체(깊이 방향 1 m)를 폭 4 m 수조에 넣는다. 물체를 마우스나 손가락으로 위아래로 끌어 보자. 놓으면 부력과 무게의 차이로 움직이고, 물의 저항(근사적인 감쇠)으로 진동이 잦아들며 평형 흘수에 안착한다. 해볼 것: 얼음(917)을 담수와 해수에 띄워 잠긴 비율을 비교하자. 밀도를 액체보다 크게 하면 아무리 밀어 올려도 바닥으로 가라앉는다. 물체가 잠기는 만큼 수조 수위가 올라가는 것도 확인하자. 밀어낸 물이 바로 '배수량'이다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 2 -->
+  <section id="pressure">
+    <h2>부력은 어디서 오는가: 정수압</h2>
+    <p>물은 깊어질수록 위에 있는 물의 무게만큼 압력이 커진다. 이것이 <span class="term">정수압</span><span class="en">(Hydrostatic Pressure)</span>이다. 대기압을 빼고 수면에서 깊이 \(z\)인 곳의 게이지 압력은</p>
+    <div class="formula">$$p(z) = \rho\, g\, z$$
+      <div class="where">해수에서 깊이 10 m마다 약 100 kPa(대략 1기압)씩 늘어난다. 흘수 20 m인 VLCC의 선저에는 약 200 kPa, 1 m²당 20톤의 무게에 해당하는 압력이 걸린다.</div>
+    </div>
+    <p>압력은 항상 표면에 수직으로 작용한다. 잠긴 물체의 옆면에서는 좌우의 압력이 서로 상쇄되지만, 아래쪽 면은 위쪽 면보다 깊어서 더 큰 압력을 받는다. 이 차이를 표면 전체에 대해 더한(적분한) 것이 부력이다. 직육면체로 확인하면 바닥면(깊이 \(T\))이 받는 힘 \(\rho g T \cdot A\)가 곧 \(\rho g \nabla\)다.</p>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 760 320" role="img" aria-label="잠긴 상자에 작용하는 정수압 분포">
+        <rect x="0" y="80" width="760" height="240" class="f-water"/>
+        <line x1="0" y1="80" x2="760" y2="80" class="s-water"/>
+        <rect x="250" y="30" width="200" height="190" class="f-surface"/>
+        <g stroke="var(--accent)" stroke-width="2" fill="var(--accent)">
+          <line x1="250" y1="110" x2="236" y2="110"/><line x1="250" y1="140" x2="222" y2="140"/><line x1="250" y1="170" x2="208" y2="170"/><line x1="250" y1="200" x2="194" y2="200"/>
+          <line x1="450" y1="110" x2="464" y2="110"/><line x1="450" y1="140" x2="478" y2="140"/><line x1="450" y1="170" x2="492" y2="170"/><line x1="450" y1="200" x2="506" y2="200"/>
+          <polygon points="250,106 250,114 258,110" stroke="none"/><polygon points="250,136 250,144 258,140" stroke="none"/><polygon points="250,166 250,174 258,170" stroke="none"/><polygon points="250,196 250,204 258,200" stroke="none"/>
+          <polygon points="450,106 450,114 442,110" stroke="none"/><polygon points="450,136 450,144 442,140" stroke="none"/><polygon points="450,166 450,174 442,170" stroke="none"/><polygon points="450,196 450,204 442,200" stroke="none"/>
+        </g>
+        <path d="M250 80 L180 220 L250 220" fill="var(--accent-soft)" stroke="var(--accent)" stroke-dasharray="4 3"/>
+        <path d="M450 80 L520 220 L450 220" fill="var(--accent-soft)" stroke="var(--accent)" stroke-dasharray="4 3"/>
+        <g stroke="var(--accent-2)" stroke-width="2.5" fill="var(--accent-2)">
+          <line x1="280" y1="290" x2="280" y2="226"/><line x1="330" y1="290" x2="330" y2="226"/><line x1="380" y1="290" x2="380" y2="226"/><line x1="420" y1="290" x2="420" y2="226"/>
+          <polygon points="274,232 286,232 280,220" stroke="none"/><polygon points="324,232 336,232 330,220" stroke="none"/><polygon points="374,232 386,232 380,220" stroke="none"/><polygon points="414,232 426,232 420,220" stroke="none"/>
+        </g>
+        <text x="350" y="130" class="t" text-anchor="middle">잠긴 부피 ∇</text>
+        <text x="350" y="152" class="t-mono" text-anchor="middle">= A · T</text>
+        <text x="120" y="160" class="t-dim" text-anchor="middle">옆면 압력</text><text x="120" y="180" class="t-dim" text-anchor="middle">(좌우 상쇄)</text>
+        <text x="600" y="250" class="t-acc">바닥 압력 p = ρgT</text>
+        <text x="600" y="272" class="t">합력 = ρgT·A = ρg∇</text>
+        <line x1="470" y1="80" x2="470" y2="220" class="s-line"/><text x="478" y="236" class="t-mono">T</text>
+        <text x="20" y="72" class="t-dim">수면 p = 0</text>
+      </svg>
+      <figcaption><b>그림 2-1.</b> 잠긴 상자에 작용하는 정수압. 옆면의 압력(파란색)은 깊이에 비례해 커지지만 좌우가 같아 상쇄되고, 바닥면이 받는 위쪽 압력(빨간색)의 합이 부력이 된다. 모양이 아무리 복잡해도 표면 압력을 모두 더하면 결과는 \(\rho g \nabla\)로 같다.</figcaption>
+    </figure>
+
+    <div class="sim" id="sim-press">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>압력을 적분하면 부력이 된다</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-press" class="grab"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>단면 모양</span><div class="seg" id="pr-shape"><button data-value="box" class="on">상자</button><button data-value="ship">선체</button><button data-value="circle">원</button><button data-value="vee">V형</button></div></div>
+          <label class="ctrl"><span>잠긴 깊이(바닥 기준) <output id="pr-d-out"></output></span><input type="range" id="pr-d" min="0" max="16" step="0.1" value="5"></label>
+          <label class="ctrl"><span>기울기 <output id="pr-h-out"></output></span><input type="range" id="pr-h" min="-40" max="40" step="1" value="0"></label>
+          <label class="check"><input type="checkbox" id="pr-res" checked> 합력과 부심 B 표시</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">압력 적분 수직 합력</span><span class="v" id="o-pr-fz">—</span></div>
+        <div class="stat"><span class="k">ρ g A<sub>잠김</sub></span><span class="v" id="o-pr-rga">—</span></div>
+        <div class="stat"><span class="k">수평 합력</span><span class="v" id="o-pr-fx">—</span></div>
+        <div class="stat"><span class="k">최대 압력</span><span class="v" id="o-pr-pmax">—</span></div>
+      </div>
+      <div class="sim-note">길이 방향 1 m당 2차원 계산이다(kN/m). 단면 둘레를 0.25 m 간격으로 나누어 각 점의 압력 \(p=\rho g z\)에 법선 방향과 길이를 곱해 더했다. 캔버스를 위아래로 끌어 잠긴 깊이를 바꿀 수도 있다. 해볼 것: 모양과 기울기를 바꿔도 '압력 적분'과 'ρgA'가 항상 같고 수평 합력은 0이다. 기울이면 잠긴 부분의 도심, 즉 부심 B가 옆으로 이동한다. 이 이동이 배를 다시 세우는 복원 모멘트의 원천이다(<a href="stability.html">3장</a>).</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 3 -->
+  <section id="steel">
+    <h2>강철 배가 뜨는 이유</h2>
+    <p>강철의 밀도는 약 7,850 kg/m³로 바닷물의 7.7배다. 강철 덩어리는 당연히 가라앉는다. 그런데 같은 강철을 얇은 판으로 펴서 속이 빈 상자를 만들면, 상자는 강철 무게에 비해 훨씬 큰 부피의 물을 밀어낼 수 있다. 물이 보는 것은 재료의 밀도가 아니라 <b>상자 전체의 평균 밀도</b>, 즉 무게를 바깥 부피로 나눈 값이다.</p>
+    <div class="formula">$$\bar\rho = \frac{m_{steel} + m_{cargo}}{L\,B\,H} < \rho \quad\Longrightarrow\quad \text{floats},\qquad T = \frac{m}{\rho\,L\,B}$$
+      <div class="where">\(L, B, H\): 상자의 길이·폭·높이, \(T\): 흘수. 평균 밀도가 물보다 작아야 하고, 실제로는 \(T\)가 \(H\)보다 충분히 작아 건현이 남아야 파도에 물이 넘치지 않는다.</div>
+    </div>
+
+    <div class="sim" id="sim-steel">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>강판 덩어리 vs 강판 상자</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-steel"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>판 두께 <output id="st-t-out"></output></span><input type="range" id="st-t" min="3" max="60" step="1" value="10"></label>
+          <label class="ctrl"><span>길이 L <output id="st-l-out"></output></span><input type="range" id="st-l" min="2" max="40" step="0.5" value="12"></label>
+          <label class="ctrl"><span>폭 B <output id="st-b-out"></output></span><input type="range" id="st-b" min="1" max="12" step="0.1" value="4"></label>
+          <label class="ctrl"><span>높이 H <output id="st-h-out"></output></span><input type="range" id="st-h" min="0.3" max="5" step="0.05" value="1.5"></label>
+          <label class="ctrl"><span>화물 <output id="st-c-out"></output></span><input type="range" id="st-c" min="0" max="200" step="1" value="0"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">강철 질량</span><span class="v" id="o-st-m">—</span></div>
+        <div class="stat"><span class="k">평균 밀도</span><span class="v" id="o-st-rho">—</span></div>
+        <div class="stat"><span class="k">흘수 T</span><span class="v" id="o-st-t">—</span></div>
+        <div class="stat"><span class="k">건현</span><span class="v" id="o-st-f">—</span></div>
+        <div class="stat"><span class="k">더 실을 수 있는 무게</span><span class="v" id="o-st-cap">—</span></div>
+      </div>
+      <div class="sim-note">윗면이 열린 상자(바닥 + 옆면 4개)로, 해수 1,025 kg/m³, 강철 7,850 kg/m³. 왼쪽은 같은 양의 강철을 정육면체로 뭉친 것. 해볼 것: 판 두께를 키우면 상자가 무거워져 흘수가 늘고, 높이를 낮추면 어느 순간 물이 넘쳐 가라앉는다. 화물을 실어 건현이 0이 되는 순간이 이 상자의 '재화중량' 한계다. 실제 선박은 판 두께가 길이에 비해 극히 얇아(200 m 배에 15~30 mm) 평균 밀도가 매우 작다.</div>
+    </div>
+
+    <div class="callout tip"><strong>배는 '속이 빈 그릇'이다</strong>길이 200 m 배의 선체 강재 무게는 보통 만재 배수량의 15~20% 정도에 불과하다. 나머지 부력은 화물·연료·밸러스트를 받치는 데 쓰인다. 같은 이유로 배에 구멍이 나서 물이 차면, 물이 들어온 공간만큼 '그릇'이 사라져 부력을 잃는다(<a href="damage.html">5장</a>).</div>
+  </section>
+
+  <!-- =============================================================== 4 -->
+  <section id="displacement">
+    <h2>배수량과 재화중량</h2>
+    <p>떠 있는 배에서는 부력과 무게가 같다. 그러므로 배의 질량은 밀어낸 물의 질량과 같고, 이것을 <span class="term">배수량</span><span class="en">(Displacement)</span> \(\Delta\)라 한다. 조선에서는 질량을 톤(t = 1,000 kg) 단위로 쓰는 것이 관례다.</p>
+    <div class="formula">$$\Delta = \rho\,\nabla,\qquad \Delta = \text{LWT} + \text{DWT}$$
+      <div class="where">\(\Delta\): 배수량(t), \(\rho\): 해수 1.025 t/m³, \(\nabla\): 배수 용적(m³, 외판 두께와 부가물을 포함하면 형 배수 용적보다 0.5~1% 크다). LWT: 경하중량(선체·기관·의장품, 빈 배), DWT: 재화중량(화물·연료·청수·선용품·선원).</div>
+    </div>
+    <p>같은 배라도 \(\rho\)가 작은 담수에서는 같은 무게를 받치려고 더 많이 잠긴다. 1.025와 1.000의 차이는 2.5%에 불과하지만, 흘수 10 m 배라면 20~30 cm에 해당해 결코 작지 않다. 이 차이는 뒤에서 담수 여유(FWA)로 정리한다.</p>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 760 300" role="img" aria-label="배수량, 재화중량, 총톤수의 관계">
+        <path d="M60 150 L60 110 L500 110 L540 150 L520 200 L90 200 Z" class="f-surface"/>
+        <rect x="80" y="40" width="70" height="70" class="f-surface"/>
+        <path d="M60 110 L500 110 L540 150 M60 110 L60 150" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 4"/>
+        <path d="M80 110 L80 40 L150 40 L150 110" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 4"/>
+        <path d="M60 150 L540 150 L520 200 L90 200 Z" fill="var(--water-soft)" stroke="var(--water)" stroke-width="2"/>
+        <line x1="20" y1="150" x2="580" y2="150" class="s-water"/>
+        <text x="300" y="182" class="t" text-anchor="middle">배수 용적 ∇ → 배수량 Δ = ρ∇ (무게)</text>
+        <text x="320" y="96" class="t-acc" text-anchor="middle">밀폐 공간 부피 V → 총톤수 GT (부피)</text>
+        <rect x="620" y="40" width="70" height="80" fill="var(--accent-soft)" stroke="var(--accent)"/>
+        <rect x="620" y="120" width="70" height="90" class="f-dim-soft"/>
+        <text x="655" y="84" class="t" text-anchor="middle">DWT</text>
+        <text x="655" y="170" class="t" text-anchor="middle">LWT</text>
+        <path d="M700 40 L712 40 L712 210 L700 210" fill="none" class="s-line"/><text x="718" y="130" class="t-acc">Δ</text>
+        <text x="655" y="232" class="t-dim" text-anchor="middle">화물·연료</text><text x="655" y="250" class="t-dim" text-anchor="middle">+ 빈 배</text>
+        <text x="40" y="250" class="t-dim">무게(t)를 재는 것: 배수량, 경하중량, 재화중량</text>
+        <text x="40" y="274" class="t-dim">부피(m³)에서 계산하는 것: 총톤수(GT), 순톤수(NT) — 단위 없음</text>
+      </svg>
+      <figcaption><b>그림 2-2.</b> 무게와 부피. 배수량은 물속 부피(∇)에서, 총톤수는 수면 위아래를 합친 밀폐 공간 전체의 부피(V)에서 나온다. 같은 '톤'이라는 말을 쓰지만 서로 다른 양이다.</figcaption>
+    </figure>
+  </section>
+
+  <!-- =============================================================== 5 -->
+  <section id="tonnage">
+    <h2>부피로 재는 크기: 총톤수와 순톤수</h2>
+    <p>'톤수(tonnage)'라는 말은 원래 포도주 통(tun)을 몇 개 실을 수 있는지에서 왔다. 즉 처음부터 <b>부피</b>의 척도였다. 오늘날에는 1969년 국제 톤수 측정 협약(ITC 1969)에 따라 선체와 상부 구조의 모든 밀폐 공간 부피 \(V\)(m³)에서 계산하는 무단위 지표다.</p>
+    <div class="formula">$$GT = K_1 V,\qquad K_1 = 0.2 + 0.02\log_{10} V$$
+      <div class="where">\(V\): 모든 밀폐 공간의 부피 합(m³). 큰 배일수록 \(K_1\)이 조금씩 커진다(V = 10,000 m³에서 0.28, 1,000,000 m³에서 0.32).</div>
+    </div>
+    <p><span class="term">순톤수</span><span class="en">(Net Tonnage, NT)</span>는 돈을 버는 공간, 즉 화물 공간 부피 \(V_c\)와 승객 수로 계산하며, 항만세·운하 통과료의 기준이 된다.</p>
+    <div class="formula">$$NT = K_2 V_c\left(\frac{4d}{3D}\right)^2 + K_3\left(N_1 + \frac{N_2}{10}\right),\quad K_2 = 0.2 + 0.02\log_{10}V_c,\quad K_3 = 1.25\,\frac{GT + 10000}{10000}$$
+      <div class="where">\(d\): 형 흘수, \(D\): 형 깊이(\((4d/3D)^2 \le 1\)), \(N_1\): 8인 이하 객실의 승객 수, \(N_2\): 그 외 승객 수(승객이 13명 이상일 때만 둘째 항 적용). 첫째 항은 \(0.25\,GT\) 이상, NT 전체는 \(0.30\,GT\) 이상이어야 한다.</div>
+    </div>
+
+    <div class="sim" id="sim-gt">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>총톤수·순톤수 계산기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-gt"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>예시 선박</span><div class="seg" id="gt-pre"><button data-value="bulk" class="on">벌크선</button><button data-value="container">컨테이너선</button><button data-value="vlcc">VLCC</button><button data-value="cruise">크루즈선</button><button data-value="tug">예인선</button></div></div>
+          <label class="ctrl"><span>밀폐 부피 V <output id="gt-v-out"></output></span><input type="range" id="gt-v" min="2" max="6.3" step="0.01" value="5.48"></label>
+          <label class="ctrl"><span>화물 공간 V<sub>c</sub>/V <output id="gt-vc-out"></output></span><input type="range" id="gt-vc" min="0" max="0.9" step="0.01" value="0.67"></label>
+          <label class="ctrl"><span>흘수/깊이 d/D <output id="gt-dd-out"></output></span><input type="range" id="gt-dd" min="0.3" max="0.8" step="0.01" value="0.73"></label>
+          <label class="ctrl"><span>승객 수 <output id="gt-n-out"></output></span><input type="range" id="gt-n" min="0" max="7000" step="10" value="0"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">K<sub>1</sub></span><span class="v" id="o-gt-k1">—</span></div>
+        <div class="stat"><span class="k">총톤수 GT</span><span class="v" id="o-gt-gt">—</span></div>
+        <div class="stat"><span class="k">순톤수 NT</span><span class="v" id="o-gt-nt">—</span></div>
+        <div class="stat"><span class="k">NT를 정한 조건</span><span class="v" id="o-gt-why">—</span></div>
+        <div class="stat"><span class="k">참고: 대표 재화중량</span><span class="v" id="o-gt-dwt">—</span></div>
+      </div>
+      <div class="sim-note">예시 선박의 부피와 재화중량은 대표적인 근사값이다. 해볼 것: 벌크선과 크루즈선의 GT는 비슷한데 재화중량은 10배 넘게 다르다. 크루즈선은 화물 공간이 거의 없어 NT가 승객 수 항으로 결정되고, 예인선처럼 작은 배는 하한(0.30 GT)에 걸린다. 그래프의 기울기가 1보다 조금 큰 것은 \(K_1\)이 부피와 함께 커지기 때문이다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 6 -->
+  <section id="coef">
+    <h2>형상 계수: 선체는 얼마나 뚱뚱한가</h2>
+    <p>선체의 물속 부분을 꼭 감싸는 직육면체(L × B × T)를 생각하면, 선체가 그 상자를 얼마나 채우는지로 '뚱뚱한 정도'를 나타낼 수 있다. 이런 무차원 비율을 <span class="term">형상 계수</span><span class="en">(Form Coefficients)</span>라 한다. 계수가 크면 같은 주요 치수에서 더 많이 싣지만 저항이 커진다.</p>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 760 330" role="img" aria-label="형상 계수의 정의">
+        <rect x="30" y="30" width="330" height="110" fill="none" class="s-line" stroke-dasharray="5 4"/>
+        <path d="M30 85 C40 35 80 30 120 30 L280 30 C330 30 355 60 360 85 C355 110 330 140 280 140 L120 140 C80 140 40 135 30 85 Z" class="f-acc-soft"/>
+        <text x="195" y="90" class="t-acc" text-anchor="middle">C_wp = A_wp / (L·B)</text>
+        <text x="30" y="160" class="t-dim">수선면(위에서 본 흘수선 단면)</text>
+        <rect x="420" y="30" width="140" height="110" fill="none" class="s-line" stroke-dasharray="5 4"/>
+        <path d="M420 30 L560 30 L560 110 Q560 140 530 140 L450 140 Q420 140 420 110 Z" class="f-acc-soft"/>
+        <text x="490" y="90" class="t-acc" text-anchor="middle">C_m = A_m/(B·T)</text>
+        <text x="420" y="160" class="t-dim">중앙단면</text>
+        <rect x="600" y="30" width="140" height="110" fill="none" class="s-line" stroke-dasharray="5 4"/>
+        <path d="M600 30 L740 30 L725 140 L640 140 Q605 110 600 30 Z" class="f-acc2-soft"/>
+        <text x="670" y="90" class="t-acc" text-anchor="middle">C_b</text>
+        <text x="600" y="160" class="t-dim">물속 선체 / 상자</text>
+        <rect x="30" y="190" width="440" height="110" fill="none" class="s-line" stroke-dasharray="5 4"/>
+        <path d="M30 300 C80 300 110 190 170 190 L330 190 C390 190 430 280 470 300 Z" class="f-acc-soft"/>
+        <text x="250" y="260" class="t-acc" text-anchor="middle">C_p = ∇ / (A_m·L)</text>
+        <text x="30" y="320" class="t-dim">단면적 곡선: 길이 방향 각 위치의 잠긴 단면적</text>
+        <text x="500" y="220" class="t">C_b = ∇ / (L·B·T)</text>
+        <text x="500" y="248" class="t">C_p = C_b / C_m</text>
+        <text x="500" y="276" class="t">C_vp = C_b / C_wp</text>
+        <text x="500" y="304" class="t-dim">점선 상자에 대한 채움 비율</text>
+      </svg>
+      <figcaption><b>그림 2-3.</b> 네 가지 형상 계수. 각각 점선으로 그린 상자를 색칠한 면적(또는 부피)이 얼마나 채우는지를 나타낸다. 주형 계수 \(C_p\)는 중앙단면을 길이 방향으로 늘인 기둥에 대한 비율이라, 배의 '끝부분이 얼마나 뾰족한가'를 나타낸다.</figcaption>
+    </figure>
+
+    <div class="formula">$$C_b = \frac{\nabla}{L B T},\quad C_m = \frac{A_m}{B T},\quad C_p = \frac{\nabla}{A_m L} = \frac{C_b}{C_m},\quad C_{wp} = \frac{A_{wp}}{L B}$$
+      <div class="where">\(C_b\): 방형 계수(Block), \(C_m\): 중앙단면 계수(Midship), \(C_p\): 주형 계수(Prismatic), \(C_{wp}\): 수선면 계수(Waterplane). \(A_m\): 중앙단면의 잠긴 면적, \(A_{wp}\): 수선면 면적. L은 보통 Lpp를 쓴다.</div>
+    </div>
+
+    <div class="sim" id="sim-coef">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>선형을 바꾸며 형상 계수 계산하기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-coef"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>비대도 full <output id="cf-f-out"></output></span><input type="range" id="cf-f" min="0.2" max="1" step="0.01" value="0.7"></label>
+          <label class="ctrl"><span>흘수 T <output id="cf-t-out"></output></span><input type="range" id="cf-t" min="3" max="16" step="0.1" value="11"></label>
+          <div class="ctrl"><span>예시</span><div class="ctrl-row"><button class="btn" data-full="0.25">날씬(고속선)</button><button class="btn" data-full="0.7">보통</button><button class="btn" data-full="1">비대(탱커)</button></div></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">C<sub>b</sub></span><span class="v" id="o-cf-cb">—</span></div>
+        <div class="stat"><span class="k">C<sub>m</sub></span><span class="v" id="o-cf-cm">—</span></div>
+        <div class="stat"><span class="k">C<sub>p</sub></span><span class="v" id="o-cf-cp">—</span></div>
+        <div class="stat"><span class="k">C<sub>wp</sub></span><span class="v" id="o-cf-cw">—</span></div>
+        <div class="stat"><span class="k">배수량 Δ</span><span class="v" id="o-cf-d">—</span></div>
+        <div class="stat"><span class="k">LCB(중앙 기준)</span><span class="v" id="o-cf-lcb">—</span></div>
+      </div>
+      <div class="sim-note">공용 선형 함수 SB.hullHalf(L 200 m, B 32 m, D 18 m)의 반폭을 길이 80칸 × 높이 40칸으로 수치 적분했다. 이 단순한 선형족은 \(C_b\)가 약 0.6~0.76 범위만 표현한다(실제 선박은 0.5~0.87). 해볼 것: 비대도를 올리면 평행 중앙부(단면이 일정한 구간)가 길어져 \(C_p\)와 \(C_{wp}\)가 함께 커진다. 흘수를 줄이면 빌지의 둥근 부분이 차지하는 비율이 커져 \(C_m\)과 \(C_b\)가 작아진다. 계수는 흘수에 따라 변한다는 점을 기억하자.</div>
+    </div>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>선종</th><th class="num">C<sub>b</sub></th><th class="num">C<sub>m</sub></th><th class="num">C<sub>p</sub></th><th class="num">C<sub>wp</sub></th><th class="num">F<sub>n</sub></th></tr></thead>
+      <tbody>
+        <tr><td>탱커·벌크선</td><td class="num">0.80~0.87</td><td class="num">0.99</td><td class="num">0.81~0.88</td><td class="num">0.88~0.92</td><td class="num">0.12~0.15</td></tr>
+        <tr><td>컨테이너선</td><td class="num">0.60~0.68</td><td class="num">0.97~0.98</td><td class="num">0.62~0.70</td><td class="num">0.75~0.82</td><td class="num">0.18~0.25</td></tr>
+        <tr><td>여객선·카페리</td><td class="num">0.55~0.65</td><td class="num">0.95~0.98</td><td class="num">0.58~0.68</td><td class="num">0.72~0.80</td><td class="num">0.25~0.30</td></tr>
+        <tr><td>함정(구축함)</td><td class="num">0.45~0.52</td><td class="num">0.75~0.82</td><td class="num">0.60~0.65</td><td class="num">0.70~0.75</td><td class="num">0.35~0.45</td></tr>
+      </tbody>
+    </table></div>
+    <p>표에서 보듯 느린 배일수록 \(C_b\)가 크다. 프루드 수가 커지면 선수·선미에서 만드는 파도가 저항의 큰 부분을 차지하므로 끝을 날씬하게(\(C_p\)를 작게) 해야 한다(<a href="resistance.html">6장</a>).</p>
+  </section>
+
+  <!-- =============================================================== 7 -->
+  <section id="integration">
+    <h2>곡선 선체의 면적과 부피: 수치 적분</h2>
+    <p>선체는 수식으로 된 곡면이 아니라 도면 위의 점들로 정의된다. 선도(lines plan)에서는 길이 방향으로 등간격의 <span class="term">스테이션</span><span class="en">(Station)</span>을 나누고, 각 스테이션에서 반폭(half-breadth) \(y_i\)를 읽는다. 면적은 이 값들의 가중합으로 근사한다.</p>
+    <div class="formula">$$A_{trap} = h\left(\tfrac12 y_0 + y_1 + y_2 + \cdots + y_{n-1} + \tfrac12 y_n\right)$$
+      <div class="where">사다리꼴 법칙. \(h = L/n\): 스테이션 간격. 이웃 점을 직선으로 잇는다. 곡선이 볼록하면 면적을 체계적으로 작게 계산한다.</div>
+    </div>
+    <div class="formula">$$A_{simp} = \frac{h}{3}\left(y_0 + 4y_1 + 2y_2 + 4y_3 + \cdots + 4y_{n-1} + y_n\right)$$
+      <div class="where">심프슨 제1법칙(\(n\)은 짝수). 세 점씩 묶어 포물선으로 잇는다. 승수 1, 4, 2, 4, …, 4, 1을 '심프슨 승수'라 부르며, 매끄러운 곡선에서 오차가 \(h^4\)에 비례해 매우 빨리 줄어든다.</div>
+    </div>
+    <p>부피도 같은 방법이다. 각 스테이션의 잠긴 단면적 \(A(x)\)를 먼저 구하고(높이 방향 적분), 그것을 다시 길이 방향으로 적분하면 \(\nabla\)가 된다. 1차 모멘트를 같이 적분하면 부심의 위치(LCB, KB)도 얻는다. 아래 정수압 곡선 시뮬레이터가 바로 이 계산을 흘수마다 반복한 것이다.</p>
+
+    <div class="sim" id="sim-simp">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>사다리꼴 vs 심프슨: 수선면 면적</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-simp"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>스테이션 구간 수 n <output id="sp-n-out"></output></span><input type="range" id="sp-n" min="2" max="40" step="2" value="6"></label>
+          <div class="ctrl"><span>방법</span><div class="seg" id="sp-m"><button data-value="trap">사다리꼴</button><button data-value="simp" class="on">심프슨</button><button data-value="both">둘 다</button></div></div>
+          <label class="ctrl"><span>비대도 full <output id="sp-f-out"></output></span><input type="range" id="sp-f" min="0.2" max="1" step="0.01" value="0.7"></label>
+          <label class="check"><input type="checkbox" id="sp-mul" checked> 심프슨 승수 표시</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">정밀 적분(2,000칸)</span><span class="v" id="o-sp-ex">—</span></div>
+        <div class="stat"><span class="k">사다리꼴</span><span class="v" id="o-sp-tr">—</span></div>
+        <div class="stat"><span class="k">심프슨</span><span class="v" id="o-sp-si">—</span></div>
+        <div class="stat"><span class="k">TPC(정밀)</span><span class="v" id="o-sp-tpc">—</span></div>
+      </div>
+      <div class="sim-note">흘수 11 m 수선면의 반폭 곡선(L 200 m)이다. 면적은 양현을 합한 값. 해볼 것: n = 2에서 시작해 n을 늘려 보자. 심프슨은 n = 10 정도면 오차가 0.5% 안쪽으로 줄지만, 사다리꼴은 같은 정확도에 훨씬 많은 점이 필요하다. 다만 이 선형은 평행 중앙부 끝에서 곡률이 갑자기 바뀌어 심프슨의 오차가 이론만큼 빨리 줄지는 않는다. 실무에서 스테이션을 끝부분에 더 촘촘히 두는 이유다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 8 -->
+  <section id="hydrostatics">
+    <h2>정수압 곡선: 흘수에 따라 변하는 선체의 성질</h2>
+    <p>배는 싣는 무게에 따라 흘수가 변하고, 흘수가 변하면 배수량·수선면 면적·부심 위치 등이 모두 변한다. 이 값들을 흘수의 함수로 미리 계산해 둔 것이 <span class="term">정수압 곡선</span><span class="en">(Hydrostatic Curves)</span>, 또는 그 표인 정수압표다. 선원은 흘수를 읽고 이 표를 찾아 배의 상태를 계산한다(<a href="trim.html">4장</a>).</p>
+    <ul>
+      <li><b>Δ</b>: 배수량. 흘수에 따라 단조 증가한다.</li>
+      <li><b>TPC</b><span class="en">(Tonnes per Centimetre)</span>: 흘수를 1 cm 늘리는 데 필요한 무게. \(TPC = \rho A_{wp}/100\)(t/cm). 수선면이 넓을수록 크다.</li>
+      <li><b>KB</b>: 용골에서 부심(잠긴 부피의 중심)까지 높이. 상자형이면 \(T/2\), 실제 선형은 0.52~0.55 T 정도.</li>
+      <li><b>LCB, LCF</b>: 부심과 <span class="term">부면심</span><span class="en">(Centre of Flotation, 수선면의 도심)</span>의 길이 방향 위치. 작은 무게를 LCF 위에 실으면 트림 없이 평행하게 가라앉는다.</li>
+      <li><b>KM</b>: 용골에서 횡메타센터까지 높이, \(KM = KB + BM\), \(BM = I_T/\nabla\). 복원성의 출발점이다(<a href="stability.html">3장</a>).</li>
+    </ul>
+
+    <div class="sim" id="sim-hydro">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>정수압 곡선 읽기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-hydro"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>곡선</span><div class="seg" id="hy-c"><button data-value="disp" class="on">배수량</button><button data-value="tpc">TPC</button><button data-value="kb">KB·KM</button><button data-value="lc">LCB·LCF</button><button data-value="coef">계수</button></div></div>
+          <div class="ctrl"><span>선형</span><div class="seg" id="hy-f"><button data-value="0.3">날씬</button><button data-value="0.7" class="on">보통</button><button data-value="1">비대</button></div></div>
+          <label class="ctrl"><span>흘수 T <output id="hy-t-out"></output></span><input type="range" id="hy-t" min="1" max="16" step="0.05" value="11"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">배수량 Δ</span><span class="v" id="o-hy-d">—</span></div>
+        <div class="stat"><span class="k">TPC</span><span class="v" id="o-hy-tpc">—</span></div>
+        <div class="stat"><span class="k">KB</span><span class="v" id="o-hy-kb">—</span></div>
+        <div class="stat"><span class="k">KM<sub>T</sub></span><span class="v" id="o-hy-km">—</span></div>
+        <div class="stat"><span class="k">LCB / LCF</span><span class="v" id="o-hy-lc">—</span></div>
+        <div class="stat"><span class="k">C<sub>b</sub> / C<sub>wp</sub></span><span class="v" id="o-hy-cb">—</span></div>
+      </div>
+      <div class="sim-note">관례대로 세로축이 흘수다. LCB·LCF는 중앙에서 선수 쪽이 +. 해볼 것: 배수량 곡선의 기울기(흘수 1 m당 배수량 증가)가 바로 100 × TPC다. 흘수가 작을 때 TPC가 빨리 커지는 것은 빌지의 둥근 부분 때문이다. KM 곡선이 얕은 흘수에서 매우 큰 것은 \(BM = I_T/\nabla\)에서 부피가 작기 때문이며, 흘수가 깊어지면 최솟값을 지나 다시 커진다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 9 -->
+  <section id="tpc">
+    <h2>짐을 실으면, 강에 들어가면: TPC와 FWA</h2>
+    <p>무게 \(w\)(t)를 LCF 위에 실으면 배는 평행하게 가라앉는다. 흘수 변화가 작아 그 사이 수선면 면적이 거의 일정하다고 보면</p>
+    <div class="formula">$$\delta T\ [\text{cm}] = \frac{w}{TPC},\qquad TPC = \frac{\rho\,A_{wp}}{100}$$
+      <div class="where">\(A_{wp}\): 수선면 면적(m²), \(\rho\): 1.025 t/m³. 길이 200 m급 배의 TPC는 50 t/cm 안팎이다. 실을 무게가 커서 흘수가 크게 변하면 정수압 곡선으로 직접 계산해야 한다.</div>
+    </div>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 760 300" role="img" aria-label="선수의 흘수 표지 읽기">
+        <path d="M120 20 L520 20 L560 20 C600 120 610 200 600 290 L120 290 Z" class="f-dim-soft"/>
+        <rect x="0" y="178" width="760" height="122" class="f-water"/>
+        <line x1="0" y1="178" x2="760" y2="178" class="s-water"/>
+        <g class="t" font-weight="700">
+          <text x="470" y="58" class="t" style="font-size:22px;font-weight:700">12M</text>
+          <text x="490" y="98" class="t" style="font-size:22px;font-weight:700">8</text>
+          <text x="490" y="138" class="t" style="font-size:22px;font-weight:700">6</text>
+          <text x="490" y="178" class="t" style="font-size:22px;font-weight:700">4</text>
+          <text x="490" y="218" class="t" style="font-size:22px;font-weight:700;opacity:.55">2</text>
+          <text x="470" y="258" class="t" style="font-size:22px;font-weight:700;opacity:.55">11M</text>
+        </g>
+        <g class="s-line"><line x1="520" y1="58" x2="640" y2="58"/><line x1="520" y1="98" x2="640" y2="98"/><line x1="520" y1="138" x2="640" y2="138"/><line x1="520" y1="258" x2="640" y2="258"/></g>
+        <text x="648" y="62" class="t-mono">12.0 m</text><text x="648" y="102" class="t-mono">11.8 m</text><text x="648" y="142" class="t-mono">11.6 m</text><text x="648" y="262" class="t-mono">11.0 m</text>
+        <path d="M410 138 L410 178" class="s-acc"/><path d="M402 178 L418 178" class="s-acc"/>
+        <text x="400" y="200" class="t-acc" text-anchor="end">수면 = 11.4 m</text>
+        <text x="60" y="60" class="t-dim">숫자 높이 10 cm</text>
+        <text x="60" y="82" class="t-dim">간격 20 cm</text>
+        <text x="60" y="104" class="t-dim">숫자 아래 끝 = 그 흘수</text>
+      </svg>
+      <figcaption><b>그림 2-4.</b> 선수의 미터식 흘수 표지. 높이 10 cm의 숫자를 20 cm 간격으로 칠하고, 숫자의 <b>아래 끝</b>이 그 흘수다. 그림에서 수면이 '4'의 아래 끝에 있으므로 흘수는 11.4 m. 선수·선미·중앙 양현에 있어 6곳을 읽고 평균과 트림을 구한다.</figcaption>
+    </figure>
+
+    <div class="sim" id="sim-tpc">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>화물을 실으면 흘수는 얼마나 변할까</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-tpc"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>실은 화물 <output id="tp-w-out"></output></span><input type="range" id="tp-w" min="0" max="45000" step="100" value="0"></label>
+          <div class="ctrl-row"><button class="btn primary" id="tp-add">+500 t 싣기</button><button class="btn" id="tp-sub">−500 t 내리기</button><button class="btn" id="tp-big">+20,000 t</button></div>
+          <label class="ctrl"><span>출발 상태(경하+밸러스트) <output id="tp-0-out"></output></span><input type="range" id="tp-0" min="12000" max="30000" step="500" value="18000"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">배수량 Δ</span><span class="v" id="o-tp-d">—</span></div>
+        <div class="stat"><span class="k">흘수 T(정수압 곡선)</span><span class="v" id="o-tp-t">—</span></div>
+        <div class="stat"><span class="k">현재 TPC</span><span class="v" id="o-tp-tpc">—</span></div>
+        <div class="stat"><span class="k">직전 변화: TPC 추정 / 실제</span><span class="v" id="o-tp-est">—</span></div>
+      </div>
+      <div class="sim-note">L 200 m, B 32 m 공용 선형(보통). 흘수는 정수압 곡선을 거꾸로 풀어 구하고, 'TPC 추정'은 직전 흘수의 TPC 하나로 \(w/TPC\)를 계산한 값이다. 해볼 것: +500 t를 여러 번 누르면 추정과 실제가 거의 같다. +20,000 t처럼 큰 무게를 한 번에 실으면 흘수가 커지는 동안 수선면이 넓어져 TPC 추정이 실제보다 크게 나온다. 선수의 흘수 눈금이 움직이는 것도 보자.</div>
+    </div>
+
+    <p>바다에서 강을 거슬러 항구로 들어가면, 배의 무게는 그대로인데 물의 밀도가 1.025에서 1.000으로 줄어든다. 같은 무게를 받치려면 \(\nabla\)가 2.5% 늘어야 하므로 배가 더 가라앉는다. 이 침하량을 <span class="term">담수 여유</span><span class="en">(FWA, Fresh Water Allowance)</span>라 한다.</p>
+    <div class="formula">$$\delta T = \frac{\Delta}{A_{wp}}\left(\frac{1}{\rho_f} - \frac{1}{\rho_s}\right) \approx \frac{\Delta\,(\rho_s - \rho_f)}{\rho_f\cdot 100\,TPC} \quad\Longrightarrow\quad FWA\ [\text{mm}] = \frac{\Delta}{4\,TPC}$$
+      <div class="where">\(\rho_s = 1.025\), \(\rho_f = 1.000\) t/m³, \(\Delta\)(t), \(TPC\)(t/cm, 해수 기준). 밀도가 그 중간인 기수(brackish water)에서는 <b>DWA</b>(Dock Water Allowance) \(= FWA\cdot(1025 - \rho_{dock})/25\)를 쓴다.</div>
+    </div>
+
+    <div class="sim" id="sim-fwa">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>강 하구의 항구로 들어가기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-fwa"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>배수량 Δ <output id="fw-d-out"></output></span><input type="range" id="fw-d" min="15000" max="65000" step="500" value="50000"></label>
+          <label class="ctrl"><span>항구 물 밀도 <output id="fw-r-out"></output></span><input type="range" id="fw-r" min="1000" max="1025" step="1" value="1000"></label>
+          <div class="ctrl-row"><button class="btn primary" id="fw-in">입항</button><button class="btn" id="fw-out">출항</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">현재 물 밀도</span><span class="v" id="o-fw-rho">—</span></div>
+        <div class="stat"><span class="k">현재 흘수</span><span class="v" id="o-fw-t">—</span></div>
+        <div class="stat"><span class="k">FWA = Δ/(4·TPC)</span><span class="v" id="o-fw-fwa">—</span></div>
+        <div class="stat"><span class="k">항구 침하: DWA / 정확</span><span class="v" id="o-fw-dwa">—</span></div>
+      </div>
+      <div class="sim-note">하구의 밀도는 바다에서 항구까지 매끄럽게 변한다고 가정했다(실제 하구는 염분이 층을 이루기도 한다). 오른쪽 아래 확대 그림은 선측 중앙의 만재 흘수선 표지 부근이다. 해볼 것: 하계 만재(S) 상태로 바다에서 출발해 담수 항구로 들어가면 수면이 F 표지 근처까지 올라간다. 그래서 담수 항구에서는 S 표지가 FWA만큼 잠겨도 과적이 아니다. 바다로 나가면 다시 S로 떠오르기 때문이다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 10 -->
+  <section id="loadline">
+    <h2>얼마까지 실어도 되나: 만재 흘수선</h2>
+    <p>짐을 많이 실을수록 운임을 더 받지만, 건현이 줄어 파도가 갑판을 덮치고 예비 부력이 사라진다. 19세기 영국에서는 보험금을 노린 과적으로 '관선(coffin ship)' 사고가 잦았고, 의원 새뮤얼 플림솔의 노력으로 선측에 최대 흘수를 표시하는 법이 생겼다. 지금은 <span class="term">국제 만재 흘수선 협약</span><span class="en">(ILLC 1966)</span>이 배의 길이·형태로 최소 건현을 계산하게 하고, 결과를 선측 중앙의 <span class="term">만재 흘수선 표지</span><span class="en">(Load Line Mark, Plimsoll Mark)</span>로 칠한다.</p>
+    <p>바다는 계절과 수역에 따라 거칠기가 다르므로 허용 흘수도 다르다. 하계(S) 흘수를 기준으로 열대(T)는 \(T_S/48\)만큼 더 싣고, 동계(W)는 \(T_S/48\)만큼 덜 싣는다. 겨울 북대서양(WNA)은 길이 100 m 이하 배에 W보다 50 mm 더 엄격하다. 담수(F, TF)는 FWA만큼 위에 있다.</p>
+
+    <div class="sim" id="sim-load">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>만재 흘수선 표지: 어디까지 잠겨도 되나</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view sim-svg" id="ld-view"></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>수역·계절</span><div class="seg" id="ld-zone"><button data-value="T">열대</button><button data-value="S" class="on">하계</button><button data-value="W">동계</button><button data-value="WNA">북대서양 동계</button></div></div>
+          <div class="ctrl"><span>물</span><div class="seg" id="ld-water"><button data-value="1025" class="on">해수 1.025</button><button data-value="1012">기수 1.012</button><button data-value="1000">담수 1.000</button></div></div>
+          <label class="ctrl"><span>실제 흘수 <output id="ld-t-out"></output></span><input type="range" id="ld-t" min="10.3" max="11.8" step="0.005" value="11.0"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">허용 흘수</span><span class="v" id="o-ld-allow">—</span></div>
+        <div class="stat"><span class="k">여유</span><span class="v" id="o-ld-margin">—</span></div>
+        <div class="stat"><span class="k">판정</span><span class="v" id="o-ld-ok">—</span></div>
+        <div class="stat"><span class="k">하계 건현</span><span class="v" id="o-ld-fb">—</span></div>
+      </div>
+      <div class="sim-note">L 200 m 공용 선형, 하계 흘수 11.0 m(형깊이 18 m)로 가정한 예시다. 표지 선의 <b>위쪽 끝</b>이 기준선이다. 원의 지름 300 mm, 표지 선 길이 230 mm, 굵기 25 mm. 원 양옆의 글자는 건현을 지정한 기관(선급)의 약자다. 해볼 것: 하계 해수에서 수면을 S선에 맞춘 뒤 '담수'로 바꾸면 허용 흘수가 F선으로 올라간다. WNA는 길이 100 m 이하 선박에만 칠하므로 이 배에서는 동계(W)가 적용된다.</div>
+    </div>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>표지</th><th>의미</th><th>하계(S) 기준 위치</th></tr></thead>
+      <tbody>
+        <tr><td>TF</td><td>열대 담수</td><td>T + FWA</td></tr>
+        <tr><td>F</td><td>하계 담수</td><td>S + FWA</td></tr>
+        <tr><td>T</td><td>열대 해수</td><td>S + T<sub>S</sub>/48</td></tr>
+        <tr><td>S</td><td>하계 해수(원의 중심선과 같은 높이)</td><td>기준</td></tr>
+        <tr><td>W</td><td>동계 해수</td><td>S − T<sub>S</sub>/48</td></tr>
+        <tr><td>WNA</td><td>북대서양 동계(L ≤ 100 m)</td><td>W − 50 mm</td></tr>
+      </tbody>
+    </table></div>
+    <div class="callout"><strong>건현 갑판선과 하계 건현</strong>원 위쪽의 가로선(갑판선)은 건현 갑판의 높이를 나타낸다. 갑판선 위쪽 끝에서 원 중심까지가 <b>하계 건현</b>이며, ILLC의 표에서 배 길이로 기본 건현을 찾고 블록 계수·깊이·현호(sheer)·선수 높이 등을 보정해 정한다. 상부 구조가 많고 선수가 높을수록 건현을 줄여 더 실을 수 있다.</div>
+  </section>
+
+  <!-- =============================================================== summary -->
+  <section class="keypoints" id="summary">
+    <h2>핵심 정리</h2>
+    <ol>
+      <li>부력은 밀어낸 유체의 무게 \(F_B = \rho g\nabla\)이며, 표면에 작용하는 정수압 \(p = \rho g z\)를 적분한 결과다. 수평 성분은 상쇄되고 합력은 잠긴 부분의 도심(부심 B)을 지나 수직으로 작용한다.</li>
+      <li>떠 있는 물체는 평균 밀도의 비만큼 잠긴다. 강철 배가 뜨는 것은 얇은 강판으로 큰 부피를 감싸 평균 밀도를 물보다 작게 만들었기 때문이다.</li>
+      <li>배수량 Δ = ρ∇ = 경하중량 + 재화중량(무게). 총톤수 GT = K₁V, 순톤수는 화물 공간과 승객 수에서 계산하는 부피 지표다.</li>
+      <li>형상 계수 C<sub>b</sub> = ∇/LBT, C<sub>m</sub> = A<sub>m</sub>/BT, C<sub>p</sub> = C<sub>b</sub>/C<sub>m</sub>, C<sub>wp</sub> = A<sub>wp</sub>/LB. 느린 배일수록 크고, 흘수에 따라 변한다.</li>
+      <li>곡선 선체의 면적·부피는 스테이션의 값으로 수치 적분한다. 심프슨 제1법칙(승수 1, 4, 2, …, 4, 1)이 사다리꼴보다 훨씬 정확하다.</li>
+      <li>정수압 곡선은 흘수별 Δ, TPC, KB, LCB, LCF, KM을 모은 것이다. 작은 적재에는 δT(cm) = w/TPC를 쓴다.</li>
+      <li>해수에서 담수로 들어가면 FWA(mm) = Δ/(4·TPC)만큼 가라앉는다. 만재 흘수선 표지(TF, F, T, S, W, WNA)는 수역·계절·물의 밀도별 허용 흘수를 나타낸다.</li>
+    </ol>
+  </section>
+
+  <!-- =============================================================== quiz -->
+  <section class="quiz-sec" id="quiz">
+    <h2>확인 퀴즈</h2>
+    <div class="quiz">
+      <div class="quiz-q"><p>Q1. 밀도 820 kg/m³인 나무 기둥(단면 일정)을 해수(1,025 kg/m³)에 세워 띄우면, 높이의 몇 %가 잠기는가?</p><div class="opts">
+        <button class="opt">약 18%</button><button class="opt">약 64%</button><button class="opt" data-correct>약 80%</button><button class="opt">100% (가라앉는다)</button>
+      </div><div class="quiz-exp">T/a = ρ<sub>b</sub>/ρ = 820/1025 = 0.80. 무게와 부력이 같아지는 깊이에서 멈춘다.</div></div>
+
+      <div class="quiz-q"><p>Q2. 물에 잠긴 물체가 받는 정수압의 합력에 대한 설명으로 옳은 것은?</p><div class="opts">
+        <button class="opt">수평 성분이 수직 성분보다 크다</button><button class="opt" data-correct>수평 성분은 상쇄되고 수직 성분은 ρg∇와 같다</button><button class="opt">모양에 따라 ρg∇보다 클 수도 작을 수도 있다</button><button class="opt">물체의 무게중심을 지난다</button>
+      </div><div class="quiz-exp">닫힌 표면에 걸친 압력 적분은 모양과 무관하게 ρg∇의 수직 상향 힘이 되며, 잠긴 부분의 도심(부심)을 지난다. 무게중심과 부심이 어긋나면 모멘트가 생긴다.</div></div>
+
+      <div class="quiz-q"><p>Q3. L = 100 m, B = 16 m, T = 6 m인 배의 C<sub>b</sub>가 0.65라면 해수에서의 배수량은?</p><div class="opts">
+        <button class="opt">약 6,240 t</button><button class="opt" data-correct>약 6,400 t</button><button class="opt">약 9,600 t</button><button class="opt">약 9,840 t</button>
+      </div><div class="quiz-exp">∇ = C<sub>b</sub>LBT = 0.65 × 100 × 16 × 6 = 6,240 m³, Δ = 1.025 × 6,240 ≈ 6,396 t.</div></div>
+
+      <div class="quiz-q"><p>Q4. C<sub>b</sub> = 0.80, C<sub>m</sub> = 0.99일 때 주형 계수 C<sub>p</sub>는?</p><div class="opts">
+        <button class="opt">0.79</button><button class="opt" data-correct>0.81</button><button class="opt">0.99</button><button class="opt">1.24</button>
+      </div><div class="quiz-exp">C<sub>p</sub> = C<sub>b</sub>/C<sub>m</sub> = 0.80/0.99 ≈ 0.808.</div></div>
+
+      <div class="quiz-q"><p>Q5. 반폭 y₀…y₄ = 0, 6, 8, 6, 0 m, 스테이션 간격 h = 10 m일 때 심프슨 제1법칙으로 구한 반쪽 수선면 면적은?</p><div class="opts">
+        <button class="opt">200 m²</button><button class="opt" data-correct>213.3 m²</button><button class="opt">226.7 m²</button><button class="opt">320 m²</button>
+      </div><div class="quiz-exp">(h/3)(y₀ + 4y₁ + 2y₂ + 4y₃ + y₄) = (10/3)(0 + 24 + 16 + 24 + 0) = 213.3 m². 사다리꼴로 하면 10 × (6 + 8 + 6) = 200 m²로 작게 나온다.</div></div>
+
+      <div class="quiz-q"><p>Q6. TPC = 50 t/cm인 배에 화물 750 t을 LCF 위에 실으면 평균 흘수는 얼마나 늘어나는가?</p><div class="opts">
+        <button class="opt">1.5 cm</button><button class="opt" data-correct>15 cm</button><button class="opt">37.5 cm</button><button class="opt">1.5 m</button>
+      </div><div class="quiz-exp">δT = w/TPC = 750/50 = 15 cm. LCF 위에 실었으므로 트림 없이 평행 침하한다.</div></div>
+
+      <div class="quiz-q"><p>Q7. 배수량 48,000 t, TPC 50 t/cm인 배가 해수에서 담수 항구로 들어가면 흘수는?</p><div class="opts">
+        <button class="opt">24 mm 깊어진다</button><button class="opt" data-correct>240 mm 깊어진다</button><button class="opt">240 mm 얕아진다</button><button class="opt">변하지 않는다</button>
+      </div><div class="quiz-exp">FWA = Δ/(4·TPC) = 48,000/200 = 240 mm. 담수는 밀도가 작아 같은 무게를 받치려면 더 잠겨야 한다.</div></div>
+
+      <div class="quiz-q"><p>Q8. 만재 흘수선 표지에서 F 표지는 무엇을 뜻하는가?</p><div class="opts">
+        <button class="opt">선수(Fore) 흘수</button><button class="opt">동계(Fall) 흘수</button><button class="opt" data-correct>하계 담수(Fresh) 흘수, S보다 FWA만큼 위</button><button class="opt">건현 갑판(Freeboard deck)의 높이</button>
+      </div><div class="quiz-exp">F는 담수에서의 하계 만재 흘수다. 담수 항구에서는 수면이 F에 닿아도 바다로 나가면 S까지 떠오르므로 과적이 아니다.</div></div>
+    </div>
+  </section>
+</main>
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const cssv = (n) => getComputedStyle(document.body).getPropertyValue(n).trim();
+  const font = (sz, mono, w) => (w ? w + " " : "") + sz + "px " + (mono ? cssv("--mono") : cssv("--font"));
+  const sm = (v, u) => v + "<small>" + u + "</small>";
+  const nf = (x, d) => Number(x).toLocaleString("en-US", { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+  function label(ctx, s, x, y, c, a, sz, w, base) {
+    ctx.font = font(sz || 12, false, w); ctx.fillStyle = c; ctx.textAlign = a || "left"; ctx.textBaseline = base || "middle"; ctx.fillText(s, x, y);
+  }
+  function seg(ctx, x1, y1, x2, y2) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+  function waterBox(ctx, x0, x1, y, y1, tint) {
+    const g = ctx.createLinearGradient(0, y, 0, y1);
+    g.addColorStop(0, tint || cssv("--water-soft") || "rgba(47,143,208,.18)"); g.addColorStop(1, "rgba(20,70,120,0.30)");
+    ctx.fillStyle = g; ctx.fillRect(x0, y, x1 - x0, y1 - y);
+    ctx.strokeStyle = cssv("--water"); ctx.lineWidth = 1.6; seg(ctx, x0, y, x1, y);
+  }
+  function run(name, fn) { try { fn(); } catch (e) { console.error("[sim " + name + "]", e); } }
+  const G = SB.G;
+
+  /* ------------------------------------------------ 공용: 정수압 계산(공용 선형 L 200, B 32, D 18) */
+  const HL = 200, HB = 32, HD = 18, DZ = 0.1, NZ = 170;
+  const HC = {};
+  /** 흘수 0~17 m를 0.1 m 간격으로: 수선면 면적, 배수 용적, KB, LCB, LCF, BM 등. 길이 방향 80칸 사다리꼴 + 높이 방향 누적 사다리꼴 */
+  function hydro(full) {
+    const key = String(full); if (HC[key]) return HC[key];
+    const NX = 80, dx = HL / NX, o = { full };
+    const A = [], MX = [], IT = [], IL = [];
+    for (let k = 0; k <= NZ; k++) {
+      const z = k * DZ; let a = 0, mx = 0, it = 0, il = 0;
+      for (let i = 0; i <= NX; i++) {
+        const xi = -1 + (2 * i) / NX, x = (xi * HL) / 2, wt = i === 0 || i === NX ? 0.5 : 1;
+        const b = (SB.hullHalf(xi, z / HD, o) * HB) / 2;
+        a += wt * 2 * b * dx; mx += wt * 2 * b * x * dx; it += wt * (2 / 3) * b * b * b * dx; il += wt * 2 * b * x * x * dx;
+      }
+      A.push(a); MX.push(mx); IT.push(it); IL.push(il);
+    }
+    const V = [0], MZ = [0], ML = [0];
+    for (let k = 1; k <= NZ; k++) {
+      V.push(V[k - 1] + ((A[k - 1] + A[k]) / 2) * DZ);
+      MZ.push(MZ[k - 1] + ((A[k - 1] * (k - 1) * DZ + A[k] * k * DZ) / 2) * DZ);
+      ML.push(ML[k - 1] + ((MX[k - 1] + MX[k]) / 2) * DZ);
+    }
+    const H = { A, V, IT, full,
+      disp: V.map((v) => 1.025 * v), tpc: A.map((a) => (1.025 * a) / 100),
+      kb: V.map((v, k) => (v > 1e-6 ? MZ[k] / v : 0)), lcb: V.map((v, k) => (v > 1e-6 ? ML[k] / v : 0)),
+      lcf: A.map((a, k) => (a > 1e-6 ? MX[k] / a : 0)), bm: V.map((v, k) => (v > 1e-6 ? IT[k] / v : 0)),
+      cb: V.map((v, k) => (k ? v / (HL * HB * k * DZ) : 0)), cwp: A.map((a) => a / (HL * HB)) };
+    H.km = H.kb.map((kb, k) => kb + H.bm[k]);
+    return (HC[key] = H);
+  }
+  /** 흘수 T에서 표 값을 선형 보간 */
+  function at(H, key, T) {
+    const f = SB.clamp(T / DZ, 0, NZ), i = Math.min(NZ - 1, Math.floor(f)), r = f - i;
+    return H[key][i] * (1 - r) + H[key][i + 1] * r;
+  }
+  /** 배수량 disp(t)를 밀도 rho(t/m³)에서 받치는 흘수 */
+  function draftFor(H, disp, rho) {
+    const V = disp / (rho || 1.025), arr = H.V;
+    if (V <= 0) return 0; if (V >= arr[NZ]) return NZ * DZ;
+    let lo = 0, hi = NZ; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (arr[m] < V) lo = m; else hi = m; }
+    return (lo + (V - arr[lo]) / (arr[hi] - arr[lo])) * DZ;
+  }
+
+  /* =================================================== Sim 1: 아르키메데스 수조 */
+  run("arch", function () {
+    const WT = 4, HT = 3, H0 = 1.5, A = 1, BW = 1;
+    const st = { yb: 2.4, v: 0, drag: false, off: 0 };
+    const gR = SB.range("ar-rho", (v) => nf(v) + " kg/m³", () => { st.v = 0; });
+    const gL = SB.seg("ar-liq", () => { st.v = 0; });
+    document.querySelectorAll("#sim-arch [data-rho]").forEach((b) => b.addEventListener("click", () => gR.set(Number(b.dataset.rho))));
+    $("ar-push").addEventListener("click", () => { st.yb = 0.05; st.v = 0; });
+    $("ar-reset").addEventListener("click", () => { st.yb = 2.4; st.v = 0; });
+    function sub(yb) { const d = SB.clamp((H0 - yb) / (1 - BW / WT), 0, A); return { d, lev: H0 + (d * BW) / WT }; }
+    let geo = null;
+    function step(dt) {
+      if (st.drag) return;
+      const rb = gR(), rl = Number(gL()), m = rb * A * BW;
+      for (let k = 0; k < 10; k++) {
+        const h = dt / 10, { d } = sub(st.yb);
+        const me = m + 0.3 * rl * d * BW;
+        const c = 2 * 0.12 * Math.sqrt(rl * G * BW * me) + (d > 0 ? 0 : 0);
+        const F = rl * G * d * BW - m * G - (d > 0 ? c : 0.05 * c) * st.v;
+        st.v += (F / me) * h; st.yb += st.v * h;
+        if (st.yb < 0) { st.yb = 0; st.v = st.v < 0 ? -st.v * 0.15 : st.v; if (Math.abs(st.v) < 0.03) st.v = 0; }
+        if (st.yb > HT + 0.4) { st.yb = HT + 0.4; st.v = 0; }
+      }
+    }
+    function readout() {
+      const rb = gR(), rl = Number(gL()), { d, lev } = sub(st.yb), W = rb * G / 1000, Fb = (rl * G * d) / 1000;
+      SB.stat("o-ar-w", sm(W.toFixed(2), "kN")); SB.stat("o-ar-b", sm(Fb.toFixed(2), "kN"));
+      SB.stat("o-ar-sub", sm(((d / A) * 100).toFixed(0), "%"));
+      const r = rb / rl;
+      SB.stat("o-ar-eq", r.toFixed(3) + (r < 1 ? "<small> 뜬다</small>" : '<small style="color:var(--bad)"> 가라앉는다</small>'));
+      SB.stat("o-ar-rise", sm(((lev - H0) * 1000).toFixed(0), "mm"));
+    }
+    const cvs = $("cv-arch");
+    const cv = SB.canvas(cvs, (ctx, w, h) => {
+      const P = SB.palette(), rb = gR(), rl = Number(gL()), { d, lev } = sub(st.yb);
+      const s = Math.min((w - 150) / WT, (h - 40) / (HT + 0.6)), fy = h - 16, x0 = 30, X = (m) => x0 + m * s, Y = (m) => fy - m * s;
+      geo = { s, fy, x0 };
+      waterBox(ctx, X(0), X(WT), Y(lev), fy);
+      ctx.strokeStyle = P.faint; ctx.setLineDash([4, 4]); ctx.lineWidth = 1; seg(ctx, X(0), Y(H0), X(WT), Y(H0)); ctx.setLineDash([]);
+      label(ctx, "처음 수위", X(WT) - 4, Y(H0) + 10, P.dim, "right", 10.5);
+      ctx.strokeStyle = P.text; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(X(0), Y(HT)); ctx.lineTo(X(0), fy); ctx.lineTo(X(WT), fy); ctx.lineTo(X(WT), Y(HT)); ctx.stroke();
+      // 물체
+      const bx = X(WT / 2 - BW / 2), by = Y(st.yb + A), bs = BW * s;
+      const t = SB.clamp((rb - 100) / 2500, 0, 1);
+      ctx.fillStyle = rb > 5000 ? "#6f7785" : rb > 2000 ? "#a7a9a6" : rb > 900 && rb < 940 ? "rgba(200,230,250,0.9)" : `rgb(${Math.round(196 - 60 * t)},${Math.round(150 - 40 * t)},${Math.round(100 - 30 * t)})`;
+      ctx.fillRect(bx, by, bs, bs); ctx.strokeStyle = P.text; ctx.lineWidth = 1.5; ctx.strokeRect(bx, by, bs, bs);
+      if (d > 0) { ctx.fillStyle = "rgba(47,143,208,0.18)"; ctx.fillRect(bx, Y(st.yb + d), bs, d * s); }
+      // 힘 화살표
+      const unit = 70 / (rl * G), W = rb * G, Fb = rl * G * d, cx = X(WT / 2);
+      const lw = Math.min(W * unit, 170), lb = Math.min(Fb * unit, 170);
+      SB.arrow(ctx, cx - 9, Y(st.yb + A / 2), cx - 9, Y(st.yb + A / 2) + lw, P.accent2, 3);
+      label(ctx, "W", cx - 14, Y(st.yb + A / 2) + lw - 6, P.accent2, "right", 13, 700);
+      if (d > 0) { SB.arrow(ctx, cx + 9, Y(st.yb + d / 2), cx + 9, Y(st.yb + d / 2) - lb, P.accent, 3); label(ctx, "F_B", cx + 14, Y(st.yb + d / 2) - lb + 6, P.accent, "left", 13, 700); }
+      // 오른쪽 막대 비교
+      const gx = X(WT) + 30, top = Y(HT), bh = fy - top, mx = Math.max(W, rl * G * A) * 1.05;
+      ctx.fillStyle = P.accent2; ctx.globalAlpha = 0.8; ctx.fillRect(gx, fy - (W / mx) * bh, 26, (W / mx) * bh);
+      ctx.fillStyle = P.accent; ctx.fillRect(gx + 36, fy - (Fb / mx) * bh, 26, (Fb / mx) * bh); ctx.globalAlpha = 1;
+      ctx.strokeStyle = P.accent; ctx.setLineDash([3, 3]); ctx.lineWidth = 1; ctx.strokeRect(gx + 36, fy - ((rl * G * A) / mx) * bh, 26, ((rl * G * A) / mx) * bh); ctx.setLineDash([]);
+      label(ctx, "W", gx + 13, fy + 8, P.accent2, "center", 11, 700); label(ctx, "F_B", gx + 49, fy + 8, P.accent, "center", 11, 700);
+      label(ctx, "점선: 다 잠겼을 때", gx - 4, top - 10, P.dim, "left", 10);
+      if (st.drag) label(ctx, "놓으면 움직인다", X(WT / 2), Y(HT) - 6, P.dim, "center", 11);
+    }, { aspect: 0.62, minHeight: 280, maxHeight: 400 });
+    SB.drag(cvs, {
+      down(p) { if (!geo) return false; const { s, fy, x0 } = geo, bx = x0 + (WT / 2 - BW / 2) * s, by = fy - (st.yb + A) * s;
+        if (p.x < bx - 20 || p.x > bx + BW * s + 20 || p.y < by - 20 || p.y > by + A * s + 20) return false; st.drag = true; st.off = p.y - by; st.v = 0; },
+      move(p) { const { s, fy } = geo; st.yb = SB.clamp((fy - (p.y - st.off)) / s - A, 0, HT + 0.4); },
+      up() { st.drag = false; st.v = 0; },
+    });
+    SB.loop(cvs, (dt) => { step(dt); readout(); cv.redraw(); });
+    readout();
+  });
+
+  /* =================================================== Sim 2: 정수압 적분 */
+  run("press", function () {
+    function shapePts(k) {
+      if (k === "box") return [[-6, 0], [6, 0], [6, 8], [-6, 8]];
+      if (k === "circle") { const p = []; for (let i = 0; i < 48; i++) { const a = -Math.PI / 2 + (i / 48) * 2 * Math.PI; p.push([5 * Math.cos(a), 5 + 5 * Math.sin(a)]); } return p; }
+      if (k === "vee") return [[0, 0], [7, 9], [-7, 9]];
+      const B = 14, D = 9, r = 3, p = [];
+      for (let i = 0; i <= 8; i++) { const a = 1.5 * Math.PI + (i / 8) * (Math.PI / 2); p.push([B / 2 - r + r * Math.cos(a), r + r * Math.sin(a)]); }
+      p.push([B / 2, D], [-B / 2, D]);
+      for (let i = 0; i <= 8; i++) { const a = Math.PI + (i / 8) * (Math.PI / 2); p.push([-B / 2 + r + r * Math.cos(a), r + r * Math.sin(a)]); }
+      return p;
+    }
+    const gS = SB.seg("pr-shape", upd);
+    const gD = SB.range("pr-d", (v) => v.toFixed(1) + " m", upd);
+    const gH = SB.range("pr-h", (v) => v + "°", upd);
+    $("pr-res").addEventListener("change", upd);
+    function model() {
+      const base = shapePts(gS()), [, gx, gy] = SB.polyArea(base), a = SB.rad(gH()), c = Math.cos(a), s = Math.sin(a);
+      let pts = base.map(([x, y]) => [gx + (x - gx) * c + (y - gy) * s, gy - (x - gx) * s + (y - gy) * c]);
+      const minY = Math.min(...pts.map((p) => p[1])); pts = pts.map(([x, y]) => [x, y - minY - gD()]);
+      let sa = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; sa += p[0] * q[1] - q[0] * p[1]; }
+      const sgn = sa > 0 ? 1 : -1, rho = SB.RHO; let Fx = 0, Fy = 0, pmax = 0; const samples = [];
+      for (let i = 0; i < pts.length; i++) {
+        const p = pts[i], q = pts[(i + 1) % pts.length], L = Math.hypot(q[0] - p[0], q[1] - p[1]), n = Math.max(1, Math.ceil(L / 0.25));
+        const nx = (sgn * (q[1] - p[1])) / L, ny = (-sgn * (q[0] - p[0])) / L;
+        for (let j = 0; j < n; j++) {
+          const t = (j + 0.5) / n, mx = p[0] + (q[0] - p[0]) * t, my = p[1] + (q[1] - p[1]) * t, ds = L / n;
+          const pr = my < 0 ? rho * G * -my : 0;
+          Fx += -pr * nx * ds; Fy += -pr * ny * ds; pmax = Math.max(pmax, pr);
+          samples.push([mx, my, nx, ny, pr]);
+        }
+      }
+      const sub = SB.clipPoly(pts, 0, 1, 0), [As, bx, by] = sub.length > 2 ? SB.polyArea(sub) : [0, 0, 0];
+      return { pts, Fx, Fy, pmax, samples, As, bx, by };
+    }
+    function upd() {
+      const M = model();
+      SB.stat("o-pr-fz", sm(nf(M.Fy / 1000, 1), "kN/m")); SB.stat("o-pr-rga", sm(nf((SB.RHO * G * M.As) / 1000, 1), "kN/m"));
+      SB.stat("o-pr-fx", sm((M.Fx / 1000).toFixed(2), "kN/m")); SB.stat("o-pr-pmax", sm((M.pmax / 1000).toFixed(0), "kPa"));
+      cv.redraw();
+    }
+    let geo = null;
+    const cvs = $("cv-press");
+    const cv = SB.canvas(cvs, (ctx, w, h) => {
+      const P = SB.palette(), M = model(), s = Math.min(w / 24, h / 27), sy = 7 * s + 6, cx = w / 2;
+      geo = { s };
+      const X = (x) => cx + x * s, Y = (y) => sy - y * s;
+      waterBox(ctx, 0, w, sy, h);
+      ctx.beginPath(); M.pts.forEach(([x, y], i) => (i ? ctx.lineTo(X(x), Y(y)) : ctx.moveTo(X(x), Y(y)))); ctx.closePath();
+      ctx.fillStyle = P.surface; ctx.globalAlpha = 0.9; ctx.fill(); ctx.globalAlpha = 1; ctx.strokeStyle = P.text; ctx.lineWidth = 1.6; ctx.stroke();
+      const sub = SB.clipPoly(M.pts, 0, 1, 0);
+      if (sub.length > 2) { ctx.beginPath(); sub.forEach(([x, y], i) => (i ? ctx.lineTo(X(x), Y(y)) : ctx.moveTo(X(x), Y(y)))); ctx.closePath(); ctx.fillStyle = "rgba(47,143,208,0.22)"; ctx.fill(); }
+      const k = 46 / (SB.RHO * G * 16);
+      M.samples.forEach(([x, y, nx, ny, pr], i) => {
+        if (pr <= 0 || i % 3) return; const L = pr * k;
+        SB.arrow(ctx, X(x + (nx * L) / s), Y(y + (ny * L) / s), X(x), Y(y), P.accent, 1.2);
+      });
+      if ($("pr-res").checked && M.As > 0) {
+        const bxp = X(M.bx), byp = Y(M.by), L = Math.min(140, (M.Fy / (SB.RHO * G * 100)) * 70);
+        SB.arrow(ctx, bxp, byp, bxp, byp - L, P.accent2, 3.5);
+        ctx.fillStyle = P.accent2; ctx.beginPath(); ctx.arc(bxp, byp, 5, 0, Math.PI * 2); ctx.fill();
+        label(ctx, "B", bxp + 9, byp + 4, P.accent2, "left", 13, 700); label(ctx, "합력", bxp + 9, byp - L + 8, P.accent2, "left", 12, 700);
+      }
+      for (let d = 5; d <= 20; d += 5) { label(ctx, d + " m · " + Math.round((SB.RHO * G * d) / 1000) + " kPa", 8, Y(-d), P.dim, "left", 10); ctx.strokeStyle = P.grid; ctx.lineWidth = 1; seg(ctx, 0, Y(-d), 40, Y(-d)); }
+      label(ctx, "수면 p = 0", 8, sy - 9, P.dim, "left", 11);
+    }, { aspect: 0.72, minHeight: 320, maxHeight: 440 });
+    let y0 = 0, d0 = 0;
+    SB.drag(cvs, { down(p) { y0 = p.y; d0 = gD(); }, move(p) { if (geo) gD.set(SB.clamp(Math.round((d0 + (p.y - y0) / geo.s) * 10) / 10, 0, 16)); } });
+    upd();
+  });
+
+  /* =================================================== Sim 3: 강판 덩어리 vs 상자 */
+  run("steel", function () {
+    const gT = SB.range("st-t", (v) => v + " mm", upd), gL = SB.range("st-l", (v) => v + " m", upd), gB = SB.range("st-b", (v) => v.toFixed(1) + " m", upd);
+    const gH = SB.range("st-h", (v) => v.toFixed(2) + " m", upd), gC = SB.range("st-c", (v) => v + " t", upd);
+    function model() {
+      const L = gL(), B = gB(), H = gH(), t = gT() / 1000;
+      const Ap = L * B + 2 * (L + B) * H, Vs = Ap * t, ms = 7.85 * Vs, M = ms + gC();
+      const T = M / (1.025 * L * B), sunk = T >= H;
+      return { L, B, H, t, Vs, ms, M, T, sunk, rho: (M / (L * B * H)) * 1000, cap: 1.025 * L * B * H - M };
+    }
+    function upd() {
+      const m = model();
+      SB.stat("o-st-m", sm(m.ms.toFixed(2), "t"));
+      SB.stat("o-st-rho", sm(nf(m.rho), "kg/m³"));
+      SB.stat("o-st-t", m.sunk ? '<span style="color:var(--bad)">침몰</span>' : sm(m.T.toFixed(3), "m"));
+      SB.stat("o-st-f", m.sunk ? "—" : sm((m.H - m.T).toFixed(3), "m"));
+      SB.stat("o-st-cap", m.cap > 0 ? sm(m.cap.toFixed(1), "t") : '<span style="color:var(--bad)">0</span>');
+      cv.redraw();
+    }
+    const cv = SB.canvas($("cv-steel"), (ctx, w, h) => {
+      const P = SB.palette(), m = model(), wy = h * 0.42, fy = h - 14;
+      const lw = w * 0.3, rx = lw + 10, rw = w - rx - 12;
+      const s = Math.min((rw * 0.9) / m.L, (h * 0.45) / m.H);
+      waterBox(ctx, 0, w, wy, fy);
+      ctx.fillStyle = P.dim; ctx.fillRect(0, fy, w, h - fy);
+      ctx.strokeStyle = P.border; ctx.lineWidth = 1; seg(ctx, lw, 24, lw, fy);
+      // 덩어리
+      const a = Math.cbrt(m.Vs), ap = Math.max(3, a * s);
+      ctx.fillStyle = "#6f7785"; ctx.fillRect(lw / 2 - ap / 2, fy - ap, ap, ap);
+      label(ctx, "강철 덩어리", lw / 2, 14, P.text, "center", 12, 700);
+      label(ctx, a.toFixed(2) + " m 정육면체", lw / 2, fy - ap - 12, P.dim, "center", 11);
+      label(ctx, "ρ = 7,850 → 가라앉음", lw / 2, fy - ap - 28, P.bad, "center", 11, 600);
+      // 상자
+      const bw = m.L * s, bh = m.H * s, bx = rx + (rw - bw) / 2, th = Math.max(1.5, m.t * s);
+      const top = m.sunk ? fy - bh : wy - (m.H - m.T) * s;
+      ctx.fillStyle = "#8a93a8";
+      ctx.fillRect(bx, top, th, bh); ctx.fillRect(bx + bw - th, top, th, bh); ctx.fillRect(bx, top + bh - th, bw, th);
+      if (!m.sunk && gC() > 0) { const ch = Math.min(bh - th - 2, ((gC() / (2.5 * m.L * m.B)) * s) + 2); ctx.fillStyle = "#c69a5a"; ctx.fillRect(bx + th + 2, top + bh - th - ch, bw - 2 * th - 4, ch); }
+      if (m.sunk) { ctx.fillStyle = "rgba(47,143,208,0.3)"; ctx.fillRect(bx + th, top, bw - 2 * th, bh - th); label(ctx, "물이 넘쳐 침몰!", bx + bw / 2, top - 12, P.bad, "center", 13, 700); }
+      else {
+        ctx.strokeStyle = P.accent2; ctx.lineWidth = 1.2; seg(ctx, bx + bw + 6, wy, bx + bw + 6, top + bh);
+        if (bx + bw + 70 <= w) label(ctx, "T " + m.T.toFixed(2) + " m", bx + bw + 10, (wy + top + bh) / 2, P.accent2, "left", 11, 700);
+        else label(ctx, "T " + m.T.toFixed(2) + " m", bx + bw / 2, top + bh + 14, P.accent2, "center", 11, 700);
+      }
+      label(ctx, "같은 강철로 만든 상자 (" + m.L + " × " + m.B.toFixed(1) + " × " + m.H.toFixed(2) + " m)", rx + rw / 2, 14, P.text, "center", 12, 700);
+      label(ctx, "판 두께는 축척대로(" + gT() + " mm)", rx + rw / 2, 30, P.dim, "center", 10.5);
+    }, { aspect: 0.55, minHeight: 280, maxHeight: 380 });
+    upd();
+  });
+
+  /* =================================================== Sim 4: 총톤수·순톤수 */
+  run("gt", function () {
+    const PRE = {
+      bulk: { name: "벌크선", V: 300000, vc: 0.67, dd: 0.73, n: 0, dwt: "177,000 t" },
+      container: { name: "컨테이너선", V: 450000, vc: 0.67, dd: 0.49, n: 0, dwt: "150,000 t" },
+      vlcc: { name: "VLCC", V: 510000, vc: 0.69, dd: 0.74, n: 0, dwt: "300,000 t" },
+      cruise: { name: "크루즈선", V: 540000, vc: 0, dd: 0.58, n: 5000, dwt: "11,000 t" },
+      tug: { name: "예인선", V: 1000, vc: 0, dd: 0.8, n: 0, dwt: "약 300 t" },
+    };
+    const K1 = (V) => 0.2 + 0.02 * Math.log10(V);
+    const gV = SB.range("gt-v", (v) => nf(Math.pow(10, v)) + " m³", upd), gVc = SB.range("gt-vc", (v) => Math.round(v * 100) + " %", upd);
+    const gDD = SB.range("gt-dd", (v) => v.toFixed(2), upd), gN = SB.range("gt-n", (v) => nf(v) + " 명", upd);
+    const gP = SB.seg("gt-pre", (k) => { const p = PRE[k]; gV.set(Math.log10(p.V)); gVc.set(p.vc); gDD.set(p.dd); gN.set(p.n); });
+    function calc(V, vc, dd, N) {
+      const GT = K1(V) * V, Vc = vc * V, a = Math.min(1, Math.pow((4 * dd) / 3, 2));
+      let t1 = Vc > 0 ? (0.2 + 0.02 * Math.log10(Vc)) * Vc * a : 0, why = "화물 공간 항";
+      if (t1 < 0.25 * GT) { t1 = 0.25 * GT; why = "하한 0.25 GT"; }
+      const K3 = (1.25 * (GT + 10000)) / 10000, t2 = N >= 13 ? K3 * N : 0;
+      let NT = t1 + t2; if (t2 > 0) why += " + 승객 항";
+      if (NT < 0.3 * GT) { NT = 0.3 * GT; why = "하한 0.30 GT"; }
+      return { GT, NT, why, k1: K1(V) };
+    }
+    function upd() {
+      const V = Math.pow(10, gV()), r = calc(V, gVc(), gDD(), gN());
+      SB.stat("o-gt-k1", r.k1.toFixed(4)); SB.stat("o-gt-gt", nf(r.GT)); SB.stat("o-gt-nt", nf(r.NT));
+      SB.stat("o-gt-why", '<span style="font-size:14px">' + r.why + "</span>"); SB.stat("o-gt-dwt", '<span style="font-size:14px">' + PRE[gP()].name + " " + PRE[gP()].dwt + "</span>");
+      cv.redraw();
+    }
+    const cv = SB.canvas($("cv-gt"), (ctx, w, h) => {
+      const P = SB.palette(), V = Math.pow(10, gV()), r = calc(V, gVc(), gDD(), gN());
+      const data = []; for (let e = 2; e <= 6.3; e += 0.05) { const v = Math.pow(10, e); data.push([v, K1(v) * v]); }
+      const pts = Object.keys(PRE).map((k) => { const p = PRE[k]; return { x: p.V, y: K1(p.V) * p.V, color: P.dim, r: 3.5, label: k === gP() ? p.name : "" }; });
+      pts.push({ x: V, y: r.GT, color: P.accent2, r: 6 });
+      const ch = SB.chart(ctx, null, { x: [100, 2e6], y: [20, 8e5], logX: true, logY: true, xLabel: "밀폐 공간 부피 V (m³)", yLabel: "총톤수 GT",
+        series: [{ data, color: P.accent, width: 2 }, { data: data.map(([v]) => [v, 0.3 * v]), color: P.faint, width: 1, dash: [4, 4] }], points: pts,
+        xFmt: (v) => SB.fmt(v, 1), yFmt: (v) => SB.fmt(v, 1) });
+      label(ctx, "점선: GT = 0.3 V", ch.box.x + 8, ch.box.y + 10, P.dim, "left", 10.5);
+      label(ctx, "GT " + nf(r.GT) + " / NT " + nf(r.NT), ch.box.x + 8, ch.box.y + 28, P.accent2, "left", 12, 700);
+    }, { aspect: 0.62, minHeight: 280, maxHeight: 400 });
+    upd();
+  });
+
+  /* =================================================== Sim 5: 형상 계수 */
+  run("coef", function () {
+    const gF = SB.range("cf-f", (v) => v.toFixed(2), upd), gT = SB.range("cf-t", (v) => v.toFixed(1) + " m", upd);
+    document.querySelectorAll("#sim-coef [data-full]").forEach((b) => b.addEventListener("click", () => gF.set(Number(b.dataset.full))));
+    const NX = 80, NZ = 40;
+    function calc() {
+      const full = gF(), T = gT(), o = { full }, dx = HL / NX, dz = T / NZ;
+      const bw = [], area = [], mid = [];
+      let V = 0, Aw = 0, ML = 0;
+      for (let i = 0; i <= NX; i++) {
+        const xi = -1 + (2 * i) / NX, wx = i === 0 || i === NX ? 0.5 : 1;
+        let As = 0;
+        for (let k = 0; k <= NZ; k++) { const wz = k === 0 || k === NZ ? 0.5 : 1; As += wz * SB.hullHalf(xi, (k * dz) / HD, o) * HB * dz; }
+        const b = SB.hullHalf(xi, T / HD, o) * HB / 2;
+        bw.push(b); area.push(As); V += wx * As * dx; Aw += wx * 2 * b * dx; ML += wx * As * ((xi * HL) / 2) * dx;
+      }
+      for (let k = 0; k <= NZ; k++) mid.push(SB.hullHalf(0, (k * dz) / HD, o) * HB / 2);
+      const Am = area[NX / 2];
+      return { full, T, bw, area, mid, V, Aw, Am, Cb: V / (HL * HB * T), Cm: Am / (HB * T), Cp: V / (Am * HL), Cw: Aw / (HL * HB), lcb: ML / V };
+    }
+    let C = null;
+    function upd() {
+      C = calc();
+      SB.stat("o-cf-cb", C.Cb.toFixed(3)); SB.stat("o-cf-cm", C.Cm.toFixed(3)); SB.stat("o-cf-cp", C.Cp.toFixed(3)); SB.stat("o-cf-cw", C.Cw.toFixed(3));
+      SB.stat("o-cf-d", sm(nf(1.025 * C.V), "t")); SB.stat("o-cf-lcb", sm((C.lcb >= 0 ? "+" : "") + C.lcb.toFixed(2), "m"));
+      cv.redraw();
+    }
+    C = calc();
+    const cv = SB.canvas($("cv-coef"), (ctx, w, h) => {
+      const P = SB.palette(), c = C;
+      const fillPath = (pts, fill, stroke) => { ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.fillStyle = fill; ctx.fill(); if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke(); } };
+      const dashRect = (x, y, ww, hh) => { ctx.strokeStyle = P.dim; ctx.setLineDash([5, 4]); ctx.lineWidth = 1; ctx.strokeRect(x, y, ww, hh); ctx.setLineDash([]); };
+      // 수선면
+      const wpW = w * 0.64 - 24, sx = wpW / HL, x0 = 14, y0 = 30, wpH = HB * sx;
+      dashRect(x0, y0, wpW, wpH);
+      const up = [], dn = [];
+      c.bw.forEach((b, i) => { const x = x0 + (i / NX) * wpW; up.push([x, y0 + wpH / 2 - b * sx]); dn.unshift([x, y0 + wpH / 2 + b * sx]); });
+      fillPath(up.concat(dn), "rgba(47,143,208,0.30)", P.accent);
+      label(ctx, "수선면  C_wp = " + c.Cw.toFixed(3), x0, 14, P.text, "left", 12, 700);
+      label(ctx, "AP", x0, y0 + wpH + 10, P.dim, "left", 10); label(ctx, "FP", x0 + wpW, y0 + wpH + 10, P.dim, "right", 10);
+      // 중앙단면
+      const sx0 = w * 0.64 + 8, sW = w - sx0 - 14, ss = Math.min(sW / HB, (wpH + 30) / c.T, 9), sCx = sx0 + sW / 2, sTop = y0;
+      dashRect(sCx - (HB / 2) * ss, sTop, HB * ss, c.T * ss);
+      const sp = [];
+      c.mid.forEach((b, k) => sp.push([sCx + b * ss, sTop + c.T * ss - (k / NZ) * c.T * ss]));
+      for (let k = NZ; k >= 0; k--) sp.push([sCx - c.mid[k] * ss, sTop + c.T * ss - (k / NZ) * c.T * ss]);
+      fillPath(sp, "rgba(47,143,208,0.30)", P.accent);
+      label(ctx, (w < 520 ? "C_m = " : "중앙단면 C_m = ") + c.Cm.toFixed(3), sx0, 14, P.text, "left", 12, 700);
+      // 단면적 곡선
+      const ay = Math.max(y0 + wpH, sTop + c.T * ss) + 44, aH = h - ay - 26;
+      dashRect(x0, ay, wpW + (w - wpW - 28), aH);
+      const aw = w - 28, ap = [[x0, ay + aH]];
+      c.area.forEach((A, i) => ap.push([x0 + (i / NX) * aw, ay + aH - (A / c.Am) * aH]));
+      ap.push([x0 + aw, ay + aH]);
+      fillPath(ap, "rgba(217,72,59,0.22)", P.accent2);
+      label(ctx, "단면적 곡선 A(x)  C_p = " + c.Cp.toFixed(3) + "   ·   C_b = " + c.Cb.toFixed(3), x0, ay - 12, P.text, "left", 12, 700);
+      const lx = x0 + ((c.lcb + HL / 2) / HL) * aw;
+      ctx.strokeStyle = P.text; ctx.lineWidth = 1; ctx.setLineDash([3, 3]); seg(ctx, lx, ay, lx, ay + aH); ctx.setLineDash([]);
+      label(ctx, "LCB", lx + 4, ay + aH - 10, P.text, "left", 10.5, 700);
+      label(ctx, "중앙", x0 + aw / 2, ay + aH + 10, P.dim, "center", 10);
+    }, { aspect: 0.62, minHeight: 330, maxHeight: 440 });
+    upd();
+  });
+
+  /* =================================================== Sim 6: 사다리꼴 vs 심프슨 */
+  run("simp", function () {
+    const gN = SB.range("sp-n", (v) => String(v), upd), gM = SB.seg("sp-m", upd), gF = SB.range("sp-f", (v) => v.toFixed(2), upd);
+    $("sp-mul").addEventListener("change", upd);
+    const TW = 11;
+    const y = (x) => (SB.hullHalf((2 * x) / HL - 1, TW / HD, { full: gF() }) * HB) / 2;
+    function simpson(n) { const h = HL / n; let s = y(0) + y(HL); for (let i = 1; i < n; i++) s += (i % 2 ? 4 : 2) * y(i * h); return (h / 3) * s; }
+    function trap(n) { const h = HL / n; let s = (y(0) + y(HL)) / 2; for (let i = 1; i < n; i++) s += y(i * h); return h * s; }
+    let R = null;
+    function upd() {
+      const n = gN(), ex = 2 * simpson(2000), tr = 2 * trap(n), si = 2 * simpson(n);
+      R = { n, ex, tr, si };
+      const e = (v) => ((v / ex - 1) * 100);
+      SB.stat("o-sp-ex", sm(nf(ex), "m²"));
+      SB.stat("o-sp-tr", nf(tr) + "<small>m² (" + (e(tr) >= 0 ? "+" : "") + e(tr).toFixed(2) + "%)</small>");
+      SB.stat("o-sp-si", nf(si) + "<small>m² (" + (e(si) >= 0 ? "+" : "") + e(si).toFixed(2) + "%)</small>");
+      SB.stat("o-sp-tpc", sm(((1.025 * ex) / 100).toFixed(1), "t/cm"));
+      cv && cv.redraw();
+    }
+    let cv = null;
+    upd();
+    cv = SB.canvas($("cv-simp"), (ctx, w, h) => {
+      const P = SB.palette(), n = gN(), m = gM(), hh = HL / n;
+      const fine = []; for (let i = 0; i <= 400; i++) { const x = (i / 400) * HL; fine.push([x, y(x)]); }
+      const ch = SB.chart(ctx, { x: 52, y: 18, w: w - 70, h: h - 18 - ($("sp-mul").checked ? 64 : 46) }, { x: [0, HL], y: [0, 18], xLabel: "AP에서의 거리 x (m)", yLabel: "반폭 y (m)", series: [] });
+      const { X, Y } = ch;
+      if (m !== "simp") {
+        ctx.beginPath(); ctx.moveTo(X(0), Y(0)); for (let i = 0; i <= n; i++) ctx.lineTo(X(i * hh), Y(y(i * hh))); ctx.lineTo(X(HL), Y(0)); ctx.closePath();
+        ctx.fillStyle = "rgba(224,168,58,0.28)"; ctx.fill(); ctx.strokeStyle = P.warn; ctx.lineWidth = 1.8; ctx.stroke();
+      }
+      if (m !== "trap") {
+        ctx.beginPath(); ctx.moveTo(X(0), Y(0));
+        for (let i = 0; i < n; i += 2) {
+          const xa = i * hh, ya = y(xa), yb = y(xa + hh), yc = y(xa + 2 * hh);
+          for (let k = 0; k <= 20; k++) { const t = (k / 20) * 2, q = ya * ((t - 1) * (t - 2)) / 2 - yb * t * (t - 2) + yc * (t * (t - 1)) / 2; ctx.lineTo(X(xa + t * hh), Y(q)); }
+        }
+        ctx.lineTo(X(HL), Y(0)); ctx.closePath(); ctx.fillStyle = "rgba(217,72,59,0.18)"; ctx.fill(); ctx.strokeStyle = P.accent2; ctx.lineWidth = 1.8; ctx.stroke();
+      }
+      ctx.beginPath(); fine.forEach(([x, v], i) => (i ? ctx.lineTo(X(x), Y(v)) : ctx.moveTo(X(x), Y(v)))); ctx.strokeStyle = P.text; ctx.lineWidth = 1.5; ctx.setLineDash([5, 3]); ctx.stroke(); ctx.setLineDash([]);
+      for (let i = 0; i <= n; i++) {
+        const x = i * hh; ctx.strokeStyle = P.grid; ctx.lineWidth = 1; seg(ctx, X(x), Y(0), X(x), Y(y(x)));
+        ctx.fillStyle = P.accent; ctx.beginPath(); ctx.arc(X(x), Y(y(x)), 3.5, 0, Math.PI * 2); ctx.fill();
+        if ($("sp-mul").checked && n <= 20) label(ctx, String(i === 0 || i === n ? 1 : i % 2 ? 4 : 2), X(x), h - 12, P.accent2, "center", 11, 700);
+      }
+      if ($("sp-mul").checked && n <= 20) label(ctx, "승수", 8, h - 12, P.dim, "left", 10.5);
+      label(ctx, "점선: 실제 곡선  ·  " + (m === "trap" ? "노랑: 사다리꼴" : m === "simp" ? "빨강: 심프슨 포물선" : "노랑: 사다리꼴, 빨강: 심프슨"), ch.box.x + 6, ch.box.y + 8, P.dim, "left", 10.5);
+    }, { aspect: 0.55, minHeight: 280, maxHeight: 380 });
+  });
+
+  /* =================================================== Sim 7: 정수압 곡선 */
+  run("hydro", function () {
+    const gC = SB.seg("hy-c", upd), gF = SB.seg("hy-f", upd), gT = SB.range("hy-t", (v) => v.toFixed(2) + " m", upd);
+    function upd() {
+      const H = hydro(Number(gF())), T = gT();
+      SB.stat("o-hy-d", sm(nf(at(H, "disp", T)), "t")); SB.stat("o-hy-tpc", sm(at(H, "tpc", T).toFixed(1), "t/cm"));
+      SB.stat("o-hy-kb", sm(at(H, "kb", T).toFixed(2), "m")); SB.stat("o-hy-km", sm(at(H, "km", T).toFixed(2), "m"));
+      const f = (v) => (v >= 0 ? "+" : "") + v.toFixed(1);
+      SB.stat("o-hy-lc", f(at(H, "lcb", T)) + "<small> / " + f(at(H, "lcf", T)) + " m</small>");
+      SB.stat("o-hy-cb", at(H, "cb", T).toFixed(3) + "<small>/" + at(H, "cwp", T).toFixed(3) + "</small>");
+      cv && cv.redraw();
+    }
+    let cv = null;
+    upd();
+    cv = SB.canvas($("cv-hydro"), (ctx, w, h) => {
+      const P = SB.palette(), H = hydro(Number(gF())), T = gT(), c = gC();
+      const ser = (key, k0) => { const d = []; for (let k = k0 || 1; k <= 160; k++) d.push([H[key][k], k * DZ]); return d; };
+      let o;
+      if (c === "disp") o = { x: [0, 76000], series: [{ data: ser("disp"), color: P.accent }], xLabel: "배수량 Δ (t)", keys: [["disp", P.accent, "Δ"]], xFmt: (v) => SB.fmt(v, 2) };
+      else if (c === "tpc") o = { x: [0, 70], series: [{ data: ser("tpc"), color: P.ok }], xLabel: "TPC (t/cm)", keys: [["tpc", P.ok, "TPC"]] };
+      else if (c === "kb") o = { x: [0, 40], series: [{ data: ser("kb"), color: P.accent }, { data: ser("km", 5), color: P.accent2 }], xLabel: "KB, KM (m)", keys: [["kb", P.accent, "KB"], ["km", P.accent2, "KM"]] };
+      else if (c === "lc") o = { x: [-12, 12], series: [{ data: ser("lcb"), color: P.accent }, { data: ser("lcf"), color: P.warn }], xLabel: "중앙 기준 위치 (m, + 선수)", keys: [["lcb", P.accent, "LCB"], ["lcf", P.warn, "LCF"]] };
+      else o = { x: [0.4, 1], series: [{ data: ser("cb", 3), color: P.accent }, { data: ser("cwp"), color: P.accent2 }], xLabel: "계수", keys: [["cb", P.accent, "C_b"], ["cwp", P.accent2, "C_wp"]] };
+      const pts = o.keys.map(([k, col, lb]) => ({ x: SB.clamp(at(H, k, T), o.x[0], o.x[1]), y: T, color: col, r: 5, label: lb }));
+      SB.chart(ctx, null, { x: o.x, y: [0, 16], xLabel: o.xLabel, yLabel: "흘수 T (m)", series: o.series, points: pts, xFmt: o.xFmt,
+        hlines: [{ y: T, color: P.dim, label: "T = " + T.toFixed(2) + " m" }, { y: 11, color: P.faint, dash: [2, 4], label: Math.abs(T - 11) > 0.8 ? "계획 흘수" : "" }] });
+    }, { aspect: 0.66, minHeight: 300, maxHeight: 420 });
+  });
+
+  /* =================================================== Sim 8: TPC 적재 */
+  run("tpc", function () {
+    const H = hydro(0.7);
+    const st = { Td: null, last: null };
+    const gW = SB.range("tp-w", (v) => nf(v) + " t", change), g0 = SB.range("tp-0", (v) => nf(v) + " t", change);
+    $("tp-add").addEventListener("click", () => gW.set(Math.min(45000, gW() + 500)));
+    $("tp-sub").addEventListener("click", () => gW.set(Math.max(0, gW() - 500)));
+    $("tp-big").addEventListener("click", () => gW.set(Math.min(45000, gW() + 20000)));
+    let prev = { D: g0() + gW() };
+    function change() {
+      const D = g0() + gW(), T0 = draftFor(H, prev.D), T1 = draftFor(H, D), dw = D - prev.D;
+      if (Math.abs(dw) > 0.5) st.last = { est: dw / at(H, "tpc", T0), act: (T1 - T0) * 100, dw };
+      prev = { D }; readout();
+    }
+    function readout() {
+      const D = g0() + gW(), T = draftFor(H, D);
+      SB.stat("o-tp-d", sm(nf(D), "t")); SB.stat("o-tp-t", sm(T.toFixed(3), "m")); SB.stat("o-tp-tpc", sm(at(H, "tpc", T).toFixed(2), "t/cm"));
+      SB.stat("o-tp-est", st.last ? st.last.est.toFixed(1) + "<small> / " + st.last.act.toFixed(1) + " cm</small>" : "—");
+    }
+    const cvs = $("cv-tpc");
+    const cv = SB.canvas(cvs, (ctx, w, h) => {
+      const P = SB.palette(), Tt = draftFor(H, g0() + gW());
+      if (st.Td == null) st.Td = Tt;
+      const T = st.Td, pw = Math.min(150, w * 0.3), sw = w - pw - 10;
+      const s = Math.min((sw - 20) / 215, (h - 40) / 52), wl = 34 + (18 - 4 + 24) * s, cx = 10 + sw / 2;
+      SB.shipSide(ctx, cx, wl, s, { L: HL, D: HD, T: 11, heave: 11 - T, cargo: "bulk" });
+      waterBox(ctx, 0, sw + 10, wl, h);
+      const bx = cx + 0.5 * HL * s; ctx.strokeStyle = P.accent2; ctx.lineWidth = 1.5; ctx.strokeRect(bx - 12, wl - 26, 24, 40);
+      label(ctx, "Δ " + nf(g0() + gW()) + " t", 14, 14, P.text, "left", 12, 700);
+      // 흘수 눈금 확대
+      const x0 = w - pw, k = (h - 30) / 1.6, mid = h / 2, Y = (d) => mid - (d - T) * k;
+      ctx.fillStyle = P.surface; ctx.fillRect(x0, 0, pw, h); ctx.strokeStyle = P.border; ctx.lineWidth = 1; seg(ctx, x0, 0, x0, h);
+      ctx.fillStyle = "#2b3445"; ctx.fillRect(x0 + 10, 0, pw - 20, Y(11.0));
+      ctx.fillStyle = "#a8372f"; ctx.fillRect(x0 + 10, Y(11.0), pw - 20, h - Y(11.0));
+      const fs = Math.max(10, 0.1 * k);
+      for (let d = Math.ceil((T - 1) * 5) / 5; d <= T + 1; d += 0.2) {
+        const v = Math.round(d * 10) / 10, yb = Y(v), dec = Math.round(v * 10) % 10;
+        const txt = dec === 0 ? Math.round(v) + "M" : String(dec);
+        ctx.font = "700 " + fs + "px " + cssv("--mono"); ctx.fillStyle = "#f2f4f7"; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+        ctx.fillText(txt, x0 + pw / 2, yb);
+      }
+      waterBox(ctx, x0, w, mid, h);
+      ctx.fillStyle = P.surface; ctx.fillRect(x0 + 1, 0, pw, 22); label(ctx, "선수 흘수 표지", x0 + pw / 2, 11, P.text, "center", 11, 700);
+      ctx.strokeStyle = P.accent2; ctx.lineWidth = 2; seg(ctx, x0, mid, x0 + 10, mid);
+      label(ctx, "T = " + T.toFixed(2) + " m", sw - 4, 14, P.accent, "right", 12, 700);
+    }, { aspect: 0.5, minHeight: 260, maxHeight: 360 });
+    SB.loop(cvs, (dt) => { const Tt = draftFor(H, g0() + gW()); if (st.Td == null) st.Td = Tt; if (Math.abs(Tt - st.Td) > 1e-4) { st.Td += (Tt - st.Td) * Math.min(1, dt * 3); cv.redraw(); } });
+    readout();
+  });
+
+  /* =================================================== Sim 9: 담수 여유 FWA */
+  run("fwa", function () {
+    const H = hydro(0.7), TS = 11.0, DS = at(H, "disp", TS), TPCS = at(H, "tpc", TS), FWAS = DS / (4 * TPCS), T48 = (TS * 1000) / 48;
+    const st = { p: 0, target: 0 };
+    const gD = SB.range("fw-d", (v) => nf(v) + " t", readout), gR = SB.range("fw-r", (v) => (v / 1000).toFixed(3) + " t/m³", readout);
+    $("fw-in").addEventListener("click", () => (st.target = 1));
+    $("fw-out").addEventListener("click", () => (st.target = 0));
+    function rhoAt(p) { const t = SB.clamp((p - 0.25) / 0.5, 0, 1), sst = t * t * (3 - 2 * t); return 1025 - (1025 - gR()) * sst; }
+    gD.set(Math.round(DS / 500) * 500);
+    function readout() {
+      const D = gD(), rho = rhoAt(st.p), T = draftFor(H, D, rho / 1000), Tsea = draftFor(H, D, 1.025), tpc = at(H, "tpc", Tsea), fwa = D / (4 * tpc);
+      SB.stat("o-fw-rho", sm((rho / 1000).toFixed(4), "t/m³")); SB.stat("o-fw-t", sm(T.toFixed(3), "m"));
+      SB.stat("o-fw-fwa", sm(fwa.toFixed(0), "mm"));
+      const dwa = (fwa * (1025 - gR())) / 25, exact = (draftFor(H, D, gR() / 1000) - Tsea) * 1000;
+      SB.stat("o-fw-dwa", dwa.toFixed(0) + "<small> / " + exact.toFixed(0) + " mm</small>");
+    }
+    const cvs = $("cv-fwa");
+    const cv = SB.canvas(cvs, (ctx, w, h) => {
+      const P = SB.palette(), D = gD(), rho = rhoAt(st.p), T = draftFor(H, D, rho / 1000);
+      const wy = h * 0.36;
+      // 하구: 밀도 띠
+      for (let i = 0; i < 40; i++) { const p = 1 - i / 40, r = rhoAt(p), t = (1025 - r) / 25, xa = Math.floor((i * w) / 40), xb = Math.floor(((i + 1) * w) / 40); ctx.fillStyle = `rgba(${Math.round(60 + 90 * t)},${Math.round(140 - 10 * t)},${Math.round(200 - 110 * t)},0.22)`; ctx.fillRect(xa, wy, xb - xa, h - wy); }
+      ctx.strokeStyle = cssv("--water"); ctx.lineWidth = 1.6; seg(ctx, 0, wy, w, wy);
+      ctx.fillStyle = P.dim; ctx.fillRect(0, wy - 18, w * 0.12, 18); label(ctx, "부두", 6, wy - 28, P.dim, "left", 11, 600);
+      const s = (w * 0.3) / 215, x = SB.lerp(w * 0.8, w * 0.3, st.p);
+      SB.shipSide(ctx, x, wy, s, { L: HL, D: HD, T: TS, heave: TS - T, cargo: "bulk", flip: true });
+      label(ctx, "바다 ρ 1.025", w - 8, wy + 16, P.text, "right", 11, 600);
+      label(ctx, "항구 ρ " + (gR() / 1000).toFixed(3), 8, wy + 16, P.text, "left", 11, 600);
+      // 표지 확대
+      const iw = Math.min(260, w * 0.5), ih = h * 0.33, ix = w - iw - 8, iy = h - ih - 8, k = ih / 0.9, Y = (d) => iy + ih / 2 - (d - (TS + 0.12)) * k;
+      ctx.save(); ctx.beginPath(); ctx.rect(ix, iy, iw, ih); ctx.clip();
+      ctx.fillStyle = "#3a4250"; ctx.fillRect(ix, iy, iw, ih);
+      const lx = ix + iw * 0.45, mk = (d, x1, x2, t) => { ctx.fillStyle = "#f2f4f7"; ctx.fillRect(x1, Y(d), x2 - x1, Math.max(2, 0.025 * k)); label(ctx, t, x2 + 4, Y(d) + 6, "#f2f4f7", "left", 11, 700); };
+      ctx.fillStyle = "#f2f4f7"; ctx.fillRect(lx, Y(TS + T48 / 1000 + FWAS / 1000), Math.max(2, 0.025 * k), (T48 / 500 + FWAS / 1000 + 0.03) * k);
+      mk(TS, lx, lx + 0.23 * k, "S"); mk(TS + T48 / 1000, lx, lx + 0.23 * k, "T"); mk(TS - T48 / 1000, lx, lx + 0.23 * k, "W");
+      ctx.fillStyle = "#f2f4f7"; ctx.fillRect(lx - 0.23 * k, Y(TS + FWAS / 1000), 0.23 * k, Math.max(2, 0.025 * k)); label(ctx, "F", lx - 0.23 * k - 4, Y(TS + FWAS / 1000) + 6, "#f2f4f7", "right", 11, 700);
+      ctx.beginPath(); ctx.arc(ix + iw * 0.18, Y(TS) + 0.0125 * k, 0.15 * k, 0, Math.PI * 2); ctx.strokeStyle = "#f2f4f7"; ctx.lineWidth = Math.max(2, 0.025 * k); ctx.stroke();
+      ctx.fillStyle = "#f2f4f7"; ctx.fillRect(ix + iw * 0.18 - 0.225 * k, Y(TS), 0.45 * k, Math.max(2, 0.025 * k));
+      ctx.fillStyle = "rgba(47,143,208,0.45)"; ctx.fillRect(ix, Y(T), iw, ih); ctx.strokeStyle = cssv("--water"); ctx.lineWidth = 2; seg(ctx, ix, Y(T), ix + iw, Y(T));
+      ctx.restore(); ctx.strokeStyle = P.border; ctx.lineWidth = 1; ctx.strokeRect(ix, iy, iw, ih);
+      label(ctx, "선측 확대 (FWA " + FWAS.toFixed(0) + " mm)", ix, iy - 8, P.dim, "left", 10.5);
+    }, { aspect: 0.62, minHeight: 300, maxHeight: 420 });
+    SB.loop(cvs, (dt) => { if (Math.abs(st.target - st.p) > 1e-4) { st.p += Math.sign(st.target - st.p) * Math.min(Math.abs(st.target - st.p), dt * 0.18); readout(); } cv.redraw(); });
+    readout();
+  });
+
+  /* =================================================== Sim 10: 만재 흘수선 표지 (SVG) */
+  run("load", function () {
+    const H = hydro(0.7), TS = 11000, DS = at(H, "disp", 11), TPCS = at(H, "tpc", 11), FWA = DS / (4 * TPCS), T48 = TS / 48;
+    const MK = { S: TS, T: TS + T48, W: TS - T48, WNA: TS - T48 - 50, F: TS + FWA, TF: TS + T48 + FWA };
+    const NS = "http://www.w3.org/2000/svg", view = $("ld-view");
+    const k = 0.3, Y = (mm) => 540 - (mm - 10300) * k, th = 25 * k;
+    const svg = document.createElementNS(NS, "svg"); svg.setAttribute("viewBox", "0 0 640 560"); svg.setAttribute("role", "img"); svg.setAttribute("aria-label", "만재 흘수선 표지");
+    view.appendChild(svg);
+    const el = (tag, at, parent) => { const e = document.createElementNS(NS, tag); Object.keys(at).forEach((a) => e.setAttribute(a, at[a])); (parent || svg).appendChild(e); return e; };
+    el("rect", { x: 0, y: 0, width: 640, height: 560, class: "f-dim-soft" });
+    // 갑판선(생략 표시)
+    el("rect", { x: 180, y: 34, width: 300 * k, height: th, class: "mk" });
+    el("path", { d: "M0 70 L250 70 L262 60 L274 80 L286 70 L640 70", fill: "none", class: "s-line" });
+    el("text", { x: 180 + 300 * k + 10, y: 46, class: "t-dim" }).textContent = "건현 갑판선 (위쪽 끝)";
+    el("text", { x: 300, y: 92, class: "t-mono" }).textContent = "≈ 7,000 mm 생략 (하계 건현)";
+    const cx = 160, mkEls = {};
+    el("circle", { cx, cy: Y(TS) + th / 2, r: 150 * k, fill: "none", class: "mkc", stroke: "var(--text)", "stroke-width": th });
+    const sLine = el("rect", { x: cx - 225 * k, y: Y(TS), width: 450 * k, height: th, class: "mk" });
+    el("text", { x: cx - 150 * k - 34, y: Y(TS) - 18, class: "mkt" }).textContent = "K";
+    el("text", { x: cx + 150 * k + 20, y: Y(TS) - 18, class: "mkt" }).textContent = "R";
+    const vx = cx + 540 * k;
+    el("rect", { x: vx, y: Y(MK.TF), width: th, height: Y(MK.WNA) - Y(MK.TF) + th, class: "mk" });
+    const mark = (key, right) => {
+      const x = right ? vx + th : vx - 230 * k;
+      const r = el("rect", { x, y: Y(MK[key]), width: 230 * k, height: th, class: "mk" });
+      const t = el("text", { x: right ? x + 230 * k + 8 : x - 8, y: Y(MK[key]) + th, class: "mkt", "text-anchor": right ? "start" : "end" }); t.textContent = key;
+      mkEls[key] = [r, t];
+    };
+    ["T", "S", "W", "WNA"].forEach((kk) => mark(kk, true)); ["TF", "F"].forEach((kk) => mark(kk, false));
+    mkEls.S.push(sLine);
+    const dims = el("g", {});
+    const water = el("rect", { x: 0, y: 300, width: 640, height: 300, fill: "var(--water-soft)" });
+    const wline = el("line", { x1: 0, x2: 640, y1: 300, y2: 300, class: "s-water" });
+    const allowL = el("line", { x1: 300, x2: 640, y1: 0, y2: 0, stroke: "var(--accent-2)", "stroke-width": 1.5, "stroke-dasharray": "6 4" });
+    const allowT = el("text", { x: 636, y: 0, class: "t-acc", "text-anchor": "end" });
+    const wT = el("text", { x: 8, y: 0, class: "t" });
+    void dims;
+    const gZ = SB.seg("ld-zone", upd), gW = SB.seg("ld-water", upd), gT = SB.range("ld-t", (v) => v.toFixed(3) + " m", upd);
+    function upd() {
+      const zone = gZ(), rho = Number(gW()), Tm = gT() * 1000;
+      const zk = zone === "WNA" ? "W" : zone, dwa = (FWA * (1025 - rho)) / 25, allow = MK[zk] + dwa;
+      Object.keys(mkEls).forEach((kk) => {
+        let on = kk === zk || (rho < 1025 && ((zk === "S" && kk === "F") || (zk === "T" && kk === "TF")));
+        const cls = kk === "WNA" ? "na" : on ? "on" : "";
+        mkEls[kk].forEach((e) => e.setAttribute("class", (e.tagName === "text" ? "mkt" : "mk") + (cls ? " " + cls : "")));
+      });
+      const yw = Y(Tm); water.setAttribute("y", yw); water.setAttribute("height", 560 - yw); wline.setAttribute("y1", yw); wline.setAttribute("y2", yw);
+      wT.setAttribute("y", yw + 22); wT.textContent = "수면 " + (Tm / 1000).toFixed(3) + " m";
+      const ya = Y(allow); allowL.setAttribute("y1", ya); allowL.setAttribute("y2", ya); allowT.setAttribute("y", ya - 6); allowT.textContent = "허용 " + (allow / 1000).toFixed(3) + " m";
+      const margin = allow - Tm;
+      SB.stat("o-ld-allow", sm((allow / 1000).toFixed(3), "m"));
+      SB.stat("o-ld-margin", sm((margin >= 0 ? "+" : "") + margin.toFixed(0), "mm"));
+      SB.stat("o-ld-ok", (margin >= 0 ? '<span style="color:var(--ok)">적합</span>' : '<span style="color:var(--bad)">과적</span>') + (zone === "WNA" ? '<small> (W 적용)</small>' : ""));
+      SB.stat("o-ld-fb", sm(((18000 - Tm) / 1000).toFixed(3), "m") + "<small> 현재</small>");
+    }
+    upd();
+  });
+})();
+</script>
+</body>
+</html>

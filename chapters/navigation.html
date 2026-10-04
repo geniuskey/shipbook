@@ -1,0 +1,1845 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<title>항해술 · ShipBook</title>
+<meta name="description" content="위도·경도와 해리, 메르카토르 해도, 항정선과 대권, 추측 항법과 조류 보정, 나침반 오차, 위치선, 천측, 조석과 여유 수심, GNSS 삼변측량을 3D 지구본과 시뮬레이터로 배운다.">
+<link rel="canonical" href="https://shipbook.euiyun.com/chapters/navigation.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="ShipBook">
+<meta property="og:title" content="항해술 · ShipBook">
+<meta property="og:description" content="위도·경도와 해리, 메르카토르 해도, 항정선과 대권, 추측 항법과 조류 보정, 나침반 오차, 위치선, 천측, 조석과 여유 수심, GNSS 삼변측량을 3D 지구본과 시뮬레이터로 배운다.">
+<meta property="og:url" content="https://shipbook.euiyun.com/chapters/navigation.html">
+<meta property="og:image" content="https://shipbook.euiyun.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"항해술","name":"항해술 · ShipBook","url":"https://shipbook.euiyun.com/chapters/navigation.html","mainEntityOfPage":"https://shipbook.euiyun.com/chapters/navigation.html","inLanguage":"ko","isAccessibleForFree":true,"learningResourceType":"interactive textbook chapter","position":20,"image":"https://shipbook.euiyun.com/og.png","dateModified":"2026-10-04","isPartOf":{"@type":"Book","@id":"https://shipbook.euiyun.com/#book","name":"ShipBook — 인터랙티브 선박 교과서","url":"https://shipbook.euiyun.com/"},"publisher":{"@type":"Organization","name":"ShipBook","url":"https://shipbook.euiyun.com/"},"description":"위도·경도와 해리, 메르카토르 해도, 항정선과 대권, 추측 항법과 조류 보정, 나침반 오차, 위치선, 천측, 조석과 여유 수심, GNSS 삼변측량을 3D 지구본과 시뮬레이터로 배운다."},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ShipBook","item":"https://shipbook.euiyun.com/"},{"@type":"ListItem","position":2,"name":"20 항해술","item":"https://shipbook.euiyun.com/chapters/navigation.html"}]}]}</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../css/style.css">
+<script src="../js/common.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<style>
+  .sim-view.duo { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .sim-view.duo > div { min-width: 0; position: relative; }
+  @media (min-width: 700px) {
+    .sim-view.duo { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .sim-view.duo > div + div { border-left: 1px solid var(--border); }
+  }
+  .sim-view canvas.grab { cursor: grab; touch-action: none; }
+  .sim-view canvas.grab:active { cursor: grabbing; }
+  .sim-view.stack > div + div { border-top: 1px solid var(--border); }
+  .fig-lg svg .t, .fig-lg svg .t-acc { font-size: 16px; }
+  .fig-lg svg .t-dim { font-size: 14px; }
+  .fig-lg svg .t-mono { font-size: 13px; }
+  .port-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .port-row select { width: 100%; min-width: 0; }
+</style>
+</head>
+<body data-chapter="navigation">
+<main class="chapter">
+  <header class="chapter-hero">
+    <div class="eyebrow">Chapter 20</div>
+    <h1>항해술</h1>
+    <p class="lead">배는 도로도 표지판도 없는 바다 위에서 수천 해리를 달려 정해진 부두에 닿는다. 그 바탕에는 지구를 격자로 나누는 위도와 경도, 둥근 지구를 평평한 종이에 옮기는 해도, 침로와 속력과 시간만으로 위치를 추정하는 추측 항법, 그리고 별·해·전파로 그 추정을 바로잡는 위치 결정이 있다. 이 장에서는 3D 지구본 위에 항로를 그어 보고, 조류를 거슬러 침로를 잡고, 정오의 태양으로 위도를 구하고, 위성 신호로 위치를 푸는 과정을 차례로 손으로 해 본다.</p>
+    <ul class="objectives">
+      <li>위도·경도와 해리·노트의 관계를 알고, 위도 1분 = 1해리가 되는 이유를 설명한다.</li>
+      <li>메르카토르 해도가 등각이고 항정선이 직선이 되는 대신 고위도 면적이 \(\sec^2\varphi\)배로 커지는 이유를 안다.</li>
+      <li>항정선과 대권의 차이를 구면 삼각법(haversine)으로 계산하고 대권 항해의 이득을 추정한다.</li>
+      <li>추측 항법으로 위치를 계산하고, 조류와 풍압차를 보정한 조타 침로(CTS)를 구한다.</li>
+      <li>편차·자차를 이용해 진방위와 나침반 방위를 서로 바꾸고, 위치선으로 선위를 구한다.</li>
+      <li>정오 태양 고도로 위도를, 시각으로 경도를 구하는 천측의 원리를 이해한다.</li>
+      <li>조석의 원인과 대조·소조를 이해하고 12분의 1 법칙으로 조고와 여유 수심을 계산한다.</li>
+      <li>GNSS가 4개 이상의 위성을 필요로 하는 이유와 DOP, 재밍·스푸핑의 위험을 설명한다.</li>
+    </ul>
+  </header>
+
+  <!-- =============================================================== 1 -->
+  <section id="latlon">
+    <h2>지구의 격자: 위도·경도와 해리</h2>
+    <p>지구 위의 한 점은 두 각도로 정해진다. <span class="term">위도</span><span class="en">(Latitude, φ)</span>는 그 점과 지구 중심을 잇는 선이 적도면과 이루는 각으로, 적도 0°에서 극 90°까지 북위(N)·남위(S)로 센다. <span class="term">경도</span><span class="en">(Longitude, λ)</span>는 그 점을 지나는 자오선이 영국 그리니치를 지나는 본초 자오선과 이루는 각으로, 0°에서 180°까지 동경(E)·서경(W)으로 센다. 같은 위도를 잇는 원을 <b>거등권</b>(평행권), 같은 경도를 잇는 반원을 <b>자오선</b>이라 한다.</p>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 720 330" role="img" aria-label="위도와 경도의 정의">
+        <circle cx="200" cy="165" r="130" class="f-water" stroke="var(--text-dim)" stroke-width="1.5" fill-opacity="0.35"/>
+        <ellipse cx="200" cy="165" rx="130" ry="30" fill="none" class="s-line"/>
+        <ellipse cx="200" cy="100" rx="105" ry="24" fill="none" stroke="var(--accent-2)" stroke-width="1.6" stroke-dasharray="5 4"/>
+        <path d="M200 35 A 60 130 0 0 0 200 295" fill="none" class="s-line"/>
+        <path d="M200 35 A 60 130 0 0 1 200 295" fill="none" stroke="var(--text-faint)" stroke-dasharray="3 4"/>
+        <path d="M200 35 A 75 130 0 0 1 262 191" fill="none" stroke="var(--accent)" stroke-width="2"/>
+        <line x1="200" y1="165" x2="262" y2="191" class="s-axis"/>
+        <line x1="200" y1="165" x2="274" y2="95" stroke="var(--accent)" stroke-width="2"/>
+        <circle cx="274" cy="95" r="6" fill="var(--accent-2)"/>
+        <circle cx="200" cy="165" r="3" fill="var(--text)"/>
+        <path d="M244 183 A 48 48 0 0 0 236 132" fill="none" stroke="var(--accent)" stroke-width="2"/>
+        <text x="250" y="160" class="t-acc">φ</text>
+        <path d="M172 192 Q 220 205 262 191" fill="none" stroke="var(--warn)" stroke-width="2.4"/>
+        <text x="205" y="218" class="t" fill="var(--warn)">λ</text>
+        <text x="282" y="90" class="t">P (φ, λ)</text>
+        <text x="200" y="26" class="t-dim" text-anchor="middle">N</text>
+        <text x="200" y="316" class="t-dim" text-anchor="middle">S</text>
+        <text x="60" y="172" class="t-dim">적도</text>
+        <text x="96" y="90" class="t-dim" fill="var(--accent-2)">거등권</text>
+        <text x="150" y="250" class="t-dim">본초 자오선</text>
+        <line x1="172" y1="192" x2="164" y2="238" class="s-line"/>
+        <g transform="translate(400,40)">
+          <text x="0" y="10" class="t"><tspan class="t-acc">위도 1′ = 1 해리 = 1852 m</tspan></text>
+          <text x="0" y="38" class="t-dim">지구 둘레 ≈ 40,000 km = 360° × 60′ = 21,600′</text>
+          <text x="0" y="62" class="t-dim">→ 40,000 km ÷ 21,600 ≈ 1.852 km</text>
+          <text x="0" y="100" class="t"><tspan class="t-acc">경도 1′</tspan> = 1852 m × cos φ</text>
+          <text x="0" y="124" class="t-dim">거등권 반지름이 cos φ로 줄어든다</text>
+          <text x="0" y="148" class="t-dim">위도 60°에서는 0.5해리, 극에서는 0</text>
+          <text x="0" y="186" class="t"><tspan class="t-acc">1 노트</tspan> = 1 해리/시 = 0.514 m/s</text>
+          <text x="0" y="210" class="t-dim">20 kn로 하루 달리면 480 해리 = 위도 8°</text>
+          <text x="0" y="248" class="t-mono">35°06.0′N 129°02.4′E</text>
+          <text x="0" y="270" class="t-dim">(도·분 표기: 해도와 GPS의 기본 형식)</text>
+        </g>
+      </svg>
+      <figcaption><b>그림 20-1.</b> 위도는 적도면에서 잰 각, 경도는 본초 자오선에서 잰 각이다. 해리는 위도 1분에 해당하는 자오선 호의 길이로 정의되었기 때문에(현재는 1852 m로 고정), 해도의 위도 눈금이 그대로 거리 자가 된다.</figcaption>
+    </figure>
+
+    <p>항해에서 거리 단위는 <span class="term">해리</span><span class="en">(Nautical Mile, NM)</span>다. 원래 정의는 "자오선 위 위도 1분의 길이"였고, 1929년 국제 협약으로 1852 m로 고정되었다. 지구가 약간 납작한 타원체라 실제 위도 1분은 적도에서 1843 m, 극에서 1862 m 정도로 조금 다르지만, 해도 위에서는 <b>옆 테두리의 위도 눈금을 디바이더로 재면 곧 해리</b>라는 편리함이 남는다. 경도 눈금은 거리 자로 쓰면 안 된다. 경선 사이 간격이 \(\cos\varphi\)로 줄어들기 때문이다. 속력 단위 <span class="term">노트</span><span class="en">(knot)</span>는 시간당 1해리다.</p>
+
+    <div class="formula">$$1\ \text{NM} = 1852\ \text{m},\qquad 1\ \text{kn} = 1\ \text{NM/h} = 0.5144\ \text{m/s},\qquad \Delta x_{E} = 60\,\Delta\lambda\cos\varphi\ \ [\text{NM}]$$
+      <div class="where">여기서 \(\Delta\lambda\)는 경도 차(도), \(\Delta x_E\)는 같은 위도에서 동서 방향 거리. 동서 거리를 항해에서는 <b>동서거</b>(departure)라고 부른다.</div>
+    </div>
+
+    <div class="sim" id="sim-ll">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>지구 위의 한 점: 위도·경도 읽기</h3></div>
+      <div class="sim-body">
+        <div class="sim-view duo"><div><canvas id="cv-ll" class="grab"></canvas></div><div><canvas id="cv-ll2"></canvas></div></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>바로 가기</span><div class="seg" id="ll-go"><button data-value="busan" class="on">부산</button><button data-value="rtm">로테르담</button><button data-value="sin">싱가포르</button><button data-value="la">LA</button><button data-value="cape">케이프타운</button></div></div>
+          <label class="check"><input type="checkbox" id="ll-grid" checked> 15° 격자 표시</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">위도</span><span class="v" id="o-ll-lat">—</span></div>
+        <div class="stat"><span class="k">경도</span><span class="v" id="o-ll-lon">—</span></div>
+        <div class="stat"><span class="k">적도까지 거리</span><span class="v" id="o-ll-eq">—</span></div>
+        <div class="stat"><span class="k">이 위도의 경도 1°</span><span class="v" id="o-ll-dl">—</span></div>
+        <div class="stat"><span class="k">20 kn로 적도까지</span><span class="v" id="o-ll-t">—</span></div>
+      </div>
+      <div class="sim-note">왼쪽 지구본에서 빨간 점을 끌면 위치가 바뀌고, 빈 곳을 끌면 지구본이 돈다. 오른쪽은 그 점을 지나는 자오선을 옆에서 자른 단면으로, 위도각 φ와 거등권 반지름 \(R\cos\varphi\)를 보여 준다. 해볼 것: 점을 북쪽으로 끌어 올리며 '경도 1°'의 길이가 60해리에서 0으로 줄어드는 것을 확인하라. 위도 60°에서 정확히 절반이다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 2 -->
+  <section id="mercator">
+    <h2>둥근 지구를 평평한 종이에: 메르카토르 해도</h2>
+    <p>구면은 찢거나 늘리지 않고는 평면으로 펼 수 없다(가우스의 정리). 그래서 모든 지도 투영은 각도·면적·거리 가운데 무언가를 포기한다. 1569년 메르카토르가 고안한 투영은 <b>각도</b>를 지키기로 했다. 경선을 평행한 세로선으로 펴면 위도 φ에서 동서 방향이 \(\sec\varphi = 1/\cos\varphi\)배로 늘어나므로, 같은 비율만큼 남북 방향도 늘려 준다. 그러면 작은 영역에서 모양이 유지되는 <span class="term">등각 투영</span><span class="en">(Conformal Projection)</span>이 된다.</p>
+
+    <div class="formula">$$x = R\,(\lambda-\lambda_0),\qquad y = R\,\ln\tan\!\left(\frac{\pi}{4}+\frac{\varphi}{2}\right),\qquad k = \sec\varphi$$
+      <div class="where">여기서 \(k\)는 그 위도의 축척 계수(지도 위 길이 ÷ 실제 길이의 비). 면적은 \(k^2 = \sec^2\varphi\)배로 확대된다. 위도 60°에서 길이 2배·면적 4배, 80°에서 길이 5.8배·면적 33배다.</div>
+    </div>
+
+    <p>항해사에게 이 투영이 결정적으로 중요한 이유는 하나다. <b>나침반의 한 방위를 계속 유지하는 항로(항정선)가 메르카토르 해도 위에서 직선이 된다.</b> 모든 경선과 같은 각으로 만나는 선은 등각 투영에서도 모든 세로선과 같은 각으로 만나야 하기 때문이다. 해도 위 두 점을 자로 잇고 각도기로 각을 재면 그것이 곧 침로다. 대가는 면적 왜곡이다. 그린란드는 아프리카의 약 1/14 크기인데 메르카토르 지도에서는 비슷해 보인다. 거리를 잴 때는 반드시 <b>그 구간과 같은 위도의</b> 옆 테두리 눈금을 써야 하는 것도 이 때문이다.</p>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 720 300" role="img" aria-label="메르카토르 투영의 원리">
+        <g transform="translate(40,20)">
+          <ellipse cx="120" cy="20" rx="90" ry="14" fill="none" class="s-line"/>
+          <line x1="30" y1="20" x2="30" y2="250" class="s-line"/><line x1="210" y1="20" x2="210" y2="250" class="s-line"/>
+          <ellipse cx="120" cy="250" rx="90" ry="14" fill="none" class="s-line"/>
+          <circle cx="120" cy="135" r="90" class="f-water" fill-opacity="0.3" stroke="var(--text-dim)"/>
+          <ellipse cx="120" cy="135" rx="90" ry="14" fill="none" stroke="var(--accent)" stroke-width="2"/>
+          <ellipse cx="120" cy="73" rx="66" ry="10" fill="none" stroke="var(--accent-2)" stroke-dasharray="4 3"/>
+          <line x1="186" y1="73" x2="210" y2="40" stroke="var(--accent-2)" stroke-width="1.5"/>
+          <text x="120" y="290" class="t-dim" text-anchor="middle">적도에 접하는 원통</text>
+        </g>
+        <g transform="translate(320,20)">
+          <rect x="0" y="0" width="360" height="250" fill="none" class="s-axis"/>
+          <g class="s-line">
+            <line x1="60" y1="0" x2="60" y2="250"/><line x1="120" y1="0" x2="120" y2="250"/><line x1="180" y1="0" x2="180" y2="250"/><line x1="240" y1="0" x2="240" y2="250"/><line x1="300" y1="0" x2="300" y2="250"/>
+          </g>
+          <line x1="0" y1="200" x2="360" y2="200" stroke="var(--accent)" stroke-width="2"/>
+          <line x1="0" y1="167" x2="360" y2="167" class="s-line"/><line x1="0" y1="131" x2="360" y2="131" class="s-line"/>
+          <line x1="0" y1="88" x2="360" y2="88" stroke="var(--accent-2)" stroke-dasharray="4 3"/>
+          <line x1="0" y1="22" x2="360" y2="22" class="s-line"/>
+          <text x="364" y="204" class="t-mono">0°</text><text x="364" y="171" class="t-mono">20°</text><text x="364" y="135" class="t-mono">40°</text>
+          <text x="364" y="92" class="t-mono">60°</text><text x="364" y="26" class="t-mono">80°</text>
+          <circle cx="90" cy="184" r="12" class="f-acc-soft" stroke="var(--accent)"/>
+          <circle cx="90" cy="110" r="24" class="f-acc-soft" stroke="var(--accent)"/>
+          <line x1="210" y1="230" x2="330" y2="40" stroke="var(--warn)" stroke-width="2.5"/>
+          <text x="262" y="160" class="t" fill="var(--warn)">항정선 = 직선</text>
+          <text x="180" y="244" class="t-dim" text-anchor="middle">위도 간격이 북쪽으로 갈수록 벌어진다</text>
+        </g>
+      </svg>
+      <figcaption><b>그림 20-2.</b> 메르카토르 투영. 경선을 평행선으로 펴서 생긴 동서 확대(sec φ)만큼 남북 간격도 늘린다. 같은 크기의 원(파랑)이 고위도에서 더 크게 그려지지만 여전히 원이다(등각). 항정선은 직선이 된다.</figcaption>
+    </figure>
+
+    <div class="sim" id="sim-merc">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>티소 지시원: 같은 원은 어디서 얼마나 커지나</h3></div>
+      <div class="sim-body">
+        <div class="sim-view duo"><div><canvas id="cv-mg"></canvas></div><div><canvas id="cv-mm" class="grab"></canvas></div></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>탐침 원의 위도 φ <output id="mc-lat-out"></output></span><input type="range" id="mc-lat" min="-80" max="80" step="1" value="60"></label>
+          <div class="ctrl"><span>투영</span><div class="seg" id="mc-proj"><button data-value="merc" class="on">메르카토르</button><button data-value="eq">정거 원통(위경도 그대로)</button></div></div>
+          <label class="check"><input type="checkbox" id="mc-gl"> 그린란드·아프리카 강조</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">축척 계수 sec φ</span><span class="v" id="o-mc-k">—</span></div>
+        <div class="stat"><span class="k">면적 확대 sec²φ</span><span class="v" id="o-mc-a">—</span></div>
+        <div class="stat"><span class="k">원 모양</span><span class="v" id="o-mc-sh">—</span></div>
+        <div class="stat"><span class="k">지도 위 면적비 그린란드/아프리카</span><span class="v" id="o-mc-gl">—</span></div>
+      </div>
+      <div class="sim-note">모든 원은 실제로 반지름 600 km(약 324해리)로 같다. 왼쪽 지구본은 탐침 원 쪽을 바라본다. 오른쪽 지도 위에서 끌거나 슬라이더로 탐침 원(주황)의 위도를 바꿔라. 해볼 것: 메르카토르에서는 원이 커져도 원 모양을 유지한다(등각). '정거 원통'으로 바꾸면 고위도 원이 옆으로 납작한 타원이 된다. 그린란드 강조를 켜고 두 투영의 면적비를 실제 값 0.071과 비교하라.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 3 -->
+  <section id="routes">
+    <h2>항정선과 대권: 가장 쉬운 길과 가장 짧은 길</h2>
+    <p>나침반 방위를 하나로 고정하고 가는 항로가 <span class="term">항정선</span><span class="en">(Rhumb Line, Loxodrome)</span>이다. 모든 경선과 같은 각으로 만나므로 조타가 쉽지만, 극 쪽으로 계속 가면 극을 향해 소용돌이처럼 감겨 든다. 반면 구 위 두 점 사이의 최단 경로는 지구 중심을 지나는 평면이 구면을 자른 큰 원, 즉 <span class="term">대권</span><span class="en">(Great Circle)</span>의 호다. 대권은 메르카토르 해도 위에서 극 쪽으로 휜 곡선으로 보이고, 따라가는 동안 침로가 계속 변한다.</p>
+
+    <p>두 점 사이 대권 거리(중심각 \(c\))는 구면 삼각법으로 구한다. 수치적으로 안정한 형태가 <b>haversine 공식</b>이다. 항정선 거리는 메르카토르 평면에서의 직선 관계로 구한다.</p>
+
+    <div class="formula">$$\operatorname{hav} c = \operatorname{hav}\Delta\varphi + \cos\varphi_1\cos\varphi_2\,\operatorname{hav}\Delta\lambda,\qquad \operatorname{hav}\theta=\sin^2\frac{\theta}{2},\qquad d_{GC}=R\,c$$
+      $$\tan C_{RL}=\frac{\Delta\lambda}{\Delta\psi},\quad \Delta\psi=\ln\frac{\tan(\pi/4+\varphi_2/2)}{\tan(\pi/4+\varphi_1/2)},\qquad d_{RL}=R\,\frac{\Delta\varphi}{\cos C_{RL}}$$
+      <div class="where">여기서 \(R\) = 3440 NM(지구 평균 반지름 6371 km), \(C_{RL}\)은 항정선 침로, \(\Delta\psi\)는 메르카토르 위도 차(漸長緯度差, meridional parts). 동서 방향(\(\Delta\varphi = 0\))이면 \(d_{RL} = R\,\Delta\lambda\cos\varphi\)로 바꿔 쓴다. 대권의 출발 침로는 \(\tan C_0 = \sin\Delta\lambda\cos\varphi_2/(\cos\varphi_1\sin\varphi_2-\sin\varphi_1\cos\varphi_2\cos\Delta\lambda)\).</div>
+    </div>
+
+    <div class="sim" id="sim-gc">
+      <div class="sim-head"><span class="sim-tag three">3D</span><h3>3D 지구본 위의 항정선과 대권</h3></div>
+      <div class="sim-body">
+        <div class="sim-view three" id="v3d-gc"><span class="hint">끌어서 회전 · 휠로 확대</span></div>
+        <div class="sim-view" style="border-top:1px solid var(--border)"><canvas id="cv-gcm" class="grab"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>출발 · 도착 항구</span><div class="port-row"><select id="gc-a"></select><select id="gc-b"></select></div></div>
+          <label class="ctrl"><span>항해 속력 <output id="gc-v-out"></output></span><input type="range" id="gc-v" min="10" max="25" step="0.5" value="18"></label>
+          <div class="ctrl-row"><label class="check"><input type="checkbox" id="gc-rl" checked> 항정선</label><label class="check"><input type="checkbox" id="gc-gc" checked> 대권</label><button class="btn" id="gc-swap">출발↔도착</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">대권 거리</span><span class="v" id="o-gc-d">—</span></div>
+        <div class="stat"><span class="k">항정선 거리</span><span class="v" id="o-gc-r">—</span></div>
+        <div class="stat"><span class="k">차이</span><span class="v" id="o-gc-diff">—</span></div>
+        <div class="stat"><span class="k">대권 출발 침로 / 최고 위도</span><span class="v" id="o-gc-c">—</span></div>
+        <div class="stat"><span class="k">항정선 침로</span><span class="v" id="o-gc-rc">—</span></div>
+        <div class="stat"><span class="k">절약 시간</span><span class="v" id="o-gc-t">—</span></div>
+      </div>
+      <div class="sim-note">위: 3D 지구본(파랑 = 대권, 노랑 = 항정선). 아래: 같은 두 경로를 메르카토르 해도에 그린 것. 아래 해도에서 항구 표지(동그라미)를 끌어 임의의 지점으로 옮길 수 있다. 해볼 것: 부산 → LA를 고르면 대권이 알류샨 열도 쪽으로 크게 휘어 약 370해리(7%)를 줄인다. 싱가포르 → 시드니 같은 남북 방향 항로나 산투스 → 케이프타운 같은 저위도 항로는 차이가 1% 안팎이다. 케이프타운 → 시드니는 대권이 남극 쪽으로 휘며 약 10%(670해리)나 짧다. 지구본을 돌려 보면 '휜' 대권이 3D에서는 가장 곧은 선임을 알 수 있다. 실제 항로는 육지, 빙해, 기상 때문에 대권을 그대로 따르지 않는다(로테르담 항로는 수에즈 운하를 지난다).</div>
+    </div>
+
+    <p>실제 대양 항해에서는 대권을 여러 개의 짧은 항정선 구간으로 나누어 따라간다. 해도에 대권 위의 점들(예: 경도 5°~10°마다)을 찍고, 각 점 사이는 항정선(일정 침로)으로 달린다. 대권이 너무 높은 위도로 올라가 빙산이나 폭풍 해역에 들어가면 일정 위도 이상은 거등권을 따라가는 <b>복합 대권</b><span class="en">(Composite Great Circle)</span>을 쓴다. 지금은 ECDIS와 항로 계획 소프트웨어가 이 계산을 하고, 기상 항로(weather routing)가 바람·파도·해류를 고려해 시간과 연료가 최소인 경로를 고른다.</p>
+  </section>
+
+  <!-- =============================================================== 4 -->
+  <section id="dr">
+    <h2>추측 항법과 조류 보정</h2>
+    <p>위치를 직접 잴 수단이 없을 때, 마지막으로 확인한 위치(fix)에서 출발해 <b>침로·속력·경과 시간</b>만으로 현재 위치를 계산하는 것이 <span class="term">추측 항법</span><span class="en">(Dead Reckoning, DR)</span>이다. 거리 \(d = V t\)를 침로 \(C\) 방향으로 나누면 남북 성분은 위도 변화, 동서 성분(동서거)은 \(\cos\varphi_m\)로 나누어 경도 변화가 된다.</p>
+
+    <div class="formula">$$\Delta\varphi' = d\cos C,\qquad \text{dep} = d\sin C,\qquad \Delta\lambda' = \frac{\text{dep}}{\cos\varphi_m}$$
+      <div class="where">여기서 \(d\)는 항주 거리(NM), \(\Delta\varphi'\)·\(\Delta\lambda'\)은 분(′) 단위, \(\varphi_m\)은 출발·도착 위도의 평균(중분 위도 항법). 수백 해리 이내에서 충분히 정확하다.</div>
+    </div>
+
+    <p>DR은 배가 물에 대해 움직인 것만 센다. 그런데 물 자체가 흐르고(조류·해류), 바람은 배를 옆으로 민다. 그래서 항해에는 서로 다른 방향 개념이 여럿 있다. 선수가 가리키는 방향이 <b>선수 방위</b>(heading), 물에 대한 진행 방향이 <b>항적</b>(water track), 바다 밑바닥에 대한 실제 진행 방향이 <span class="term">대지 침로</span><span class="en">(COG, Course over Ground)</span>다. 조류가 흘러가는 방향을 <b>유향</b>(set), 그 속력을 <b>유속</b>(drift)이라 하고, 바람에 밀려 선수 방위와 항적이 벌어지는 각을 <span class="term">풍압차</span><span class="en">(Leeway)</span>라 한다.</p>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 720 300" role="img" aria-label="조류 삼각형">
+        <defs><marker id="ah20" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="context-stroke"/></marker></defs>
+        <circle cx="90" cy="250" r="5" fill="var(--text)"/>
+        <text x="70" y="275" class="t-dim">출발점</text>
+        <line x1="90" y1="250" x2="560" y2="60" stroke="var(--text-faint)" stroke-dasharray="6 5"/>
+        <text x="570" y="56" class="t-dim">목적지 방향</text>
+        <line x1="90" y1="250" x2="350" y2="35" stroke="var(--accent)" stroke-width="3" marker-end="url(#ah20)"/>
+        <line x1="350" y1="35" x2="440" y2="108" stroke="var(--accent-2)" stroke-width="3" marker-end="url(#ah20)"/>
+        <line x1="90" y1="250" x2="440" y2="108" stroke="var(--ok)" stroke-width="3.5" marker-end="url(#ah20)"/>
+        <text x="150" y="120" class="t" fill="var(--accent)">물에 대한 속도 (STW, 항적)</text>
+        <text x="410" y="60" class="t" fill="var(--accent-2)">조류 (유향·유속)</text>
+        <text x="260" y="210" class="t" fill="var(--ok)">대지 속도 (SOG, COG)</text>
+        <line x1="90" y1="250" x2="90" y2="150" class="s-axis" marker-end="url(#ah20)"/>
+        <text x="80" y="140" class="t-dim">N</text>
+        <path d="M90 200 A 50 50 0 0 1 128 214" fill="none" stroke="var(--text-dim)"/>
+        <text x="104" y="190" class="t-mono">CTS</text>
+        <g transform="translate(560,150)">
+          <text x="0" y="0" class="t-acc">조타 침로 CTS</text>
+          <text x="0" y="22" class="t-dim">Course to Steer</text>
+          <text x="0" y="50" class="t-dim">조류를 미리 거슬러</text>
+          <text x="0" y="72" class="t-dim">선수를 틀어 두면</text>
+          <text x="0" y="94" class="t-dim">합성 속도가 목적지를</text>
+          <text x="0" y="116" class="t-dim">향한다</text>
+        </g>
+      </svg>
+      <figcaption><b>그림 20-3.</b> 조류 삼각형. 배가 물에 대해 낸 속도(파랑)에 물의 흐름(빨강)이 더해져 실제 대지 속도(초록)가 된다. 목적지로 곧장 가려면 초록 벡터가 목적지 방향에 놓이도록 파랑 벡터의 방향, 즉 조타 침로를 정한다.</figcaption>
+    </figure>
+
+    <div class="sim" id="sim-dr">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>추측 항법 게임: DR과 실제 위치는 얼마나 벌어지나</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-dr"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>침로 <output id="dr-c-out"></output></span><input type="range" id="dr-c" min="0" max="359" step="1" value="70"></label>
+          <label class="ctrl"><span>속력(STW) <output id="dr-v-out"></output></span><input type="range" id="dr-v" min="4" max="20" step="0.5" value="12"></label>
+          <label class="ctrl"><span>조류 유향(set) <output id="dr-s-out"></output></span><input type="range" id="dr-s" min="0" max="359" step="5" value="160"></label>
+          <label class="ctrl"><span>조류 유속(drift) <output id="dr-d-out"></output></span><input type="range" id="dr-d" min="0" max="4" step="0.1" value="1.5"></label>
+          <div class="ctrl-row"><button class="btn primary" id="dr-run">출항</button><button class="btn" id="dr-fix">위치 측정(Fix)</button><button class="btn" id="dr-reset">처음부터</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">경과 시간</span><span class="v" id="o-dr-t">—</span></div>
+        <div class="stat"><span class="k">DR 위치</span><span class="v" id="o-dr-pos">—</span></div>
+        <div class="stat"><span class="k">항주 거리(물 기준)</span><span class="v" id="o-dr-d">—</span></div>
+        <div class="stat"><span class="k">DR 오차(실제와 거리)</span><span class="v" id="o-dr-e">—</span></div>
+      </div>
+      <div class="sim-note">35°00′N 129°00′E에서 출항한다. 점선은 침로와 속력만으로 계산한 DR 항적(매시 반원 표지), 실선은 조류가 더해진 실제 항적이다(실제 바다에서는 보이지 않는다). 항해 중에도 침로·속력을 바꿀 수 있다. 해볼 것: 1~2시간 달린 뒤 'Fix'를 눌러 위치를 확인하면 DR이 그 점에서 다시 시작한다. DR 오차는 대략 유속 × 경과 시간으로 쌓인다. 유속 1.5 kn면 4시간 뒤 6해리 오차다.</div>
+    </div>
+
+    <p>조류를 알고 있다면 미리 보정할 수 있다. 원하는 대지 침로 방향으로 조류의 <b>옆 성분</b> \(c_\perp\)을 상쇄하도록 선수를 틀면 된다. 조류의 앞뒤 성분 \(c_\parallel\)은 대지 속력에 더해진다.</p>
+    <div class="formula">$$\sin\alpha = -\frac{c_\perp}{V_{w}},\qquad \text{SOG} = V_w\cos\alpha + c_\parallel,\qquad \text{CTS} = \text{COG} + \alpha - \text{leeway}$$
+      <div class="where">여기서 \(V_w\)는 대수 속력(STW), \(\alpha\)는 항적과 대지 침로 사이 보정각. 풍압차는 바람이 좌현에서 불면(배가 우현으로 밀리면) 선수를 바람 쪽(좌현)으로 더 틀어 보정한다. \(|c_\perp| > V_w\)이면 그 방향으로는 갈 수 없다.</div>
+    </div>
+
+    <div class="sim" id="sim-cts">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>조류 삼각형: 조타 침로(CTS) 구하기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-cts" class="grab"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>원하는 대지 침로(COG) <output id="ct-cog-out"></output></span><input type="range" id="ct-cog" min="0" max="359" step="1" value="45"></label>
+          <label class="ctrl"><span>대수 속력(STW) <output id="ct-v-out"></output></span><input type="range" id="ct-v" min="3" max="20" step="0.5" value="10"></label>
+          <label class="ctrl"><span>조류 유향 <output id="ct-s-out"></output></span><input type="range" id="ct-s" min="0" max="359" step="1" value="135"></label>
+          <label class="ctrl"><span>조류 유속 <output id="ct-d-out"></output></span><input type="range" id="ct-d" min="0" max="6" step="0.1" value="2.5"></label>
+          <label class="ctrl"><span>풍압차 <output id="ct-lw-out"></output></span><input type="range" id="ct-lw" min="0" max="10" step="0.5" value="3"></label>
+          <div class="ctrl"><span>바람이 부는 쪽</span><div class="seg" id="ct-wind"><button data-value="port" class="on">좌현에서</button><button data-value="stbd">우현에서</button></div></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">조타 침로 CTS</span><span class="v" id="o-ct-cts">—</span></div>
+        <div class="stat"><span class="k">조류 보정각</span><span class="v" id="o-ct-a">—</span></div>
+        <div class="stat"><span class="k">대지 속력 SOG</span><span class="v" id="o-ct-sog">—</span></div>
+        <div class="stat"><span class="k">30해리 도착 시간</span><span class="v" id="o-ct-eta">—</span></div>
+      </div>
+      <div class="sim-note">조류 벡터(빨강)의 화살촉을 캔버스 위에서 직접 끌어 유향·유속을 바꿀 수 있다. 배 그림은 CTS로 선수를 둔 모습이다. 해볼 것: 조류를 목적지 방향과 직각으로 두고 유속을 키우면 보정각이 커지고 SOG가 줄어든다. 유속이 STW를 넘으면 삼각형이 닫히지 않는다. 조류가 정면에서 오면 보정각은 0이지만 SOG가 크게 준다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 5 -->
+  <section id="compass">
+    <h2>나침반: 진북, 자북, 나북</h2>
+    <p>해도의 방위는 모두 지리상의 북극을 기준으로 한 <b>진방위</b>(True)다. 그런데 자기 나침반은 지구 자기장의 방향, 즉 자북을 가리킨다. 진북과 자북의 차이가 <span class="term">편차</span><span class="en">(Variation)</span>다. 장소에 따라 다르고 해마다 조금씩 변하며, 해도의 나침도(compass rose)에 "7°10′W (2025), 매년 4′E 감소" 같은 식으로 적혀 있다. 여기에 배 자체의 철재와 전기 장비가 만든 자기장이 나침반을 또 비튼다. 이것이 <span class="term">자차</span><span class="en">(Deviation)</span>이고, 배의 선수 방위에 따라 달라지므로 <b>자차표</b>(deviation card)로 관리한다.</p>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 720 280" role="img" aria-label="진북 자북 나북과 TVMDC">
+        <defs><marker id="ah20b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="context-stroke"/></marker></defs>
+        <g transform="translate(160,250)">
+          <line x1="0" y1="0" x2="0" y2="-210" stroke="var(--text)" stroke-width="2.5" marker-end="url(#ah20b)"/>
+          <line x1="0" y1="0" x2="-40" y2="-200" stroke="var(--accent)" stroke-width="2.2" marker-end="url(#ah20b)"/>
+          <line x1="0" y1="0" x2="-15" y2="-200" stroke="var(--warn)" stroke-width="2.2" marker-end="url(#ah20b)"/>
+          <line x1="0" y1="0" x2="120" y2="-150" stroke="var(--accent-2)" stroke-width="3" marker-end="url(#ah20b)"/>
+          <text x="6" y="-214" class="t">진북 T</text>
+          <text x="-92" y="-196" class="t" fill="var(--accent)">자북 M</text>
+          <text x="-30" y="-226" class="t" fill="var(--warn)">나북 C</text>
+          <text x="126" y="-150" class="t" fill="var(--accent-2)">선수</text>
+          <path d="M0 -120 A 120 120 0 0 0 -24 -117" fill="none" stroke="var(--accent)"/>
+          <text x="-62" y="-128" class="t-mono" fill="var(--accent)">V 11°W</text>
+          <path d="M-9 -150 A 150 150 0 0 0 -22 -148" fill="none" stroke="var(--warn)"/>
+        </g>
+        <g transform="translate(340,40)">
+          <text x="0" y="0" class="t"><tspan class="t-acc">T</tspan>rue  —  <tspan class="t-acc">V</tspan>ariation  —  <tspan class="t-acc">M</tspan>agnetic  —  <tspan class="t-acc">D</tspan>eviation  —  <tspan class="t-acc">C</tspan>ompass</text>
+          <text x="0" y="40" class="t-mono">T 060°  −(11°W)→  M 071°  −(4°E)→  C 067°</text>
+          <text x="0" y="80" class="t-dim">T → C (해도에서 나침반으로): 동(E)은 빼고, 서(W)는 더한다</text>
+          <text x="0" y="104" class="t-dim">C → T (나침반에서 해도로): 동(E)은 더하고, 서(W)는 뺀다</text>
+          <text x="0" y="142" class="t-dim">편차 V: 장소·연도에 따라 (해도 나침도)</text>
+          <text x="0" y="166" class="t-dim">자차 D: 배의 선수 방위에 따라 (자차표)</text>
+          <text x="0" y="190" class="t-dim">컴퍼스 오차 = V + D (부호 포함 합)</text>
+        </g>
+      </svg>
+      <figcaption><b>그림 20-4.</b> 세 개의 북. 진북에서 자북까지가 편차, 자북에서 나침반이 가리키는 북(나북)까지가 자차다. 동쪽(E) 오차는 나침반이 진방위보다 작은 값을 읽게 만든다.</figcaption>
+    </figure>
+
+    <div class="sim" id="sim-comp">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>TVMDC 변환기와 자차 곡선</h3></div>
+      <div class="sim-body">
+        <div class="sim-view duo"><div><canvas id="cv-cp"></canvas></div><div><canvas id="cv-cp2"></canvas></div></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>진침로 T <output id="cp-t-out"></output></span><input type="range" id="cp-t" min="0" max="359" step="1" value="60"></label>
+          <label class="ctrl"><span>편차 V (+E / −W) <output id="cp-v-out"></output></span><input type="range" id="cp-v" min="-20" max="20" step="0.5" value="-8"></label>
+          <label class="ctrl"><span>자차 계수 B (sin 성분) <output id="cp-b-out"></output></span><input type="range" id="cp-b" min="-8" max="8" step="0.5" value="4"></label>
+          <label class="ctrl"><span>자차 계수 C (cos 성분) <output id="cp-c-out"></output></span><input type="range" id="cp-c" min="-8" max="8" step="0.5" value="-2"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">진침로 T</span><span class="v" id="o-cp-t">—</span></div>
+        <div class="stat"><span class="k">편차 V</span><span class="v" id="o-cp-v">—</span></div>
+        <div class="stat"><span class="k">자침로 M</span><span class="v" id="o-cp-m">—</span></div>
+        <div class="stat"><span class="k">자차 D</span><span class="v" id="o-cp-d">—</span></div>
+        <div class="stat"><span class="k">나침로 C (조타할 값)</span><span class="v" id="o-cp-c">—</span></div>
+      </div>
+      <div class="sim-note">자차는 근사식 \(D = A + B\sin M + C\cos M\)으로 만든 자차표다(실제로는 \(D\cos 2M\), \(E\sin 2M\) 항도 있다). 오른쪽 그래프는 선수 방위별 자차 곡선, 점은 현재 선수 방위. 해볼 것: 진침로를 한 바퀴 돌려 보며 자차가 선수 방위에 따라 부호까지 바뀌는 것을 확인하라. 같은 장소에서도 침로를 바꾸면 나침반 오차가 달라지는 이유다. 편차를 서편(−)으로 두면 나침로가 진침로보다 커진다.</div>
+    </div>
+
+    <p>대형 상선의 주 나침반은 자기 나침반이 아니라 <span class="term">자이로컴퍼스</span><span class="en">(Gyrocompass)</span>다. 고속으로 도는 자이로의 축은 공간에 대해 방향을 유지하려 하는데(강직성), 여기에 축이 수평을 벗어나면 진자처럼 토크를 거는 장치를 더하면 지구 자전과의 상호작용으로 축이 <b>지구 자전축의 수평 성분, 즉 진북</b>에 정착한다(세차 운동). 자기장과 무관하므로 편차·자차가 없지만, 속력·위도에 따른 작은 오차(속도 오차, 수 도 이내)를 보정해야 하고 기동 후 정착에 몇 시간이 걸린다. 그래서 선교에는 고장에 대비해 자기 나침반을 함께 둔다. 최근에는 광섬유 자이로(FOG)나 GNSS 안테나 2개로 방위를 재는 GNSS 컴퍼스도 쓰인다. 자이로는 <a href="bridge.html">21장</a>의 레이더·ECDIS·오토파일럿에 방위를 공급하는 심장이다.</p>
+  </section>
+
+  <!-- =============================================================== 6 -->
+  <section id="lop">
+    <h2>위치선과 선위 결정</h2>
+    <p>연안에서는 해도에 표시된 물표(등대, 산봉우리, 탑)의 방위를 재서 위치를 구한다. 물표의 방위를 하나 재면 배는 그 물표를 지나 측정 방위의 반대 방향으로 그은 직선 어딘가에 있다. 이 선이 <span class="term">위치선</span><span class="en">(LOP, Line of Position)</span>이다. 두 위치선의 교점이 선위(fix)다. 실제 측정에는 오차가 있으므로 세 번째 물표를 재면 세 선이 한 점에서 만나지 않고 작은 삼각형을 만든다. 항해사는 이를 <span class="term">오차 삼각형</span><span class="en">(Cocked Hat)</span>이라 부르며, 삼각형이 작으면 측정이 믿을 만하다고 보고 보통 안쪽 가운데를 선위로 삼는다(위험 쪽 꼭짓점을 택하기도 한다).</p>
+    <ul>
+      <li><b>교차각</b>이 중요하다. 두 위치선이 90°(세 개면 60°·120°)에 가깝게 만나야 방위 오차가 위치 오차로 덜 증폭된다. 거의 평행하게 만나면 작은 오차로도 교점이 크게 미끄러진다.</li>
+      <li>모든 방위에 똑같이 들어간 <b>계통 오차</b>(예: 모르는 자차)는 삼각형 크기를 키우거나, 물표 배치에 따라 작은 삼각형을 그리면서도 엉뚱한 곳을 가리킬 수 있다.</li>
+      <li>레이더로 잰 <b>거리</b>는 물표를 중심으로 한 원(거리원)이 위치선이 된다. 레이더 거리는 방위보다 정확하므로 연안 항해에서 자주 쓴다.</li>
+    </ul>
+
+    <div class="sim" id="sim-lop">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>세 물표 방위와 오차 삼각형</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-lop" class="grab"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>측정 방법</span><div class="seg" id="lp-mode"><button data-value="brg" class="on">방위 3개</button><button data-value="rng">레이더 거리 3개</button></div></div>
+          <label class="ctrl"><span>우연 오차 σ <output id="lp-sd-out"></output></span><input type="range" id="lp-sd" min="0" max="5" step="0.1" value="1.5"></label>
+          <label class="ctrl"><span>계통 오차(모르는 자차 등) <output id="lp-sys-out"></output></span><input type="range" id="lp-sys" min="-6" max="6" step="0.5" value="0"></label>
+          <div class="ctrl-row"><button class="btn primary" id="lp-again">다시 측정</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">측정값</span><span class="v" id="o-lp-m" style="font-size:14px">—</span></div>
+        <div class="stat"><span class="k">삼각형 최대 변</span><span class="v" id="o-lp-hat">—</span></div>
+        <div class="stat"><span class="k">선위 오차(실제와)</span><span class="v" id="o-lp-err">—</span></div>
+      </div>
+      <div class="sim-note">배(검은 점, 실제 위치)를 바다 위에서 끌어 옮길 수 있다. 방위 모드에서 σ는 방위 오차(도), 거리 모드에서는 거리 오차(케이블, 0.1해리 단위). 해볼 것: 배를 물표 A·C와 일직선에 가깝게 놓아 교차각이 나빠지면 같은 σ에서도 삼각형이 길쭉해진다. 우연 오차를 0으로 하고 계통 오차만 주면 삼각형은 생기지만 선위는 한쪽으로 치우친다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 7 -->
+  <section id="celestial">
+    <h2>천측 항법: 해와 시계로 위치 구하기</h2>
+    <p>GPS가 없던 시대 대양 한가운데에서 위치를 아는 방법은 천체였다. 지금도 GNSS 고장에 대비해 항해사는 천측을 배운다. 도구는 <span class="term">육분의</span><span class="en">(Sextant)</span>다. 두 개의 거울로 수평선과 천체를 한 시야에 겹쳐 놓으면 눈금이 천체의 고도(수평선 위 각)를 1′ 정밀도로 알려 준다. 거울 하나가 θ만큼 돌면 반사광은 2θ 돌기 때문에, 60°(원의 1/6) 호로 120°까지 잴 수 있어 '육분의'라는 이름이 붙었다.</p>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 720 280" role="img" aria-label="육분의의 원리">
+        <path d="M120 40 L320 240 L 320 240 A 283 283 0 0 0 -0 240 Z" fill="none" stroke="none"/>
+        <line x1="200" y1="40" x2="120" y2="240" class="s-line"/><line x1="200" y1="40" x2="300" y2="240" class="s-line"/>
+        <path d="M120 240 A 216 216 0 0 0 300 240" fill="none" stroke="var(--text-dim)" stroke-width="6"/>
+        <line x1="200" y1="40" x2="250" y2="248" stroke="var(--accent)" stroke-width="2.5"/>
+        <rect x="190" y="30" width="22" height="8" transform="rotate(20 200 40)" fill="var(--accent)"/>
+        <text x="215" y="30" class="t-dim">동경(index mirror)</text>
+        <rect x="134" y="118" width="20" height="7" transform="rotate(-25 144 121)" fill="var(--accent-2)"/>
+        <text x="40" y="112" class="t-dim">수평경</text>
+        <circle cx="70" cy="150" r="9" fill="none" stroke="var(--text)"/><text x="30" y="178" class="t-dim">망원경 → 눈</text>
+        <line x1="79" y1="150" x2="144" y2="122" stroke="var(--warn)" stroke-width="1.6"/>
+        <line x1="144" y1="122" x2="200" y2="40" stroke="var(--warn)" stroke-width="1.6"/>
+        <line x1="200" y1="40" x2="340" y2="-10" stroke="var(--warn)" stroke-width="1.6"/>
+        <text x="250" y="270" class="t-mono" text-anchor="middle">눈금 호(arc) · 0°~120°</text>
+        <g transform="translate(400,30)">
+          <rect x="0" y="0" width="280" height="160" rx="10" fill="var(--surface)" stroke="var(--border)"/>
+          <circle cx="140" cy="80" r="62" fill="var(--bg-elev)" stroke="var(--text-dim)"/>
+          <rect x="78" y="80" width="62" height="62" fill="var(--water)" opacity="0.6"/>
+          <line x1="78" y1="80" x2="202" y2="80" stroke="var(--text)" stroke-width="1.4"/>
+          <circle cx="140" cy="73" r="7" fill="var(--warn)"/>
+          <text x="140" y="178" class="t-dim" text-anchor="middle">태양 아랫가장자리를 수평선에 접하게</text>
+          <text x="140" y="200" class="t-dim" text-anchor="middle">→ 눈금 = 태양 고도 h</text>
+        </g>
+      </svg>
+      <figcaption><b>그림 20-5.</b> 육분의. 태양 빛(주황)은 동경과 수평경에서 두 번 반사되어 망원경으로 들어가고, 수평선은 수평경의 투명한 절반을 통해 직접 보인다. 동경을 돌려 두 상을 겹치면 팔(index arm)이 가리키는 눈금이 고도다. 실제 관측값에는 안고차(눈높이), 대기 굴절, 태양 반지름 보정을 더한다.</figcaption>
+    </figure>
+
+    <p>가장 단순한 천측은 <b>정오 위도</b>다. 태양이 그 지점의 자오선을 지날 때(시정오) 고도가 하루 중 가장 높다. 그 순간 관측자의 천정, 태양, 천구의 적도가 모두 자오선 위에 있으므로 각도의 덧셈만으로 위도가 나온다. 태양의 <span class="term">적위</span><span class="en">(Declination, δ)</span>는 천구 적도에서 잰 태양의 위도로, 하지 +23.44°, 동지 −23.44° 사이를 1년 주기로 오간다(항해력에 매 시각 값이 있다).</p>
+    <div class="formula">$$\varphi = (90^\circ - H_o) + \delta \quad(\text{sun bearing south}),\qquad \delta \approx 23.44^\circ\sin\!\left(\frac{360^\circ}{365}(N-81)\right)$$
+      <div class="where">여기서 \(H_o\)는 보정된 관측 고도, \(90^\circ - H_o\)는 천정 거리, \(N\)은 1월 1일부터의 날짜 번호. 태양이 북쪽에 보이면 천정 거리의 부호를 바꾼다(\(\varphi = \delta - (90^\circ - H_o)\)). 적위 식은 시뮬레이터용 근사이며 실제 항해에는 항해력 값을 쓴다.</div>
+    </div>
+
+    <div class="sim" id="sim-noon">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>정오 태양 고도로 위도 구하기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-noon"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>날짜 <output id="nn-day-out"></output></span><input type="range" id="nn-day" min="1" max="365" step="1" value="172"></label>
+          <label class="ctrl"><span>배의 실제 위도 <output id="nn-lat-out"></output></span><input type="range" id="nn-lat" min="-60" max="70" step="0.5" value="35"></label>
+          <label class="ctrl"><span>관측 오차 <output id="nn-err-out"></output></span><input type="range" id="nn-err" min="-10" max="10" step="0.5" value="0"></label>
+          <div class="ctrl-row"><button class="btn primary" id="nn-play">시간 흐르기</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">태양 적위 δ</span><span class="v" id="o-nn-dec">—</span></div>
+        <div class="stat"><span class="k">자오선 고도 Ho</span><span class="v" id="o-nn-h">—</span></div>
+        <div class="stat"><span class="k">태양 방향</span><span class="v" id="o-nn-dir">—</span></div>
+        <div class="stat"><span class="k">계산 위도</span><span class="v" id="o-nn-lat">—</span></div>
+        <div class="stat"><span class="k">위치 오차</span><span class="v" id="o-nn-e">—</span></div>
+      </div>
+      <div class="sim-note">위: 관측자 기준 자오선 단면(수평선, 천정, 천구 적도, 태양). 아래: 정오 전후 3시간의 태양 고도 곡선. 해볼 것: '시간 흐르기'를 누르면 태양이 떠올라 정오에 최고점에 이르렀다 내려간다. 항해사는 고도가 더는 오르지 않는 순간을 기다려 읽는다. 관측 오차 1′는 위도 1′ = 1해리 오차가 된다. 날짜를 춘분(3월 20일 무렵)에 두면 δ ≈ 0이라 위도 = 90° − 고도다.</div>
+    </div>
+
+    <p><b>경도</b>는 훨씬 어려운 문제였다. 지구는 24시간에 360°, 즉 <b>1시간에 15°, 4분에 1°, 4초에 1′</b> 돈다. 그러니 그 지점의 정오(태양이 가장 높을 때)에 그리니치 표준시가 몇 시인지 알면 경도는 시간 차 × 15°다. 문제는 흔들리는 배 위에서 몇 달 동안 그리니치 시각을 정확히 지키는 시계였다. 1714년 영국 의회가 경도 문제에 상금을 걸었고, 존 해리슨의 해상 시계(크로노미터) H4가 1760년대에 이를 해결했다. 하루 1초씩 틀리는 시계는 한 달 뒤 30초, 즉 경도 7.5′(적도에서 7.5해리)의 오차를 만든다.</p>
+
+    <div class="sim" id="sim-lon">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>크로노미터와 경도: 시간 1시간 = 15°</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-lon"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>현지 정오 때 크로노미터(UTC) <output id="ln-t-out"></output></span><input type="range" id="ln-t" min="0" max="1439" step="1" value="211"></label>
+          <label class="ctrl"><span>크로노미터 오차 <output id="ln-e-out"></output></span><input type="range" id="ln-e" min="-120" max="120" step="1" value="0"></label>
+          <label class="ctrl"><span>위도 <output id="ln-lat-out"></output></span><input type="range" id="ln-lat" min="0" max="70" step="1" value="35"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">계산 경도</span><span class="v" id="o-ln-lon">—</span></div>
+        <div class="stat"><span class="k">시계 오차에 의한 경도 오차</span><span class="v" id="o-ln-dl">—</span></div>
+        <div class="stat"><span class="k">위치 오차(동서)</span><span class="v" id="o-ln-nm">—</span></div>
+      </div>
+      <div class="sim-note">북극 위에서 내려다본 지구. 태양은 오른쪽에 있고, 배(빨강)는 지금 정오를 맞았다(태양 쪽 자오선). 그리니치 자오선(굵은 선)이 어디 있는지는 크로노미터가 알려 준다. 해볼 것: 시각을 03:31로 두면 경도 127°E 부근(한반도 남쪽)이 나온다. 크로노미터 오차 ±60초는 경도 ±15′이고, 위도 35°에서 약 12해리의 동서 오차다. 실제 계산에는 균시차(태양 시정오와 평균 정오의 차, 최대 ±16분)를 보정한다.</div>
+    </div>
+
+    <div class="callout deep">
+      <strong>위치선으로서의 천측: 고도차법</strong>
+      <p>정오가 아니어도 천체 하나의 고도 \(H\)를 재면, 그 천체 바로 아래 지점(지리 위치, GP)을 중심으로 반지름 \((90^\circ - H)\times 60\) 해리인 원 위에 배가 있다. 이 '등고도권'은 반지름이 수천 해리라 해도 위에서는 직선 위치선이 된다. 추측 위치에서 계산한 고도 \(H_c\)와 관측 고도 \(H_o\)의 차(1′ = 1해리)만큼 천체 방향으로 위치선을 옮겨 긋는 것이 1875년 생틸레르의 <b>고도차법</b>(intercept method)이다. 서로 다른 방향의 별 3개를 새벽·저녁 박명에 재면 연안의 세 물표 방위처럼 오차 삼각형이 생긴다. 계산식은 \(\sin H_c = \sin\varphi\sin\delta + \cos\varphi\cos\delta\cos \text{LHA}\)이다.</p>
+    </div>
+  </section>
+
+  <!-- =============================================================== 8 -->
+  <section id="tide">
+    <h2>조석: 하루 두 번 숨 쉬는 바다</h2>
+    <p>바다는 하루에 대개 두 번 차오르고(만조, HW) 두 번 빠진다(간조, LW). 원인은 달과 해의 <b>기조력</b>이다. 지구 중심이 받는 달의 인력과 지구 표면 각 지점이 받는 인력의 차이가 달 쪽과 그 반대쪽을 동시에 잡아당겨, 바다가 두 개의 볼록한 부분을 가진 타원체가 된다. 지구가 이 아래에서 하루 한 바퀴 돌면 한 지점은 하루에 볼록부를 두 번 지난다. 달도 같은 방향으로 공전하므로 주기는 24시간이 아니라 약 24시간 50분이고, 만조 간격은 12시간 25분(M2 분조)이다. 기조력은 거리의 세제곱에 반비례해서, 훨씬 무거운 해보다 가까운 달의 효과가 약 2.2배 크다.</p>
+    <ul>
+      <li><b>대조</b><span class="en">(Spring Tide, 사리)</span>: 그믐과 보름. 해·달·지구가 일직선이라 두 볼록부가 겹쳐 조차가 가장 크다. 실제로는 1~2일 늦게 온다.</li>
+      <li><b>소조</b><span class="en">(Neap Tide, 조금)</span>: 상현과 하현. 해와 달이 90° 벌어져 서로 상쇄, 조차가 가장 작다.</li>
+      <li><b>반일주조·일주조·혼합조</b>: 달의 적위가 크면 두 볼록부의 높이가 달라져 하루 두 번 조석의 높이가 다른 일조 부등이 생기고, 해역의 공진 특성에 따라 하루 한 번 조석이 우세한 곳도 있다. 한국 서해는 반일주조가 강하고 조차가 커서(인천 대조차 약 8 m) 갯벌과 갑문식 도크가 발달했고, 동해는 조차가 수십 cm에 불과하다.</li>
+    </ul>
+
+    <div class="sim" id="sim-spring">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>대조와 소조: 달·해·지구와 조석 곡선</h3></div>
+      <div class="sim-body">
+        <div class="sim-view duo"><div><canvas id="cv-sp"></canvas></div><div><canvas id="cv-sp2"></canvas></div></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>달의 위상(일) <output id="sp-day-out"></output></span><input type="range" id="sp-day" min="0" max="29.5" step="0.1" value="0"></label>
+          <div class="ctrl"><span>조석 형태</span><div class="seg" id="sp-type"><button data-value="semi" class="on">반일주조</button><button data-value="mixed">혼합조</button><button data-value="diur">일주조</button></div></div>
+          <div class="ctrl-row"><button class="btn primary" id="sp-play">재생</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">달의 위상</span><span class="v" id="o-sp-ph">—</span></div>
+        <div class="stat"><span class="k">해–달 이각</span><span class="v" id="o-sp-ang">—</span></div>
+        <div class="stat"><span class="k">이날 조차</span><span class="v" id="o-sp-rng">—</span></div>
+        <div class="stat"><span class="k">상태</span><span class="v" id="o-sp-st">—</span></div>
+      </div>
+      <div class="sim-note">왼쪽: 북극 위에서 본 지구(해는 왼쪽, 아주 멀리). 파란 타원은 달 조석(크다)과 해 조석(작다)의 합, 과장해서 그렸다. 오른쪽: 이 날부터 3일 동안의 조고 곡선(M2·S2·K1·O1 네 분조의 합으로 만든 교육용 모델, 대조 조차 4 m 기준). 해볼 것: 재생하며 보름(14.8일)과 그믐(0일)에 타원이 가장 길어지고 곡선 진폭이 커지는 것을, 상현(7.4일)에 진폭이 줄어드는 것을 보라. '혼합조'에서는 하루 두 번의 만조 높이가 서로 다르다.</div>
+    </div>
+
+    <p>해도의 수심은 <span class="term">기본수준면</span><span class="en">(Chart Datum)</span> 아래로 적혀 있다. 기본수준면은 보통 최저 천문조위(LAT) 근처로, 물이 거의 그보다 더 빠지지 않는 낮은 면이다. 그러니 실제 수심은 해도 수심에 그 시각의 <span class="term">조고</span><span class="en">(Height of Tide)</span>를 더한 값이다. 배의 흘수를 빼고 남는 바닥과 선체 사이 틈이 <span class="term">여유 수심</span><span class="en">(UKC, Under Keel Clearance)</span>이다. 항만 규정은 UKC를 흘수의 10% 이상 또는 일정 미터 이상으로 요구하며, 속력에 따른 침하(스쿼트, <a href="maneuvering.html">12장</a>)와 파도에 의한 상하 운동도 감안해야 한다.</p>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 720 300" role="img" aria-label="조석 수준면과 여유 수심">
+        <rect x="0" y="80" width="720" height="170" class="f-water" opacity="0.35"/>
+        <line x1="0" y1="80" x2="720" y2="80" class="s-water" stroke-width="2"/>
+        <line x1="0" y1="50" x2="720" y2="50" stroke="var(--text-faint)" stroke-dasharray="4 4"/>
+        <line x1="0" y1="150" x2="720" y2="150" stroke="var(--accent-2)" stroke-width="1.8" stroke-dasharray="8 4"/>
+        <path d="M0 260 L 160 252 L 300 262 L 420 255 L 560 262 L 720 250 L720 300 L0 300 Z" class="f-dim-soft" stroke="var(--text-dim)"/>
+        <path d="M300 80 L 300 70 L 500 70 L 500 80 L 490 190 L 310 190 Z" class="f-hull" stroke="var(--text-dim)"/>
+        <g class="s-line">
+          <line x1="120" y1="150" x2="120" y2="254"/><line x1="200" y1="80" x2="200" y2="150"/>
+          <line x1="560" y1="80" x2="560" y2="190"/><line x1="560" y1="190" x2="560" y2="261"/>
+        </g>
+        <text x="128" y="210" class="t">해도 수심</text>
+        <text x="208" y="122" class="t">조고</text>
+        <text x="568" y="140" class="t">흘수</text>
+        <text x="568" y="232" class="t" fill="var(--ok)">UKC</text>
+        <line x1="556" y1="190" x2="564" y2="190" stroke="var(--text)"/>
+        <text x="8" y="44" class="t-dim">최고 천문조위 HAT</text>
+        <text x="8" y="74" class="t-dim">현재 해면</text>
+        <text x="8" y="144" class="t" fill="var(--accent-2)">기본수준면 CD ≈ LAT</text>
+        <text x="350" y="290" class="t-dim">해저</text>
+        <text x="610" y="74" class="t-mono">실제 수심 = 해도 수심 + 조고</text>
+      </svg>
+      <figcaption><b>그림 20-6.</b> 조석 수준면. 해도 수심은 기본수준면 기준이고 조고는 그 위로 잰다. UKC = 해도 수심 + 조고 − 흘수. 다리 밑 통과 높이(air draft)는 반대로 높은 해면(HAT 등)을 기준으로 따진다.</figcaption>
+    </figure>
+
+    <p>조석표는 만조와 간조의 시각과 높이만 준다. 그 사이 임의 시각의 조고는 조석 곡선이 대략 코사인 모양이라는 점을 이용한 <span class="term">12분의 1 법칙</span><span class="en">(Rule of Twelfths)</span>으로 어림한다. 간조에서 만조까지 약 6시간 동안, 시간마다 조차의 1/12, 2/12, 3/12, 3/12, 2/12, 1/12씩 오른다. 중간 2시간 동안 조차의 절반이 바뀌므로 조류도 이때 가장 세다.</p>
+    <div class="formula">$$h(t) \approx h_{LW} + (h_{HW}-h_{LW})\,\frac{1-\cos(\pi t/D)}{2}$$
+      <div class="where">여기서 \(t\)는 간조 후 경과 시간, \(D\)는 간조에서 만조까지 걸리는 시간(반일주조에서 약 6시간 12분). 12분의 1 법칙은 이 코사인 곡선의 계단 근사다.</div>
+    </div>
+
+    <div class="sim" id="sim-12">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>12분의 1 법칙과 여유 수심(UKC) 판단</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-12"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>간조 높이 <output id="tw-lw-out"></output></span><input type="range" id="tw-lw" min="0" max="2" step="0.1" value="0.6"></label>
+          <label class="ctrl"><span>만조 높이 <output id="tw-hw-out"></output></span><input type="range" id="tw-hw" min="1" max="9" step="0.1" value="6.2"></label>
+          <label class="ctrl"><span>간조 후 경과 시간 <output id="tw-t-out"></output></span><input type="range" id="tw-t" min="0" max="6.2" step="0.05" value="2"></label>
+          <label class="ctrl"><span>해도 수심 <output id="tw-cd-out"></output></span><input type="range" id="tw-cd" min="5" max="16" step="0.1" value="10.5"></label>
+          <label class="ctrl"><span>배의 흘수 <output id="tw-dr-out"></output></span><input type="range" id="tw-dr" min="5" max="16" step="0.1" value="13.2"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">조고(12분법)</span><span class="v" id="o-tw-h12">—</span></div>
+        <div class="stat"><span class="k">조고(코사인)</span><span class="v" id="o-tw-hc">—</span></div>
+        <div class="stat"><span class="k">실제 수심</span><span class="v" id="o-tw-dep">—</span></div>
+        <div class="stat"><span class="k">UKC (요구: 흘수의 10%)</span><span class="v" id="o-tw-ukc">—</span></div>
+        <div class="stat"><span class="k">통과 가능 시간대</span><span class="v" id="o-tw-win">—</span></div>
+      </div>
+      <div class="sim-note">위: 간조(0시간)에서 만조(6.2시간)까지의 조고. 계단은 12분의 1 법칙, 곡선은 코사인 모델. 초록 띠는 UKC가 흘수의 10% 이상인 시간대. 아래: 그 시각의 단면. 해볼 것: 흘수 13.2 m 배가 해도 수심 10.5 m 수로를 지나려면 조고가 4 m 이상 필요하다. 언제부터 언제까지 통과할 수 있는지 '통과 가능 시간대'를 보라. 대형 컨테이너선이 만조 전후를 기다려 입항하는 이유다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 9 -->
+  <section id="gnss">
+    <h2>GNSS: 위성으로 위치 풀기</h2>
+    <p>GPS(미국), GLONASS(러시아), Galileo(EU), BeiDou(중국)를 묶어 <span class="term">GNSS</span><span class="en">(Global Navigation Satellite System)</span>라 한다. 고도 약 2만 km의 위성들이 원자시계로 맞춘 정확한 시각과 자신의 궤도 정보를 계속 방송한다. 수신기는 신호가 떠난 시각과 도착한 시각의 차 \(\Delta t\)에 빛의 속도를 곱해 위성까지의 거리를 얻는다. 위성 하나까지의 거리를 알면 배는 그 위성을 중심으로 한 구 위에 있다. 구 셋이면 두 점으로 좁혀지고(하나는 우주 공간이라 버린다) 위치가 정해질 것 같다.</p>
+    <p>문제는 수신기의 시계다. 값싼 수정 시계는 위성 원자시계와 어긋나 있고, <b>1 μs의 시계 오차가 300 m의 거리 오차</b>가 된다. 이 오차는 모든 위성의 거리에 똑같이 더해지므로, 수신기가 잰 값은 참거리가 아니라 <span class="term">의사거리</span><span class="en">(Pseudorange)</span>다. 그래서 미지수가 위치 3개(x, y, z)에 시계 오차 \(b\)까지 4개가 되고, <b>위성이 최소 4개</b> 필요하다. 아래 시뮬레이터는 같은 원리를 평면에 옮긴 것이다. 평면에서는 미지수가 x, y, b 3개라 위성 3개가 필요하다(3D에서는 하나 더).</p>
+    <div class="formula">$$\rho_i = \sqrt{(x-x_i)^2+(y-y_i)^2+(z-z_i)^2} + c\,b + \varepsilon_i,\qquad i = 1,\dots,n\ (n\ge 4)$$
+      <div class="where">여기서 \(\rho_i\)는 위성 \(i\)의 의사거리, \(c\,b\)는 수신기 시계 오차를 거리로 바꾼 값, \(\varepsilon_i\)는 전리층·대류층 지연, 다중 경로, 잡음. 연립 비선형 방정식을 선형화해 최소제곱으로 푼다. 위치 오차 ≈ DOP × 거리 측정 오차.</div>
+    </div>
+    <p>같은 측정 잡음이라도 위성의 <b>배치</b>에 따라 위치 오차가 달라진다. 위성들이 하늘 한쪽에 몰려 있으면 거리 원들이 거의 평행하게 만나 교점이 길쭉하게 퍼진다. 이 증폭률이 <span class="term">DOP</span><span class="en">(Dilution of Precision)</span>다. 수평 오차는 HDOP, 전체는 PDOP·GDOP로 나타내며, HDOP 1~2면 좋고 5 이상이면 나쁘다. 연안 물표의 교차각과 같은 이야기다.</p>
+
+    <div class="sim" id="sim-gnss">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>2D 삼변측량: 시계 오차와 DOP, 스푸핑</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-gn" class="grab"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>수신기 시계 오차 <output id="gn-b-out"></output></span><input type="range" id="gn-b" min="-12" max="12" step="0.5" value="6"></label>
+          <label class="ctrl"><span>거리 잡음 σ(과장) <output id="gn-n-out"></output></span><input type="range" id="gn-n" min="0" max="1.5" step="0.05" value="0.3"></label>
+          <label class="check"><input type="checkbox" id="gn-solve" checked> 시계 오차도 미지수로 풀기</label>
+          <label class="check"><input type="checkbox" id="gn-s4" checked> 위성 4 사용</label>
+          <div class="ctrl"><span>신호 환경</span><div class="seg" id="gn-env"><button data-value="ok" class="on">정상</button><button data-value="jam">재밍</button><button data-value="spoof">스푸핑</button></div></div>
+          <div class="ctrl-row"><button class="btn" id="gn-good">좋은 배치</button><button class="btn" id="gn-bad">나쁜 배치</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">사용 위성</span><span class="v" id="o-gn-n">—</span></div>
+        <div class="stat"><span class="k">HDOP</span><span class="v" id="o-gn-dop">—</span></div>
+        <div class="stat"><span class="k">추정 시계 오차</span><span class="v" id="o-gn-b">—</span></div>
+        <div class="stat"><span class="k">위치 오차</span><span class="v" id="o-gn-e">—</span></div>
+        <div class="stat"><span class="k">상태</span><span class="v" id="o-gn-st">—</span></div>
+      </div>
+      <div class="sim-note">위성(S1~S4)과 배를 끌어 옮길 수 있다. 점선 원은 의사거리, 작은 점 구름은 잡음을 여러 번 바꿔 푼 해의 분포(크기 ∝ DOP), 십자는 수신기의 답이다. 단위는 화면 거리 km(교육용으로 축소). 해볼 것: ① '시계 오차도 미지수로 풀기'를 끄면 원들이 한 점에서 만나지 않고 답이 크게 틀린다. ② 위성을 한쪽으로 몰거나 '나쁜 배치'를 누르면 HDOP와 점 구름이 커진다. ③ '스푸핑'에서는 가짜 신호가 일관된 거리를 만들어 HDOP도 좋고 오차 경고도 없이 배를 엉뚱한 곳(빨간 X)에 있다고 믿게 한다.</div>
+    </div>
+
+    <ul>
+      <li><b>보정 기술</b>: 위치를 정확히 아는 기준국이 각 위성의 거리 오차를 계산해 방송하면(DGPS, 해상에서는 중파 비컨) 1~3 m, 정지 위성으로 보정 정보를 보내는 SBAS(WAAS, EGNOS, 한국 KASS)는 1 m 안팎, 반송파 위상을 쓰는 RTK는 cm 수준까지 정확해진다.</li>
+      <li><b>재밍</b><span class="en">(Jamming)</span>: 지상에 도달하는 GNSS 신호는 매우 약해서(약 −130 dBm, 잡음보다 낮다) 값싼 방해 전파로도 수신이 끊긴다. 한국 서해와 발트해·흑해·홍해 등에서 대규모 GNSS 교란이 보고되어 왔다.</li>
+      <li><b>스푸핑</b><span class="en">(Spoofing)</span>: 가짜 위성 신호로 그럴듯한 엉뚱한 위치를 믿게 만든다. 재밍보다 위험하다. AIS 위치가 육지 공항 위에 원형으로 몰려 찍히는 사례들이 보고되었다.</li>
+      <li><b>대책</b>: GNSS 위치를 레이더 거리·방위, 수심, 자이로·로그 DR, 천측과 계속 대조한다. 다중 GNSS·다중 주파수 수신기, 지상파 백업(eLoran), 관성 항법이 연구·도입되고 있다. GNSS 하나에만 의존하지 않는 것이 항해의 기본이다.</li>
+    </ul>
+
+    <div class="callout warn">
+      <strong>항해사의 원칙: 한 가지 수단만 믿지 않는다</strong>
+      <p>1995년 크루즈선 Royal Majesty호는 GPS 안테나 케이블이 빠져 수신기가 DR 모드로 바뀐 것을 아무도 모른 채 하루 넘게 항해했고, 조류와 바람으로 계획 항로에서 17해리 벗어나 낸터킷 근해 모래톱에 좌초했다. 화면에는 여전히 '위치'가 표시되고 있었다. 위치는 서로 독립적인 두 가지 이상의 방법으로 확인해야 하고, 수신기가 무엇을 근거로 위치를 내는지(DR, 2D, 3D 고정)를 알아야 한다. 선교 장비의 통합과 그 함정은 <a href="bridge.html">21장</a>에서 이어진다.</p>
+    </div>
+  </section>
+
+  <section class="keypoints" id="summary">
+    <h2>핵심 정리</h2>
+    <ol>
+      <li>위도 1′ = 1해리 = 1852 m, 1 kn = 1해리/시. 경도 1′의 길이는 \(\cos\varphi\)배로 줄어든다(동서거 = \(60\,\Delta\lambda\cos\varphi\)).</li>
+      <li>메르카토르 해도는 등각이며 항정선이 직선이다. 축척은 \(\sec\varphi\), 면적은 \(\sec^2\varphi\)배로 커지므로 거리는 같은 위도의 위도 눈금으로 잰다.</li>
+      <li>대권은 최단 경로(haversine으로 계산), 항정선은 일정 침로 경로다. 고위도 동서 항로에서 차이가 크며, 실제로는 대권을 항정선 구간으로 나누어 따라간다.</li>
+      <li>DR은 침로·속력·시간만으로 위치를 계산하고, 조류·풍압차 때문에 시간이 갈수록 오차가 쌓인다. 조류 삼각형으로 옆 성분을 상쇄하는 조타 침로(CTS)를 구한다.</li>
+      <li>T → M → C: 편차와 자차를 차례로 적용한다(T→C에서 동은 빼고 서는 더한다). 자차는 선수 방위에 따라 변한다. 자이로컴퍼스는 진북을 찾는다.</li>
+      <li>물표 방위·거리는 위치선을 만든다. 세 위치선의 오차 삼각형 크기와 교차각이 선위의 신뢰도를 알려 준다.</li>
+      <li>정오 위도: \(\varphi = 90^\circ - H_o + \delta\). 경도는 시간이다(1시간 = 15°, 4초 = 1′). 크로노미터가 경도 문제를 풀었다.</li>
+      <li>달과 해의 기조력이 반일주조를 만들고, 일직선일 때 대조·직각일 때 소조다. 실제 수심 = 해도 수심 + 조고, UKC = 실제 수심 − 흘수. 12분의 1 법칙으로 조고를 어림한다.</li>
+      <li>GNSS는 의사거리로 위치와 시계 오차를 함께 풀기 때문에 위성 4개가 필요하다. 위성 배치가 나쁘면 DOP가 오차를 증폭하고, 재밍·스푸핑에 대비해 독립적인 수단으로 교차 확인해야 한다.</li>
+    </ol>
+  </section>
+
+  <section class="quiz-sec" id="quiz">
+    <h2>확인 퀴즈</h2>
+    <div class="quiz">
+      <div class="quiz-q"><p>1. 메르카토르 해도 위에서 두 지점 사이 거리를 디바이더로 잴 때 써야 하는 눈금은?</p><div class="opts">
+        <button class="opt">해도 아래쪽 테두리의 경도 눈금</button>
+        <button class="opt" data-correct>두 지점과 같은 위도 부근의 옆 테두리 위도 눈금</button>
+        <button class="opt">적도 부근의 위도 눈금</button>
+        <button class="opt">어느 눈금이든 상관없다</button>
+      </div><div class="quiz-exp">위도 1′ = 1해리이므로 위도 눈금이 거리 자다. 메르카토르의 축척은 sec φ로 위도에 따라 변하므로 측정 구간과 같은 위도의 눈금을 써야 한다. 경도 눈금은 cos φ만큼 짧은 실제 거리를 나타내므로 거리 자로 쓸 수 없다.</div></div>
+
+      <div class="quiz-q"><p>2. 위도 60°N에서 동쪽으로 경도 10°를 항해했다. 동서거(departure)는 약 얼마인가?</p><div class="opts">
+        <button class="opt">600해리</button>
+        <button class="opt" data-correct>300해리</button>
+        <button class="opt">520해리</button>
+        <button class="opt">1200해리</button>
+      </div><div class="quiz-exp">동서거 = 60 × Δλ × cos φ = 60 × 10 × 0.5 = 300해리. 적도였다면 600해리다.</div></div>
+
+      <div class="quiz-q"><p>3. 부산에서 LA로 갈 때 대권 항로가 항정선보다 북쪽으로 휘어 보이는 이유로 옳은 것은?</p><div class="opts">
+        <button class="opt">북태평양의 해류를 타기 위해서</button>
+        <button class="opt">메르카토르 해도가 대권을 정확한 직선으로 보여 주기 때문에</button>
+        <button class="opt" data-correct>구면 위 최단 경로는 극 쪽으로 볼록하며, 메르카토르 해도는 고위도를 크게 늘려 그 곡선을 휘어 보이게 한다</button>
+        <button class="opt">자기 편차 때문에</button>
+      </div><div class="quiz-exp">대권은 지구 중심을 지나는 평면의 단면이라 북반구 동서 항로에서는 극 쪽으로 올라간다. 3D 지구본에서는 곧은 선이지만 메르카토르 해도에서는 극 쪽으로 볼록한 곡선이 된다. 거리는 약 7%(370해리) 짧다.</div></div>
+
+      <div class="quiz-q"><p>4. 원하는 대지 침로가 090°, 대수 속력 10 kn, 조류가 북쪽(000°)으로 2 kn 흐른다. 조타 침로는?</p><div class="opts">
+        <button class="opt">약 078°</button>
+        <button class="opt">090° 그대로</button>
+        <button class="opt" data-correct>약 102°</button>
+        <button class="opt">약 120°</button>
+      </div><div class="quiz-exp">북쪽으로 미는 2 kn를 상쇄하려면 남쪽으로 2 kn 성분이 필요하다. sin α = 2/10 → α ≈ 11.5°, 남쪽(오른쪽)으로 틀어 CTS ≈ 101.5°. 대지 속력은 10 cos 11.5° ≈ 9.8 kn.</div></div>
+
+      <div class="quiz-q"><p>5. 진침로 200°, 편차 5°W, 자차 3°E일 때 조타할 나침로는?</p><div class="opts">
+        <button class="opt">192°</button>
+        <button class="opt" data-correct>202°</button>
+        <button class="opt">198°</button>
+        <button class="opt">208°</button>
+      </div><div class="quiz-exp">T → C 방향에서는 서(W)는 더하고 동(E)은 뺀다. M = 200 + 5 = 205°, C = 205 − 3 = 202°.</div></div>
+
+      <div class="quiz-q"><p>6. 춘분날 정오에 측정한 태양 고도가 남쪽 55°였다. 위도는?</p><div class="opts">
+        <button class="opt" data-correct>35°N</button>
+        <button class="opt">55°N</button>
+        <button class="opt">23.4°N</button>
+        <button class="opt">35°S</button>
+      </div><div class="quiz-exp">춘분의 적위 δ ≈ 0°. φ = 90° − 55° + 0° = 35°. 태양이 남쪽에 보이므로 북위다.</div></div>
+
+      <div class="quiz-q"><p>7. 해도 수심 9.0 m, 현재 조고 2.4 m, 흘수 10.5 m인 배의 여유 수심(UKC)은?</p><div class="opts">
+        <button class="opt">−1.5 m(좌초)</button>
+        <button class="opt" data-correct>0.9 m</button>
+        <button class="opt">3.9 m</button>
+        <button class="opt">2.4 m</button>
+      </div><div class="quiz-exp">실제 수심 = 9.0 + 2.4 = 11.4 m, UKC = 11.4 − 10.5 = 0.9 m. 흘수의 10%(1.05 m)를 요구하는 규정이라면 아직 부족하므로 조고가 더 오를 때까지 기다려야 한다.</div></div>
+
+      <div class="quiz-q"><p>8. 3차원 위치를 얻는 데 GNSS 위성이 최소 4개 필요한 이유는?</p><div class="opts">
+        <button class="opt">위성 하나가 고장 날 경우를 대비한 여분이다</button>
+        <button class="opt" data-correct>위치 3성분과 함께 수신기 시계 오차도 미지수이기 때문이다</button>
+        <button class="opt">전리층 지연을 계산하려면 위성 하나가 더 필요하다</button>
+        <button class="opt">지구가 타원체이기 때문이다</button>
+      </div><div class="quiz-exp">수신기 시계 오차는 모든 의사거리에 같은 값(c·b)으로 더해진다. x, y, z, b 네 미지수를 풀려면 독립 측정이 4개 필요하다. 1 μs 오차가 300 m가 되므로 무시할 수 없다.</div></div>
+    </div>
+  </section>
+</main>
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const cssv = (n) => getComputedStyle(document.body).getPropertyValue(n).trim();
+  const font = (sz, mono, w) => (w ? w + " " : "") + sz + "px " + (mono ? cssv("--mono") : cssv("--font"));
+  const D2R = Math.PI / 180, R2D = 180 / Math.PI, RE = 3440.065; // 지구 평균 반지름(해리)
+  const sm = (v, u) => v + "<small>" + u + "</small>";
+  function txt(ctx, s, x, y, c, a, sz, w, mono) {
+    ctx.font = font(sz || 12, mono, w); ctx.fillStyle = c; ctx.textAlign = a || "left"; ctx.textBaseline = "middle"; ctx.fillText(s, x, y);
+  }
+  function seg(ctx, x1, y1, x2, y2) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+  const wrap180 = (x) => ((((x + 180) % 360) + 360) % 360) - 180;
+  const wrap360 = (x) => ((x % 360) + 360) % 360;
+  const brgS = (x) => String(Math.round(wrap360(x)) % 360).padStart(3, "0") + "°";
+  function dm(v, P, N) {
+    const s = v >= 0 ? P : N; v = Math.abs(v);
+    let d = Math.floor(v), m = (v - d) * 60;
+    if (m >= 59.95) { d++; m = 0; }
+    return d + "°" + m.toFixed(1).padStart(4, "0") + "′" + s;
+  }
+  const latS = (v) => dm(v, "N", "S"), lonS = (v) => dm(wrap180(v), "E", "W");
+  const hhmm = (h) => { h = ((h % 24) + 24) % 24; let H = Math.floor(h), M = Math.round((h - H) * 60); if (M === 60) { H = (H + 1) % 24; M = 0; } return String(H).padStart(2, "0") + ":" + String(M).padStart(2, "0"); };
+  function run(fn) { try { fn(); } catch (e) { console.error(e); } }
+  const landColor = () => (SB.isDark() ? "#5d6a4c" : "#cdbf8f");
+
+  /* ---------- 대략적인 대륙 윤곽 [경도, 위도] (교육용으로 단순화) */
+  const LAND = [
+    { n: "africa", p: [[-17,21],[-16,12],[-13,8],[-8,4.5],[-2,5],[5,6],[9,4],[10,-1],[13,-6],[12,-17],[15,-27],[18,-34.5],[22,-34],[27,-33.5],[33,-28],[35,-22],[40,-15],[40.5,-10],[39,-5],[42,0],[48,4],[51,11.5],[44,11],[43,13],[39,18],[35,24],[32.5,30],[29,31],[20,31],[19,30.3],[11,33],[10,37],[3,36.8],[-5,35.8],[-6,34],[-10,30],[-13,27.5],[-16,24]] },
+    { n: "eurasia", p: [[-9,43],[-9,37],[-5.5,36],[0,39],[3.2,42.5],[7,43.5],[10,44],[12.5,41.5],[16,38],[18.5,40.3],[19.5,42],[23,40],[22.5,37],[24,38],[26.5,40.5],[29,41],[36,36.5],[35.5,33.5],[34.5,31.5],[32.6,30.2],[35,28],[39,22],[43,13],[45,12.5],[52,15],[56,18],[59.8,22.5],[56.5,25.5],[51.5,24.5],[50,26],[48,29.5],[51,27],[56,27],[61,25],[66.5,25],[68.5,23.5],[73,21],[73,16],[76.5,8.3],[80,10],[80.3,15.5],[86,20],[90,22],[92,21],[94,16],[98,15.5],[98.5,8],[100.5,4],[103.5,1.3],[104,2],[103,5],[100.5,13.5],[102,12],[105,8.6],[109,11.5],[108,16],[106,20],[110,21],[113.5,22.3],[117,23.5],[120,26.5],[122,30],[121,32],[120.5,34.5],[119,35],[122.5,37],[118,38],[117.7,39],[121,41],[122,39],[124,40],[125,37.7],[126.3,34.6],[129.2,35.1],[129.5,36.5],[128.5,38.5],[129.8,41],[131,42.5],[135,43.5],[138,46],[140.5,48.5],[141,52],[137,54],[135,54.5],[141,59],[149,59.5],[155,59],[156,62],[163,61.5],[160,57],[156,51],[162,56],[163,59],[170,60],[180,65],[190,66],[185,69],[180,69],[170,70],[160,69.7],[150,71.5],[140,72.5],[130,71],[120,73],[113,73.7],[105,77.5],[100,76],[90,75.5],[80,73.5],[72,72.5],[69,68.5],[60,69.5],[55,68.5],[44,68.5],[40,66],[33,69.3],[25,71],[18,69.5],[13,67],[8,63],[5,61.5],[5.5,58.5],[8,58],[10.5,59.3],[11.5,58],[12.8,56],[14.5,56],[16.5,57],[18.7,60],[17.5,62.3],[21.5,65],[25,65.5],[22.5,63],[21.2,61],[22.5,60],[30,60],[24,59.4],[21.5,57],[21,55],[18,54.8],[14,54],[10,54.5],[11,56],[10.5,57.7],[8.5,57],[8.6,53.9],[7,53.5],[4.5,52.5],[3.5,51.4],[1.6,50.9],[-1.5,49.7],[-4.5,48.5],[-1.5,46.5],[-1.5,43.5],[-8,43.7]] },
+    { n: "britain", p: [[-5.7,50],[1.5,51],[1.7,52.7],[0,53.5],[-1.5,55],[-2,57],[-3,58.6],[-5,58.6],[-6.2,56.5],[-5,55],[-3,54.7],[-3,53.3],[-4.6,52.8],[-5.2,51.7],[-3,51.4]] },
+    { n: "ireland", p: [[-6,52],[-6,54],[-7.5,55.3],[-10,54],[-10,51.6]] },
+    { n: "iceland", p: [[-24,65.5],[-22,66.4],[-15,66.5],[-13.5,65],[-18,63.4],[-22.5,63.8]] },
+    { n: "japan", p: [[130,31],[131.5,31.5],[132,33.5],[135,33.5],[137,34.5],[139.8,35],[141,37],[142,39.5],[141.5,41.5],[140,40.5],[139.5,38],[137,37],[136,36],[133,35.5],[131,34.5],[129.8,33.2]] },
+    { n: "hokkaido", p: [[140,41.5],[141.5,42.5],[143.5,42],[145.5,43.3],[142,45.5],[141.5,44],[140,43]] },
+    { n: "taiwan", p: [[120.2,22.5],[121,25.3],[121.9,25],[120.8,22]] },
+    { n: "philippines", p: [[120,18.5],[122.5,18],[124,12.5],[126.5,7],[125,6],[122,7],[123,10],[120,14.5]] },
+    { n: "borneo", p: [[109.5,1.5],[111,-3],[116,-4],[118,1],[119,5],[116.5,7],[113.5,4]] },
+    { n: "sumatra", p: [[95.5,5.5],[98.5,4],[103.5,0],[106,-3],[106,-6],[102,-4],[99,0],[96,4]] },
+    { n: "java", p: [[105.5,-6],[114,-7],[114.5,-8.5],[106,-7.5]] },
+    { n: "newguinea", p: [[131,-1],[141,-2.6],[147,-6],[150,-10.5],[143,-9],[138,-8],[132,-4]] },
+    { n: "australia", p: [[114,-22],[113.5,-26],[115,-34],[118,-35],[123,-34],[129,-31.5],[132,-32],[135.5,-34.8],[138,-34],[141,-38],[146,-39],[150,-37.5],[153,-32],[153.5,-28],[152,-24],[149,-21],[146,-19],[145.5,-15],[142.5,-10.7],[141.5,-13],[141.5,-17],[139,-17],[136,-15],[137,-12],[131,-11.2],[129.5,-15],[126,-14],[122,-17.5],[121,-19.5]] },
+    { n: "nz1", p: [[172.5,-34.5],[178.5,-37.6],[177,-39.5],[175,-41.5],[173,-41],[174.5,-39],[173,-35.5]] },
+    { n: "nz2", p: [[172.5,-40.5],[174,-41.5],[171,-44.5],[169,-46.6],[166.5,-46],[168,-44],[171,-42]] },
+    { n: "madagascar", p: [[44,-25],[47,-25],[50.5,-15.5],[49.3,-12],[44,-17]] },
+    { n: "namerica", p: [[-168,65.5],[-162,66.5],[-156.5,71.3],[-141,69.6],[-128,70],[-115,68.5],[-104,68],[-94.5,71.5],[-90,68.5],[-82,69],[-81,66.5],[-87,64],[-94,61],[-93,58.8],[-87,55.5],[-82,55],[-79,51.5],[-78.5,58.5],[-77,62],[-72,61.5],[-66,58.5],[-61,56],[-56,52],[-59.5,47.5],[-65,49],[-66,45],[-70,43.5],[-70.5,41.7],[-74,40.6],[-76,37],[-75.5,35.2],[-81,31.5],[-80,27],[-80.5,25.2],[-82.5,27.5],[-84,30],[-89,30.3],[-94,29.6],[-97.3,27.5],[-97.5,22],[-95,18.7],[-91,19],[-90.5,21],[-87,21.5],[-88.2,16],[-83.2,15],[-83.6,11],[-79,9.3],[-77.5,8.7],[-79.5,7.3],[-81.5,8],[-85.7,10],[-87.5,13],[-91.5,14],[-96,15.7],[-105.5,19.8],[-106,23],[-109,26],[-112.8,29.5],[-114.7,31.5],[-113,29],[-110,24.5],[-109.4,23],[-112,25.5],[-114.5,28],[-116.5,31.5],[-117.2,32.7],[-118.3,33.7],[-120.6,34.5],[-122.5,37.8],[-124.2,40.5],[-124,46],[-124.7,48.4],[-123,49],[-127,50.5],[-130,54],[-133,57.5],[-137,59],[-141,60],[-146,61],[-151,59.5],[-154,57.5],[-158,56.5],[-163,54.8],[-157.5,58.5],[-162,60],[-165,61.5],[-164.5,63.2],[-161,64.5]] },
+    { n: "greenland", p: [[-73,78],[-66,80.5],[-55,82],[-40,83.5],[-25,83],[-18,81],[-20,76],[-22,70],[-29,68],[-36,65.5],[-40.5,63],[-43,60],[-48,61],[-51.5,64],[-53,67],[-54,70],[-56,72.5],[-62,76],[-68,77]] },
+    { n: "cuba", p: [[-85,21.8],[-82,23.2],[-77,22.2],[-74,20.2],[-77.7,19.9],[-81,21.6]] },
+    { n: "samerica", p: [[-77,8.5],[-75.5,10.5],[-71.5,12.4],[-68,10.5],[-62,10.7],[-60,8.5],[-57,6],[-52,5],[-50,1.7],[-48,-1],[-44,-2.5],[-39.5,-3],[-35,-5.5],[-35,-9],[-39,-13.5],[-39,-18],[-41,-22],[-44.5,-23.2],[-48.5,-26.5],[-48.7,-28.5],[-52,-32],[-54.5,-34.8],[-57,-36],[-57.5,-38],[-62,-39],[-65,-42.5],[-67.5,-46.5],[-69,-51],[-68.5,-52.5],[-70,-55],[-73.5,-53],[-75.5,-48],[-73.5,-42],[-73.5,-37],[-71.5,-33],[-71.5,-28],[-70.3,-18.5],[-75,-15.5],[-77,-12],[-79.5,-7],[-81.2,-5],[-80,-2],[-80,1],[-78.8,1.8],[-77.5,4],[-77.3,7]] },
+  ];
+
+  /* ---------- 구면 기하 */
+  const toVec = (lat, lon) => { const p = lat * D2R, l = lon * D2R; return [Math.cos(p) * Math.cos(l), Math.sin(p), -Math.cos(p) * Math.sin(l)]; };
+  const fromVec = (v) => { const n = Math.hypot(v[0], v[1], v[2]); return [Math.asin(SB.clamp(v[1] / n, -1, 1)) * R2D, Math.atan2(-v[2], v[0]) * R2D]; };
+  function gcAngle(a, b) {
+    const p1 = a.lat * D2R, p2 = b.lat * D2R, dp = p2 - p1, dl = (b.lon - a.lon) * D2R;
+    const h = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+    return 2 * Math.asin(Math.min(1, Math.sqrt(h)));
+  }
+  function gcCourse(a, b) {
+    const p1 = a.lat * D2R, p2 = b.lat * D2R, dl = (b.lon - a.lon) * D2R;
+    return wrap360(R2D * Math.atan2(Math.sin(dl) * Math.cos(p2), Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl)));
+  }
+  function gcPts(a, b, n) {
+    const A = toVec(a.lat, a.lon), B = toVec(b.lat, b.lon), om = gcAngle(a, b), out = [];
+    let prev = a.lon;
+    for (let i = 0; i <= n; i++) {
+      const t = i / n;
+      let v;
+      if (om < 1e-9) v = A;
+      else { const s1 = Math.sin((1 - t) * om) / Math.sin(om), s2 = Math.sin(t * om) / Math.sin(om); v = [A[0] * s1 + B[0] * s2, A[1] * s1 + B[1] * s2, A[2] * s1 + B[2] * s2]; }
+      let [la, lo] = fromVec(v);
+      lo = prev + wrap180(lo - prev); prev = lo;
+      out.push([la, lo]);
+    }
+    return out;
+  }
+  const mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + SB.clamp(lat, -89.5, 89.5) * D2R / 2));
+  const invMerc = (y) => (2 * Math.atan(Math.exp(y)) - Math.PI / 2) * R2D;
+  function rhumb(a, b, n) {
+    const p1 = a.lat * D2R, p2 = b.lat * D2R, dp = p2 - p1, dl = wrap180(b.lon - a.lon) * D2R;
+    const y1 = mercY(a.lat), dpsi = mercY(b.lat) - y1;
+    const q = Math.abs(dpsi) > 1e-10 ? dp / dpsi : Math.cos(p1);
+    const ang = Math.sqrt(dp * dp + q * q * dl * dl);
+    const crs = wrap360(R2D * Math.atan2(dl, dpsi));
+    const pts = [];
+    for (let i = 0; i <= (n || 0); i++) { const t = i / n; pts.push([Math.abs(dpsi) > 1e-10 ? invMerc(y1 + t * dpsi) : a.lat, a.lon + t * dl * R2D]); }
+    return { ang, crs, pts };
+  }
+  function dest(lat, lon, brg, ang) { // ang: rad
+    const p = lat * D2R, b = brg * D2R;
+    const p2 = Math.asin(Math.sin(p) * Math.cos(ang) + Math.cos(p) * Math.sin(ang) * Math.cos(b));
+    const l2 = lon * D2R + Math.atan2(Math.sin(b) * Math.sin(ang) * Math.cos(p), Math.cos(ang) - Math.sin(p) * Math.sin(p2));
+    return [p2 * R2D, l2 * R2D];
+  }
+
+  /* ---------- 정사 투영 지구본 */
+  function orthoP(lat, lon, lat0, lon0) {
+    const p = lat * D2R, l = (lon - lon0) * D2R, p0 = lat0 * D2R;
+    return [Math.cos(p) * Math.sin(l), Math.cos(p0) * Math.sin(p) - Math.sin(p0) * Math.cos(p) * Math.cos(l), Math.sin(p0) * Math.sin(p) + Math.cos(p0) * Math.cos(p) * Math.cos(l)];
+  }
+  function orthoInv(x, y, lat0, lon0) {
+    const rho = Math.hypot(x, y);
+    if (rho > 1) return null;
+    if (rho < 1e-9) return [lat0, lon0];
+    const c = Math.asin(rho), p0 = lat0 * D2R;
+    const lat = Math.asin(Math.cos(c) * Math.sin(p0) + (y * Math.sin(c) * Math.cos(p0)) / rho);
+    const lon = lon0 + R2D * Math.atan2(x * Math.sin(c), rho * Math.cos(c) * Math.cos(p0) - y * Math.sin(c) * Math.sin(p0));
+    return [lat * R2D, wrap180(lon)];
+  }
+  function orthoLine(ctx, pts, G) { // pts [[lat,lon]] → 보이는 부분만 선으로
+    ctx.beginPath(); let pen = false;
+    pts.forEach(([la, lo]) => {
+      const [x, y, c] = orthoP(la, lo, G.lat0, G.lon0);
+      if (c < 0) { pen = false; return; }
+      const X = G.cx + x * G.R, Y = G.cy - y * G.R;
+      pen ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); pen = true;
+    });
+    ctx.stroke();
+  }
+  function drawGlobe(ctx, G, opt) {
+    opt = opt || {};
+    const P = SB.palette();
+    ctx.save();
+    const g = ctx.createRadialGradient(G.cx - G.R * 0.35, G.cy - G.R * 0.35, G.R * 0.1, G.cx, G.cy, G.R);
+    g.addColorStop(0, cssv("--water-soft") || "rgba(47,143,208,0.2)"); g.addColorStop(1, cssv("--water") || "#2f8fd0");
+    ctx.beginPath(); ctx.arc(G.cx, G.cy, G.R, 0, Math.PI * 2); ctx.fillStyle = g; ctx.globalAlpha = 0.55; ctx.fill(); ctx.globalAlpha = 1;
+    ctx.clip();
+    LAND.forEach((L) => {
+      ctx.beginPath(); let any = false;
+      L.p.forEach(([lo, la], i) => {
+        let [x, y, c] = orthoP(la, lo, G.lat0, G.lon0);
+        if (c < 0) { const n = Math.hypot(x, y) || 1; x /= n; y /= n; } else any = true;
+        const X = G.cx + x * G.R, Y = G.cy - y * G.R;
+        i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y);
+      });
+      if (!any) return;
+      ctx.closePath();
+      ctx.fillStyle = opt.hi && opt.hi[L.n] ? opt.hi[L.n] : landColor(); ctx.fill();
+    });
+    if (opt.grid !== false) {
+      ctx.strokeStyle = P.grid; ctx.lineWidth = 1;
+      for (let lo = -180; lo < 180; lo += 15) { const pts = []; for (let la = -90; la <= 90; la += 3) pts.push([la, lo]); ctx.strokeStyle = lo === 0 ? P.axis : P.grid; orthoLine(ctx, pts, G); }
+      for (let la = -75; la <= 75; la += 15) { const pts = []; for (let lo = -180; lo <= 180; lo += 3) pts.push([la, lo]); ctx.strokeStyle = la === 0 ? P.axis : P.grid; orthoLine(ctx, pts, G); }
+    }
+    ctx.restore();
+    ctx.strokeStyle = P.dim; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(G.cx, G.cy, G.R, 0, Math.PI * 2); ctx.stroke();
+  }
+  const gProj = (G, la, lo) => { const [x, y, c] = orthoP(la, lo, G.lat0, G.lon0); return { x: G.cx + x * G.R, y: G.cy - y * G.R, vis: c >= 0 }; };
+
+  /* ---------- 원통 투영 지도(메르카토르 / 정거) */
+  function makeMap(box, lon0, latC, proj) {
+    const k = box.w / 360; // px/deg
+    const fy = proj === "eq" ? (la) => la : (la) => mercY(la) * R2D;
+    const cy = box.y + box.h / 2 + k * fy(latC);
+    const M = {
+      box, lon0, k, proj,
+      X: (lo) => box.x + box.w / 2 + (lo - lon0) * k,
+      Y: (la) => cy - k * fy(la),
+      inv: (x, y) => { const v = (cy - y) / k; return [proj === "eq" ? v : invMerc(v * D2R), lon0 + (x - box.x - box.w / 2) / k]; },
+    };
+    return M;
+  }
+  function mapPoly(ctx, M, pts, off) { // pts [[lat,lon]]
+    ctx.beginPath();
+    pts.forEach(([la, lo], i) => { const X = M.X(lo + off), Y = M.Y(la); i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
+  }
+  function drawMap(ctx, M, opt) {
+    opt = opt || {};
+    const P = SB.palette(), b = M.box;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(b.x, b.y, b.w, b.h); ctx.clip();
+    ctx.fillStyle = cssv("--water-soft") || "rgba(47,143,208,0.15)"; ctx.fillRect(b.x, b.y, b.w, b.h);
+    if (M.proj === "eq") { ctx.fillStyle = P.surface; const yt = M.Y(90), yb = M.Y(-90); ctx.fillRect(b.x, b.y, b.w, yt - b.y); ctx.fillRect(b.x, yb, b.w, b.y + b.h - yb); }
+    const lonOffsets = [-360, 0, 360];
+    LAND.forEach((L) => {
+      const pts = L.p.map(([lo, la]) => [la, lo]);
+      lonOffsets.forEach((off) => { mapPoly(ctx, M, pts, off); ctx.closePath(); ctx.fillStyle = opt.hi && opt.hi[L.n] ? opt.hi[L.n] : landColor(); ctx.fill(); });
+    });
+    ctx.lineWidth = 1;
+    const step = opt.step || 30;
+    for (let lo = Math.ceil((M.lon0 - 180) / step) * step; lo <= M.lon0 + 180; lo += step) {
+      const x = M.X(lo); ctx.strokeStyle = wrap180(lo) === 0 ? P.axis : P.grid; seg(ctx, x, b.y, x, b.y + b.h);
+      if (opt.labels !== false) txt(ctx, Math.abs(wrap180(lo)) + (wrap180(lo) > 0 ? "E" : wrap180(lo) < 0 ? "W" : ""), x + 2, b.y + b.h - 8, P.faint, "left", 9, null, true);
+    }
+    for (let la = -75; la <= 75; la += 15) {
+      const y = M.Y(la); if (y < b.y || y > b.y + b.h) continue;
+      ctx.strokeStyle = la === 0 ? P.axis : P.grid; seg(ctx, b.x, y, b.x + b.w, y);
+      if (opt.labels !== false && la % 30 === 0) txt(ctx, Math.abs(la) + (la > 0 ? "N" : la < 0 ? "S" : ""), b.x + 3, y - 7, P.faint, "left", 9, null, true);
+    }
+    ctx.restore();
+    ctx.strokeStyle = P.border; ctx.lineWidth = 1; ctx.strokeRect(b.x + 0.5, b.y + 0.5, b.w - 1, b.h - 1);
+  }
+  function mapLine(ctx, M, pts) { [-360, 0, 360].forEach((off) => { mapPoly(ctx, M, pts, off); ctx.stroke(); }); }
+
+  /* =================================================== 1: 위도·경도 */
+  run(function () {
+    const PRE = { busan: [35.1, 129.04], rtm: [51.95, 4.1], sin: [1.26, 103.84], la: [33.72, -118.27], cape: [-33.9, 18.4] };
+    const st = { lat0: 30, lon0: 128, lat: 35.1, lon: 129.04 };
+    let G = null, mode = null, last = null, cv2 = null;
+    const go = SB.seg("ll-go", (v) => { const p = PRE[v]; st.lat = p[0]; st.lon = p[1]; st.lat0 = SB.clamp(p[0], -60, 60); st.lon0 = p[1]; upd(); });
+    $("ll-grid").addEventListener("change", () => upd());
+    const cv = SB.canvas($("cv-ll"), (ctx, w, h) => {
+      const P = SB.palette();
+      G = { cx: w / 2, cy: h / 2, R: Math.min(w, h) / 2 - 16, lat0: st.lat0, lon0: st.lon0 };
+      drawGlobe(ctx, G, { grid: $("ll-grid").checked });
+      // 위도 호(자오선을 따라 적도→점), 경도 호(적도를 따라 본초 자오선→점)
+      const latArc = [], lonArc = [];
+      for (let i = 0; i <= 40; i++) latArc.push([(st.lat * i) / 40, st.lon]);
+      for (let i = 0; i <= 60; i++) lonArc.push([0, (st.lon * i) / 60]);
+      ctx.save(); ctx.beginPath(); ctx.arc(G.cx, G.cy, G.R, 0, Math.PI * 2); ctx.clip();
+      ctx.lineWidth = 3; ctx.strokeStyle = P.warn; orthoLine(ctx, lonArc, G);
+      ctx.strokeStyle = P.accent; orthoLine(ctx, latArc, G);
+      ctx.restore();
+      const q = gProj(G, st.lat, st.lon), e = gProj(G, 0, st.lon), m0 = gProj(G, 0, st.lon / 2), mL = gProj(G, st.lat / 2, st.lon);
+      if (mL.vis) txt(ctx, "φ", mL.x + 8, mL.y, P.accent, "left", 15, 700);
+      if (m0.vis) txt(ctx, "λ", m0.x, m0.y + 12, P.warn, "center", 15, 700);
+      if (e.vis) { ctx.fillStyle = P.text; ctx.beginPath(); ctx.arc(e.x, e.y, 2.5, 0, 7); ctx.fill(); }
+      if (q.vis) {
+        ctx.fillStyle = P.accent2; ctx.strokeStyle = P.bg; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(q.x, q.y, 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        txt(ctx, latS(st.lat) + " " + lonS(st.lon), q.x + 10, q.y - 12, P.text, "left", 11, 600, true);
+      } else txt(ctx, "점이 지구 뒤편에 있다 — 지구본을 돌려 보라", w / 2, h - 10, P.dim, "center", 11);
+      txt(ctx, "끌기: 점 이동 / 빈 곳 회전", 8, 12, P.faint, "left", 11);
+    }, { aspect: 0.9, maxHeight: 400 });
+    cv2 = SB.canvas($("cv-ll2"), (ctx, w, h) => {
+      const P = SB.palette();
+      const r = Math.min(w * 0.36, h * 0.38), cx = w * 0.42, cy = h * 0.5;
+      const p = st.lat * D2R, px = cx + r * Math.cos(p), py = cy - r * Math.sin(p);
+      ctx.fillStyle = cssv("--water-soft"); ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = P.dim; ctx.lineWidth = 1.4; ctx.stroke();
+      ctx.strokeStyle = P.axis; ctx.lineWidth = 1; seg(ctx, cx - r - 14, cy, cx + r + 14, cy); ctx.setLineDash([4, 4]); seg(ctx, cx, cy - r - 14, cx, cy + r + 14); ctx.setLineDash([]);
+      txt(ctx, "N", cx, cy - r - 22, P.dim, "center", 12, 700); txt(ctx, "S", cx, cy + r + 22, P.dim, "center", 12, 700);
+      txt(ctx, "적도면", cx + r + 4, cy - 10, P.dim, "right", 11);
+      ctx.strokeStyle = P.accent; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(cx, cy, r, -Math.max(p, 0), -Math.min(p, 0)); ctx.stroke();
+      ctx.lineWidth = 1.6; seg(ctx, cx, cy, px, py);
+      ctx.beginPath(); ctx.arc(cx, cy, r * 0.25, -Math.max(p, 0), -Math.min(p, 0)); ctx.stroke();
+      txt(ctx, "φ = " + st.lat.toFixed(1) + "°", cx + r * 0.3, cy - (p >= 0 ? 12 : -12), P.accent, "left", 12, 700);
+      ctx.strokeStyle = P.accent2; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.6; seg(ctx, cx, py, px, py); ctx.setLineDash([]);
+      txt(ctx, "R cos φ", (cx + px) / 2, py + (p >= 0 ? -10 : 12), P.accent2, "center", 11, 600);
+      ctx.fillStyle = P.accent2; ctx.beginPath(); ctx.arc(px, py, 6, 0, Math.PI * 2); ctx.fill();
+      const arcNm = Math.abs(st.lat) * 60;
+      const ly = h - 44;
+      txt(ctx, "자오선 호 = " + Math.round(arcNm).toLocaleString() + " NM", 10, ly, P.accent, "left", 12, 600);
+      txt(ctx, "(위도 1° = 60′ = 60 NM)", 10, ly + 18, P.dim, "left", 11);
+      txt(ctx, "자오선 단면", 10, 14, P.dim, "left", 12, 700);
+    }, { aspect: 0.9, maxHeight: 400 });
+    SB.drag($("cv-ll"), {
+      down(p) { if (!G) return false; const q = gProj(G, st.lat, st.lon); mode = q.vis && Math.hypot(p.x - q.x, p.y - q.y) < 18 ? "pt" : "rot"; last = p; },
+      move(p) {
+        if (mode === "pt") { const r = orthoInv((p.x - G.cx) / G.R, -(p.y - G.cy) / G.R, st.lat0, st.lon0); if (r) { st.lat = r[0]; st.lon = r[1]; } }
+        else { st.lon0 = wrap180(st.lon0 - ((p.x - last.x) / G.R) * R2D); st.lat0 = SB.clamp(st.lat0 + ((p.y - last.y) / G.R) * R2D, -85, 85); }
+        last = p; upd();
+      },
+    });
+    function upd() {
+      const nm = Math.abs(st.lat) * 60, dl = 60 * Math.cos(st.lat * D2R);
+      SB.stat("o-ll-lat", latS(st.lat));
+      SB.stat("o-ll-lon", lonS(st.lon));
+      SB.stat("o-ll-eq", sm(Math.round(nm).toLocaleString(), "NM") + " " + sm((nm * 1.852).toFixed(0), "km"));
+      SB.stat("o-ll-dl", sm(dl.toFixed(1), "NM") + " " + sm((dl * 1.852).toFixed(0), "km"));
+      const hrs = nm / 20;
+      SB.stat("o-ll-t", hrs < 48 ? sm(hrs.toFixed(1), "시간") : sm((hrs / 24).toFixed(1), "일"));
+      cv.redraw(); if (cv2) cv2.redraw();
+    }
+    upd();
+  });
+
+  /* =================================================== 2: 티소 지시원 */
+  run(function () {
+    const RAD = 600 / 6371; // 600 km 원의 중심각(rad)
+    const LON0 = 10, PLON = 20;
+    let M = null;
+    const gLat = SB.range("mc-lat", (v) => (v >= 0 ? v + "°N" : -v + "°S"), upd);
+    const proj = SB.seg("mc-proj", upd);
+    $("mc-gl").addEventListener("change", upd);
+    const circ = (la, lo) => { const out = []; for (let i = 0; i <= 48; i++) out.push(dest(la, lo, (i / 48) * 360, RAD)); return out; };
+    const centers = [];
+    [-60, -30, 0, 30, 60].forEach((la) => { for (let lo = -160; lo < 180; lo += 40) centers.push([la, lo]); });
+    const hi = () => ($("mc-gl").checked ? { greenland: SB.color("accent-2"), africa: SB.color("warn") } : null);
+    const cvg = SB.canvas($("cv-mg"), (ctx, w, h) => {
+      const P = SB.palette();
+      const G = { cx: w / 2, cy: h / 2, R: Math.min(w, h) / 2 - 14, lat0: SB.clamp(gLat() * 0.75, -60, 60), lon0: PLON };
+      drawGlobe(ctx, G, { hi: hi() });
+      ctx.save(); ctx.beginPath(); ctx.arc(G.cx, G.cy, G.R, 0, Math.PI * 2); ctx.clip();
+      ctx.lineWidth = 1.5; ctx.strokeStyle = P.accent;
+      centers.forEach(([la, lo]) => orthoLine(ctx, circ(la, lo), G));
+      ctx.lineWidth = 2.5; ctx.strokeStyle = P.accent2; orthoLine(ctx, circ(gLat(), PLON), G);
+      ctx.restore();
+      txt(ctx, "지구본: 모든 원이 같은 크기", 8, 12, P.dim, "left", 11, 600);
+    }, { aspect: 0.85, maxHeight: 400 });
+    const cvm = SB.canvas($("cv-mm"), (ctx, w, h) => {
+      const P = SB.palette();
+      M = makeMap({ x: 4, y: 4, w: w - 8, h: h - 8 }, LON0, 0, proj());
+      drawMap(ctx, M, { hi: hi() });
+      ctx.save(); ctx.beginPath(); ctx.rect(M.box.x, M.box.y, M.box.w, M.box.h); ctx.clip();
+      ctx.lineWidth = 1.5; ctx.strokeStyle = P.accent; ctx.fillStyle = cssv("--accent-soft");
+      centers.forEach(([la, lo]) => { mapPoly(ctx, M, circ(la, lo), 0); ctx.closePath(); ctx.fill(); ctx.stroke(); });
+      ctx.lineWidth = 2.5; ctx.strokeStyle = P.accent2; mapPoly(ctx, M, circ(gLat(), PLON), 0); ctx.closePath(); ctx.stroke();
+      ctx.restore();
+      txt(ctx, proj() === "merc" ? "메르카토르" : "정거 원통", w - 10, 16, P.dim, "right", 11, 600);
+    }, { aspect: 0.85, maxHeight: 400 });
+    SB.drag($("cv-mm"), { move(p) { if (!M) return; const [la] = M.inv(p.x, p.y); gLat.set(Math.round(SB.clamp(la, -80, 80))); }, down(p) { this.move(p); } });
+    function area(name) {
+      const L = LAND.find((l) => l.n === name);
+      return SB.polyArea(L.p.map(([lo, la]) => [M.X(lo), M.Y(la)]))[0];
+    }
+    function upd() {
+      const la = gLat(), k = 1 / Math.cos(la * D2R);
+      SB.stat("o-mc-k", sm(k.toFixed(2), "배"));
+      SB.stat("o-mc-a", sm((k * k).toFixed(2), "배"));
+      SB.stat("o-mc-sh", proj() === "merc" ? "원(등각)" : "타원 " + sm(k.toFixed(2) + " : 1", "가로:세로"));
+      cvg.redraw(); cvm.redraw();
+      if (M) SB.stat("o-mc-gl", sm((area("greenland") / area("africa")).toFixed(2), "(실제 0.071)"));
+    }
+    upd();
+  });
+
+  /* =================================================== 3: 3D 대권·항정선 */
+  run(function () {
+    const PORTS = [
+      { id: "busan", n: "부산", lat: 35.08, lon: 129.08 },
+      { id: "rtm", n: "로테르담", lat: 51.98, lon: 4.05 },
+      { id: "la", n: "로스앤젤레스", lat: 33.72, lon: -118.27 },
+      { id: "sin", n: "싱가포르", lat: 1.25, lon: 103.83 },
+      { id: "ny", n: "뉴욕", lat: 40.48, lon: -73.9 },
+      { id: "van", n: "밴쿠버", lat: 49.3, lon: -123.1 },
+      { id: "syd", n: "시드니", lat: -33.85, lon: 151.3 },
+      { id: "cpt", n: "케이프타운", lat: -33.9, lon: 18.4 },
+      { id: "san", n: "산투스", lat: -24.0, lon: -46.3 },
+      { id: "pan", n: "발보아(파나마)", lat: 8.9, lon: -79.55 },
+    ];
+    const selA = $("gc-a"), selB = $("gc-b");
+    [selA, selB].forEach((s) => {
+      s.innerHTML = PORTS.map((p) => `<option value="${p.id}">${p.n}</option>`).join("") + '<option value="custom" disabled>사용자 지정</option>';
+    });
+    selA.value = "busan"; selB.value = "la";
+    const A = Object.assign({}, PORTS[0]), B = Object.assign({}, PORTS[2]);
+    const setFrom = (o, id) => { const p = PORTS.find((q) => q.id === id); if (p) { o.lat = p.lat; o.lon = p.lon; o.n = p.n; } };
+    const gV = SB.range("gc-v", (v) => v + " kn", () => upd(false));
+    selA.addEventListener("change", () => { setFrom(A, selA.value); upd(true); });
+    selB.addEventListener("change", () => { setFrom(B, selB.value); upd(true); });
+    $("gc-rl").addEventListener("change", () => upd(false));
+    $("gc-gc").addEventListener("change", () => upd(false));
+    $("gc-swap").addEventListener("click", () => {
+      const t = { lat: A.lat, lon: A.lon, n: A.n }; A.lat = B.lat; A.lon = B.lon; A.n = B.n; B.lat = t.lat; B.lon = t.lon; B.n = t.n;
+      const v = selA.value; selA.value = selB.value; selB.value = v; upd(true);
+    });
+    let route = null, M = null, drag = null;
+
+    // ---- 3D
+    let T3 = null;
+    run(function () {
+      const T = SB.three($("v3d-gc"), { camera: [0, 1.5, 3.9], fov: 36, minDistance: 1.8, maxDistance: 7, pan: false });
+      if (!T) return;
+      const THREE = T.THREE;
+      const tc = document.createElement("canvas"); tc.width = 2048; tc.height = 1024;
+      const tx = tc.getContext("2d");
+      tx.fillStyle = "#1d5a86"; tx.fillRect(0, 0, 2048, 1024);
+      const kx = 2048 / 360, ky = 1024 / 180;
+      LAND.forEach((L) => [-360, 0, 360].forEach((off) => {
+        tx.beginPath(); L.p.forEach(([lo, la], i) => { const X = (lo + off + 180) * kx, Y = (90 - la) * ky; i ? tx.lineTo(X, Y) : tx.moveTo(X, Y); });
+        tx.closePath(); tx.fillStyle = "#c9b98a"; tx.fill(); tx.strokeStyle = "#8f7f55"; tx.lineWidth = 2; tx.stroke();
+      }));
+      tx.fillStyle = "#e8eef4"; tx.fillRect(0, 0, 2048, 0.035 * 1024); tx.fillRect(0, 1024 * (1 - 0.1), 2048, 0.1 * 1024);
+      const tex = new THREE.CanvasTexture(tc);
+      if (THREE.sRGBEncoding) tex.encoding = THREE.sRGBEncoding;
+      const globe = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 64), new THREE.MeshStandardMaterial({ map: tex, roughness: 1, metalness: 0, color: 0xd8d8d8 }));
+      T.scene.add(globe);
+      const gp = [];
+      const push = (a, b) => { gp.push(...toVec(a[0], a[1]).map((v) => v * 1.002), ...toVec(b[0], b[1]).map((v) => v * 1.002)); };
+      for (let lo = -180; lo < 180; lo += 15) for (let la = -90; la < 90; la += 3) push([la, lo], [la + 3, lo]);
+      for (let la = -75; la <= 75; la += 15) for (let lo = -180; lo < 180; lo += 3) push([la, lo], [la, lo + 3]);
+      const gg = new THREE.BufferGeometry(); gg.setAttribute("position", new THREE.Float32BufferAttribute(gp, 3));
+      T.scene.add(new THREE.LineSegments(gg, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.22 })));
+      const eqg = new THREE.TorusGeometry(1.003, 0.003, 6, 180); eqg.rotateX(Math.PI / 2);
+      T.scene.add(new THREE.Mesh(eqg, new THREE.MeshBasicMaterial({ color: 0xffe08a })));
+      const mk = (c) => new THREE.Mesh(new THREE.SphereGeometry(0.022, 16, 12), new THREE.MeshBasicMaterial({ color: c }));
+      const mA = mk(0x1f9d55), mB = mk(0xd9483b); T.scene.add(mA, mB);
+      const lA = T.label("A", [0, 0, 0]), lB = T.label("B", [0, 0, 0]);
+      T.onFrame(() => { [lA, lB].forEach((L) => { const vis = L.pos.dot(T.camera.position) > 1.05; if (vis !== L.visible) L.setVisible(vis); }); });
+      let tubeGC = null, tubeRL = null;
+      const matGC = new THREE.MeshBasicMaterial({ color: new THREE.Color(SB.color("accent") || "#0b6fb5") });
+      const matRL = new THREE.MeshBasicMaterial({ color: new THREE.Color(SB.color("warn") || "#b8930a") });
+      SB.onTheme(() => { matGC.color.set(SB.color("accent")); matRL.color.set(SB.color("warn")); });
+      const tube = (pts, mat) => {
+        const v = pts.map(([la, lo]) => new THREE.Vector3(...toVec(la, lo)).multiplyScalar(1.008));
+        const curve = new THREE.CatmullRomCurve3(v);
+        return new THREE.Mesh(new THREE.TubeGeometry(curve, Math.max(40, v.length * 2), 0.007, 6, false), mat);
+      };
+      T3 = {
+        set(r, moveCam) {
+          [tubeGC, tubeRL].forEach((m) => { if (m) { T.scene.remove(m); m.geometry.dispose(); } });
+          tubeGC = tube(r.gc, matGC); tubeRL = tube(r.rl, matRL);
+          tubeGC.visible = $("gc-gc").checked; tubeRL.visible = $("gc-rl").checked;
+          T.scene.add(tubeGC, tubeRL);
+          const va = toVec(A.lat, A.lon), vb = toVec(B.lat, B.lon);
+          mA.position.set(...va).multiplyScalar(1.01); mB.position.set(...vb).multiplyScalar(1.01);
+          lA.pos.set(...va).multiplyScalar(1.1); lB.pos.set(...vb).multiplyScalar(1.1);
+          lA.el.textContent = A.n; lB.el.textContent = B.n;
+          if (moveCam) {
+            const mid = r.gc[Math.floor(r.gc.length / 2)];
+            const v = new THREE.Vector3(...toVec(mid[0] + 12, mid[1])).normalize().multiplyScalar(4.1);
+            T.camera.position.copy(v); if (T.controls) T.controls.update();
+          }
+        },
+      };
+    });
+
+    // ---- 메르카토르 해도
+    const cvm = SB.canvas($("cv-gcm"), (ctx, w, h) => {
+      if (!route) return;
+      const P = SB.palette();
+      M = makeMap({ x: 4, y: 4, w: w - 8, h: h - 8 }, route.lon0, route.latC, "merc");
+      drawMap(ctx, M, { step: 30 });
+      ctx.save(); ctx.beginPath(); ctx.rect(M.box.x, M.box.y, M.box.w, M.box.h); ctx.clip();
+      ctx.lineWidth = 2.5;
+      if ($("gc-rl").checked) { ctx.strokeStyle = P.warn; mapLine(ctx, M, route.rl); }
+      if ($("gc-gc").checked) { ctx.strokeStyle = P.accent; mapLine(ctx, M, route.gc); }
+      [[A, P.ok], [B, P.accent2]].forEach(([p, c]) => [-360, 0, 360].forEach((off) => {
+        const x = M.X(p.lon + off), y = M.Y(p.lat);
+        ctx.fillStyle = c; ctx.strokeStyle = P.bg; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        txt(ctx, p.n, x + 9, y - 10, P.text, "left", 11, 700);
+      }));
+      ctx.restore();
+      txt(ctx, "메르카토르 해도 — 파랑: 대권, 노랑: 항정선", 10, h - 22, P.dim, "left", 11, 600);
+    }, { aspect: 0.5, maxHeight: 380, minHeight: 200 });
+    SB.drag($("cv-gcm"), {
+      down(p) {
+        if (!M) return false;
+        drag = null; let best = 22;
+        [A, B].forEach((q) => [-360, 0, 360].forEach((off) => { const d = Math.hypot(M.X(q.lon + off) - p.x, M.Y(q.lat) - p.y); if (d < best) { best = d; drag = q; } }));
+        return drag ? undefined : false;
+      },
+      move(p) {
+        if (!drag) return;
+        const [la, lo] = M.inv(p.x, p.y);
+        drag.lat = SB.clamp(la, -70, 75); drag.lon = wrap180(lo); drag.n = drag === A ? "출발점" : "도착점";
+        (drag === A ? selA : selB).value = "custom";
+        upd(false, true);
+      },
+      up() { upd(true); },
+    });
+    function upd(moveCam, keepCenter) {
+      const gc = gcPts(A, B, 120), rl = rhumb(A, B, 120);
+      const lon0 = keepCenter && route ? route.lon0 : A.lon + wrap180(B.lon - A.lon) / 2;
+      const lats = gc.map((p) => p[0]).concat([A.lat, B.lat]);
+      const latC = keepCenter && route ? route.latC : SB.clamp((Math.max(...lats) + Math.min(...lats)) / 2, -35, 35);
+      route = { gc, rl: rl.pts, lon0, latC };
+      const dG = gcAngle(A, B) * RE, dR = rl.ang * RE;
+      const maxLat = gc.reduce((m, p) => (Math.abs(p[0]) > Math.abs(m) ? p[0] : m), 0);
+      SB.stat("o-gc-d", sm(Math.round(dG).toLocaleString(), "NM"));
+      SB.stat("o-gc-r", sm(Math.round(dR).toLocaleString(), "NM"));
+      SB.stat("o-gc-diff", sm(Math.round(dR - dG).toLocaleString(), "NM") + " " + sm(dR > 0 ? (((dR - dG) / dR) * 100).toFixed(1) : "0", "%"));
+      SB.stat("o-gc-c", brgS(gcCourse(A, B)) + " / " + sm(latS(maxLat), ""));
+      SB.stat("o-gc-rc", brgS(rl.crs) + sm("(일정)", ""));
+      const v = gV(), hrs = (dR - dG) / v;
+      SB.stat("o-gc-t", sm(hrs.toFixed(1), "시간"));
+      cvm.redraw();
+      if (T3) T3.set(route, moveCam);
+    }
+    upd(true);
+  });
+
+  /* =================================================== 4: 추측 항법 */
+  run(function () {
+    const LAT0 = 35, LON0 = 129;
+    const fmtB = (v) => String(v).padStart(3, "0") + "°";
+    const gC = SB.range("dr-c", fmtB, () => cv.redraw());
+    const gV = SB.range("dr-v", (v) => v + " kn", () => cv.redraw());
+    const gS = SB.range("dr-s", fmtB, () => cv.redraw());
+    const gD = SB.range("dr-d", (v) => v.toFixed(1) + " kn", () => cv.redraw());
+    let st;
+    function reset() {
+      st = { t: 0, tru: [0, 0], dr: [0, 0], path: [[0, 0]], drSegs: [[[0, 0]]], fixes: [[0, 0]], hours: [], running: false, rec: 0, dist: 0 };
+      $("dr-run").textContent = "출항";
+    }
+    reset();
+    function step(dh) {
+      const C = gC() * D2R, V = gV(), S = gS() * D2R, Dd = gD();
+      const vx = V * Math.sin(C), vy = V * Math.cos(C), cx = Dd * Math.sin(S), cy = Dd * Math.cos(S);
+      const h0 = Math.floor(st.t);
+      st.t += dh; st.dist += V * dh;
+      st.tru[0] += (vx + cx) * dh; st.tru[1] += (vy + cy) * dh;
+      st.dr[0] += vx * dh; st.dr[1] += vy * dh;
+      if (st.t - st.rec > 0.04) { st.rec = st.t; st.path.push(st.tru.slice()); st.drSegs[st.drSegs.length - 1].push(st.dr.slice()); }
+      if (Math.floor(st.t) > h0) st.hours.push(st.dr.slice());
+      if (st.t >= 10) { st.running = false; $("dr-run").textContent = "끝(10시간)"; }
+    }
+    SB.loop($("cv-dr"), (dt) => { if (!st.running) return; step(dt * 0.35); cv.redraw(); upd(); });
+    $("dr-run").addEventListener("click", () => {
+      if (st.t >= 10) return;
+      st.running = !st.running; $("dr-run").textContent = st.running ? "일시정지" : "계속";
+    });
+    $("dr-fix").addEventListener("click", () => {
+      if (st.t <= 0) return;
+      st.path.push(st.tru.slice()); st.drSegs[st.drSegs.length - 1].push(st.dr.slice());
+      st.fixes.push(st.tru.slice()); st.dr = st.tru.slice(); st.drSegs.push([st.dr.slice()]);
+      cv.redraw(); upd();
+    });
+    $("dr-reset").addEventListener("click", () => { reset(); cv.redraw(); upd(); });
+    const cv = SB.canvas($("cv-dr"), (ctx, w, h) => {
+      const P = SB.palette();
+      const all = st.path.concat(...st.drSegs, [st.dr, st.tru]);
+      let x0 = Math.min(...all.map((p) => p[0])), x1 = Math.max(...all.map((p) => p[0]));
+      let y0 = Math.min(...all.map((p) => p[1])), y1 = Math.max(...all.map((p) => p[1]));
+      const span = Math.max(24, (x1 - x0) * 1.2, (y1 - y0) * 1.2 * (w / h));
+      const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+      const s = (w - 30) / span;
+      const X = (x) => w / 2 + (x - mx) * s, Y = (y) => h / 2 - (y - my) * s;
+      ctx.fillStyle = cssv("--water-soft"); ctx.fillRect(0, 0, w, h);
+      const stp = [2, 5, 10, 20, 50].find((v) => span / v <= 8) || 50;
+      ctx.lineWidth = 1; ctx.strokeStyle = P.grid;
+      for (let g = Math.ceil((mx - w / 2 / s) / stp) * stp; g <= mx + w / 2 / s; g += stp) { seg(ctx, X(g), 0, X(g), h); txt(ctx, g + "", X(g) + 2, h - 8, P.faint, "left", 9, null, true); }
+      for (let g = Math.ceil((my - h / 2 / s) / stp) * stp; g <= my + h / 2 / s; g += stp) { seg(ctx, 0, Y(g), w, Y(g)); txt(ctx, g + "", 3, Y(g) - 7, P.faint, "left", 9, null, true); }
+      txt(ctx, "격자 " + stp + " NM", w - 8, h - 24, P.dim, "right", 10);
+      // 실제 항적
+      ctx.strokeStyle = P.accent2; ctx.lineWidth = 2; ctx.beginPath(); st.path.forEach((p, i) => (i ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1])))); ctx.lineTo(X(st.tru[0]), Y(st.tru[1])); ctx.stroke();
+      // DR
+      ctx.strokeStyle = P.accent; ctx.setLineDash([6, 5]);
+      st.drSegs.forEach((sg, k) => { ctx.beginPath(); sg.forEach((p, i) => (i ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1])))); if (k === st.drSegs.length - 1) ctx.lineTo(X(st.dr[0]), Y(st.dr[1])); ctx.stroke(); });
+      ctx.setLineDash([]);
+      st.hours.forEach((p) => { ctx.strokeStyle = P.accent; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(X(p[0]), Y(p[1]), 6, Math.PI, 0); ctx.stroke(); seg(ctx, X(p[0]) - 8, Y(p[1]), X(p[0]) + 8, Y(p[1])); });
+      st.fixes.forEach((p) => { ctx.strokeStyle = P.text; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(X(p[0]), Y(p[1]), 7, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = P.text; ctx.beginPath(); ctx.arc(X(p[0]), Y(p[1]), 2, 0, 7); ctx.fill(); });
+      ctx.strokeStyle = P.accent; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(X(st.dr[0]), Y(st.dr[1]), 6, Math.PI, 0); ctx.stroke(); seg(ctx, X(st.dr[0]) - 8, Y(st.dr[1]), X(st.dr[0]) + 8, Y(st.dr[1]));
+      txt(ctx, "DR", X(st.dr[0]) + 9, Y(st.dr[1]) + 9, P.accent, "left", 11, 700);
+      SB.shipTop(ctx, X(st.tru[0]), Y(st.tru[1]), (gC() - 90) * D2R, { len: 28, color: P.accent2 });
+      // 조류 표시
+      const S = gS() * D2R, Dd = gD(), bx = w - 46, by = 44;
+      ctx.fillStyle = P.bg; ctx.globalAlpha = 0.8; ctx.fillRect(bx - 40, by - 36, 80, 78); ctx.globalAlpha = 1;
+      if (Dd > 0) SB.arrow(ctx, bx - Math.sin(S) * 22, by + Math.cos(S) * 22, bx + Math.sin(S) * 22, by - Math.cos(S) * 22, P.accent2, 2);
+      txt(ctx, "조류 " + Dd.toFixed(1) + " kn", bx, by + 34, P.dim, "center", 10);
+      txt(ctx, "N↑", 10, 14, P.dim, "left", 12, 700);
+      txt(ctx, "— 실제 항적", 40, 14, P.accent2, "left", 11, 600); txt(ctx, "- - DR 항적", 120, 14, P.accent, "left", 11, 600);
+    }, { aspect: 0.72, maxHeight: 440, minHeight: 280 });
+    function upd() {
+      const H = Math.floor(st.t), Mn = Math.floor((st.t - H) * 60);
+      SB.stat("o-dr-t", H + "h " + String(Mn).padStart(2, "0") + "m");
+      const lat = LAT0 + st.dr[1] / 60, lon = LON0 + st.dr[0] / (60 * Math.cos(((LAT0 + lat) / 2) * D2R));
+      SB.stat("o-dr-pos", '<span style="font-size:14px">' + latS(lat) + " " + lonS(lon) + "</span>");
+      SB.stat("o-dr-d", sm(st.dist.toFixed(1), "NM"));
+      const e = Math.hypot(st.tru[0] - st.dr[0], st.tru[1] - st.dr[1]);
+      SB.stat("o-dr-e", sm(e.toFixed(2), "NM") + " " + sm("(" + Math.round(e * 1852).toLocaleString() + " m)", ""));
+    }
+    upd();
+  });
+
+  /* =================================================== 5: 조류 삼각형 CTS */
+  run(function () {
+    const fmtB = (v) => String(v).padStart(3, "0") + "°";
+    const gCog = SB.range("ct-cog", fmtB, upd), gV = SB.range("ct-v", (v) => v + " kn", upd);
+    const gS = SB.range("ct-s", fmtB, upd), gD = SB.range("ct-d", (v) => v.toFixed(1) + " kn", upd);
+    const gLw = SB.range("ct-lw", (v) => v.toFixed(1) + "°", upd);
+    const wind = SB.seg("ct-wind", upd);
+    let geo = null, cv = null;
+    function solve() {
+      const cog = gCog() * D2R, V = gV(), set = gS() * D2R, d = gD();
+      const t = [Math.sin(cog), Math.cos(cog)], n = [Math.cos(cog), -Math.sin(cog)];
+      const c = [d * Math.sin(set), d * Math.cos(set)];
+      const cpar = c[0] * t[0] + c[1] * t[1], cperp = c[0] * n[0] + c[1] * n[1];
+      const sa = -cperp / V;
+      if (Math.abs(sa) > 1) return { ok: false, c, V };
+      const a = Math.asin(sa), sog = V * Math.cos(a) + cpar;
+      const wt = gCog() + a * R2D;
+      const lw = wind() === "port" ? -gLw() : gLw();
+      const hdg = wrap360(wt + lw);
+      const wv = [V * Math.sin(wt * D2R), V * Math.cos(wt * D2R)];
+      return { ok: sog > 0.05, c, V, a: a * R2D, sog, wt: wrap360(wt), hdg, wv };
+    }
+    cv = SB.canvas($("cv-cts"), (ctx, w, h) => {
+      const P = SB.palette(), r = solve();
+      const s = (Math.min(w, h) * 0.36) / Math.max(gV() + gD(), 6);
+      const O = { x: w / 2, y: h / 2 + 10 };
+      geo = { O, s };
+      const cog = gCog() * D2R;
+      ctx.strokeStyle = P.grid; ctx.lineWidth = 1;
+      for (let k = 2; k <= 30; k += 2) { if (k * s > Math.max(w, h)) break; ctx.beginPath(); ctx.arc(O.x, O.y, k * s, 0, Math.PI * 2); ctx.stroke(); }
+      txt(ctx, "N", O.x, 12, P.dim, "center", 12, 700); ctx.strokeStyle = P.grid; seg(ctx, O.x, 20, O.x, h);
+      ctx.strokeStyle = P.faint; ctx.setLineDash([7, 5]); ctx.lineWidth = 1.4;
+      seg(ctx, O.x, O.y, O.x + Math.sin(cog) * 2000, O.y - Math.cos(cog) * 2000); ctx.setLineDash([]);
+      const L = Math.min(w, h) * 0.46;
+      txt(ctx, "원하는 COG " + brgS(gCog()), O.x + Math.sin(cog) * L, O.y - Math.cos(cog) * L - 12, P.dim, "center", 11, 600);
+      const C = { x: O.x + r.c[0] * s, y: O.y - r.c[1] * s };
+      ctx.strokeStyle = P.accent; ctx.globalAlpha = 0.35; ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.arc(C.x, C.y, r.V * s, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+      SB.arrow(ctx, O.x, O.y, C.x, C.y, P.accent2, 3);
+      ctx.fillStyle = P.accent2; ctx.beginPath(); ctx.arc(C.x, C.y, 6, 0, Math.PI * 2); ctx.fill();
+      txt(ctx, "조류 " + gD().toFixed(1) + " kn", C.x + 8, C.y + 14, P.accent2, "left", 11, 700);
+      if (r.wv) {
+        const G = { x: C.x + r.wv[0] * s, y: C.y - r.wv[1] * s };
+        SB.arrow(ctx, C.x, C.y, G.x, G.y, P.accent, 3);
+        if (r.ok) SB.arrow(ctx, O.x, O.y, G.x, G.y, P.ok, 3.5);
+        txt(ctx, "STW " + gV() + " kn (항적 " + brgS(r.wt) + ")", (C.x + G.x) / 2 + 8, (C.y + G.y) / 2 - 10, P.accent, "left", 11, 700);
+        { const gx = G.x - O.x, gy = G.y - O.y, gl = Math.hypot(gx, gy) || 1; txt(ctx, "SOG " + r.sog.toFixed(1) + " kn", O.x + gx * 0.6 + (gy / gl) * 16, O.y + gy * 0.6 - (gx / gl) * 16, P.ok, "center", 11, 700); }
+        const hd = r.hdg * D2R;
+        ctx.strokeStyle = P.text; ctx.setLineDash([2, 3]); seg(ctx, O.x, O.y, O.x + Math.sin(hd) * 70, O.y - Math.cos(hd) * 70); ctx.setLineDash([]);
+        SB.shipTop(ctx, O.x, O.y, hd - Math.PI / 2, { len: 40, color: P.text, alpha: 0.85 });
+        txt(ctx, "선수 " + brgS(r.hdg), O.x + Math.sin(hd) * 82, O.y - Math.cos(hd) * 82, P.text, "center", 11, 700);
+      }
+      if (!r.ok) txt(ctx, r.wv ? "SOG ≤ 0 — 조류를 이기지 못한다" : "조류 옆 성분 > STW — 이 방향으로는 갈 수 없다", w / 2, h - 14, P.bad, "center", 12, 700);
+      txt(ctx, "조류 화살촉을 끌어 보라", 8, h - 14, P.faint, "left", 10);
+    }, { aspect: 0.8, maxHeight: 440, minHeight: 300 });
+    SB.drag($("cv-cts"), {
+      down(p) { this.move(p); },
+      move(p) {
+        if (!geo) return;
+        const dx = (p.x - geo.O.x) / geo.s, dy = -(p.y - geo.O.y) / geo.s;
+        gS.set(Math.round(wrap360(Math.atan2(dx, dy) * R2D)) % 360);
+        gD.set(Math.round(SB.clamp(Math.hypot(dx, dy), 0, 6) * 10) / 10);
+      },
+    });
+    function upd() {
+      const r = solve();
+      if (r.wv && r.ok) {
+        SB.stat("o-ct-cts", brgS(r.hdg));
+        SB.stat("o-ct-a", sm((r.a >= 0 ? "+" : "") + r.a.toFixed(1) + "°", r.a >= 0 ? "우현 쪽" : "좌현 쪽"));
+        SB.stat("o-ct-sog", sm(r.sog.toFixed(1), "kn"));
+        const hrs = 30 / r.sog; SB.stat("o-ct-eta", sm(Math.floor(hrs) + "h " + String(Math.round((hrs % 1) * 60)).padStart(2, "0") + "m", ""));
+      } else { ["o-ct-cts", "o-ct-a", "o-ct-sog", "o-ct-eta"].forEach((id) => SB.stat(id, "—")); }
+      if (cv) cv.redraw();
+    }
+    upd();
+  });
+
+  /* =================================================== 6: TVMDC */
+  run(function () {
+    const ew = (v) => Math.abs(v).toFixed(1) + "°" + (v >= 0 ? "E" : "W");
+    const gT = SB.range("cp-t", (v) => String(v).padStart(3, "0") + "°", upd);
+    const gVa = SB.range("cp-v", ew, upd);
+    const gB = SB.range("cp-b", (v) => (v >= 0 ? "+" : "") + v.toFixed(1) + "°", upd);
+    const gC = SB.range("cp-c", (v) => (v >= 0 ? "+" : "") + v.toFixed(1) + "°", upd);
+    const devOf = (M) => gB() * Math.sin(M * D2R) + gC() * Math.cos(M * D2R);
+    let cv1 = null, cv2 = null;
+    function calc() { const T = gT(), V = gVa(), M = wrap360(T - V), D = devOf(M), C = wrap360(M - D); return { T, V, M, D, C }; }
+    cv1 = SB.canvas($("cv-cp"), (ctx, w, h) => {
+      const P = SB.palette(), k = calc();
+      const cx = w / 2, cy = h / 2 - 4, R = Math.min(w, h) / 2 - 38;
+      ctx.strokeStyle = P.border; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
+      for (let a = 0; a < 360; a += 5) {
+        const L = a % 30 === 0 ? 12 : a % 10 === 0 ? 7 : 4, r1 = R - L, t = a * D2R;
+        ctx.strokeStyle = a % 30 === 0 ? P.dim : P.faint; seg(ctx, cx + Math.sin(t) * r1, cy - Math.cos(t) * r1, cx + Math.sin(t) * R, cy - Math.cos(t) * R);
+        if (a % 30 === 0) txt(ctx, a === 0 ? "000" : String(a).padStart(3, "0"), cx + Math.sin(t) * (R + 14), cy - Math.cos(t) * (R + 14), P.dim, "center", 10, null, true);
+      }
+      const ray = (b, len, c, wd, lab) => { const t = b * D2R; SB.arrow(ctx, cx, cy, cx + Math.sin(t) * len, cy - Math.cos(t) * len, c, wd); if (lab) txt(ctx, lab, cx + Math.sin(t) * (len + 2) + (b >= 0 && b < 180 ? 6 : -6), cy - Math.cos(t) * (len + 10), c, b >= 0 && b < 180 ? "left" : "right", 11, 700); };
+      const arc = (b0, b1, rr, c) => { ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, rr, (Math.min(b0, b1) - 90) * D2R, (Math.max(b0, b1) - 90) * D2R); ctx.stroke(); };
+      arc(0, k.V, R * 0.8, P.accent);
+      arc(k.V, k.V + k.D, R * 0.7, P.warn);
+      ray(0, R * 0.92, P.text, 2.2, "T");
+      ray(k.V, R * 0.86, P.accent, 2.2, "M");
+      ray(k.V + k.D, R * 0.76, P.warn, 2.2, "C");
+      const hd = k.T * D2R;
+      ctx.strokeStyle = P.accent2; ctx.lineWidth = 1.6; ctx.setLineDash([6, 4]); seg(ctx, cx, cy, cx + Math.sin(hd) * R, cy - Math.cos(hd) * R); ctx.setLineDash([]);
+      SB.shipTop(ctx, cx, cy, hd - Math.PI / 2, { len: R * 0.55, color: P.accent2, alpha: 0.9 });
+      txt(ctx, "선수 T " + brgS(k.T) + " · M " + brgS(k.M) + " · C " + brgS(k.C), w / 2, h - 10, P.text, "center", 11, 700, true);
+      txt(ctx, "검정 T 진북 · 파랑 M 자북 · 노랑 C 나북", 8, 12, P.dim, "left", 10);
+    }, { aspect: 0.9, maxHeight: 400 });
+    cv2 = SB.canvas($("cv-cp2"), (ctx, w, h) => {
+      const P = SB.palette(), k = calc(), lim = Math.max(4, Math.ceil(Math.hypot(gB(), gC()) + 1));
+      const data = []; for (let m = 0; m <= 360; m += 3) data.push([m, devOf(m)]);
+      SB.chart(ctx, { x: 48, y: 18, w: w - 64, h: h - 66 }, {
+        x: [0, 360], y: [-lim, lim], xTicks: [0, 90, 180, 270, 360], xLabel: "자침 선수 방위 M (°)", yLabel: "자차 D (°, +E)",
+        series: [{ data, color: P.warn, width: 2.5 }], hlines: [{ y: 0, color: P.axis, dash: [] }],
+        points: [{ x: k.M, y: k.D, color: P.accent2, r: 6, label: (k.D >= 0 ? "+" : "") + k.D.toFixed(1) + "°" }],
+      });
+    }, { aspect: 0.9, maxHeight: 400 });
+    function upd() {
+      const k = calc();
+      SB.stat("o-cp-t", brgS(k.T)); SB.stat("o-cp-v", ew(k.V)); SB.stat("o-cp-m", brgS(k.M));
+      SB.stat("o-cp-d", ew(k.D)); SB.stat("o-cp-c", brgS(k.C));
+      if (cv1) cv1.redraw(); if (cv2) cv2.redraw();
+    }
+    upd();
+  });
+
+  /* =================================================== 7: 위치선 */
+  run(function () {
+    const W = 10, H = 7.5;
+    const LANDP = [[0, 7.5], [0, 6.4], [1.5, 6.0], [2.6, 6.6], [3.8, 5.9], [5.0, 6.1], [6.2, 5.2], [7.0, 4.0], [8.2, 3.6], [8.6, 2.2], [10, 1.6], [10, 7.5]];
+    const MK = [{ n: "A", x: 1.5, y: 6.0, t: "등대" }, { n: "B", x: 4.9, y: 6.45, t: "탑" }, { n: "C", x: 8.6, y: 2.2, t: "곶" }];
+    const ship = { x: 4.2, y: 2.6 };
+    let z = [SB.randn(), SB.randn(), SB.randn()], view = null, cv = null;
+    const mode = SB.seg("lp-mode", () => { gSd.set(gSd()); gSys.set(gSys()); });
+    const gSd = SB.range("lp-sd", (v) => (mode() === "brg" ? v.toFixed(1) + "°" : (v * 0.5).toFixed(1) + " 케이블"), upd);
+    const gSys = SB.range("lp-sys", (v) => (mode() === "brg" ? (v >= 0 ? "+" : "") + v.toFixed(1) + "°" : (v >= 0 ? "+" : "") + (v * 0.5).toFixed(1) + " 케이블"), upd);
+    $("lp-again").addEventListener("click", () => { z = [SB.randn(), SB.randn(), SB.randn()]; upd(); });
+    const inLand = (x, y) => { let c = false; for (let i = 0, j = LANDP.length - 1; i < LANDP.length; j = i++) { const [xi, yi] = LANDP[i], [xj, yj] = LANDP[j]; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c; } return c; };
+    function measure() {
+      const out = MK.map((m, i) => {
+        const dx = m.x - ship.x, dy = m.y - ship.y;
+        if (mode() === "brg") return { m, v: wrap360(Math.atan2(dx, dy) * R2D + gSys() + gSd() * z[i]) };
+        return { m, v: Math.max(0.05, Math.hypot(dx, dy) + gSys() * 0.05 + gSd() * 0.05 * z[i]) };
+      });
+      const pts = [];
+      for (let i = 0; i < 3; i++) for (let j = i + 1; j < 3; j++) {
+        const a = out[i], b = out[j];
+        if (mode() === "brg") {
+          const u = [Math.sin(a.v * D2R), Math.cos(a.v * D2R)], v = [Math.sin(b.v * D2R), Math.cos(b.v * D2R)];
+          const det = u[0] * -v[1] - u[1] * -v[0];
+          if (Math.abs(det) < 1e-6) { pts.push([(a.m.x + b.m.x) / 2, (a.m.y + b.m.y) / 2]); continue; }
+          const rx = b.m.x - a.m.x, ry = b.m.y - a.m.y, s = (rx * -v[1] - ry * -v[0]) / det;
+          pts.push([a.m.x + s * u[0], a.m.y + s * u[1]]);
+        } else {
+          const dx = b.m.x - a.m.x, dy = b.m.y - a.m.y, d = Math.hypot(dx, dy);
+          const aa = (a.v * a.v - b.v * b.v + d * d) / (2 * d), hh = Math.sqrt(Math.max(0, a.v * a.v - aa * aa));
+          const px = a.m.x + (aa * dx) / d, py = a.m.y + (aa * dy) / d;
+          const c1 = [px + (hh * dy) / d, py - (hh * dx) / d], c2 = [px - (hh * dy) / d, py + (hh * dx) / d];
+          pts.push(Math.hypot(c1[0] - ship.x, c1[1] - ship.y) < Math.hypot(c2[0] - ship.x, c2[1] - ship.y) ? c1 : c2);
+        }
+      }
+      const fix = [(pts[0][0] + pts[1][0] + pts[2][0]) / 3, (pts[0][1] + pts[1][1] + pts[2][1]) / 3];
+      let hat = 0; for (let i = 0; i < 3; i++) for (let j = i + 1; j < 3; j++) hat = Math.max(hat, Math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]));
+      return { out, pts, fix, hat };
+    }
+    cv = SB.canvas($("cv-lop"), (ctx, w, h) => {
+      const P = SB.palette(), R = measure();
+      const s = Math.min(w / W, h / H), ox = (w - W * s) / 2, oy = (h - H * s) / 2;
+      const X = (x) => ox + x * s, Y = (y) => oy + (H - y) * s;
+      view = { s, ox, oy, X, Y };
+      ctx.fillStyle = cssv("--water-soft"); ctx.fillRect(X(0), Y(H), W * s, H * s);
+      ctx.beginPath(); LANDP.forEach(([x, y], i) => (i ? ctx.lineTo(X(x), Y(y)) : ctx.moveTo(X(x), Y(y)))); ctx.closePath();
+      ctx.fillStyle = landColor(); ctx.fill(); ctx.strokeStyle = P.dim; ctx.lineWidth = 1.2; ctx.stroke();
+      ctx.strokeStyle = P.grid; ctx.lineWidth = 1; for (let g = 1; g < W; g++) seg(ctx, X(g), Y(0), X(g), Y(H)); for (let g = 1; g < H; g++) seg(ctx, X(0), Y(g), X(W), Y(g));
+      const cols = [P.accent, P.ok, P.warn];
+      ctx.save(); ctx.beginPath(); ctx.rect(X(0), Y(H), W * s, H * s); ctx.clip();
+      R.out.forEach((o, i) => {
+        ctx.strokeStyle = cols[i]; ctx.lineWidth = 1.8;
+        if (mode() === "brg") { const u = [Math.sin(o.v * D2R), Math.cos(o.v * D2R)]; seg(ctx, X(o.m.x - u[0] * 14), Y(o.m.y - u[1] * 14), X(o.m.x + u[0] * 0.3), Y(o.m.y + u[1] * 0.3)); }
+        else { ctx.beginPath(); ctx.arc(X(o.m.x), Y(o.m.y), o.v * s, 0, Math.PI * 2); ctx.stroke(); }
+      });
+      ctx.beginPath(); R.pts.forEach(([x, y], i) => (i ? ctx.lineTo(X(x), Y(y)) : ctx.moveTo(X(x), Y(y)))); ctx.closePath();
+      ctx.fillStyle = cssv("--accent-2-soft"); ctx.fill(); ctx.strokeStyle = P.accent2; ctx.lineWidth = 1.2; ctx.stroke();
+      ctx.restore();
+      MK.forEach((m, i) => {
+        ctx.fillStyle = cols[i]; ctx.strokeStyle = P.text; ctx.lineWidth = 1;
+        ctx.beginPath(); for (let k = 0; k < 10; k++) { const a = (k * Math.PI) / 5 - Math.PI / 2, rr = k % 2 ? 4 : 9; ctx.lineTo(X(m.x) + Math.cos(a) * rr, Y(m.y) + Math.sin(a) * rr); } ctx.closePath(); ctx.fill(); ctx.stroke();
+        const o = R.out[i];
+        txt(ctx, m.n + " " + m.t + " " + (mode() === "brg" ? brgS(o.v) : o.v.toFixed(2) + " NM"), X(m.x) + (m.x > 8 ? -12 : 12), Y(m.y) - 13, P.text, m.x > 8 ? "right" : "left", 11, 700);
+      });
+      ctx.strokeStyle = P.text; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.arc(X(R.fix[0]), Y(R.fix[1]), 8, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = P.text; ctx.beginPath(); ctx.arc(X(R.fix[0]), Y(R.fix[1]), 2, 0, 7); ctx.fill();
+      txt(ctx, "선위(Fix)", X(R.fix[0]) + 11, Y(R.fix[1]) + 12, P.text, "left", 11, 600);
+      ctx.fillStyle = P.text; ctx.beginPath(); ctx.arc(X(ship.x), Y(ship.y), 4.5, 0, Math.PI * 2); ctx.fill();
+      txt(ctx, "실제 위치", X(ship.x) - 8, Y(ship.y) + 14, P.dim, "right", 10);
+      txt(ctx, "격자 1 NM · N↑", X(0) + 6, Y(0) - 10, P.dim, "left", 10);
+    }, { aspect: 0.75, maxHeight: 460, minHeight: 260 });
+    SB.drag($("cv-lop"), {
+      down(p) { this.move(p); },
+      move(p) {
+        if (!view) return;
+        const x = (p.x - view.ox) / view.s, y = H - (p.y - view.oy) / view.s;
+        if (x < 0.2 || x > W - 0.2 || y < 0.2 || y > H - 0.2 || inLand(x, y)) return;
+        ship.x = x; ship.y = y; upd();
+      },
+    });
+    function upd() {
+      const R = measure();
+      SB.stat("o-lp-m", R.out.map((o) => o.m.n + " " + (mode() === "brg" ? brgS(o.v) : o.v.toFixed(2))).join(" · "));
+      SB.stat("o-lp-hat", sm(R.hat.toFixed(2), "NM") + " " + sm("(" + Math.round(R.hat * 1852) + " m)", ""));
+      const e = Math.hypot(R.fix[0] - ship.x, R.fix[1] - ship.y);
+      SB.stat("o-lp-err", sm(e.toFixed(2), "NM") + " " + sm("(" + Math.round(e * 1852) + " m)", ""));
+      if (cv) cv.redraw();
+    }
+    upd();
+  });
+
+  /* =================================================== 8: 정오 위도 */
+  run(function () {
+    const MD = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    const dateOf = (N) => { let m = 0; while (N > MD[m]) { N -= MD[m]; m++; } return m + 1 + "월 " + N + "일"; };
+    const decOf = (N) => 23.44 * Math.sin(((2 * Math.PI) / 365) * (N - 81));
+    let tau = 12, playing = false, cv = null;
+    const gDay = SB.range("nn-day", dateOf, upd);
+    const gLat = SB.range("nn-lat", (v) => (v >= 0 ? v.toFixed(1) + "°N" : (-v).toFixed(1) + "°S"), upd);
+    const gErr = SB.range("nn-err", (v) => (v >= 0 ? "+" : "") + v.toFixed(1) + "′", upd);
+    $("nn-play").addEventListener("click", () => { playing = !playing; if (playing) tau = 9; else tau = 12; $("nn-play").textContent = playing ? "정오에 멈추기" : "시간 흐르기"; upd(); });
+    SB.loop($("cv-noon"), (dt) => { if (!playing) return; tau += dt * 0.7; if (tau > 15) tau = 9; if (cv) cv.redraw(); });
+    function geom() {
+      const phi = gLat(), dec = decOf(gDay()), th = 90 - phi + dec;
+      const Ht = th <= 90 ? th : 180 - th, south = th <= 90;
+      const Ho = Ht + gErr() / 60, z = 90 - Ho, latC = south ? dec + z : dec - z;
+      return { phi, dec, th, Ht, Ho, south, z, latC };
+    }
+    const altAt = (phi, dec, t) => R2D * Math.asin(Math.sin(phi * D2R) * Math.sin(dec * D2R) + Math.cos(phi * D2R) * Math.cos(dec * D2R) * Math.cos(15 * (t - 12) * D2R));
+    cv = SB.canvas($("cv-noon"), (ctx, w, h) => {
+      const P = SB.palette(), g = geom();
+      const th = h * 0.58, O = { x: w / 2, y: th * 0.8 }, r = Math.min(w * 0.4, th * 0.68);
+      const pt = (deg, rr) => ({ x: O.x + rr * Math.cos(deg * D2R), y: O.y - rr * Math.sin(deg * D2R) });
+      ctx.save(); ctx.beginPath(); ctx.rect(0, 0, w, th); ctx.clip();
+      ctx.fillStyle = cssv("--accent-soft"); ctx.beginPath(); ctx.arc(O.x, O.y, r, Math.PI, 0); ctx.fill();
+      ctx.strokeStyle = P.border; ctx.lineWidth = 1; ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.arc(O.x, O.y, r, 0, Math.PI); ctx.stroke(); ctx.setLineDash([]);
+      ctx.strokeStyle = P.axis; ctx.lineWidth = 2; seg(ctx, O.x - r - 16, O.y, O.x + r + 16, O.y);
+      txt(ctx, "S", O.x + r + 22, O.y, P.dim, "center", 13, 700); txt(ctx, "N", O.x - r - 22, O.y, P.dim, "center", 13, 700);
+      txt(ctx, "수평선", O.x + r - 4, O.y + 12, P.dim, "right", 10);
+      const Z = pt(90, r); ctx.strokeStyle = P.faint; ctx.lineWidth = 1; seg(ctx, O.x, O.y, Z.x, Z.y); txt(ctx, "천정 Z", Z.x, Z.y - 10, P.dim, "center", 11, 700);
+      const qa = 90 - g.phi, Q1 = pt(qa, r * 1.02), Q2 = pt(qa + 180, r * 1.02);
+      ctx.strokeStyle = P.accent; ctx.lineWidth = 1.5; ctx.setLineDash([7, 4]); seg(ctx, Q2.x, Q2.y, Q1.x, Q1.y); ctx.setLineDash([]);
+      txt(ctx, "천구 적도", Q1.x + (qa < 90 ? 4 : -4), Q1.y - 10, P.accent, qa < 90 ? "left" : "right", 11, 600);
+      const Pp = pt(180 - g.phi, r); ctx.strokeStyle = P.faint; seg(ctx, O.x, O.y, Pp.x, Pp.y); txt(ctx, "천구 북극", Pp.x - 4, Pp.y - 10, P.faint, "center", 10);
+      const arc = (a0, a1, rr, c, lab) => { ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(O.x, O.y, rr, -Math.max(a0, a1) * D2R, -Math.min(a0, a1) * D2R); ctx.stroke(); const m = pt((a0 + a1) / 2, rr + 12); txt(ctx, lab, m.x, m.y, c, "center", 11, 700); };
+      if (g.Ht > 0) {
+        arc(g.south ? 0 : 180, g.th, r * 0.88, P.warn, "Ho " + g.Ho.toFixed(1) + "°");
+        arc(90, g.th, r * 0.6, P.accent2, "z");
+        arc(qa, g.th, r * 0.74, P.ok, "δ");
+        arc(qa, 90, r * 0.36, P.accent, "φ");
+        const S = pt(g.th, r); ctx.strokeStyle = P.warn; ctx.lineWidth = 1; ctx.setLineDash([2, 3]); seg(ctx, O.x, O.y, S.x, S.y); ctx.setLineDash([]);
+        ctx.fillStyle = P.warn; ctx.globalAlpha = 0.45; ctx.beginPath(); ctx.arc(S.x, S.y, 10, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+        txt(ctx, "정오 태양", S.x, S.y + (S.y < O.y - 30 ? -18 : 18), P.warn, "center", 10, 600);
+        if (playing) {
+          const hn = altAt(g.phi, g.dec, tau);
+          if (hn > 0) { const Sn = pt(g.south ? hn : 180 - hn, r); ctx.fillStyle = P.warn; ctx.beginPath(); ctx.arc(Sn.x, Sn.y, 9, 0, Math.PI * 2); ctx.fill(); }
+        }
+      } else txt(ctx, "이 날 이 위도에서는 정오에도 해가 뜨지 않는다(극야)", w / 2, O.y - r * 0.5, P.bad, "center", 12, 700);
+      ctx.fillStyle = P.text; ctx.beginPath(); ctx.arc(O.x, O.y, 4, 0, 7); ctx.fill();
+      txt(ctx, "관측자 자오선 단면", 8, 12, P.dim, "left", 11, 700);
+      ctx.restore();
+      // 고도 곡선
+      const yMax = Math.min(90, Math.max(20, Math.ceil((g.Ht + 6) / 10) * 10));
+      const data = []; for (let t = 9; t <= 15.001; t += 0.05) data.push([t, altAt(g.phi, g.dec, t)]);
+      const box = { x: 48, y: th + 12, w: w - 64, h: h - th - 54 };
+      ctx.strokeStyle = P.border; seg(ctx, 0, th, w, th);
+      SB.chart(ctx, box, {
+        x: [9, 15], y: [Math.max(-10, Math.floor((g.Ht - 30) / 10) * 10), yMax], xTicks: [9, 10, 11, 12, 13, 14, 15], xFmt: (v) => v + "시",
+        xLabel: "지방 시각(시정오 = 12시)", yLabel: "고도 °", series: [{ data, color: P.warn, width: 2.5 }],
+        vlines: [{ x: 12, color: P.accent2, label: "자오선 통과" }],
+        points: playing ? [{ x: tau, y: altAt(g.phi, g.dec, tau), color: P.warn, r: 6, label: hhmm(tau) }] : [{ x: 12, y: g.Ht, color: P.accent2, r: 5, label: "최대 " + g.Ht.toFixed(1) + "°" }],
+      });
+    }, { aspect: 0.95, maxHeight: 600, minHeight: 420 });
+    function upd() {
+      const g = geom();
+      SB.stat("o-nn-dec", sm((g.dec >= 0 ? "+" : "") + g.dec.toFixed(2) + "°", g.dec >= 0 ? "N" : "S"));
+      if (g.Ht <= 0) { ["o-nn-h", "o-nn-dir", "o-nn-lat", "o-nn-e"].forEach((id) => SB.stat(id, "—")); }
+      else {
+        SB.stat("o-nn-h", sm(g.Ho.toFixed(2) + "°", ""));
+        SB.stat("o-nn-dir", g.south ? "남쪽" : "북쪽");
+        SB.stat("o-nn-lat", latS(g.latC));
+        const e = Math.abs(g.latC - g.phi) * 60;
+        SB.stat("o-nn-e", sm(e.toFixed(1), "NM"));
+      }
+      if (cv) cv.redraw();
+    }
+    upd();
+  });
+
+  /* =================================================== 9: 크로노미터와 경도 */
+  run(function () {
+    let cv = null;
+    const gT = SB.range("ln-t", (v) => String(Math.floor(v / 60)).padStart(2, "0") + ":" + String(v % 60).padStart(2, "0") + " UTC", upd);
+    const gE = SB.range("ln-e", (v) => (v >= 0 ? "+" : "") + v + " s", upd);
+    const gL = SB.range("ln-lat", (v) => v + "°N", upd);
+    const lonTrue = () => wrap180((12 - gT() / 60) * 15);
+    const lonComp = () => wrap180((12 - (gT() / 60 + gE() / 3600)) * 15);
+    cv = SB.canvas($("cv-lon"), (ctx, w, h) => {
+      const P = SB.palette(), lt = lonTrue(), lc = lonComp();
+      const cx = w * 0.42, cy = h / 2, r = Math.min(w * 0.36, h * 0.42);
+      ctx.fillStyle = P.surface; ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI / 2, -Math.PI / 2); ctx.fill();
+      ctx.fillStyle = cssv("--water-soft"); ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, Math.PI / 2); ctx.fill();
+      ctx.strokeStyle = P.dim; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+      txt(ctx, "밤", cx - r * 0.75, cy + r * 0.85, P.faint, "center", 11); txt(ctx, "낮", cx + r * 0.75, cy + r * 0.85, P.faint, "center", 11);
+      for (let L = -165; L <= 180; L += 15) {
+        const a = (L - lt) * D2R, x2 = cx + r * Math.cos(a), y2 = cy - r * Math.sin(a);
+        ctx.strokeStyle = L === 0 ? P.text : P.grid; ctx.lineWidth = L === 0 ? 2.6 : 1; seg(ctx, cx, cy, x2, y2);
+        if (L % 45 === 0) txt(ctx, L === 0 ? "0° 그리니치" : Math.abs(L) + "°" + (L > 0 ? "E" : "W"), cx + (r + 16) * Math.cos(a), cy - (r + 12) * Math.sin(a), L === 0 ? P.text : P.faint, "center", 10, L === 0 ? 700 : 400);
+      }
+      const ga = (0 - lt) * D2R;
+      ctx.strokeStyle = P.accent; ctx.lineWidth = 2.5; ctx.beginPath();
+      const a0 = -Math.max(0, ga), a1 = -Math.min(0, ga);
+      ctx.arc(cx, cy, r * 0.35, a0, a1); ctx.stroke();
+      txt(ctx, "λ " + lonS(lt), cx + r * 0.42 * Math.cos(ga / 2), cy - r * 0.42 * Math.sin(ga / 2) + 2, P.accent, "left", 11, 700);
+      const rr = r * Math.cos(gL() * D2R);
+      ctx.fillStyle = P.accent2; ctx.beginPath(); ctx.arc(cx + rr, cy, 6, 0, Math.PI * 2); ctx.fill();
+      const ca = (lc - lt) * D2R;
+      ctx.strokeStyle = P.accent2; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx + rr * Math.cos(ca), cy - rr * Math.sin(ca), 7, 0, Math.PI * 2); ctx.stroke();
+      txt(ctx, "배", cx + rr + 9, cy - 10, P.accent2, "left", 11, 700);
+      ctx.fillStyle = P.text; ctx.beginPath(); ctx.arc(cx, cy, 3, 0, 7); ctx.fill();
+      txt(ctx, "N극", cx - 6, cy + 12, P.dim, "right", 10);
+      ctx.strokeStyle = P.dim; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(cx, cy, r * 0.18, 0.3, 2.2); ctx.stroke();
+      SB.arrow(ctx, cx + r * 0.18 * Math.cos(2.0), cy + r * 0.18 * Math.sin(2.0), cx + r * 0.18 * Math.cos(2.3), cy + r * 0.18 * Math.sin(2.3), P.dim, 1.4);
+      const sx = w - 26;
+      ctx.fillStyle = P.warn; ctx.beginPath(); ctx.arc(sx, cy, 16, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = P.warn; ctx.lineWidth = 1.2; for (let k = -2; k <= 2; k++) SB.arrow(ctx, sx - 22, cy + k * r * 0.35, cx + r + 30, cy + k * r * 0.35, P.warn, 1.2);
+      txt(ctx, "해", sx, cy + 28, P.warn, "center", 12, 700);
+      txt(ctx, "북극 위에서 본 지구 (반시계 방향 자전)", 8, 12, P.dim, "left", 11, 600);
+    }, { aspect: 0.75, maxHeight: 420, minHeight: 280 });
+    function upd() {
+      const lc = lonComp(), dl = Math.abs(gE()) / 4;
+      SB.stat("o-ln-lon", lonS(lc));
+      SB.stat("o-ln-dl", sm(dl.toFixed(1) + "′", "(= 오차 초 ÷ 4)"));
+      SB.stat("o-ln-nm", sm((dl * Math.cos(gL() * D2R)).toFixed(1), "NM"));
+      if (cv) cv.redraw();
+    }
+    upd();
+  });
+
+  /* =================================================== 10: 대조·소조 */
+  run(function () {
+    const SYN = 29.53;
+    const TYPES = { semi: { M2: 1.3, S2: 0.55, K1: 0.1, O1: 0.07 }, mixed: { M2: 0.6, S2: 0.25, K1: 0.55, O1: 0.4 }, diur: { M2: 0.1, S2: 0.05, K1: 0.75, O1: 0.55 } };
+    const W2 = { M2: (2 * Math.PI) / 12.4206, S2: (2 * Math.PI) / 12, K1: (2 * Math.PI) / 23.9345, O1: (2 * Math.PI) / 25.8193 };
+    let playing = false, cv1 = null, cv2 = null;
+    const gD = SB.range("sp-day", (v) => v.toFixed(1) + " 일", upd);
+    const type = SB.seg("sp-type", upd);
+    $("sp-play").addEventListener("click", () => { playing = !playing; $("sp-play").textContent = playing ? "일시정지" : "재생"; });
+    SB.loop($("cv-sp"), (dt) => { if (!playing) return; let d = gD() + dt * 1.6; if (d > 29.5) d = 0; gD.set(Math.round(d * 10) / 10); });
+    const hAt = (t) => { const A = TYPES[type()]; return A.M2 * Math.cos(W2.M2 * t) + A.S2 * Math.cos(W2.S2 * t) + A.K1 * Math.cos(W2.K1 * t) + A.O1 * Math.cos(W2.O1 * t - 0.6); };
+    function phaseName(d) {
+      const f = d / SYN;
+      if (f < 0.04 || f > 0.96) return "그믐(삭)"; if (f < 0.21) return "초승"; if (f < 0.29) return "상현"; if (f < 0.46) return "차오르는 달";
+      if (f < 0.54) return "보름(망)"; if (f < 0.71) return "기우는 달"; if (f < 0.79) return "하현"; return "그믐달";
+    }
+    cv1 = SB.canvas($("cv-sp"), (ctx, w, h) => {
+      const P = SB.palette(), d = gD(), m = Math.min(w, h);
+      const cx = w * 0.55, cy = h / 2, re = m * 0.15, R0 = re * 1.3, k = re * 0.28, ro = Math.min(m * 0.42, w * 0.4);
+      const thm = Math.PI + (2 * Math.PI * d) / SYN;
+      for (let i = 0; i < 6; i++) SB.arrow(ctx, 6, cy + (i - 2.5) * m * 0.14, 30, cy + (i - 2.5) * m * 0.14, P.warn, 1.2);
+      txt(ctx, "해 →", 6, 14, P.warn, "left", 12, 700);
+      const shape = (am, as, off) => { ctx.beginPath(); for (let i = 0; i <= 120; i++) { const t = (i / 120) * Math.PI * 2, rr = R0 + k * (am * Math.cos(2 * (t - thm)) + as * Math.cos(2 * (t - Math.PI))) + (off || 0); const x = cx + rr * Math.cos(t), y = cy - rr * Math.sin(t); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.closePath(); };
+      shape(1, 0.46); ctx.fillStyle = cssv("--water-soft"); ctx.fill(); ctx.strokeStyle = cssv("--water"); ctx.lineWidth = 2; ctx.stroke();
+      ctx.setLineDash([4, 4]); ctx.lineWidth = 1; shape(1, 0); ctx.strokeStyle = P.dim; ctx.stroke(); shape(0, 0.46); ctx.strokeStyle = P.warn; ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = landColor(); ctx.beginPath(); ctx.arc(cx, cy, re, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = P.dim; ctx.stroke();
+      ctx.fillStyle = "rgba(0,0,0,0.25)"; ctx.beginPath(); ctx.arc(cx, cy, re, -Math.PI / 2, Math.PI / 2); ctx.fill();
+      ctx.strokeStyle = P.grid; ctx.beginPath(); ctx.arc(cx, cy, ro, 0, Math.PI * 2); ctx.stroke();
+      const mx = cx + ro * Math.cos(thm), my = cy - ro * Math.sin(thm), mr = Math.max(7, m * 0.03);
+      ctx.fillStyle = "#555b66"; ctx.beginPath(); ctx.arc(mx, my, mr, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#e9e6d8"; ctx.beginPath(); ctx.arc(mx, my, mr, Math.PI / 2, -Math.PI / 2); ctx.fill();
+      txt(ctx, "달", mx, my + mr + 10, P.text, "center", 11, 700);
+      txt(ctx, "점선: 달·해 각각의 조석(과장)", w - 8, h - 10, P.dim, "right", 10);
+    }, { aspect: 0.85, maxHeight: 380 });
+    cv2 = SB.canvas($("cv-sp2"), (ctx, w, h) => {
+      const P = SB.palette(), t0 = gD() * 24, data = [];
+      for (let t = 0; t <= 72; t += 0.2) data.push([t, hAt(t0 + t)]);
+      SB.chart(ctx, { x: 46, y: 16, w: w - 60, h: h - 62 }, { x: [0, 72], y: [-2.6, 2.6], xTicks: [0, 12, 24, 36, 48, 60, 72], xLabel: "시간(h) — 선택한 날부터 3일", yLabel: "평균 해면 기준 조고 (m)", series: [{ data, color: cssv("--water") || P.accent, width: 2.2 }], hlines: [{ y: 0, color: P.axis }] });
+    }, { aspect: 0.85, maxHeight: 380 });
+    function upd() {
+      const d = gD(), t0 = d * 24; let mn = 1e9, mx = -1e9;
+      for (let t = 0; t <= 24.9; t += 0.1) { const v = hAt(t0 + t); mn = Math.min(mn, v); mx = Math.max(mx, v); }
+      const el = ((d / SYN) * 360) % 360, sep = el > 180 ? 360 - el : el;
+      SB.stat("o-sp-ph", phaseName(d));
+      SB.stat("o-sp-ang", sm(sep.toFixed(0) + "°", ""));
+      SB.stat("o-sp-rng", sm((mx - mn).toFixed(2), "m"));
+      const sp = sep < 35 || sep > 145, np = sep > 60 && sep < 120;
+      SB.stat("o-sp-st", sp ? '<span style="color:var(--accent-2)">대조(사리) 무렵</span>' : np ? '<span style="color:var(--accent)">소조(조금) 무렵</span>' : "중간");
+      if (cv1) { cv1.redraw(); cv2.redraw(); }
+    }
+    upd();
+  });
+
+  /* =================================================== 11: 12분의 1 법칙과 UKC */
+  run(function () {
+    const D = 6.2, CUM = [0, 1, 3, 6, 9, 11, 12];
+    let cv = null;
+    const rgba = (c, a) => { const m = /^#([0-9a-f]{6})$/i.exec(c); if (!m) return c; const n = parseInt(m[1], 16); return "rgba(" + (n >> 16) + "," + ((n >> 8) & 255) + "," + (n & 255) + "," + a + ")"; };
+    const gLW = SB.range("tw-lw", (v) => v.toFixed(1) + " m", upd), gHW = SB.range("tw-hw", (v) => v.toFixed(1) + " m", upd);
+    const gT = SB.range("tw-t", (v) => Math.floor(v) + "h " + String(Math.round((v % 1) * 60)).padStart(2, "0") + "m", upd);
+    const gCD = SB.range("tw-cd", (v) => v.toFixed(1) + " m", upd), gDr = SB.range("tw-dr", (v) => v.toFixed(1) + " m", upd);
+    const lw = () => gLW(), hw = () => Math.max(gHW(), gLW() + 0.1);
+    const h12 = (t) => { const u = SB.clamp((t / D) * 6, 0, 6), i = Math.min(5, Math.floor(u)), f = u - i; return lw() + ((hw() - lw()) * (CUM[i] + (CUM[i + 1] - CUM[i]) * f)) / 12; };
+    const hcos = (t) => lw() + ((hw() - lw()) * (1 - Math.cos((Math.PI * t) / D))) / 2;
+    const fmtHM = (x) => Math.floor(x) + "h " + String(Math.round((x % 1) * 60)).padStart(2, "0") + "m";
+    function windowCalc() {
+      const need = gDr() * 1.1 - gCD();
+      if (need <= lw()) return { need, t: 0, txt: "항상 가능" };
+      if (need > hw()) return { need, t: null, txt: "불가(만조에도 부족)" };
+      const t = (D / Math.PI) * Math.acos(1 - (2 * (need - lw())) / (hw() - lw()));
+      return { need, t, txt: "만조 ±" + fmtHM(D - t) };
+    }
+    cv = SB.canvas($("cv-12"), (ctx, w, h) => {
+      const P = SB.palette(), t = gT(), wc = windowCalc();
+      const top = h * 0.5;
+      const yM = Math.ceil(Math.max(hw(), wc.need) + 0.5);
+      const d1 = [], d2 = []; for (let x = 0; x <= D + 1e-6; x += 0.05) { d1.push([x, hcos(x)]); d2.push([x, h12(x)]); }
+      const bands = wc.t != null ? [{ x0: wc.t, x1: D, color: rgba(P.ok, 0.16) }] : [];
+      SB.chart(ctx, { x: 46, y: 14, w: w - 60, h: top - 56 }, {
+        x: [0, D], y: [0, yM], xTicks: [0, 1, 2, 3, 4, 5, 6], xFmt: (v) => v + "h", xLabel: "간조 후 경과 시간", yLabel: "조고 (m)",
+        bands, series: [{ data: d1, color: P.accent, width: 2.5 }, { data: d2, color: P.accent2, width: 1.8, dash: [5, 4] }],
+        hlines: wc.need > 0 && wc.need < yM ? [{ y: wc.need, color: P.ok, label: "필요 조고 " + wc.need.toFixed(2) + " m" }] : [],
+        vlines: [{ x: t, color: P.text, dash: [2, 3] }], points: [{ x: t, y: hcos(t), color: P.accent, r: 5 }],
+      });
+      // 단면
+      ctx.strokeStyle = P.border; ctx.lineWidth = 1; seg(ctx, 0, top, w, top);
+      const sh = h - top, s = Math.min((sh - 16) / 28, (w * 0.55) / 32);
+      const yCD = top + 8 + s * 10.5, ht = hcos(t), yW = yCD - s * ht, ySea = yCD + s * gCD(), cx = w * 0.5;
+      SB.section(ctx, cx, yW, s, { B: 32, D: gDr() + 6, T: gDr(), color: P.surface, stroke: P.text });
+      ctx.save(); ctx.beginPath(); ctx.rect(0, top + 1, w, sh); ctx.clip();
+      SB.water(ctx, w, h, yW);
+      ctx.fillStyle = landColor(); ctx.fillRect(0, ySea, w, h - ySea); ctx.strokeStyle = P.dim; seg(ctx, 0, ySea, w, ySea);
+      ctx.strokeStyle = P.accent2; ctx.setLineDash([8, 4]); ctx.lineWidth = 1.4; seg(ctx, 0, yCD, w, yCD); ctx.setLineDash([]);
+      txt(ctx, "기본수준면(CD)", w - 6, yCD - 8, P.accent2, "right", 10, 600);
+      const yK = yW + gDr() * s, ukc = gCD() + ht - gDr(), ok = ukc >= gDr() * 0.1;
+      ctx.fillStyle = ukc < 0 ? P.bad : ok ? P.ok : P.warn; ctx.globalAlpha = 0.85;
+      if (ukc > 0) ctx.fillRect(cx - 5, yK, 10, ySea - yK);
+      ctx.globalAlpha = 1;
+      txt(ctx, ukc < 0 ? "좌초!" : "UKC " + ukc.toFixed(2) + " m", cx + 12 + 16 * s, Math.min(ySea - 8, (yK + ySea) / 2), ukc < 0 ? P.bad : ok ? P.ok : P.warn, "left", 12, 700);
+      const xl = Math.max(30, cx - 16 * s - 50);
+      ctx.strokeStyle = P.dim; ctx.lineWidth = 1; seg(ctx, xl, yCD, xl, ySea); seg(ctx, xl + 14, yW, xl + 14, yCD);
+      txt(ctx, "해도 수심 " + gCD().toFixed(1), xl - 4, (yCD + ySea) / 2, P.dim, "right", 10);
+      txt(ctx, "조고 " + ht.toFixed(2), xl + 10, (yW + yCD) / 2 - (ht * s < 14 ? 10 : 0), P.dim, "right", 10);
+      ctx.restore();
+    }, { aspect: 0.9, maxHeight: 620, minHeight: 440 });
+    function upd() {
+      const t = gT(), wc = windowCalc(), hc = hcos(t), dep = gCD() + hc, ukc = dep - gDr();
+      SB.stat("o-tw-h12", sm(h12(t).toFixed(2), "m"));
+      SB.stat("o-tw-hc", sm(hc.toFixed(2), "m"));
+      SB.stat("o-tw-dep", sm(dep.toFixed(2), "m"));
+      const ok = ukc >= gDr() * 0.1;
+      SB.stat("o-tw-ukc", '<span style="color:var(' + (ukc < 0 ? "--bad" : ok ? "--ok" : "--warn") + ')">' + ukc.toFixed(2) + "</span>" + sm("m " + (ukc < 0 ? "좌초" : ok ? "통과 가능" : "부족"), ""));
+      SB.stat("o-tw-win", '<span style="font-size:15px">' + wc.txt + "</span>");
+      if (cv) cv.redraw();
+    }
+    upd();
+  });
+
+  /* =================================================== 12: GNSS */
+  run(function () {
+    const W = 40, H = 30, C_KM_US = 0.3; // 1 μs = 0.3 km
+    const GOOD = [[5, 26], [36, 25], [4, 4], [35, 6]], BAD = [[24, 27], [29, 28.5], [35, 26], [28, 23]];
+    let sats = GOOD.map((p) => p.slice());
+    const rx = [19, 13];
+    const Zm = [SB.randn(), SB.randn(), SB.randn(), SB.randn()];
+    const Zc = []; for (let k = 0; k < 140; k++) Zc.push([SB.randn(), SB.randn(), SB.randn(), SB.randn()]);
+    let cv = null, view = null, dragI = -1;
+    const gB = SB.range("gn-b", (v) => (v >= 0 ? "+" : "") + v.toFixed(1) + " μs", upd);
+    const gN = SB.range("gn-n", (v) => v.toFixed(2) + " km", upd);
+    const env = SB.seg("gn-env", upd);
+    $("gn-solve").addEventListener("change", upd); $("gn-s4").addEventListener("change", upd);
+    $("gn-good").addEventListener("click", () => { sats = GOOD.map((p) => p.slice()); upd(); });
+    $("gn-bad").addEventListener("click", () => { sats = BAD.map((p) => p.slice()); upd(); });
+    function lin(A, b) {
+      const n = b.length, M = A.map((r, i) => r.concat([b[i]]));
+      for (let c = 0; c < n; c++) {
+        let p = c; for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+        if (Math.abs(M[p][c]) < 1e-10) return null;
+        [M[c], M[p]] = [M[p], M[c]];
+        for (let r = 0; r < n; r++) if (r !== c) { const f = M[r][c] / M[c][c]; for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k]; }
+      }
+      return M.map((r, i) => r[n] / r[i]);
+    }
+    function nls(S, rho, withB, x0) {
+      const x = x0.slice(0, withB ? 3 : 2), n = x.length;
+      let J = [];
+      for (let it = 0; it < 15; it++) {
+        J = []; const r = [];
+        S.forEach((s, i) => { const dx = x[0] - s[0], dy = x[1] - s[1], d = Math.hypot(dx, dy) || 1e-6; J.push(withB ? [dx / d, dy / d, 1] : [dx / d, dy / d]); r.push(rho[i] - d - (withB ? x[2] : 0)); });
+        const N = [], g = [];
+        for (let a = 0; a < n; a++) { N.push([]); g.push(J.reduce((acc, row, i) => acc + row[a] * r[i], 0)); for (let b2 = 0; b2 < n; b2++) N[a].push(J.reduce((acc, row) => acc + row[a] * row[b2], 0)); }
+        const dx = lin(N, g); if (!dx) return null;
+        for (let a = 0; a < n; a++) x[a] += dx[a];
+        if (Math.hypot(...dx) < 1e-7) break;
+      }
+      return { x, J };
+    }
+    function hdop(J) {
+      const n = J[0].length, N = [];
+      for (let a = 0; a < n; a++) { N.push([]); for (let b2 = 0; b2 < n; b2++) N[a].push(J.reduce((acc, row) => acc + row[a] * row[b2], 0)); }
+      const e0 = lin(N, n === 3 ? [1, 0, 0] : [1, 0]), e1 = lin(N, n === 3 ? [0, 1, 0] : [0, 1]);
+      return e0 && e1 ? Math.sqrt(Math.max(0, e0[0] + e1[1])) : Infinity;
+    }
+    function compute() {
+      const used = $("gn-s4").checked ? sats : sats.slice(0, 3);
+      const e = env(), withB = $("gn-solve").checked;
+      const sig = gN() + (e === "jam" ? 2.5 : 0), bias = gB() * C_KM_US;
+      const fake = [SB.clamp(rx[0] + 9, 1, W - 1), SB.clamp(rx[1] - 6, 1, H - 1)];
+      const src = e === "spoof" ? fake : rx;
+      const rhoOf = (Z) => used.map((s, i) => Math.hypot(src[0] - s[0], src[1] - s[1]) + bias + sig * Z[i]);
+      const rho = rhoOf(Zm);
+      const sol = nls(used, rho, withB, [W / 2, H / 2, 0]);
+      const cloud = [];
+      if (sol) Zc.forEach((Z) => { const r = nls(used, rhoOf(Z), withB, sol.x); if (r) cloud.push(r.x); });
+      return { used, rho, sol, cloud, fake, withB, e, sig };
+    }
+    cv = SB.canvas($("cv-gn"), (ctx, w, h) => {
+      const P = SB.palette(), R = compute();
+      const s = Math.min(w / W, h / H), ox = (w - W * s) / 2, oy = (h - H * s) / 2;
+      const X = (x) => ox + x * s, Y = (y) => oy + (H - y) * s;
+      view = { s, ox, oy };
+      ctx.strokeStyle = P.grid; ctx.lineWidth = 1;
+      for (let g = 0; g <= W; g += 5) seg(ctx, X(g), Y(0), X(g), Y(H));
+      for (let g = 0; g <= H; g += 5) seg(ctx, X(0), Y(g), X(W), Y(g));
+      const cols = P.series;
+      ctx.save(); ctx.beginPath(); ctx.rect(0, 0, w, h); ctx.clip();
+      R.used.forEach((sp, i) => { ctx.strokeStyle = cols[i]; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]); ctx.beginPath(); ctx.arc(X(sp[0]), Y(sp[1]), Math.max(0, R.rho[i]) * s, 0, Math.PI * 2); ctx.stroke(); });
+      ctx.setLineDash([]);
+      ctx.fillStyle = P.accent; ctx.globalAlpha = 0.35;
+      R.cloud.forEach((x) => { ctx.beginPath(); ctx.arc(X(x[0]), Y(x[1]), 2, 0, 7); ctx.fill(); });
+      ctx.globalAlpha = 1;
+      ctx.restore();
+      sats.forEach((sp, i) => {
+        const on = i < R.used.length, x = X(sp[0]), y = Y(sp[1]);
+        ctx.globalAlpha = on ? 1 : 0.35;
+        ctx.fillStyle = cols[i]; ctx.fillRect(x - 5, y - 5, 10, 10);
+        ctx.fillStyle = P.dim; ctx.fillRect(x - 17, y - 3, 10, 6); ctx.fillRect(x + 7, y - 3, 10, 6);
+        txt(ctx, "S" + (i + 1), x, y - 14, P.text, "center", 11, 700);
+        ctx.globalAlpha = 1;
+      });
+      SB.shipTop(ctx, X(rx[0]), Y(rx[1]), -Math.PI / 2, { len: 26, color: P.text });
+      txt(ctx, "실제 위치", X(rx[0]) + 14, Y(rx[1]) + 14, P.dim, "left", 10);
+      if (R.e === "spoof") { const fx = X(R.fake[0]), fy = Y(R.fake[1]); ctx.strokeStyle = P.bad; ctx.lineWidth = 2.5; seg(ctx, fx - 7, fy - 7, fx + 7, fy + 7); seg(ctx, fx - 7, fy + 7, fx + 7, fy - 7); txt(ctx, "공격자가 만든 위치", fx + 10, fy + 12, P.bad, "left", 10, 600); }
+      if (R.sol) {
+        const sx = X(R.sol.x[0]), sy = Y(R.sol.x[1]);
+        ctx.strokeStyle = P.accent2; ctx.lineWidth = 1.2; ctx.setLineDash([2, 3]); seg(ctx, X(rx[0]), Y(rx[1]), sx, sy); ctx.setLineDash([]);
+        ctx.lineWidth = 2.6; seg(ctx, sx - 9, sy, sx + 9, sy); seg(ctx, sx, sy - 9, sx, sy + 9);
+        txt(ctx, "수신기 해", sx + 10, sy - 10, P.accent2, "left", 11, 700);
+      }
+      txt(ctx, "격자 5 km", X(0) + 4, Y(0) - 8, P.faint, "left", 10);
+    }, { aspect: 0.75, maxHeight: 460, minHeight: 260 });
+    SB.drag($("cv-gn"), {
+      down(p) {
+        if (!view) return false;
+        const X = (x) => view.ox + x * view.s, Y = (y) => view.oy + (H - y) * view.s;
+        dragI = -1; let best = 26;
+        sats.forEach((sp, i) => { const d = Math.hypot(X(sp[0]) - p.x, Y(sp[1]) - p.y); if (d < best) { best = d; dragI = i; } });
+        const d = Math.hypot(X(rx[0]) - p.x, Y(rx[1]) - p.y); if (d < best) dragI = 9;
+        return dragI < 0 ? false : undefined;
+      },
+      move(p) {
+        const x = SB.clamp((p.x - view.ox) / view.s, 0.5, W - 0.5), y = SB.clamp(H - (p.y - view.oy) / view.s, 0.5, H - 0.5);
+        if (dragI === 9) { rx[0] = x; rx[1] = y; } else if (dragI >= 0) { sats[dragI][0] = x; sats[dragI][1] = y; }
+        upd();
+      },
+    });
+    function upd() {
+      const R = compute();
+      SB.stat("o-gn-n", sm(R.used.length + "", "개 / 미지수 " + (R.withB ? 3 : 2)));
+      if (!R.sol) { ["o-gn-dop", "o-gn-b", "o-gn-e"].forEach((id) => SB.stat(id, "—")); SB.stat("o-gn-st", "해 없음"); if (cv) cv.redraw(); return; }
+      const dop = hdop(R.sol.J);
+      SB.stat("o-gn-dop", '<span style="color:var(' + (dop < 2 ? "--ok" : dop < 5 ? "--warn" : "--bad") + ')">' + (isFinite(dop) ? dop.toFixed(2) : "∞") + "</span>");
+      SB.stat("o-gn-b", R.withB ? sm((R.sol.x[2] / C_KM_US).toFixed(2), "μs") : sm("추정 안 함", ""));
+      const err = Math.hypot(R.sol.x[0] - rx[0], R.sol.x[1] - rx[1]);
+      SB.stat("o-gn-e", sm(err.toFixed(2), "km"));
+      let st;
+      if (R.e === "jam") st = '<span style="color:var(--bad)">재밍: 잡음 급증, 위치 신뢰 불가</span>';
+      else if (R.e === "spoof") st = '<span style="color:var(--bad)">겉보기 정상(스푸핑) — 실제 오차 ' + err.toFixed(1) + " km</span>";
+      else if (!R.withB && Math.abs(gB()) > 0.5) st = '<span style="color:var(--warn)">시계 오차 미보정</span>';
+      else if (dop > 5) st = '<span style="color:var(--warn)">배치 나쁨(DOP 큼)</span>';
+      else st = '<span style="color:var(--ok)">정상 고정(Fix)</span>';
+      SB.stat("o-gn-st", st);
+      if (cv) cv.redraw();
+    }
+    upd();
+  });
+})();
+</script>
+</body>
+</html>

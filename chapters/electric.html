@@ -1,0 +1,1581 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<title>선박 전력과 전기 추진 · ShipBook</title>
+<meta name="description" content="선박 전력 계통과 단선 결선도, 3상 교류 전력, 발전기 동기 투입과 드룹 부하 분담, 전력 수지, 디젤-전기 추진과 포드, 배터리 하이브리드, 육상 전원을 시뮬레이터로 배운다.">
+<link rel="canonical" href="https://shipbook.euiyun.com/chapters/electric.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="ShipBook">
+<meta property="og:title" content="선박 전력과 전기 추진 · ShipBook">
+<meta property="og:description" content="선박 전력 계통과 단선 결선도, 3상 교류 전력, 발전기 동기 투입과 드룹 부하 분담, 전력 수지, 디젤-전기 추진과 포드, 배터리 하이브리드, 육상 전원을 시뮬레이터로 배운다.">
+<meta property="og:url" content="https://shipbook.euiyun.com/chapters/electric.html">
+<meta property="og:image" content="https://shipbook.euiyun.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"선박 전력과 전기 추진","name":"선박 전력과 전기 추진 · ShipBook","url":"https://shipbook.euiyun.com/chapters/electric.html","mainEntityOfPage":"https://shipbook.euiyun.com/chapters/electric.html","inLanguage":"ko","isAccessibleForFree":true,"learningResourceType":"interactive textbook chapter","position":18,"image":"https://shipbook.euiyun.com/og.png","dateModified":"2026-10-04","isPartOf":{"@type":"Book","@id":"https://shipbook.euiyun.com/#book","name":"ShipBook — 인터랙티브 선박 교과서","url":"https://shipbook.euiyun.com/"},"publisher":{"@type":"Organization","name":"ShipBook","url":"https://shipbook.euiyun.com/"},"description":"선박 전력 계통과 단선 결선도, 3상 교류 전력, 발전기 동기 투입과 드룹 부하 분담, 전력 수지, 디젤-전기 추진과 포드, 배터리 하이브리드, 육상 전원을 시뮬레이터로 배운다."},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ShipBook","item":"https://shipbook.euiyun.com/"},{"@type":"ListItem","position":2,"name":"18 선박 전력과 전기 추진","item":"https://shipbook.euiyun.com/chapters/electric.html"}]}]}</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../css/style.css">
+<script src="../js/common.js"></script>
+<style>
+  .sim-view canvas.click { cursor: pointer; touch-action: manipulation; }
+  .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .msg-line { font-size: 13px; color: var(--text-dim); min-height: 1.4em; padding: 6px 14px 0; }
+  .msg-line.bad { color: var(--bad); }
+  .msg-line.ok { color: var(--ok); }
+  table.pb td input { margin: 0; }
+  table.pb td.on { color: var(--text); }
+  table.pb tr.off td { color: var(--text-faint); }
+  .fig-lg svg .t, .fig-lg svg .t-acc { font-size: 15px; }
+</style>
+</head>
+<body data-chapter="electric">
+<main class="chapter">
+  <header class="chapter-hero">
+    <div class="eyebrow">Chapter 18</div>
+    <h1>선박 전력과 전기 추진</h1>
+    <p class="lead">대형 크루즈선의 발전 용량은 수십 MW로, 인구 수만 명의 도시가 쓰는 전력과 맞먹는다. 화물선도 펌프·송풍기·크레인·냉동 컨테이너를 돌리려면 수 MW의 발전소를 싣고 다닌다. 바다 위에서는 끌어올 전력망이 없으므로 배는 스스로 발전하고, 배전하고, 고장이 나도 스스로 복구해야 한다. 이 장에서는 선박 전력 계통의 구조와 발전기 병렬 운전에서 출발해, 프로펠러까지 전기로 돌리는 전기 추진과 배터리 하이브리드까지 차례로 만져 본다.</p>
+    <ul class="objectives">
+      <li>선박 전력 계통의 전압 등급과 단선 결선도(주배전반·버스 타이·비상 배전반)를 읽는다.</li>
+      <li>3상 교류의 유효·무효·피상 전력과 역률을 계산하고, 역률이 전류와 손실에 미치는 영향을 안다.</li>
+      <li>발전기를 동기 투입하는 세 조건(전압·주파수·위상)을 설명하고 싱크로스코프를 읽는다.</li>
+      <li>드룹 특성으로 병렬 발전기의 부하 분담이 어떻게 정해지는지 계산한다.</li>
+      <li>운항 모드별 전력 수지로 발전기 대수를 정하고, 블랙아웃 뒤 비상 전원 복구 순서를 안다.</li>
+      <li>디젤-전기 추진·포드·축발전기·배터리 하이브리드·육상 전원의 이점과 손실을 정량적으로 비교한다.</li>
+    </ul>
+  </header>
+
+  <!-- =============================================================== 1 -->
+  <section id="plant">
+    <h2>떠다니는 발전소: 전압과 단선 결선도</h2>
+    <p>육상 전력망은 거대한 발전소 수백 기가 묶여 있어서 공장 하나가 기계를 켜도 주파수가 거의 흔들리지 않는다. 배의 전력 계통은 발전기 2~6대로 이루어진 <span class="term">고립 계통</span><span class="en">(Island Grid)</span>이다. 바우 스러스터 하나가 켜지는 순간 전체 부하의 절반이 한꺼번에 걸릴 수도 있다. 그래서 선박 전력 공학의 핵심 질문은 "부하가 갑자기 변해도, 발전기 하나가 멈춰도 전기가 끊기지 않게 하려면 어떻게 하는가"이다.</p>
+    <p>대부분의 상선은 <b>3상 교류 440 V, 60 Hz</b>를 주 전압으로 쓴다(유럽 일부 선박은 400 V, 50 Hz). 이 전압은 육상 공장의 저압과 비슷해서 전동기·차단기를 그대로 쓸 수 있다. 하지만 발전 용량이 수 MW를 넘으면 440 V로는 전류가 수천 A가 되어 케이블과 차단기가 감당하기 어렵고 단락 전류도 지나치게 커진다. 그래서 전기 추진선, 대형 컨테이너선, 해양 플랜트는 <b>6.6 kV</b>나 <b>11 kV</b> 고압으로 발전·배전하고, 조명이나 거주 구역은 변압기로 낮춘 440 V/230 V를 쓴다.</p>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>등급</th><th>대표 전압</th><th>쓰이는 곳</th><th>1 MW 전송 시 전류(역률 0.8)</th></tr></thead>
+      <tbody>
+        <tr><td>저압</td><td>440 V / 690 V</td><td>일반 상선 주 계통, 펌프·송풍기·크레인</td><td class="num">1,640 A / 1,046 A</td></tr>
+        <tr><td>고압</td><td>3.3 kV / 6.6 kV</td><td>대형 상선, 대형 스러스터, 리퍼 다수 적재선</td><td class="num">219 A / 109 A</td></tr>
+        <tr><td>고압</td><td>11 kV</td><td>크루즈선·쇄빙선·해양 플랜트 전기 추진</td><td class="num">66 A</td></tr>
+        <tr><td>소전력</td><td>230 V / 24 V DC</td><td>조명·주방 / 항해·통신 장비, 비상 배터리</td><td class="num">—</td></tr>
+      </tbody>
+    </table></div>
+
+    <p>전력 계통은 <span class="term">단선 결선도</span><span class="en">(Single-Line Diagram)</span>로 그린다. 3상의 세 선을 선 하나로 줄여 그리고, 발전기·차단기·모선(bus)·부하의 연결 관계만 보여 주는 그림이다. 발전기는 각자의 <b>발전기 차단기</b>(ACB)를 통해 <span class="term">주배전반</span><span class="en">(MSB, Main Switchboard)</span>의 모선에 붙는다. 주배전반은 보통 좌·우 두 구역으로 나뉘고, 그 사이를 <span class="term">버스 타이</span><span class="en">(Bus Tie)</span> 차단기가 잇는다. 평소에는 닫아 한 덩어리로 쓰고, 한쪽에 단락 사고가 나면 열어 나머지 반쪽을 살린다.</p>
+    <p>SOLAS는 주전원과 별도로 <span class="term">비상 배전반</span><span class="en">(ESB, Emergency Switchboard)</span>과 <span class="term">비상 발전기</span>를 요구한다. 비상 발전기는 기관실 밖, 최상층 갑판 근처의 별도 구획에 두어 기관실 화재·침수에도 살아남게 한다. 평소 비상 배전반은 주배전반에서 연락 차단기(interconnector)로 전기를 받고, 주전원이 끊기면 비상 발전기가 스스로 기동해 조타기·비상 조명·소화 펌프·항해 장비 같은 필수 부하를 살린다.</p>
+
+    <div class="sim" id="sim-sld">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>인터랙티브 단선 결선도</h3></div>
+      <div class="sim-body">
+        <div class="sim-view"><canvas id="cv-sld" class="click"></canvas></div>
+        <div class="sim-controls">
+          <div class="btn-row">
+            <button class="btn" id="sld-thr">바우 스러스터 투입</button>
+            <button class="btn" id="sld-crane">크레인 투입</button>
+            <button class="btn" id="sld-trip">G1 고장 트립</button>
+            <button class="btn" id="sld-reset">초기 상태</button>
+          </div>
+          <label class="check"><input type="checkbox" id="sld-auto" checked> 비상 발전기 자동 기동</label>
+        </div>
+      </div>
+      <div class="msg-line" id="sld-msg">발전기(원)나 차단기(사각형)를 눌러 보라.</div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">운전 발전기 용량</span><span class="v" id="o-sld-cap">—</span></div>
+        <div class="stat"><span class="k">주계통 부하</span><span class="v" id="o-sld-load">—</span></div>
+        <div class="stat"><span class="k">부하율</span><span class="v" id="o-sld-pct">—</span></div>
+        <div class="stat"><span class="k">비상 배전반</span><span class="v" id="o-sld-esb">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: ① G1만 운전 중에 바우 스러스터를 투입하면 과부하로 비필수 부하가 먼저 끊긴다(우선 차단). ② G2를 눌러 기동하고 CB2를 닫은 다음 다시 스러스터를 넣어 보라. ③ "G1 고장 트립"으로 블랙아웃을 만들면 비상 발전기가 기동해 비상 배전반만 살아난다. ④ 버스 타이(BT)를 열면 좌·우 계통이 분리된다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 2 -->
+  <section id="threephase">
+    <h2>3상 교류와 역률</h2>
+    <p>발전기 고정자에는 120°씩 떨어진 세 코일이 감겨 있어서 회전자(전자석)가 돌면 크기가 같고 위상이 120° 어긋난 세 전압이 나온다. 세 상의 전류를 합하면 매 순간 0이 되므로 귀선이 필요 없고, 세 상이 내는 순간 전력의 합은 시간에 따라 변하지 않는 <b>일정한 값</b>이 된다. 단상 전력이 초당 120번 맥동하는 것과 달리 3상 전동기는 매끄러운 토크를 낸다. 이것이 거의 모든 선박 동력이 3상인 이유다.</p>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 270" role="img" aria-label="3상 발전기와 페이저">
+        <circle cx="140" cy="135" r="95" class="f-surface" stroke="var(--border)" stroke-width="2"/>
+        <circle cx="140" cy="135" r="62" fill="none" stroke="var(--border)" stroke-dasharray="4 4"/>
+        <g stroke-width="10" stroke-linecap="round">
+          <line x1="140" y1="52" x2="140" y2="70" stroke="var(--accent)"/>
+          <line x1="140" y1="200" x2="140" y2="218" stroke="var(--accent)"/>
+          <line x1="68" y1="93" x2="84" y2="102" stroke="var(--accent-2)"/>
+          <line x1="196" y1="168" x2="212" y2="177" stroke="var(--accent-2)"/>
+          <line x1="212" y1="93" x2="196" y2="102" stroke="var(--warn)"/>
+          <line x1="84" y1="168" x2="68" y2="177" stroke="var(--warn)"/>
+        </g>
+        <rect x="128" y="95" width="24" height="80" rx="6" fill="var(--text-dim)" transform="rotate(30 140 135)"/>
+        <text x="140" y="88" class="t-mono" text-anchor="middle" transform="rotate(30 140 135)" fill="var(--bg-elev)">N</text>
+        <text x="140" y="184" class="t-mono" text-anchor="middle" transform="rotate(30 140 135)">S</text>
+        <text x="140" y="44" class="t-acc" text-anchor="middle">a</text>
+        <text x="228" y="88" class="t" text-anchor="middle">c</text>
+        <text x="52" y="88" class="t" text-anchor="middle">b</text>
+        <text x="140" y="258" class="t-dim" text-anchor="middle">회전자(전자석)가 돌면 세 코일에 120°씩 어긋난 전압</text>
+        <g transform="translate(560 135)">
+          <circle r="90" fill="none" stroke="var(--grid)" stroke-width="1.5"/>
+          <line x1="0" y1="0" x2="0" y2="-88" stroke="var(--accent)" stroke-width="3"/>
+          <line x1="0" y1="0" x2="-76" y2="44" stroke="var(--accent-2)" stroke-width="3"/>
+          <line x1="0" y1="0" x2="76" y2="44" stroke="var(--warn)" stroke-width="3"/>
+          <line x1="0" y1="0" x2="30" y2="-60" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="6 4"/>
+          <path d="M0 -40 A40 40 0 0 1 18 -36" fill="none" stroke="var(--text-dim)"/>
+          <text x="10" y="-48" class="t-mono">φ</text>
+          <text x="6" y="-92" class="t-acc">V<tspan font-size="10">a</tspan></text>
+          <text x="34" y="-64" class="t-dim">I<tspan font-size="10">a</tspan></text>
+          <text x="-110" y="58" class="t">V<tspan font-size="10">b</tspan></text>
+          <text x="84" y="58" class="t">V<tspan font-size="10">c</tspan></text>
+        </g>
+        <text x="560" y="258" class="t-dim" text-anchor="middle">페이저: 전류가 전압보다 φ만큼 늦다(유도성 부하)</text>
+      </svg>
+      <figcaption><b>그림 18-1.</b> 3상 동기 발전기의 원리와 페이저도. 전동기·변압기 같은 유도성 부하는 자화에 필요한 무효 전류를 끌어 쓰므로 전류가 전압보다 φ만큼 늦는다. cos φ가 역률이다.</figcaption>
+    </figure>
+
+    <div class="formula">$$P = \sqrt{3}\,V_L I_L \cos\varphi,\qquad Q = \sqrt{3}\,V_L I_L \sin\varphi,\qquad S = \sqrt{3}\,V_L I_L = \sqrt{P^2+Q^2}$$
+      <div class="where">\(V_L\): 선간 전압, \(I_L\): 선전류, \(P\): 유효 전력(kW, 실제 일을 하는 전력), \(Q\): 무효 전력(kvar, 자기장을 만들었다 돌려주는 전력), \(S\): 피상 전력(kVA), \(\cos\varphi\): 역률.</div>
+    </div>
+    <p>발전기와 케이블은 전류로, 즉 <b>kVA</b>로 크기가 정해진다. 엔진은 kW만 낼 수 있다. 그래서 선박 발전기는 보통 "역률 0.8에서 정격"으로 설계된다. 1,000 kW 디젤 엔진에는 1,250 kVA 발전기를 짝짓는다. 역률이 0.8보다 나빠지면 엔진에는 여유가 있어도 발전기 전류가 한계에 걸리고, 같은 kW를 보내는 데 전류가 \(1/\cos\varphi\)배, 케이블 저항 손실은 \(1/\cos^2\varphi\)배로 늘어난다.</p>
+
+    <div class="sim" id="sim-3ph">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>3상 파형과 전력 계산기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-3ph"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>선간 전압</span><div class="seg" id="tp-v"><button data-value="440" class="on">440 V</button><button data-value="6600">6.6 kV</button><button data-value="11000">11 kV</button></div></div>
+          <label class="ctrl"><span>선전류 <output id="tp-i-out"></output></span><input type="range" id="tp-i" min="0" max="2000" step="10" value="1200"></label>
+          <label class="ctrl"><span>역률 cos φ <output id="tp-pf-out"></output></span><input type="range" id="tp-pf" min="0.4" max="1" step="0.01" value="0.8"></label>
+          <label class="check"><input type="checkbox" id="tp-pwr" checked> 순간 전력 보기</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">유효 전력 P</span><span class="v" id="o-tp-p">—</span></div>
+        <div class="stat"><span class="k">무효 전력 Q</span><span class="v" id="o-tp-q">—</span></div>
+        <div class="stat"><span class="k">피상 전력 S</span><span class="v" id="o-tp-s">—</span></div>
+        <div class="stat"><span class="k">역률 1이면 필요한 전류</span><span class="v" id="o-tp-i1">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 역률을 1로 올리면 전류 파형(점선)이 전압 a상과 겹치고 a상 순간 전력이 음수로 내려가지 않는다. 역률을 0.4로 낮추면 같은 전류에서 P가 절반 이하로 떨어진다. 어떤 역률에서도 세 상의 순간 전력 합(굵은 선)은 평평하다. 전압을 6.6 kV로 바꾸면 같은 전류로 15배의 전력을 보낸다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 3 -->
+  <section id="sync">
+    <h2>발전기 병렬 운전: 동기 투입</h2>
+    <p>부하가 늘어 발전기를 한 대 더 붙여야 한다고 하자. 이미 돌고 있는 모선에 새 발전기를 아무 때나 연결하면 두 전압의 순간값 차이가 그대로 두 발전기의 작은 내부 임피던스(과도 리액턴스 \(X''_d\) 약 0.1~0.2 pu)에 걸려 정격의 수 배에 이르는 <b>순환 전류</b>가 흐른다. 회전자는 순간적으로 큰 토크를 받아 모선 위상으로 끌려가고, 커플링·크랭크축이 손상되거나 보호 계전기가 차단기를 트립한다. 그래서 투입 직전 다음 세 조건을 맞춘다. 이것을 <span class="term">동기 투입</span><span class="en">(Synchronizing)</span>이라 한다.</p>
+    <ol>
+      <li><b>전압</b>이 같을 것: 자동 전압 조정기(AVR)로 계자 전류를 조절한다.</li>
+      <li><b>주파수</b>가 거의 같을 것: 거버너로 엔진 속도를 조절한다. 들어오는 쪽이 아주 조금(0.1 Hz 정도) 빠른 것이 좋다. 그래야 투입 직후 부하를 받아 가고 역전력이 생기지 않는다.</li>
+      <li><b>위상</b>이 같을 것: 주파수가 약간 다르면 위상차가 천천히 돌아간다. 위상차가 0이 되는 순간에 차단기를 닫는다. (상회전 방향도 같아야 하지만 이는 설치 시 한 번 확인한다.)</li>
+    </ol>
+    <p>위상차를 보여 주는 계기가 <span class="term">싱크로스코프</span><span class="en">(Synchroscope)</span>다. 바늘이 위상차를 가리키고, 들어오는 발전기가 빠르면 시계 방향(FAST), 느리면 반시계 방향(SLOW)으로 돈다. 바늘이 한 바퀴 도는 데 걸리는 시간이 곧 주파수 차의 역수다. 그 옆에는 두 전압의 차를 밝기로 보여 주는 동기 램프가 있다. 위상이 맞으면 램프가 꺼진다(암등법). 지금은 대부분 자동 동기 투입 장치가 이 일을 하지만, 원리는 같고 선박 기관사는 수동 투입을 할 줄 알아야 한다.</p>
+
+    <div class="formula">$$\Delta V = \left| \vec V_{bus} - \vec V_{in} \right| = \sqrt{V_b^2 + V_i^2 - 2V_bV_i\cos\theta},\qquad I_c \approx \frac{\Delta V}{X''_{d1}+X''_{d2}}$$
+      <div class="where">\(\theta\): 위상차. 전압이 같아도 \(\theta = 180^\circ\)이면 \(\Delta V = 2V\)이고, \(X''_d = 0.15\) pu 두 대면 순환 전류가 정격의 약 6.7배다.</div>
+    </div>
+
+    <div class="sim" id="sim-syn">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>싱크로스코프: 직접 동기 투입하기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-syn"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>G2 거버너(주파수) <output id="sy-f-out"></output></span><input type="range" id="sy-f" min="58" max="62" step="0.01" value="60.6"></label>
+          <div class="btn-row"><button class="btn" id="sy-dn">속도 ▼</button><button class="btn" id="sy-up">속도 ▲</button></div>
+          <label class="ctrl"><span>G2 AVR(전압) <output id="sy-v-out"></output></span><input type="range" id="sy-v" min="380" max="500" step="1" value="455"></label>
+          <button class="btn primary" id="sy-close">차단기 투입</button>
+          <button class="btn" id="sy-open">차단기 개방 · 다시</button>
+        </div>
+      </div>
+      <div class="msg-line" id="sy-msg">G2를 모선(440 V, 60.00 Hz)에 붙여라.</div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">주파수 차</span><span class="v" id="o-sy-df">—</span></div>
+        <div class="stat"><span class="k">위상차</span><span class="v" id="o-sy-th">—</span></div>
+        <div class="stat"><span class="k">전압 차 ΔV</span><span class="v" id="o-sy-dv">—</span></div>
+        <div class="stat"><span class="k">지금 투입하면 순환 전류</span><span class="v" id="o-sy-ic">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 먼저 AVR로 전압을 440 V 근처에 맞추고, 거버너를 내려 바늘이 시계 방향으로 천천히(한 바퀴 5~10초) 돌게 한다. 바늘이 12시에 다가올 때 "차단기 투입"을 누른다. 6시 방향에서 넣으면 무슨 일이 생기는지도 확인해 보라. 투입에 성공한 뒤 거버너를 올리면 주파수가 아니라 G2가 받는 부하가 늘어난다(다음 절).</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 4 -->
+  <section id="droop">
+    <h2>부하 분담: 드룹 특성</h2>
+    <p>두 발전기가 같은 모선에 붙으면 둘은 정확히 같은 주파수로 돈다. 그러면 전체 부하를 누가 얼마나 지는가? 답은 거버너의 <span class="term">드룹</span><span class="en">(Speed Droop)</span> 특성에 있다. 드룹 거버너는 부하가 늘수록 설정 속도를 조금씩 낮춘다. 무부하에서 61.8 Hz, 정격 부하에서 60 Hz가 되도록 맞추면 드룹은 \((61.8-60)/60 = 3\%\)다.</p>
+    <div class="formula">$$f = f_{0,i} - \delta_i f_n \frac{P_i}{P_{r,i}} \quad\Longrightarrow\quad P_i = \frac{P_{r,i}}{\delta_i f_n}\left(f_{0,i} - f\right),\qquad \sum_i P_i = P_{load}$$
+      <div class="where">\(f_{0,i}\): 무부하 주파수(거버너 설정점), \(\delta_i\): 드룹(예: 0.03), \(f_n\): 정격 주파수, \(P_{r,i}\): 정격 출력. 모든 발전기가 같은 \(f\)에서 돌아야 하므로 이 연립식이 분담을 정한다.</div>
+    </div>
+    <p>드룹 직선 두 개를 같은 그래프에 그리면, 공통 주파수 \(f\)에서 그은 수평선이 각 직선과 만나는 점이 각자의 분담이다. 드룹이 같고 설정점이 같으면 정격에 비례해 나눠 진다. 한쪽의 설정점(거버너 "올림")을 높이면 그 발전기의 직선이 위로 평행 이동해 부하를 더 가져가고, 주파수도 조금 오른다. 두 설정점을 함께 올리면 분담은 그대로 두고 주파수만 60 Hz로 되돌릴 수 있다. 전력 관리 시스템(PMS)이 하는 일이 바로 이 두 가지, <b>분담 균등화</b>와 <b>주파수 복귀</b>다.</p>
+    <div class="callout deep"><strong>등시성(Isochronous) 제어</strong><p>드룹 0%, 즉 부하와 상관없이 정확히 60 Hz를 지키는 거버너도 있다. 단독 운전에는 이상적이지만, 등시성 발전기 두 대를 아무 연결 없이 병렬로 두면 서로 상대의 주파수 오차를 고치려다 부하를 다 빼앗거나 모두 떠넘긴다. 그래서 등시성 병렬 운전에는 발전기끼리 부하 분담 신호선을 연결하는 별도의 부하 분담 제어기가 필요하다.</p></div>
+
+    <div class="sim" id="sim-droop">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>드룹 부하 분담</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-droop"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>전체 부하 <output id="dr-pl-out"></output></span><input type="range" id="dr-pl" min="0" max="2200" step="10" value="1200"></label>
+          <label class="ctrl"><span>G1 무부하 주파수 <output id="dr-f1-out"></output></span><input type="range" id="dr-f1" min="60" max="63.6" step="0.02" value="61.8"></label>
+          <label class="ctrl"><span>G1 드룹 <output id="dr-d1-out"></output></span><input type="range" id="dr-d1" min="1" max="6" step="0.1" value="3"></label>
+          <label class="ctrl"><span>G2 무부하 주파수 <output id="dr-f2-out"></output></span><input type="range" id="dr-f2" min="60" max="63.6" step="0.02" value="61.5"></label>
+          <label class="ctrl"><span>G2 드룹 <output id="dr-d2-out"></output></span><input type="range" id="dr-d2" min="1" max="6" step="0.1" value="3"></label>
+          <div class="btn-row"><button class="btn" id="dr-eq">분담 균등화</button><button class="btn" id="dr-ret">주파수 60 Hz 복귀</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">모선 주파수</span><span class="v" id="o-dr-f">—</span></div>
+        <div class="stat"><span class="k">G1 분담</span><span class="v" id="o-dr-p1">—</span></div>
+        <div class="stat"><span class="k">G2 분담</span><span class="v" id="o-dr-p2">—</span></div>
+        <div class="stat"><span class="k">상태</span><span class="v" id="o-dr-st">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 처음에는 G2 설정점이 낮아 G1이 더 많이 진다. "분담 균등화"를 누른 뒤 "주파수 복귀"를 눌러 PMS의 두 동작을 따라 해 보라. G2 설정점을 60 Hz 근처까지 내리면 G2의 분담이 음수, 즉 G2가 전동기처럼 돌며 역전력 계전기가 트립한다. G1 드룹만 1%로 줄이면 부하 변화를 G1이 주로 떠맡는다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 5 -->
+  <section id="balance">
+    <h2>전력 수지와 블랙아웃</h2>
+    <p>발전기를 몇 kW짜리로 몇 대 실을지는 <span class="term">전력 수지 분석</span><span class="en">(Electric Load Analysis)</span>으로 정한다. 모든 전기 기기의 정격 출력을 나열하고, 운항 모드마다 실제로 얼마나 쓰는지를 <b>부하율</b>(운전 대수×평균 출력/정격)로 곱해 더한다. 모드는 보통 항해, 입출항(조종), 정박, 하역, 비상으로 나눈다. 입출항 때는 바우 스러스터와 조타기, 밸러스트 펌프가 동시에 돌고, 하역 때는 크레인이 몰린다.</p>
+    <p>발전기 대수는 "최대 부하 모드에서 발전기 부하율이 약 85%를 넘지 않고, 그때 한 대가 고장 나도 필수 부하를 감당할 것"으로 정한다. 이것을 N+1 원칙이라 한다. 입출항처럼 정전이 곧 사고로 이어지는 상황에서는 필요 대수보다 한 대를 더 돌려 <b>회전 예비력</b><span class="en">(Spinning Reserve)</span>을 둔다.</p>
+
+    <div class="sim" id="sim-pb">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>전력 수지와 발전기 대수 계산기</h3></div>
+      <div class="sim-body">
+        <div class="sim-view"><canvas id="cv-pb"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>표에서 볼 모드</span><div class="seg" id="pb-mode"><button data-value="0" class="on">항해</button><button data-value="1">입출항</button><button data-value="2">정박</button><button data-value="3">하역</button></div></div>
+          <label class="ctrl"><span>발전기 1대 정격 <output id="pb-g-out"></output></span><input type="range" id="pb-g" min="400" max="2000" step="50" value="900"></label>
+        </div>
+      </div>
+      <div class="table-wrap" style="margin:0 14px"><table class="pb" id="pb-table"></table></div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">선택 모드 소요 전력</span><span class="v" id="o-pb-p">—</span></div>
+        <div class="stat"><span class="k">운전 발전기</span><span class="v" id="o-pb-n">—</span></div>
+        <div class="stat"><span class="k">발전기 부하율</span><span class="v" id="o-pb-x">—</span></div>
+        <div class="stat"><span class="k">필요 설치 대수(N+1)</span><span class="v" id="o-pb-inst">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 표의 체크를 끄고 켜며 어떤 부하가 발전기 대수를 정하는지 찾아보라. 입출항 모드에서는 바우 스러스터가, 하역 모드에서는 크레인이 지배한다. 발전기 정격을 키우면 대수는 줄지만 항해 중 부하율이 낮아져 연료 효율이 나빠진다(7절).</div>
+    </div>
+
+    <h3>블랙아웃과 비상 전원</h3>
+    <p>발전기 한 대만 돌고 있을 때 그 엔진의 연료 필터가 막히면 순식간에 모든 전기가 끊긴다. 주기관 냉각수 펌프와 윤활유 펌프가 멈추고 조타기도 멈춘다. 협수로에서의 <span class="term">블랙아웃</span><span class="en">(Blackout)</span>은 좌초·충돌로 직결된다. SOLAS 제II-1장은 다음을 요구한다.</p>
+    <ul>
+      <li>주전원이 끊기면 비상 발전기가 <b>자동으로 기동</b>하고 <b>45초 이내</b>에 비상 배전반에 전원을 공급할 것.</li>
+      <li>그 사이 비상 조명 등은 <b>과도 비상 전원</b>(배터리·UPS)이 끊김 없이 받칠 것.</li>
+      <li>비상 발전기는 여객선 36시간, 화물선 18시간 동안 필수 부하를 공급할 연료를 가질 것.</li>
+      <li>기동 장치는 연속 3회 이상 기동을 시도할 수 있는 저장 에너지(시동 공기, 배터리, 유압 축압기)를 가질 것.</li>
+    </ul>
+    <p>동시에 PMS는 대기 중인 주발전기를 자동 기동해 주배전반을 되살리고, 정지했던 주요 펌프를 순서대로 다시 돌린다(한꺼번에 켜면 기동 전류로 다시 블랙아웃이 날 수 있다).</p>
+
+    <div class="sim" id="sim-bo">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>블랙아웃 복구 타임라인</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-bo"></canvas></div>
+        <div class="sim-controls">
+          <button class="btn primary" id="bo-go">블랙아웃 발생!</button>
+          <label class="check"><input type="checkbox" id="bo-fail"> 비상 발전기 1차 기동 실패</label>
+          <label class="check"><input type="checkbox" id="bo-nostby"> 대기 주발전기 없음</label>
+          <div class="ctrl"><span>재생 속도</span><div class="seg" id="bo-spd"><button data-value="1">1×</button><button data-value="3" class="on">3×</button><button data-value="6">6×</button></div></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">경과 시간</span><span class="v" id="o-bo-t">—</span></div>
+        <div class="stat"><span class="k">주배전반</span><span class="v" id="o-bo-msb">—</span></div>
+        <div class="stat"><span class="k">비상 배전반</span><span class="v" id="o-bo-esb">—</span></div>
+        <div class="stat"><span class="k">비상 전원 복구</span><span class="v" id="o-bo-rec">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 1차 기동 실패를 켜도 45초 안에 들어오는지 보라. 과도 비상 전원(배터리)이 없다면 그 사이 선교와 통로는 완전히 어둡다. 대기 주발전기가 없으면 비상 발전기 혼자 버텨야 하고, 주기관은 다시 기동할 수 없다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 6 -->
+  <section id="dieselelectric">
+    <h2>디젤-전기 추진</h2>
+    <p>보통의 상선은 저속 2행정 디젤 엔진이 축으로 프로펠러를 직접 돌린다(<a href="engine.html">9장</a>). <span class="term">디젤-전기 추진</span><span class="en">(Diesel-Electric Propulsion)</span>에서는 엔진이 프로펠러와 기계적으로 끊어져 있다. 여러 대의 중속 디젤 발전기가 모선에 전기를 보내고, 프로펠러는 주파수 변환기(VFD)가 속도를 조절하는 전동기가 돌린다. 이 "발전소 하나로 모든 것을 해결하는" 구조를 <b>통합 전력 시스템</b>이라 한다.</p>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 780 250" role="img" aria-label="디젤-전기 추진 계통과 효율 연쇄">
+        <g font-size="13">
+          <rect x="20" y="40" width="96" height="56" rx="8" class="f-surface" stroke="var(--border)"/>
+          <text x="68" y="64" class="t" text-anchor="middle">디젤 엔진</text><text x="68" y="84" class="t-mono" text-anchor="middle">×4</text>
+          <rect x="150" y="40" width="96" height="56" rx="8" class="f-acc-soft" stroke="var(--accent)"/>
+          <text x="198" y="64" class="t" text-anchor="middle">발전기</text><text x="198" y="84" class="t-mono" text-anchor="middle">η 0.97</text>
+          <line x1="280" y1="20" x2="280" y2="230" stroke="var(--accent)" stroke-width="6"/>
+          <text x="280" y="244" class="t-dim" text-anchor="middle">6.6 kV 모선</text>
+          <rect x="310" y="40" width="96" height="56" rx="8" class="f-acc-soft" stroke="var(--accent)"/>
+          <text x="358" y="64" class="t" text-anchor="middle">변압기</text><text x="358" y="84" class="t-mono" text-anchor="middle">η 0.99</text>
+          <rect x="440" y="40" width="110" height="56" rx="8" class="f-acc-soft" stroke="var(--accent)"/>
+          <text x="495" y="64" class="t" text-anchor="middle">주파수 변환기</text><text x="495" y="84" class="t-mono" text-anchor="middle">η 0.98</text>
+          <rect x="584" y="40" width="80" height="56" rx="8" class="f-acc-soft" stroke="var(--accent)"/>
+          <text x="624" y="64" class="t" text-anchor="middle">전동기</text><text x="624" y="84" class="t-mono" text-anchor="middle">η 0.97</text>
+          <line x1="664" y1="68" x2="712" y2="68" stroke="var(--text-dim)" stroke-width="5"/>
+          <ellipse cx="730" cy="68" rx="9" ry="34" fill="#c9a227"/>
+          <line x1="116" y1="68" x2="150" y2="68" stroke="var(--text-dim)" stroke-width="5"/>
+          <line x1="246" y1="68" x2="280" y2="68" stroke="var(--accent)" stroke-width="2"/>
+          <line x1="280" y1="68" x2="310" y2="68" stroke="var(--accent)" stroke-width="2"/>
+          <line x1="406" y1="68" x2="440" y2="68" stroke="var(--accent)" stroke-width="2"/>
+          <line x1="550" y1="68" x2="584" y2="68" stroke="var(--accent)" stroke-width="2"/>
+          <line x1="280" y1="160" x2="320" y2="160" stroke="var(--accent)" stroke-width="2"/>
+          <rect x="320" y="136" width="130" height="48" rx="8" class="f-acc2-soft" stroke="var(--accent-2)"/>
+          <text x="385" y="165" class="t" text-anchor="middle">선내(호텔) 부하</text>
+          <line x1="280" y1="210" x2="320" y2="210" stroke="var(--accent)" stroke-width="2"/>
+          <rect x="320" y="192" width="130" height="38" rx="8" class="f-acc2-soft" stroke="var(--accent-2)"/>
+          <text x="385" y="216" class="t" text-anchor="middle">스러스터</text>
+          <text x="610" y="150" class="t-acc" text-anchor="middle">전기 계통 효율</text>
+          <text x="610" y="176" class="t-mono" text-anchor="middle">0.97×0.99×0.98×0.97</text>
+          <text x="610" y="200" class="t-mono" text-anchor="middle">≈ 0.91</text>
+        </g>
+      </svg>
+      <figcaption><b>그림 18-2.</b> 디젤-전기 추진의 에너지 흐름. 엔진 축동력에서 프로펠러 축까지 약 8~10%를 전기 변환에서 잃는다. 기계식 직결 추진의 축계 손실은 1~2%에 불과하다.</figcaption>
+    </figure>
+
+    <p>손실이 8~10%나 되는데 왜 전기 추진을 할까? 디젤 엔진의 연료 소비율(SFOC, g/kWh)은 정격의 75~85% 근처에서 가장 낮고, 부하가 30% 아래로 떨어지면 급격히 나빠진다. 크루즈선, 해양 지원선(OSV), 쇄빙선, 연구선처럼 <b>운항 프로파일이 넓은 배</b>는 시간의 대부분을 부분 부하로 보낸다. 기계식 직결이면 거대한 주기관이 20~40% 부하로 헐떡이지만, 디젤-전기에서는 필요한 만큼만 엔진을 켜서 켜진 엔진은 늘 효율점 근처에서 돈다. 여기에 엔진 배치의 자유(기관실을 축선에 묶지 않음), 이중화로 인한 신뢰성, 저소음·저진동, 스러스터와 추진에 발전기를 공유하는 이점이 더해진다.</p>
+    <div class="formula">$$\dot m_f = \sum_{k=1}^{n} \text{SFOC}(x)\,x\,P_g,\qquad x = \frac{P_{prop}/\eta_{el} + P_{hotel}}{n\,P_g}$$
+      <div class="where">\(n\): 운전 중인 발전기 대수, \(P_g\): 발전기 1대 정격, \(x\): 엔진 부하율(대수 간 균등 분담), \(\eta_{el}\): 전기 계통 효율. PMS는 \(x\)가 효율 구간에 오도록 \(n\)을 고른다.</div>
+    </div>
+
+    <div class="sim" id="sim-de">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>디젤-전기 vs 기계식 직결: 연료 비교</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-de"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>추진 부하 <output id="de-p-out"></output></span><input type="range" id="de-p" min="2" max="100" step="1" value="35"></label>
+          <label class="ctrl"><span>선내(호텔) 부하 <output id="de-h-out"></output></span><input type="range" id="de-h" min="0" max="8" step="0.1" value="3"></label>
+          <label class="ctrl"><span>전기 계통 효율 <output id="de-eta-out"></output></span><input type="range" id="de-eta" min="0.85" max="0.97" step="0.005" value="0.91"></label>
+          <div class="ctrl"><span>비교할 기계식 추진</span><div class="seg" id="de-ref"><button data-value="4s" class="on">중속 4행정 2대 + 감속기</button><button data-value="2s">저속 2행정 직결</button></div></div>
+          <label class="check"><input type="checkbox" id="de-all"> 대수 제어 끄기(4대 모두 운전)</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">운전 발전기</span><span class="v" id="o-de-n">—</span></div>
+        <div class="stat"><span class="k">디젤-전기 연료</span><span class="v" id="o-de-fe">—</span></div>
+        <div class="stat"><span class="k">기계식 추진 연료</span><span class="v" id="o-de-fm">—</span></div>
+        <div class="stat"><span class="k">차이</span><span class="v" id="o-de-d">—</span></div>
+      </div>
+      <div class="sim-note">대표 사례: 추진 최대 16 MW. 디젤-전기는 5.5 MW 중속 발전기 4대. 기계식은 8 MW 중속 엔진 2대가 감속기(효율 0.98)로 두 축을 돌리거나, 16 MW 저속 2행정 엔진 1대가 직결로 돌리며, 호텔 부하는 2.5 MW 발전기 3대가 맡는다. SFOC 곡선은 대표적인 모양을 단순화한 근사다. 해볼 것: 중속 기계식과 비교하면 추진 부하 약 35% 아래에서 디젤-전기가 유리하고 90%에서는 불리하다. 비교 대상을 저속 2행정으로 바꾸면 SFOC 자체가 10% 이상 낮아 거의 모든 구간에서 기계식이 이긴다. 대양을 일정 속력으로 달리는 상선이 2행정 직결을 쓰는 이유다. "대수 제어 끄기"를 켜면 전기 추진의 이점이 사라진다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 7 -->
+  <section id="pod">
+    <h2>포드 추진과 축발전기</h2>
+    <p>전동기가 프로펠러를 돌린다면, 전동기를 아예 선체 밖으로 꺼내 프로펠러와 함께 물속 유선형 몸체(포드)에 넣고 몸체 전체를 360° 돌릴 수 있다. 이것이 <span class="term">포드 추진기</span><span class="en">(Podded Propulsor, Azimuth Thruster)</span>다. 타가 필요 없고, 추력 방향 자체를 돌리므로 저속에서도 조종력이 크다. 긴 축계가 없어 선미 공간을 화물이나 객실에 내줄 수 있고, 프로펠러가 포드 앞쪽에서 끄는(pulling) 형식은 균일한 유입류 덕분에 효율과 진동에서도 유리하다. 크루즈선, 쇄빙선, 해양 작업선에 널리 쓰인다.</p>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 260" role="img" aria-label="포드 추진기 단면">
+        <rect x="0" y="0" width="760" height="62" class="f-surface"/>
+        <line x1="0" y1="62" x2="760" y2="62" stroke="var(--text-dim)" stroke-width="3"/>
+        <text x="20" y="38" class="t-dim">선체 내부</text>
+        <rect x="300" y="18" width="160" height="40" rx="6" class="f-acc2-soft" stroke="var(--accent-2)"/>
+        <text x="380" y="43" class="t" text-anchor="middle">회전(선회) 장치·슬립 링</text>
+        <rect x="350" y="62" width="60" height="58" class="f-elev" stroke="var(--border)"/>
+        <path d="M200 150 Q200 118 250 118 L520 118 Q590 118 610 150 Q590 182 520 182 L250 182 Q200 182 200 150 Z" class="f-elev" stroke="var(--text-dim)" stroke-width="2"/>
+        <rect x="300" y="128" width="170" height="44" rx="10" class="f-acc-soft" stroke="var(--accent)"/>
+        <text x="385" y="155" class="t" text-anchor="middle">추진 전동기</text>
+        <line x1="200" y1="150" x2="168" y2="150" stroke="var(--text-dim)" stroke-width="6"/>
+        <ellipse cx="160" cy="150" rx="10" ry="62" fill="#c9a227"/>
+        <path d="M430 182 L470 232 L540 232 L520 182 Z" class="f-elev" stroke="var(--text-dim)"/>
+        <g stroke="var(--accent)" stroke-width="2" fill="none" stroke-dasharray="5 4">
+          <path d="M40 130 L140 130"/><path d="M40 170 L140 170"/>
+        </g>
+        <text x="40" y="118" class="t-dim">유입류</text>
+        <path d="M380 92 m-28 0 a28 10 0 1 0 56 0" fill="none" stroke="var(--accent-2)" stroke-width="2"/>
+        <text x="455" y="100" class="t-acc">360° 회전</text>
+        <text x="610" y="210" class="t-dim">핀(fin)</text>
+        <text x="160" y="240" class="t-dim" text-anchor="middle">당김형 프로펠러</text>
+      </svg>
+      <figcaption><b>그림 18-3.</b> 당김형(pulling) 포드 추진기. 전동기가 포드 안에 있고, 전력과 냉각 공기는 회전하는 이음부(슬립 링)를 통해 선체에서 공급된다.</figcaption>
+    </figure>
+
+    <p>포드 두 대와 바우 스러스터를 함께 쓰면 거의 모든 방향의 힘과 회전 모멘트를 만들 수 있다. 선체 좌표에서 각 추진기 \(k\)가 위치 \((x_k, y_k)\)에서 방위각 \(\alpha_k\)로 추력 \(T_k\)를 내면</p>
+    <div class="formula">$$F_x = \sum T_k\cos\alpha_k,\quad F_y = \sum T_k\sin\alpha_k,\quad N = \sum \left(x_k T_k \sin\alpha_k - y_k T_k\cos\alpha_k\right)$$
+      <div class="where">\(x\): 선수 방향, \(y\): 우현 방향, \(N\): 선수를 우현으로 돌리는 모멘트. 동적 위치 유지(DP, <a href="autonomous.html">22장</a>)는 이 세 값을 원하는 값으로 만드는 추력 배분 문제를 매 순간 푼다.</div>
+    </div>
+
+    <div class="sim" id="sim-pod">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>포드 추진 조종 (평면도)</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-pod"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>좌현 포드 각도 <output id="pd-a1-out"></output></span><input type="range" id="pd-a1" min="-180" max="180" step="5" value="0"></label>
+          <label class="ctrl"><span>좌현 포드 추력 <output id="pd-t1-out"></output></span><input type="range" id="pd-t1" min="0" max="100" step="1" value="40"></label>
+          <label class="ctrl"><span>우현 포드 각도 <output id="pd-a2-out"></output></span><input type="range" id="pd-a2" min="-180" max="180" step="5" value="0"></label>
+          <label class="ctrl"><span>우현 포드 추력 <output id="pd-t2-out"></output></span><input type="range" id="pd-t2" min="0" max="100" step="1" value="40"></label>
+          <label class="ctrl"><span>바우 스러스터 <output id="pd-bt-out"></output></span><input type="range" id="pd-bt" min="-100" max="100" step="5" value="0"></label>
+          <div class="btn-row"><button class="btn" id="pd-fwd">직진</button><button class="btn" id="pd-spin">제자리 선회</button><button class="btn" id="pd-crab">우현 횡이동</button><button class="btn" id="pd-stop">정지·원위치</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">선속</span><span class="v" id="o-pd-u">—</span></div>
+        <div class="stat"><span class="k">횡속도</span><span class="v" id="o-pd-v">—</span></div>
+        <div class="stat"><span class="k">선회율</span><span class="v" id="o-pd-r">—</span></div>
+        <div class="stat"><span class="k">합력 / 모멘트</span><span class="v" id="o-pd-f">—</span></div>
+      </div>
+      <div class="sim-note">길이 120 m, 배수량 15,000 t급 선박, 포드 1대 최대 600 kN, 바우 스러스터 200 kN. 시간은 5배속이다. 해볼 것: "제자리 선회"와 "우현 횡이동" 프리셋이 힘과 모멘트를 어떻게 맞추는지 화살표로 확인하라. 포드 하나를 180°로 돌리면 프로펠러 역회전 없이 바로 후진 추력이 나온다.</div>
+    </div>
+
+    <h3>축발전기(PTO)와 축모터(PTI)</h3>
+    <p>기계식 추진선에서도 전기와 추진을 잇는 방법이 있다. 주기관 축에 기어나 직결로 발전기를 달아 항해 중 선내 전력을 만드는 것이 <span class="term">축발전기</span><span class="en">(PTO, Power Take-Off)</span>다. 저속 2행정 주기관의 SFOC(약 165~175 g/kWh)는 중속 발전기 엔진(190~210 g/kWh)보다 낮고, 값싼 중유를 쓸 수 있으며, 발전기 엔진의 운전 시간과 정비가 줄어든다. 같은 기계를 전동기로 돌려 축에 동력을 보태면 <span class="term">축모터</span><span class="en">(PTI, Power Take-In)</span>가 된다. PTI는 주기관이 고장 났을 때 귀항 추진(PTH, Power Take Home)이나, 빙해·고속 구간의 추진 보조에 쓰인다.</p>
+    <figure class="diagram">
+      <svg viewBox="0 0 760 210" role="img" aria-label="축발전기와 축모터">
+        <rect x="30" y="60" width="150" height="90" rx="10" class="f-surface" stroke="var(--border)"/>
+        <text x="105" y="100" class="t" text-anchor="middle">저속 2행정</text><text x="105" y="122" class="t" text-anchor="middle">주기관</text>
+        <line x1="180" y1="105" x2="690" y2="105" stroke="var(--text-dim)" stroke-width="7"/>
+        <ellipse cx="705" cy="105" rx="10" ry="58" fill="#c9a227"/>
+        <rect x="300" y="72" width="120" height="66" rx="10" class="f-acc-soft" stroke="var(--accent)" stroke-width="2"/>
+        <text x="360" y="100" class="t" text-anchor="middle">축 발전기/</text><text x="360" y="120" class="t" text-anchor="middle">전동기</text>
+        <rect x="470" y="10" width="120" height="40" rx="8" class="f-acc-soft" stroke="var(--accent)"/>
+        <text x="530" y="35" class="t" text-anchor="middle">변환기</text>
+        <line x1="360" y1="72" x2="360" y2="30" stroke="var(--accent)" stroke-width="2"/><line x1="360" y1="30" x2="470" y2="30" stroke="var(--accent)" stroke-width="2"/>
+        <line x1="590" y1="30" x2="650" y2="30" stroke="var(--accent)" stroke-width="2"/>
+        <line x1="650" y1="8" x2="650" y2="52" stroke="var(--accent)" stroke-width="6"/>
+        <text x="660" y="36" class="t-dim">모선</text>
+        <path d="M250 170 L460 170" stroke="var(--ok)" stroke-width="3" marker-end="url(#ar-ok)" fill="none"/>
+        <text x="355" y="196" class="t" text-anchor="middle" fill="var(--ok)">PTO: 축 → 전기 (항해 중 발전)</text>
+        <path d="M470 60 Q430 50 420 64" stroke="var(--accent-2)" stroke-width="2.5" fill="none" marker-end="url(#ar-2)"/>
+        <text x="470" y="72" class="t-dim">PTI: 전기 → 축</text>
+        <defs>
+          <marker id="ar-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="var(--ok)"/></marker>
+          <marker id="ar-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="var(--accent-2)"/></marker>
+        </defs>
+      </svg>
+      <figcaption><b>그림 18-4.</b> 축발전기/축모터. 주기관은 프로펠러 피치나 속도에 따라 회전수가 변하므로, 일정한 60 Hz를 얻기 위해 주파수 변환기를 거치는 방식이 많다.</figcaption>
+    </figure>
+  </section>
+
+  <!-- =============================================================== 8 -->
+  <section id="hybrid">
+    <h2>배터리 하이브리드</h2>
+    <p>디젤-전기 모선에 대용량 리튬이온 배터리를 붙이면 세 가지가 가능해진다.</p>
+    <ul>
+      <li><b>피크 쉐이빙</b><span class="en">(Peak Shaving)</span>: 크레인 인양이나 스러스터의 순간 피크를 배터리가 메우고, 엔진은 평균 부하만 진다. 부하 변동이 줄어 엔진이 효율점에 머물고, 급격한 부하 변동에서 생기는 매연과 마모도 준다.</li>
+      <li><b>회전 예비력 대체</b><span class="en">(Spinning Reserve)</span>: DP 선박이나 입출항 중에는 한 대가 고장 나도 버티려고 발전기를 여분으로 돌려 저부하로 운전한다. 배터리는 수 밀리초 만에 출력을 내므로 그 여분 발전기를 대신할 수 있다. 연료 절감의 가장 큰 몫이 여기서 나온다.</li>
+      <li><b>무배출 운전</b>: 항구 접근·정박 중 엔진을 끄고 배터리만으로 운전한다. 근거리 페리는 아예 순수 배터리선으로 만들고 부두에서 고출력 충전한다.</li>
+    </ul>
+    <p>배터리 시스템은 에너지(kWh)와 출력(kW)을 함께 고른다. 출력/에너지 비율을 C-레이트라 하며, 하이브리드 선박용은 보통 1~3C다. 수명은 충방전 깊이(DoD)에 민감하므로 충전 상태(SOC)를 20~90% 사이에서 쓴다.</p>
+
+    <div class="sim" id="sim-bat">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>하이브리드 부하 평탄화 (2시간 하역·DP 작업)</h3></div>
+      <div class="sim-body">
+        <div class="sim-view"><canvas id="cv-bat"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>전략</span><div class="seg" id="bt-mode"><button data-value="none">배터리 없음</button><button data-value="peak">피크 쉐이빙</button><button data-value="res" class="on">피크 쉐이빙 + 예비력 대체</button></div></div>
+          <label class="ctrl"><span>배터리 용량 <output id="bt-cap-out"></output></span><input type="range" id="bt-cap" min="100" max="2000" step="50" value="600"></label>
+          <label class="check"><input type="checkbox" id="bt-zero"> 마지막 20분 무배출(엔진 정지) 운전</label>
+          <button class="btn" id="bt-new">새 부하 프로파일</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">연료 소비</span><span class="v" id="o-bt-f">—</span></div>
+        <div class="stat"><span class="k">배터리 없음 대비</span><span class="v" id="o-bt-s">—</span></div>
+        <div class="stat"><span class="k">평균 운전 대수</span><span class="v" id="o-bt-n">—</span></div>
+        <div class="stat"><span class="k">엔진 부하율 평균</span><span class="v" id="o-bt-x">—</span></div>
+      </div>
+      <div class="sim-note">발전기 1,000 kW × 4대, 예비력 요구 500 kW, 배터리 최대 출력 2C(최대 2 MW), SOC 20~90%, 왕복 효율 약 90%로 가정한 단순 모델이며, 끝 시점 SOC가 처음(60%)과 다른 만큼은 연료로 환산해 보정한다. 해볼 것: "배터리 없음"에서 흐린 선(부하)과 굵은 선(엔진)이 겹치는 것을 확인하고, 전략을 바꿔 엔진 선이 평탄해지는 것을 보라. 절감은 대부분 예비력 대체에서 나온다. 실제 DP 선박은 단일 고장 기준 예비력 요구가 더 커서 발전기가 20~30% 부하로 도는 일이 많고, 10~20%의 절감 사례도 보고된다. 용량을 줄이면 SOC가 바닥에 닿아 피크를 다 메우지 못한다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 9 -->
+  <section id="shore">
+    <h2>육상 전원과 전력 품질</h2>
+    <p>정박 중인 배는 항해하지 않아도 냉동 컨테이너, 공조, 조명, 하역 장비를 위해 발전기를 돌린다. 크루즈선 한 척의 정박 중 부하는 수 MW에서 10 MW를 넘기도 한다. 이 배출은 항구 도시 한가운데에서 나오므로 질소 산화물(NOx)과 미세먼지가 시민 건강에 직접 영향을 준다. <span class="term">육상 전원 공급</span><span class="en">(AMP, Alternative Maritime Power / OPS, Onshore Power Supply / Cold Ironing)</span>은 부두의 전력망에서 고압 케이블로 배에 전기를 보내고 발전기를 끄는 것이다. 국제 표준(IEC/IEEE 80005-1)은 6.6 kV 또는 11 kV 고압 연결과 접속 절차를 정한다. 유럽 항만은 50 Hz, 대부분의 배는 60 Hz여서 주파수 변환 설비가 필요하다.</p>
+    <p>국지 배출(NOx·PM·SOx)은 거의 100% 사라진다. CO₂ 이득은 육상 전력의 탄소 집약도에 달려 있다. 선박 발전기는 대략 \(0.215\times 3.206 \approx 0.69\) kg CO₂/kWh를 내므로, 전력망이 이보다 깨끗하면 이득이다.</p>
+
+    <div class="sim" id="sim-amp">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>육상 전원 배출 감소 계산기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-amp"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>선종(정박 중 평균 부하)</span><div class="seg" id="am-type"><button data-value="1800" class="on">컨테이너선</button><button data-value="7500">크루즈선</button><button data-value="1500">자동차선</button><button data-value="2500">탱커</button></div></div>
+          <label class="ctrl"><span>정박 시간 / 기항 <output id="am-h-out"></output></span><input type="range" id="am-h" min="4" max="72" step="1" value="24"></label>
+          <label class="ctrl"><span>연간 기항 횟수 <output id="am-n-out"></output></span><input type="range" id="am-n" min="1" max="100" step="1" value="26"></label>
+          <label class="ctrl"><span>육상 전력 탄소 집약도 <output id="am-ci-out"></output></span><input type="range" id="am-ci" min="0" max="900" step="10" value="430"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">연간 전력</span><span class="v" id="o-am-e">—</span></div>
+        <div class="stat"><span class="k">CO₂ 감소</span><span class="v" id="o-am-co2">—</span></div>
+        <div class="stat"><span class="k">NOx 감소</span><span class="v" id="o-am-nox">—</span></div>
+        <div class="stat"><span class="k">연료 절감(MGO)</span><span class="v" id="o-am-f">—</span></div>
+      </div>
+      <div class="sim-note">선박 발전기: SFOC 215 g/kWh, MGO CO₂ 계수 3.206, NOx 약 10 g/kWh(Tier II 중속 엔진), PM 약 0.2 g/kWh로 가정. 송배전 손실 5%. 해볼 것: 탄소 집약도를 석탄 위주 전력망(800 g/kWh 이상)으로 올리면 CO₂는 오히려 늘 수 있지만 NOx·PM 감소는 그대로다. 재생에너지 위주(50 g/kWh)로 낮추면 CO₂ 감소가 90%를 넘는다.</div>
+    </div>
+
+    <h3>고조파와 전력 품질</h3>
+    <p>주파수 변환기의 정류기는 사인파가 아닌 뾰족한 펄스 모양의 전류를 끌어 쓴다. 이 전류에는 기본파(60 Hz)의 정수배 주파수 성분, 즉 <span class="term">고조파</span><span class="en">(Harmonics)</span>가 섞여 있다. 6펄스 정류기는 5·7·11·13차(\(6k\pm1\)) 고조파를 대략 \(1/h\) 크기로 만든다. 발전기의 임피던스가 큰 고립 계통에서는 이 전류가 전압 파형까지 일그러뜨려, 다른 기기의 과열, 계측 오류, 차단기 오동작을 부른다. 왜곡 정도는 <span class="term">총 고조파 왜곡률</span><span class="en">(THD)</span>로 나타내며 선급 규칙은 보통 전압 THD를 5~8% 이하로 제한한다. 12펄스 정류기(변압기 위상 30° 어긋나게 두 대), 고조파 필터, 능동 전단(AFE) 변환기로 줄인다.</p>
+    <div class="formula">$$\text{THD} = \frac{\sqrt{\sum_{h\ge 2} V_h^2}}{V_1}$$</div>
+
+    <div class="sim" id="sim-thd">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>고조파와 THD</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-thd"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>변환기 정류 방식</span><div class="seg" id="th-type"><button data-value="6" class="on">6펄스</button><button data-value="12">12펄스</button><button data-value="afe">AFE</button></div></div>
+          <label class="ctrl"><span>변환기 부하 비중 <output id="th-share-out"></output></span><input type="range" id="th-share" min="0" max="100" step="5" value="60"></label>
+          <label class="ctrl"><span>계통 강도(발전기 대수) <output id="th-n-out"></output></span><input type="range" id="th-n" min="1" max="4" step="1" value="2"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">전압 THD</span><span class="v" id="o-th-thd">—</span></div>
+        <div class="stat"><span class="k">최대 개별 고조파</span><span class="v" id="o-th-max">—</span></div>
+        <div class="stat"><span class="k">판정(8% 기준)</span><span class="v" id="o-th-ok">—</span></div>
+      </div>
+      <div class="sim-note">근사 모델: 고조파 전류 \(I_h \lesssim I_1/h\)(6펄스, 고차일수록 더 작음), 계통 임피던스가 \(h\)에 비례해 \(V_h \propto h\,X\,I_h\)이며 발전기 대수가 많을수록 \(X\)가 작아진다. 해볼 것: 전기 추진선(변환기 비중 80% 이상)에 6펄스 정류기를 쓰고 발전기를 1대만 돌리면 THD가 기준을 크게 넘는다. 12펄스로 바꾸면 5·7차가 사라진다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== summary -->
+  <section class="keypoints" id="summary">
+    <h2>핵심 정리</h2>
+    <ol>
+      <li>선박은 발전기 몇 대로 이루어진 고립 계통이다. 저압 440 V/60 Hz가 기본이고, 용량이 크면 6.6/11 kV 고압을 쓴다. 주배전반은 버스 타이로 나뉘고, 비상 배전반과 비상 발전기가 따로 있다.</li>
+      <li>3상 전력은 \(P=\sqrt3 V_L I_L\cos\varphi\)이며 세 상의 순간 전력 합은 일정하다. 발전기·케이블은 kVA, 엔진은 kW로 크기가 정해지며 역률이 나쁘면 전류와 손실이 커진다.</li>
+      <li>동기 투입은 전압·주파수·위상을 맞춘 뒤 한다. 들어오는 발전기를 조금 빠르게 하고 싱크로스코프 바늘이 12시에 올 때 투입한다. 위상이 틀리면 정격의 수 배에 이르는 순환 전류가 흐른다.</li>
+      <li>병렬 발전기의 부하 분담은 드룹 직선과 공통 주파수의 교점으로 정해진다. 설정점을 따로 올리면 부하가 옮겨 가고, 함께 올리면 주파수가 복귀한다. 분담이 음수가 되면 역전력 트립이 일어난다.</li>
+      <li>발전기 대수는 모드별 전력 수지와 N+1 원칙으로 정한다. 블랙아웃 시 비상 발전기는 45초 안에 자동으로 비상 배전반을 살려야 한다.</li>
+      <li>디젤-전기 추진은 약 9%의 변환 손실이 있지만, 부분 부하가 많은 배에서는 엔진 대수를 조절해 효율점 운전을 하므로 연료가 준다. 포드는 360° 추력으로 조종성을 높이고, PTO/PTI는 기계식 추진과 전기 계통을 잇는다.</li>
+      <li>배터리 하이브리드는 피크 쉐이빙, 회전 예비력 대체, 무배출 운전을 가능하게 한다. 육상 전원은 정박 중 국지 배출을 없애며 CO₂ 이득은 전력망의 탄소 집약도에 달려 있다. 전력 변환기는 고조파를 만들므로 THD를 관리해야 한다.</li>
+    </ol>
+  </section>
+
+  <!-- =============================================================== quiz -->
+  <section class="quiz-sec" id="quiz">
+    <h2>확인 퀴즈</h2>
+    <div class="quiz">
+      <div class="quiz-q"><p>Q1. 440 V, 역률 0.8인 3상 계통에서 800 kW를 공급할 때 선전류는 약 얼마인가?</p><div class="opts">
+        <button class="opt">1,050 A</button><button class="opt" data-correct>1,312 A</button><button class="opt">1,818 A</button><button class="opt">2,273 A</button>
+      </div><div class="quiz-exp">\(I = P/(\sqrt3 V\cos\varphi) = 800{,}000/(1.732\times440\times0.8) \approx 1{,}312\) A. 같은 전력을 6.6 kV로 보내면 87 A로 줄어든다.</div></div>
+
+      <div class="quiz-q"><p>Q2. 동기 투입 직전 들어오는 발전기의 주파수를 모선보다 아주 약간 높게 두는 이유는?</p><div class="opts">
+        <button class="opt">위상차를 0으로 고정하기 위해</button>
+        <button class="opt" data-correct>투입 직후 부하를 받아 가 역전력(전동기 운전)을 피하려고</button>
+        <button class="opt">전압을 높이기 위해</button>
+        <button class="opt">고조파를 줄이기 위해</button>
+      </div><div class="quiz-exp">들어오는 발전기가 느리면 투입 직후 모선에서 전력을 받아 전동기처럼 돌게 되고, 역전력 계전기가 트립할 수 있다. 약간 빠르면 바늘이 시계 방향으로 천천히 돌고, 투입 후 곧바로 부하를 조금 진다.</div></div>
+
+      <div class="quiz-q"><p>Q3. 싱크로스코프 바늘이 시계 방향으로 4초에 한 바퀴 돈다. 들어오는 발전기의 주파수는?</p><div class="opts">
+        <button class="opt">59.75 Hz</button><button class="opt">60.04 Hz</button><button class="opt" data-correct>60.25 Hz</button><button class="opt">64 Hz</button>
+      </div><div class="quiz-exp">바늘 한 바퀴의 주기는 주파수 차의 역수다. 1/4 s = 0.25 Hz이고 시계 방향(FAST)이므로 60 + 0.25 = 60.25 Hz. 실제 투입에는 이보다 느린 회전(0.1 Hz 이하)이 좋다.</div></div>
+
+      <div class="quiz-q"><p>Q4. 드룹이 같은(3%) 1,000 kW 발전기 두 대가 병렬 운전 중이다. G1의 설정점만 올리면?</p><div class="opts">
+        <button class="opt">G1의 부하만 줄어든다</button>
+        <button class="opt">주파수는 그대로이고 아무것도 바뀌지 않는다</button>
+        <button class="opt" data-correct>G1이 부하를 더 가져가고, 모선 주파수도 조금 오른다</button>
+        <button class="opt">두 발전기 모두 부하가 늘어난다</button>
+      </div><div class="quiz-exp">G1 드룹 직선이 위로 평행 이동한다. 전체 부하가 일정하므로 G1이 더 지고 G2는 덜 지며, 새 균형점의 주파수는 조금 높다. 둘 다 올리면 분담은 그대로이고 주파수만 오른다.</div></div>
+
+      <div class="quiz-q"><p>Q5. SOLAS가 요구하는 비상 발전기의 자동 기동·급전 시간은?</p><div class="opts">
+        <button class="opt">5초 이내</button><button class="opt" data-correct>45초 이내</button><button class="opt">5분 이내</button><button class="opt">30분 이내</button>
+      </div><div class="quiz-exp">비상 발전기는 주전원 상실 후 자동 기동해 45초 이내에 비상 배전반에 급전해야 한다. 그 공백 동안은 배터리 같은 과도 비상 전원이 비상 조명 등을 받친다.</div></div>
+
+      <div class="quiz-q"><p>Q6. 디젤-전기 추진이 기계식 직결 추진보다 연료를 덜 쓰기 쉬운 경우는?</p><div class="opts">
+        <button class="opt">항상 최대 출력으로 일정하게 항해하는 대양 컨테이너선</button>
+        <button class="opt" data-correct>부분 부하 운전이 많고 호텔·스러스터 부하가 큰 크루즈선·해양 작업선</button>
+        <button class="opt">전기 계통 효율이 70%인 경우</button>
+        <button class="opt">발전기를 항상 모두 운전하는 경우</button>
+      </div><div class="quiz-exp">전기 추진은 약 9%의 변환 손실을 안지만, 부분 부하에서 엔진 대수를 줄여 남은 엔진을 효율점에서 돌릴 수 있다. 정격 근처로 계속 달리는 배에서는 저속 2행정 직결이 유리하다.</div></div>
+
+      <div class="quiz-q"><p>Q7. 배터리 하이브리드 선박에서 연료 절감 효과가 특히 큰 운용은?</p><div class="opts">
+        <button class="opt">배터리를 항상 100%까지 충전해 두는 것</button>
+        <button class="opt" data-correct>DP·입출항 중 여분으로 돌리던 발전기를 끄고 배터리를 회전 예비력으로 쓰는 것</button>
+        <button class="opt">발전기를 저부하로 더 많이 돌리는 것</button>
+        <button class="opt">육상에서 받은 전기를 바다에 버리는 것</button>
+      </div><div class="quiz-exp">예비력용 발전기는 저부하로 돌아 SFOC가 나쁘다. 배터리가 순간 응답으로 예비력을 대신하면 운전 대수가 줄어 남은 발전기의 부하율과 효율이 올라간다.</div></div>
+
+      <div class="quiz-q"><p>Q8. 6펄스 정류기가 주로 만드는 고조파 차수는?</p><div class="opts">
+        <button class="opt">2·4·6차</button><button class="opt">3·9·15차</button><button class="opt" data-correct>5·7·11·13차</button><button class="opt">고조파를 만들지 않는다</button>
+      </div><div class="quiz-exp">p펄스 정류기의 특성 고조파는 \(kp\pm1\)차다. 6펄스는 5·7·11·13…, 12펄스는 11·13·23·25…차로, 크기가 큰 5·7차가 상쇄된다.</div></div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const cssv = (n) => getComputedStyle(document.body).getPropertyValue(n);
+  const font = (sz, w, mono) => (w ? w + " " : "") + sz + "px " + (mono ? cssv("--mono") : cssv("--font"));
+  const sm = (v, u) => v + " <small>" + u + "</small>";
+  const fmtK = (v, d = 0) => Number(v).toLocaleString("ko-KR", { maximumFractionDigits: d, minimumFractionDigits: d });
+  function label(ctx, s, x, y, c, a, sz, w, base) {
+    ctx.font = font(sz || 12, w); ctx.fillStyle = c; ctx.textAlign = a || "left"; ctx.textBaseline = base || "middle"; ctx.fillText(s, x, y);
+  }
+  function rr(ctx, x, y, w, h, r) {
+    ctx.beginPath(); ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+  function line(ctx, x1, y1, x2, y2) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+  function sim(name, fn) { try { fn(); } catch (e) { console.error("[" + name + "]", e); } }
+  function msg(id, text, cls) { const el = $(id); if (!el) return; el.textContent = text; el.className = "msg-line" + (cls ? " " + cls : ""); }
+  // 중속 4행정 디젤 발전기 SFOC 근사(g/kWh), x = 부하율(0~1)
+  const sfoc4 = (x) => 158 + 13 / Math.max(x, 0.05) + 14 * x;
+  // 저속 2행정 주기관 SFOC 근사
+  const sfoc2 = (x) => 145 + 7.85 / Math.max(x, 0.05) + 13.96 * x;
+
+  /* =================================================== Sim 1: 단선 결선도 */
+  sim("sld", () => {
+    const cv0 = $("cv-sld");
+    const gens = {
+      G1: { x: 130, y: 75, kw: 800, run: true, main: true },
+      G2: { x: 330, y: 75, kw: 800, run: false, main: true },
+      G3: { x: 770, y: 75, kw: 800, run: false, main: true },
+      EG: { x: 900, y: 560, kw: 250, run: false, main: false },
+    };
+    const loads = {
+      L1: { x: 100, y: 375, kw: 150, name: "조명·거주", sub: "변압기 경유" },
+      L2: { x: 360, y: 375, kw: 380, name: "기관 보조", sub: "펌프·송풍기" },
+      L3: { x: 660, y: 375, kw: 700, name: "스러스터", sub: "비필수" },
+      L4: { x: 880, y: 375, kw: 450, name: "크레인", sub: "비필수" },
+    };
+    const EM_LOAD = 180;
+    // 차단기: a,b = 연결 노드, x,y = 그림 위치
+    const brk = {
+      CB1: { a: "G1", b: "A", x: 130, y: 150 }, CB2: { a: "G2", b: "A", x: 330, y: 150 }, CB3: { a: "G3", b: "B", x: 770, y: 150 },
+      BT: { a: "A", b: "B", x: 500, y: 220 },
+      F1: { a: "A", b: "L1", x: 100, y: 295 }, F2: { a: "A", b: "L2", x: 360, y: 295 },
+      F3: { a: "B", b: "L3", x: 660, y: 295 }, F4: { a: "B", b: "L4", x: 880, y: 295 },
+      IC: { a: "A", b: "E", x: 230, y: 470 }, EGB: { a: "EG", b: "E", x: 780, y: 560 },
+    };
+    const INIT = { CB1: 1, CB2: 0, CB3: 0, BT: 1, F1: 1, F2: 1, F3: 0, F4: 0, IC: 1, EGB: 0 };
+    let egTimer = 0, egState = "off", cv = null, dashOff = 0, lastIsl = null;
+    function reset() {
+      Object.keys(brk).forEach((k) => (brk[k].closed = !!INIT[k]));
+      gens.G1.run = true; gens.G2.run = false; gens.G3.run = false; gens.EG.run = false;
+      clearTimeout(egTimer); egState = "off";
+    }
+    function islands() {
+      const par = {};
+      const nodes = ["A", "B", "E", "L1", "L2", "L3", "L4", "G1", "G2", "G3", "EG"];
+      nodes.forEach((n) => (par[n] = n));
+      const f = (n) => (par[n] === n ? n : (par[n] = f(par[n])));
+      Object.values(brk).forEach((b) => { if (b.closed) par[f(b.a)] = f(b.b); });
+      const comp = {};
+      nodes.forEach((n) => { const r = f(n); (comp[r] = comp[r] || { nodes: [], cap: 0, load: 0, gens: [] }).nodes.push(n); });
+      Object.values(comp).forEach((c) => {
+        c.nodes.forEach((n) => {
+          if (gens[n] && gens[n].run) { c.cap += gens[n].kw; c.gens.push(n); }
+          if (loads[n]) c.load += loads[n].kw;
+          if (n === "E") c.load += EM_LOAD;
+        });
+        c.live = c.cap > 0;
+      });
+      const of = {}; Object.values(comp).forEach((c) => c.nodes.forEach((n) => (of[n] = c)));
+      return of;
+    }
+    function solve() {
+      let note = "";
+      for (let it = 0; it < 6; it++) {
+        const of = islands();
+        const bad = Object.values(of).find((c) => c.live && c.load > c.cap);
+        if (!bad) break;
+        // 우선 차단: 크레인 → 스러스터 → 발전기 트립
+        const pref = ["F4", "F3"].find((k) => brk[k].closed && bad.nodes.includes(brk[k].b));
+        if (pref) { brk[pref].closed = false; note = "과부하! 우선 차단(preferential trip)으로 " + loads[brk[pref].b].name + " 급전이 끊겼다."; continue; }
+        bad.gens.forEach((g) => { const cb = Object.keys(brk).find((k) => brk[k].a === g); if (cb) brk[cb].closed = false; });
+        note = "과부하로 발전기 차단기가 트립됐다. 블랙아웃!";
+      }
+      const of = islands();
+      // 비상 발전기 자동 기동
+      const esbLive = of.E.live;
+      if (!esbLive && $("sld-auto").checked && egState === "off") {
+        egState = "starting";
+        if (brk.IC.closed) brk.IC.closed = false; // 저전압으로 연락 차단기 개방
+        egTimer = setTimeout(() => {
+          gens.EG.run = true; egState = "on";
+          const o = islands();
+          if (!o.E.live) brk.EGB.closed = true;
+          msg("sld-msg", "비상 발전기가 기동해 비상 배전반에 급전했다(실제로는 45초 이내). 주계통을 살린 뒤 EGB를 열고 IC를 닫으면 원상 복귀.", "ok");
+          upd(false);
+        }, 2500);
+        note = (note ? note + " " : "") + "비상 배전반 전원 상실 → 연락 차단기 개방, 비상 발전기 자동 기동 중…";
+      }
+      return note;
+    }
+    function upd(doSolve = true) {
+      const note = doSolve ? solve() : "";
+      if (note) msg("sld-msg", note, note.includes("블랙아웃") || note.includes("과부하") ? "bad" : "");
+      const of = islands();
+      lastIsl = of;
+      const mainC = [...new Set(["A", "B"].map((n) => of[n]))];
+      let cap = 0, load = 0;
+      mainC.forEach((c) => { if (c.live) { cap += c.cap; c.nodes.forEach((n) => { if (gens[n] && !gens[n].main) cap -= gens[n].kw; }); } });
+      ["L1", "L2", "L3", "L4"].forEach((n) => { if (of[n].live) load += loads[n].kw; });
+      if (of.E.live && (of.E === of.A || of.E === of.B)) load += EM_LOAD;
+      SB.stat("o-sld-cap", sm(fmtK(cap), "kW"));
+      SB.stat("o-sld-load", sm(fmtK(load), "kW"));
+      SB.stat("o-sld-pct", cap ? sm(Math.round((load / cap) * 100), "%") : '<span style="color:var(--bad)">블랙아웃</span>');
+      SB.stat("o-sld-esb", of.E.live ? (of.E.gens.includes("EG") ? '<span style="color:var(--warn)">비상 발전기</span>' : '<span style="color:var(--ok)">주전원</span>') : (egState === "starting" ? '<span style="color:var(--warn)">기동 중…</span>' : '<span style="color:var(--bad)">정전</span>'));
+      $("sld-thr").textContent = brk.F3.closed ? "바우 스러스터 정지" : "바우 스러스터 투입";
+      $("sld-crane").textContent = brk.F4.closed ? "크레인 정지" : "크레인 투입";
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), s = w / 1000, sy = h / 700, of = lastIsl || islands();
+      const X = (v) => v * s, Y = (v) => v * sy;
+      const fs = Math.max(9.5, Math.min(13, 15 * s * 1.1));
+      const liveC = P.accent, deadC = P.faint;
+      const wire = (live, pts, wd) => {
+        ctx.strokeStyle = live ? liveC : deadC; ctx.lineWidth = wd || Math.max(1.5, 3 * s);
+        ctx.setLineDash(live ? [] : [4, 4]);
+        ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1])))); ctx.stroke();
+        if (live && wd == null) {
+          ctx.setLineDash([3, 9]); ctx.lineDashOffset = -dashOff; ctx.strokeStyle = P.bg; ctx.lineWidth = Math.max(1, 1.5 * s);
+          ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1])))); ctx.stroke();
+          ctx.lineDashOffset = 0;
+        }
+        ctx.setLineDash([]);
+      };
+      const lv = (n) => of[n] && of[n].live;
+      // 모선
+      wire(lv("A"), [[50, 220], [460, 220]], Math.max(4, 9 * s));
+      wire(lv("B"), [[540, 220], [950, 220]], Math.max(4, 9 * s));
+      wire(lv("E"), [[60, 560], [700, 560]], Math.max(4, 9 * s));
+      label(ctx, "MSB 좌현 구역 (440 V)", X(50), Y(244), P.dim, "left", fs - 1);
+      label(ctx, "MSB 우현 구역", X(950), Y(244), P.dim, "right", fs - 1);
+      label(ctx, "비상 배전반 ESB", X(60), Y(530), P.dim, "left", fs - 1);
+      // 연결선
+      const segOf = (k) => {
+        const b = brk[k];
+        if (k === "BT") return [[[460, 220], [482, 220]], [[518, 220], [540, 220]]];
+        if (k === "IC") return [[[230, 220], [230, 452]], [[230, 488], [230, 560]]];
+        if (k === "EGB") return [[[700, 560], [762, 560]], [[798, 560], [gens.EG.x - 34, 560]]];
+        if (k[0] === "C") return [[[b.x, gens[b.a].y + 34], [b.x, b.y - 18]], [[b.x, b.y + 18], [b.x, 220]]];
+        return [[[b.x, 220], [b.x, b.y - 18]], [[b.x, b.y + 18], [b.x, loads[b.b].y - 30]]];
+      };
+      Object.keys(brk).forEach((k) => {
+        const b = brk[k], [s1, s2] = segOf(k);
+        const la = lv(b.a), lb = lv(b.b);
+        wire(la, s1); wire(b.closed ? la : lb, s2);
+      });
+      // 차단기
+      Object.keys(brk).forEach((k) => {
+        const b = brk[k], r = Math.max(8, 18 * s);
+        const live = lv(b.a) || lv(b.b);
+        ctx.lineWidth = 2; ctx.strokeStyle = live ? P.accent : P.dim;
+        ctx.fillStyle = b.closed ? (live ? P.accent : P.dim) : P.bg;
+        ctx.fillRect(X(b.x) - r, Y(b.y) - r, 2 * r, 2 * r); ctx.strokeRect(X(b.x) - r, Y(b.y) - r, 2 * r, 2 * r);
+        if (!b.closed) { ctx.strokeStyle = P.bad; line(ctx, X(b.x) - r * 0.6, Y(b.y) + r * 0.6, X(b.x) + r * 0.6, Y(b.y) - r * 0.6); }
+        const top = k === "BT" || k === "EGB";
+        const lx = top ? X(b.x) : X(b.x) + r + 4, ly = top ? Y(b.y) - r - 8 : Y(b.y);
+        label(ctx, k, lx, ly, P.dim, top ? "center" : "left", fs - 1.5, 600);
+      });
+      // 발전기
+      Object.keys(gens).forEach((k) => {
+        const g = gens[k], r = Math.max(13, 34 * s), x = X(g.x), y = Y(g.y);
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = g.run ? (g.main ? P.accent : P.warn) : P.surface; ctx.fill();
+        ctx.lineWidth = 2; ctx.strokeStyle = g.run ? (g.main ? P.accent : P.warn) : P.dim; ctx.stroke();
+        ctx.strokeStyle = g.run ? P.bg : P.dim; ctx.lineWidth = 1.6; ctx.beginPath();
+        for (let i = 0; i <= 20; i++) { const t = i / 20, px = x - r * 0.55 + t * r * 1.1, py = y + Math.sin(t * Math.PI * 2 + (g.run ? dashOff * 0.3 : 0)) * r * 0.3; i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+        ctx.stroke();
+        const lx = k === "EG" ? x : x + r + 6;
+        label(ctx, k + (k === "EG" ? " 비상" : ""), lx, k === "EG" ? y - r - 10 : y - 7, P.text, k === "EG" ? "center" : "left", fs, 700);
+        label(ctx, g.kw + " kW" + (g.run ? "" : " · 정지"), lx, k === "EG" ? y + r + 12 : y + 9, P.dim, k === "EG" ? "center" : "left", fs - 1.5);
+        if (k === "EG" && egState === "starting") label(ctx, "기동 중…", x, y + r + 28, P.warn, "center", fs - 1, 700);
+      });
+      // 부하
+      Object.keys(loads).forEach((k) => {
+        const L = loads[k], bw = 150 * s, bh = Math.max(34, 60 * sy), x = X(L.x), y = Y(L.y);
+        const live = lv(k);
+        rr(ctx, x - bw / 2, y - bh / 2, bw, bh, 6);
+        ctx.fillStyle = live ? P.surface : P.bg; ctx.fill(); ctx.strokeStyle = live ? P.accent : P.border; ctx.lineWidth = 1.5; ctx.stroke();
+        label(ctx, L.name, x, y - bh * 0.18, live ? P.text : P.faint, "center", fs - 0.5, 600);
+        label(ctx, L.kw + " kW", x, y + bh * 0.22, live ? P.dim : P.faint, "center", fs - 1.5);
+      });
+      // 비상 부하
+      const em = [["비상조명", 120], ["조타기", 330], ["소화펌프", 540]];
+      em.forEach(([n, ex]) => {
+        ctx.strokeStyle = lv("E") ? P.accent : P.faint; ctx.lineWidth = 2;
+        line(ctx, X(ex), Y(560), X(ex), Y(620));
+        SB.arrow(ctx, X(ex), Y(600), X(ex), Y(632), lv("E") ? P.accent : P.faint, 2);
+        label(ctx, n, X(ex), Y(660), lv("E") ? P.text : P.faint, "center", fs - 1);
+      });
+      if (w > 560) label(ctx, "비상 부하 합 " + EM_LOAD + " kW", X(700), Y(660), P.dim, "right", fs - 1.5);
+    }
+    function hit(p) {
+      const s = cv.w / 1000, sy = cv.h / 700;
+      let best = null, bd = 1e9;
+      Object.keys(brk).forEach((k) => { const d = Math.hypot(p.x - brk[k].x * s, p.y - brk[k].y * sy); if (d < bd) { bd = d; best = ["b", k]; } });
+      Object.keys(gens).forEach((k) => { const d = Math.hypot(p.x - gens[k].x * s, p.y - gens[k].y * sy); if (d < bd) { bd = d; best = ["g", k]; } });
+      return bd < Math.max(22, 40 * s) ? best : null;
+    }
+    function toggleBreaker(k) {
+      const b = brk[k];
+      if (!b.closed) {
+        const of = islands();
+        if (k === "EGB" && of.E.live) { msg("sld-msg", "인터록: 비상 배전반이 주전원으로 살아 있을 때는 비상 발전기 차단기를 닫을 수 없다(비상 발전기는 주발전기와 병렬 운전하지 않는다).", "bad"); return; }
+        if (k === "IC" && brk.EGB.closed) { msg("sld-msg", "인터록: 비상 발전기 차단기(EGB)를 먼저 열어야 연락 차단기를 닫을 수 있다.", "bad"); return; }
+        if (gens[b.a] && !gens[b.a].run) { msg("sld-msg", b.a + "가 정지해 있다. 발전기를 먼저 눌러 기동하라.", "bad"); return; }
+        if (of[b.a].live && of[b.b].live && of[b.a] !== of[b.b]) msg("sld-msg", k + " 투입: 두 살아 있는 계통을 잇는다. 실제로는 자동 동기 투입 장치가 위상을 맞춘 뒤 닫는다(3절).", "");
+        else msg("sld-msg", k + " 투입.", "");
+        b.closed = true;
+      } else { b.closed = false; msg("sld-msg", k + " 개방.", ""); }
+      upd();
+    }
+    function toggleGen(k) {
+      const g = gens[k];
+      if (k === "EG") {
+        if (g.run) { g.run = false; brk.EGB.closed = false; egState = "off"; msg("sld-msg", "비상 발전기 정지.", ""); }
+        else { g.run = true; egState = "on"; msg("sld-msg", "비상 발전기 수동 기동. EGB는 비상 배전반이 정전일 때만 닫힌다.", ""); }
+        upd(); return;
+      }
+      if (g.run) { const cb = Object.keys(brk).find((x) => brk[x].a === k); brk[cb].closed = false; g.run = false; msg("sld-msg", k + " 정지(차단기 개방 후 정지).", ""); }
+      else { g.run = true; msg("sld-msg", k + " 기동. 이제 차단기를 닫아 모선에 투입하라.", ""); }
+      upd();
+    }
+    cv0.addEventListener("click", (e) => {
+      const r = cv0.getBoundingClientRect(), h = hit({ x: e.clientX - r.left, y: e.clientY - r.top });
+      if (!h) return;
+      if (h[0] === "b") toggleBreaker(h[1]); else toggleGen(h[1]);
+    });
+    $("sld-thr").addEventListener("click", () => { if (brk.F3.closed) brk.F3.closed = false; else brk.F3.closed = true; msg("sld-msg", brk.F3.closed ? "바우 스러스터 급전 차단기 F3 투입(700 kW)." : "바우 스러스터 정지.", ""); upd(); });
+    $("sld-crane").addEventListener("click", () => { brk.F4.closed = !brk.F4.closed; msg("sld-msg", brk.F4.closed ? "크레인 급전 차단기 F4 투입(450 kW)." : "크레인 정지.", ""); upd(); });
+    $("sld-trip").addEventListener("click", () => {
+      gens.G1.run = false; brk.CB1.closed = false;
+      msg("sld-msg", "G1 연료 계통 고장으로 트립!", "bad"); upd();
+    });
+    $("sld-reset").addEventListener("click", () => { reset(); msg("sld-msg", "초기 상태: G1 단독 운전, 버스 타이·연락 차단기 투입.", ""); upd(); });
+    $("sld-auto").addEventListener("change", () => upd());
+    reset();
+    lastIsl = islands();
+    cv = SB.canvas(cv0, draw, { aspect: 0.7, minHeight: 360, maxHeight: 620 });
+    upd(false);
+    SB.loop(cv0, (dt) => { dashOff = (dashOff + dt * 18) % 1200; cv.redraw(); });
+  });
+
+  /* =================================================== Sim 2: 3상 파형 */
+  sim("3ph", () => {
+    let cv = null, t = 0;
+    const gV = SB.seg("tp-v", upd);
+    const gI = SB.range("tp-i", (v) => fmtK(v) + " A", upd);
+    const gPf = SB.range("tp-pf", (v) => v.toFixed(2) + (v >= 0.995 ? "" : " 지상"), upd);
+    $("tp-pwr").addEventListener("change", upd);
+    function upd() {
+      const V = Number(gV()), I = gI(), pf = gPf(), sn = Math.sqrt(1 - pf * pf);
+      const S = Math.sqrt(3) * V * I;
+      SB.stat("o-tp-p", sm(fmtK(S * pf / 1000), "kW"));
+      SB.stat("o-tp-q", sm(fmtK(S * sn / 1000), "kvar"));
+      SB.stat("o-tp-s", sm(fmtK(S / 1000), "kVA"));
+      SB.stat("o-tp-i1", sm(fmtK(I * pf), "A") + " <small>(손실 " + Math.round(pf * pf * 100) + "%)</small>");
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), pf = gPf(), phi = Math.acos(pf), showP = $("tp-pwr").checked;
+      const narrow = w < 520;
+      const pw = narrow ? w : w * 0.66;
+      const cols = [P.accent, P.accent2, P.warn];
+      const ph = [0, -2 * Math.PI / 3, 2 * Math.PI / 3];
+      const tc = (t % 2) / 2; // 0..1 → 화면에 그린 2주기 중 위치
+      const h1 = showP ? (narrow ? h * 0.33 : h * 0.55) : (narrow ? h * 0.6 : h - 10);
+      const box1 = { x: 44, y: 12, w: pw - 58, h: h1 - 40 };
+      const N = 160, d = [[], [], []], di = [];
+      for (let i = 0; i <= N; i++) { const th = (i / N) * 4 * Math.PI; for (let k = 0; k < 3; k++) d[k].push([i / N * 2, Math.cos(th + ph[k])]); di.push([i / N * 2, 0.8 * Math.cos(th - phi)]); }
+      SB.chart(ctx, box1, { x: [0, 2], y: [-1.15, 1.15], yLabel: "v, i (정규화)", xFmt: (v) => v + "T", xTicks: [0, 0.5, 1, 1.5, 2], yTicks: [-1, 0, 1],
+        series: [{ data: d[0], color: cols[0] }, { data: d[1], color: cols[1], width: 1.5 }, { data: d[2], color: cols[2], width: 1.5 }, { data: di, color: P.text, dash: [5, 4], width: 1.6 }],
+        vlines: [{ x: tc * 2, color: P.dim, dash: [2, 3] }] });
+      label(ctx, "va vb vc  ‐‐ ia", box1.x + 6, box1.y + 8, P.dim, "left", 11);
+      if (showP) {
+        const box2 = { x: 44, y: h1 + 4, w: pw - 58, h: (narrow ? h * 0.33 : h - h1) - 52 };
+        const pa = [], pb = [], pc = [], pt = [];
+        for (let i = 0; i <= N; i++) {
+          const th = (i / N) * 4 * Math.PI;
+          const p = ph.map((q) => Math.cos(th + q) * Math.cos(th + q - phi));
+          pa.push([i / N * 2, p[0]]); pb.push([i / N * 2, p[1]]); pc.push([i / N * 2, p[2]]); pt.push([i / N * 2, p[0] + p[1] + p[2]]);
+        }
+        SB.chart(ctx, box2, { x: [0, 2], y: [-0.6, 1.6], yLabel: "순간 전력", xLabel: "시간 (T = 1/60 s)", xFmt: (v) => v + "T", xTicks: [0, 0.5, 1, 1.5, 2], yTicks: [-0.5, 0, 0.5, 1, 1.5],
+          series: [{ data: pa, color: cols[0], width: 1.4 }, { data: pb, color: cols[1], width: 1 }, { data: pc, color: cols[2], width: 1 }, { data: pt, color: P.ok, width: 3 }],
+          hlines: [{ y: 0, color: P.axis, dash: [] }], vlines: [{ x: tc * 2, color: P.dim, dash: [2, 3] }] });
+        label(ctx, "합 = 1.5·cos φ (일정)", box2.x + box2.w - 4, box2.y + 10, P.ok, "right", 11, 700);
+      }
+      // 페이저
+      const R = narrow ? Math.min(w * 0.3, h * 0.13) : Math.min(w * 0.13, h * 0.3);
+      const cx = narrow ? w / 2 : pw + (w - pw) / 2, cy = narrow ? h - R - 22 : h * 0.42;
+      ctx.strokeStyle = P.grid; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
+      const wt = tc * 4 * Math.PI;
+      for (let k = 0; k < 3; k++) { const a = wt + ph[k]; SB.arrow(ctx, cx, cy, cx + R * Math.cos(a), cy - R * Math.sin(a), cols[k], 2.5); }
+      const ai = wt - phi;
+      SB.arrow(ctx, cx, cy, cx + 0.8 * R * Math.cos(ai), cy - 0.8 * R * Math.sin(ai), P.text, 1.8);
+      ctx.strokeStyle = P.dim; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx, cy, R * 0.35, -wt, -wt + phi); ctx.stroke();
+      label(ctx, "φ = " + (phi * 180 / Math.PI).toFixed(0) + "°", cx, cy + R + 12, P.text, "center", 12, 600);
+      if (!narrow) label(ctx, "페이저 (반시계 회전)", cx, cy - R - 14, P.dim, "center", 11);
+    }
+    cv = SB.canvas($("cv-3ph"), draw, { aspect: 0.62, minHeight: 380, maxHeight: 460 });
+    upd();
+    SB.loop($("cv-3ph"), (dt) => { t += dt * 0.5; cv.redraw(); });
+  });
+
+  /* =================================================== Sim 3: 싱크로스코프 */
+  sim("sync", () => {
+    const F1 = 60, V1 = 440;
+    let th = 2.2, state = "wait", cv = null, flash = 0, revFlag = null;
+    const gF = SB.range("sy-f", (v) => v.toFixed(2) + " Hz", upd);
+    const gV = SB.range("sy-v", (v) => v + " V", upd);
+    const wrap = (a) => { a = (a + Math.PI) % (2 * Math.PI); if (a < 0) a += 2 * Math.PI; return a - Math.PI; };
+    const dV = () => Math.sqrt(V1 * V1 + gV() ** 2 - 2 * V1 * gV() * Math.cos(th)) / V1;
+    function upd() {
+      const df = gF() - F1;
+      if (state === "par") {
+        const p = Math.max(-200, (df / (0.03 * 60)) * 1000 / 2);
+        SB.stat("o-sy-df", sm("동기", "")); SB.stat("o-sy-th", sm("0", "°"));
+        SB.stat("o-sy-dv", sm(((gV() - V1) / V1 * 100).toFixed(1), "%"));
+        SB.stat("o-sy-ic", (p < 0 ? '<span style="color:var(--bad)">' : "<span>") + "G2 부하 " + Math.round(p) + " kW</span>");
+        const rev = p < -20;
+        if (rev !== revFlag) { revFlag = rev; if (rev) msg("sy-msg", "G2가 모선에서 전력을 받아 전동기처럼 돈다(역전력)! 거버너를 올려라.", "bad"); else msg("sy-msg", "병렬 운전 중. 거버너를 올리면 주파수 대신 G2가 받는 부하가 늘어난다(드룹 3% 가정).", "ok"); }
+      } else {
+        SB.stat("o-sy-df", sm((df >= 0 ? "+" : "") + df.toFixed(2), "Hz") + (Math.abs(df) > 0.005 ? " <small>(" + (df > 0 ? "FAST" : "SLOW") + ", 1바퀴 " + (1 / Math.abs(df)).toFixed(1) + " s)</small>" : ""));
+        SB.stat("o-sy-th", sm(Math.round(wrap(th) * 180 / Math.PI), "°"));
+        SB.stat("o-sy-dv", sm(Math.round(dV() * 100), "%"));
+        const ic = dV() / 0.3;
+        SB.stat("o-sy-ic", '<span style="color:' + (ic < 0.3 ? "var(--ok)" : ic < 1.5 ? "var(--warn)" : "var(--bad)") + '">' + ic.toFixed(1) + " <small>× 정격</small></span>");
+      }
+      if (cv) cv.redraw();
+    }
+    function close() {
+      if (state === "par") return;
+      const df = gF() - F1, a = Math.abs(wrap(th)) * 180 / Math.PI, dv = Math.abs(gV() - V1) / V1, ic = dV() / 0.3;
+      if (a <= 10 && Math.abs(df) <= 0.25 && dv <= 0.05) {
+        state = "par"; th = 0; revFlag = df < 0 ? true : false;
+        msg("sy-msg", df >= 0 ? "투입 성공! 순환 전류 " + ic.toFixed(2) + "배로 매끄럽게 병렬 운전에 들어갔다." : "투입은 됐지만 G2가 느려 역전력 상태로 시작한다. 거버너를 올려라.", df >= 0 ? "ok" : "bad");
+      } else {
+        flash = 1;
+        let why = [];
+        if (a > 10) why.push("위상차 " + Math.round(a) + "°");
+        if (Math.abs(df) > 0.25) why.push("주파수 차 " + Math.abs(df).toFixed(2) + " Hz");
+        if (dv > 0.05) why.push("전압 차 " + Math.round(dv * 100) + "%");
+        msg("sy-msg", "실패! " + why.join(", ") + " → 순환 전류 약 " + ic.toFixed(1) + "배 정격, 역전력·과전류 계전기 트립" + (a > 60 ? ", 커플링·축에 큰 충격 토크" : "") + ".", "bad");
+      }
+      upd();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), narrow = w < 520;
+      const R = narrow ? Math.min(w * 0.3, h * 0.22) : Math.min(w * 0.19, h * 0.33);
+      const cx = narrow ? w / 2 : w * 0.27, cy = narrow ? R + 16 : h / 2 - 22;
+      // 다이얼
+      ctx.fillStyle = P.surface; ctx.beginPath(); ctx.arc(cx, cy, R + 10, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = P.border; ctx.lineWidth = 2; ctx.stroke();
+      for (let k = 0; k < 36; k++) { const a = k * Math.PI / 18, l = k % 9 === 0 ? 12 : 5; ctx.strokeStyle = P.dim; ctx.lineWidth = k % 9 === 0 ? 2 : 1; line(ctx, cx + Math.sin(a) * (R - l), cy - Math.cos(a) * (R - l), cx + Math.sin(a) * R, cy - Math.cos(a) * R); }
+      ctx.fillStyle = "rgba(63,207,127,0.25)"; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, R, -Math.PI / 2 - 0.1745, -Math.PI / 2 + 0.1745); ctx.closePath(); ctx.fill();
+      label(ctx, "FAST ▶", cx + R * 0.55, cy + R * 0.45, P.dim, "center", 11, 600);
+      label(ctx, "◀ SLOW", cx - R * 0.55, cy + R * 0.45, P.dim, "center", 11, 600);
+      label(ctx, "동기", cx, cy - R + 22, P.ok, "center", 11, 700);
+      const a = state === "par" ? 0 : th;
+      ctx.strokeStyle = state === "par" ? P.ok : P.accent2; ctx.lineWidth = 4; ctx.lineCap = "round";
+      line(ctx, cx, cy, cx + Math.sin(a) * (R - 14), cy - Math.cos(a) * (R - 14)); ctx.lineCap = "butt";
+      ctx.fillStyle = P.text; ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.fill();
+      // 동기 램프 3개
+      const lb = state === "par" ? 0 : SB.clamp(dV() / 2, 0, 1);
+      for (let k = 0; k < 3; k++) {
+        const lx = cx + (k - 1) * 30, ly = cy + R + 30;
+        ctx.fillStyle = "rgba(255,200,60," + (0.1 + 0.9 * lb) + ")"; ctx.beginPath(); ctx.arc(lx, ly, 9, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = P.dim; ctx.lineWidth = 1; ctx.stroke();
+      }
+      if (!narrow) label(ctx, "동기 램프(암등법)", cx, cy + R + 52, P.dim, "center", 11);
+      // 파형
+      const bx = narrow ? 40 : w * 0.52, by = narrow ? cy + R + 50 : 20, bw = narrow ? w - 54 : w * 0.45, bh = narrow ? h - by - 40 : h - 70;
+      const d1 = [], d2 = [];
+      for (let i = 0; i <= 200; i++) { const x = (i / 200) * 2; d1.push([x, Math.sin(x * 2 * Math.PI)]); d2.push([x, (gV() / V1) * Math.sin(x * 2 * Math.PI + (state === "par" ? 0 : th))]); }
+      SB.chart(ctx, { x: bx, y: by, w: bw, h: bh }, { x: [0, 2], y: [-1.3, 1.3], xLabel: "주기", xTicks: [0, 1, 2], yTicks: [-1, 0, 1],
+        series: [{ data: d1, color: P.accent, width: 2.2 }, { data: d2, color: P.accent2, width: 2, dash: [6, 4] }] });
+      label(ctx, "모선", bx + 6, by + 8, P.accent, "left", 11, 700);
+      label(ctx, "G2", bx + 44, by + 8, P.accent2, "left", 11, 700);
+      if (flash > 0) { ctx.fillStyle = "rgba(214,69,69," + (0.35 * flash) + ")"; ctx.fillRect(0, 0, w, h); label(ctx, "TRIP!", w / 2, h / 2, "#fff", "center", 34, 800); }
+    }
+    cv = SB.canvas($("cv-syn"), draw, { aspect: 0.5, minHeight: 300, maxHeight: 420 });
+    $("sy-up").addEventListener("click", () => gF.set(Math.min(62, +(gF() + 0.05).toFixed(2))));
+    $("sy-dn").addEventListener("click", () => gF.set(Math.max(58, +(gF() - 0.05).toFixed(2))));
+    $("sy-close").addEventListener("click", close);
+    $("sy-open").addEventListener("click", () => { state = "wait"; revFlag = null; th = 2.2; gF.set(60.6); gV.set(455); msg("sy-msg", "차단기 개방. G2를 다시 모선(440 V, 60.00 Hz)에 붙여라.", ""); });
+    upd();
+    let acc = 0;
+    SB.loop($("cv-syn"), (dt) => {
+      if (state !== "par") th = wrap(th + 2 * Math.PI * (gF() - F1) * dt);
+      if (flash > 0) flash = Math.max(0, flash - dt * 1.2);
+      acc += dt; if (acc > 0.1) { acc = 0; upd(); } else cv.redraw();
+    });
+  });
+
+  /* =================================================== Sim 4: 드룹 */
+  sim("droop", () => {
+    const PR = 1000, FN = 60;
+    let cv = null;
+    const gPL = SB.range("dr-pl", (v) => fmtK(v) + " kW", upd);
+    const gF1 = SB.range("dr-f1", (v) => v.toFixed(2) + " Hz", upd);
+    const gD1 = SB.range("dr-d1", (v) => v.toFixed(1) + " %", upd);
+    const gF2 = SB.range("dr-f2", (v) => v.toFixed(2) + " Hz", upd);
+    const gD2 = SB.range("dr-d2", (v) => v.toFixed(1) + " %", upd);
+    function solve() {
+      const a1 = PR / (gD1() / 100 * FN), a2 = PR / (gD2() / 100 * FN);
+      const f = (a1 * gF1() + a2 * gF2() - gPL()) / (a1 + a2);
+      return { f, p1: a1 * (gF1() - f), p2: a2 * (gF2() - f), a1, a2 };
+    }
+    function upd() {
+      const s = solve();
+      SB.stat("o-dr-f", sm(s.f.toFixed(2), "Hz"));
+      SB.stat("o-dr-p1", sm(fmtK(s.p1), "kW") + " <small>(" + Math.round(s.p1 / PR * 100) + "%)</small>");
+      SB.stat("o-dr-p2", sm(fmtK(s.p2), "kW") + " <small>(" + Math.round(s.p2 / PR * 100) + "%)</small>");
+      let st = '<span style="color:var(--ok)">정상</span>';
+      if (s.p1 < 0 || s.p2 < 0) st = '<span style="color:var(--bad)">역전력 트립</span>';
+      else if (s.p1 > 1.0 * PR || s.p2 > 1.0 * PR) st = '<span style="color:var(--bad)">과부하</span>';
+      else if (Math.abs(s.f - 60) > 0.9) st = '<span style="color:var(--warn)">주파수 이탈</span>';
+      SB.stat("o-dr-st", st);
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), s = solve();
+      const fmin = 57.5, fmax = 64;
+      const l1 = [[-200, gF1() + gD1() / 100 * FN * 0.2], [1300, gF1() - gD1() / 100 * FN * 1.3]];
+      const l2 = [[-200, gF2() + gD2() / 100 * FN * 0.2], [1300, gF2() - gD2() / 100 * FN * 1.3]];
+      const C = SB.chart(ctx, { x: 58, y: 14, w: w - 76, h: h - 120 }, { x: [-200, 1300], y: [fmin, fmax], xLabel: "발전기 출력 P (kW)", yLabel: "주파수 f (Hz)", yFmt: (v) => v.toFixed(0),
+        bands: [{ x0: -200, x1: 0, color: "rgba(214,69,69,0.10)" }, { x0: 1000, x1: 1300, color: "rgba(214,69,69,0.10)" }],
+        series: [{ data: l1, color: P.accent, width: 2.4 }, { data: l2, color: P.accent2, width: 2.4 }],
+        hlines: [{ y: s.f, color: P.text, label: "모선 " + s.f.toFixed(2) + " Hz" }, { y: 60, color: P.ok, dash: [2, 4] }],
+        points: [{ x: s.p1, y: s.f, color: P.accent, r: 6, label: "G1" }, { x: s.p2, y: s.f, color: P.accent2, r: 6, label: "G2" }] });
+      label(ctx, "역전력", C.X(-100), C.Y(fmax) + 12, P.bad, "center", 11);
+      label(ctx, "과부하", C.X(1150), C.Y(fmax) + 12, P.bad, "center", 11);
+      // 분담 막대
+      const by = h - 40, bx = 58, bw = w - 76, tot = Math.max(1, gPL());
+      label(ctx, "부하 " + fmtK(gPL()) + " kW 분담", bx, by - 16, P.dim, "left", 12);
+      const f1 = SB.clamp(s.p1 / tot, 0, 1);
+      ctx.fillStyle = P.accent; ctx.fillRect(bx, by, bw * f1, 22);
+      ctx.fillStyle = P.accent2; ctx.fillRect(bx + bw * f1, by, bw * (1 - f1), 22);
+      label(ctx, "G1 " + Math.round(Math.max(0, s.p1)), bx + 6, by + 11, "#fff", "left", 12, 700);
+      label(ctx, "G2 " + Math.round(Math.max(0, s.p2)), bx + bw - 6, by + 11, "#fff", "right", 12, 700);
+    }
+    cv = SB.canvas($("cv-droop"), draw, { aspect: 0.72, minHeight: 340, maxHeight: 460 });
+    $("dr-eq").addEventListener("click", () => {
+      const s = solve(), half = gPL() / 2;
+      // G1 설정점은 그대로, G2 설정점을 바꿔 P1 = P2 = half
+      const f = gF1() - half / s.a1;
+      gF2.set(SB.clamp(+(f + half / s.a2).toFixed(2), 60, 63.6));
+    });
+    $("dr-ret").addEventListener("click", () => {
+      const s = solve(), d = 60 - s.f;
+      gF1.set(SB.clamp(+(gF1() + d).toFixed(2), 60, 63.6)); gF2.set(SB.clamp(+(gF2() + d).toFixed(2), 60, 63.6));
+    });
+    upd();
+  });
+
+  /* =================================================== Sim 5: 전력 수지 */
+  sim("pb", () => {
+    const MODES = ["항해", "입출항", "정박", "하역"];
+    const L = [
+      ["주기관 보조기기(냉각·연료·윤활 펌프)", 350, [0.8, 0.8, 0.1, 0.1]],
+      ["기관실 송풍기", 160, [0.9, 0.9, 0.3, 0.3]],
+      ["조타기", 90, [0.3, 0.6, 0, 0]],
+      ["바우 스러스터", 1200, [0, 0.7, 0, 0]],
+      ["하역 크레인 (4기)", 1200, [0, 0, 0, 0.5]],
+      ["공조·주방·거주", 250, [0.6, 0.6, 0.6, 0.6]],
+      ["냉동 컨테이너(리퍼)", 400, [0.7, 0.7, 0.7, 0.7]],
+      ["밸러스트 펌프", 220, [0, 0.3, 0.2, 0.6]],
+      ["조명·항해·통신", 80, [0.7, 0.8, 0.5, 0.7]],
+      ["압축기·기타", 150, [0.3, 0.5, 0.3, 0.4]],
+    ];
+    const on = L.map(() => true);
+    let cv = null;
+    const gMode = SB.seg("pb-mode", upd);
+    const gG = SB.range("pb-g", (v) => fmtK(v) + " kW", upd);
+    const tbl = $("pb-table");
+    function need(m) { return L.reduce((s, r, i) => s + (on[i] ? r[1] * r[2][m] : 0), 0); }
+    function nrun(m) { const P = need(m), g = gG(); let n = Math.max(1, Math.ceil(P / (0.85 * g))); if (m === 1) n += 1; return n; }
+    function buildTable() {
+      const m = Number(gMode());
+      let html = "<thead><tr><th></th><th>부하</th><th class=\"num\">정격 kW</th><th class=\"num\">부하율</th><th class=\"num\">소요 kW</th></tr></thead><tbody>";
+      L.forEach((r, i) => {
+        html += '<tr class="' + (on[i] ? "" : "off") + '"><td><input type="checkbox" data-i="' + i + '"' + (on[i] ? " checked" : "") + ' aria-label="' + r[0] + '"></td><td>' + r[0] + '</td><td class="num">' + fmtK(r[1]) + '</td><td class="num">' + r[2][m].toFixed(1) + '</td><td class="num">' + (on[i] ? fmtK(r[1] * r[2][m]) : "—") + "</td></tr>";
+      });
+      html += '<tr><td></td><td><b>합계 (' + MODES[m] + ')</b></td><td></td><td></td><td class="num"><b>' + fmtK(need(m)) + "</b></td></tr></tbody>";
+      tbl.innerHTML = html;
+    }
+    tbl.addEventListener("change", (e) => { const i = e.target.dataset.i; if (i != null) { on[i] = e.target.checked; upd(); } });
+    function upd() {
+      buildTable();
+      const m = Number(gMode()), P = need(m), n = nrun(m), g = gG();
+      SB.stat("o-pb-p", sm(fmtK(P), "kW"));
+      SB.stat("o-pb-n", sm(n, "대") + (m === 1 ? " <small>(+1 예비 포함)</small>" : ""));
+      SB.stat("o-pb-x", sm(Math.round(P / (n * g) * 100), "%"));
+      const inst = Math.max(...[0, 1, 2, 3].map(nrun)) + 1;
+      SB.stat("o-pb-inst", sm(inst, "대") + " <small>× " + fmtK(g) + " kW</small>");
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), m = Number(gMode()), g = gG();
+      const lx = Math.min(70, w * 0.18), bx = lx + 6, bw = w - bx - 20, rowH = (h - 40) / 4;
+      const maxP = Math.max(4000, ...[0, 1, 2, 3].map((k) => nrun(k) * g)) * 1.05;
+      const X = (v) => bx + (v / maxP) * bw;
+      // 눈금
+      ctx.strokeStyle = P.grid; ctx.lineWidth = 1;
+      for (let v = 0; v <= maxP; v += 1000) { line(ctx, X(v), 10, X(v), h - 28); label(ctx, (v / 1000) + " MW", X(v), h - 16, P.dim, "center", 10); }
+      const cols = ["#5b8cff", "#3fa7a0", "#f0a030", "#d9483b", "#b8930a", "#8a63c9", "#2da44e", "#2f6fb0", "#c07a3a", "#7d8698"];
+      [0, 1, 2, 3].forEach((k) => {
+        const y = 14 + k * rowH, bh = rowH * 0.5;
+        if (k === m) { ctx.fillStyle = P.surface; ctx.fillRect(0, y - 4, w, rowH - 2); }
+        label(ctx, MODES[k], lx, y + bh / 2, k === m ? P.text : P.dim, "right", 12, k === m ? 700 : 400);
+        let acc = 0;
+        L.forEach((r, i) => { if (!on[i]) return; const v = r[1] * r[2][k]; if (v <= 0) return; ctx.fillStyle = cols[i]; ctx.fillRect(X(acc), y, X(acc + v) - X(acc), bh); acc += v; });
+        const n = nrun(k);
+        for (let j = 1; j <= n; j++) { ctx.strokeStyle = j === n && k === 1 ? P.warn : P.text; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]); line(ctx, X(j * g), y - 2, X(j * g), y + bh + 6); ctx.setLineDash([]); }
+        label(ctx, fmtK(acc) + " kW · 발전기 " + n + "대", Math.min(X(acc) + 6, w - 150), y + bh + 11, P.dim, "left", 11);
+      });
+    }
+    cv = SB.canvas($("cv-pb"), draw, { aspect: 0.42, minHeight: 260, maxHeight: 340 });
+    upd();
+  });
+
+  /* =================================================== Sim 6: 블랙아웃 타임라인 */
+  sim("bo", () => {
+    let t = -1, cv = null, running = false;
+    const gSpd = SB.seg("bo-spd");
+    function events() {
+      const fail = $("bo-fail").checked, nost = $("bo-nostby").checked;
+      const e = { start: 1.0 };
+      e.retry = fail ? 6 : null;
+      e.rated = fail ? 15 : 9;
+      e.egb = e.rated + 1.2;
+      e.stbyReady = nost ? null : 20;
+      e.msb = nost ? null : 22;
+      e.ic = nost ? null : 30;
+      return e;
+    }
+    function egRpm(tt, e) {
+      if (tt < e.start) return 0;
+      if (e.retry && tt < e.retry) { const k = (tt - e.start) / 3; return tt < e.start + 3 ? 0.25 * Math.min(1, k * 2) : Math.max(0, 0.25 - (tt - e.start - 3) * 0.2); }
+      const t0 = e.retry || e.start;
+      return SB.clamp((tt - t0) / (e.rated - t0), 0, 1) ** 1.3;
+    }
+    function state(tt) {
+      const e = events();
+      if (tt < 0) return { e, msb: "live", esb: "main", ups: false };
+      const msb = e.msb != null && tt >= e.msb ? "live" : "dead";
+      let esb = tt >= e.egb ? "eg" : "dead";
+      if (e.ic != null && tt >= e.ic) esb = "main";
+      return { e, msb, esb, ups: esb === "dead" };
+    }
+    function upd() {
+      const s = state(t);
+      SB.stat("o-bo-t", t < 0 ? "—" : sm(t.toFixed(1), "s"));
+      SB.stat("o-bo-msb", s.msb === "live" ? '<span style="color:var(--ok)">정상</span>' : '<span style="color:var(--bad)">정전</span>');
+      SB.stat("o-bo-esb", s.esb === "main" ? '<span style="color:var(--ok)">주전원</span>' : s.esb === "eg" ? '<span style="color:var(--warn)">비상 발전기</span>' : '<span style="color:var(--bad)">정전 (배터리)</span>');
+      SB.stat("o-bo-rec", t < 0 ? "—" : (t >= s.e.egb ? sm(s.e.egb.toFixed(1), "s") + (s.e.egb <= 45 ? ' <small style="color:var(--ok)">≤ 45 s</small>' : "") : "대기"));
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), s = state(t), e = s.e, T = 60;
+      const bx = 20, bw = w - 40, ty = 34;
+      const X = (v) => bx + (v / T) * bw;
+      ctx.fillStyle = "rgba(214,69,69,0.10)"; ctx.fillRect(X(45), ty - 14, X(T) - X(45), 28);
+      ctx.strokeStyle = P.axis; ctx.lineWidth = 2; line(ctx, bx, ty, bx + bw, ty);
+      for (let v = 0; v <= T; v += 10) { line(ctx, X(v), ty - 4, X(v), ty + 4); label(ctx, v + "s", X(v), ty + 14, P.dim, "center", 10); }
+      label(ctx, "SOLAS 45 s", X(45) + 3, ty - 20, P.bad, "left", 10, 700);
+      const marks = [[0, "블랙아웃", P.bad], [e.start, "EG 기동", P.warn], [e.egb, "EGB 투입", P.ok]];
+      if (e.retry) marks.push([e.retry, "재기동", P.warn]);
+      if (e.msb != null) marks.push([e.msb, "주발전기 투입", P.accent]);
+      if (e.ic != null) marks.push([e.ic, "IC 복귀", P.accent]);
+      marks.forEach(([v, n, c], i) => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(X(v), ty, 4.5, 0, Math.PI * 2); ctx.fill(); if (w > 460 || i < 3) label(ctx, n, X(v), ty + 28 + (i % 2) * 13, c, "center", 10, 600); });
+      if (t >= 0) { ctx.strokeStyle = P.text; ctx.lineWidth = 2; line(ctx, X(Math.min(t, T)), ty - 16, X(Math.min(t, T)), ty + 16); }
+      // 계통 그림
+      const top = 96, mid = top + (h - top) * 0.5;
+      const bxM = w * 0.06, bwM = w * 0.4, bxE = w * 0.54, bwE = w * 0.4;
+      const box = (x, y, ww, hh, live, name, sub) => {
+        rr(ctx, x, y, ww, hh, 8); ctx.fillStyle = live ? P.surface : P.bg; ctx.fill(); ctx.strokeStyle = live ? P.accent : P.bad; ctx.lineWidth = 2; ctx.stroke();
+        label(ctx, name, x + ww / 2, y + 16, P.text, "center", 12, 700); label(ctx, sub, x + ww / 2, y + 33, live ? P.ok : P.bad, "center", 11);
+      };
+      box(bxM, top, bwM, 44, s.msb === "live", "주배전반 MSB", s.msb === "live" ? "급전 중" : "정전");
+      box(bxE, top, bwE, 44, s.esb !== "dead", "비상 배전반 ESB", s.esb === "main" ? "주전원" : s.esb === "eg" ? "비상 발전기" : "정전");
+      // 연락선
+      ctx.strokeStyle = s.esb === "main" ? P.accent : P.faint; ctx.lineWidth = 3; ctx.setLineDash(s.esb === "main" ? [] : [5, 4]); line(ctx, bxM + bwM, top + 22, bxE, top + 22); ctx.setLineDash([]);
+      // 전구들
+      const bulbs = (x0, ww, y, n, on, name) => {
+        for (let i = 0; i < n; i++) {
+          const x = x0 + ww * (i + 0.5) / n;
+          if (on) { ctx.fillStyle = "rgba(255,200,60,0.25)"; ctx.beginPath(); ctx.arc(x, y, 15, 0, Math.PI * 2); ctx.fill(); }
+          ctx.fillStyle = on ? "#ffc83c" : P.surface; ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = P.dim; ctx.lineWidth = 1; ctx.stroke();
+        }
+        label(ctx, name, x0 + ww / 2, y + 24, P.dim, "center", 11);
+      };
+      bulbs(bxM, bwM, mid + 10, 4, s.msb === "live", "주 조명·펌프");
+      bulbs(bxE, bwE, mid + 10, 3, s.esb !== "dead" || s.ups, s.ups ? "비상 조명 (배터리)" : "비상 조명·조타기");
+      // EG 회전계
+      const e2 = events(), rpm = t < 0 ? 0 : egRpm(t, e2) * (s.esb === "main" && t > e2.ic + 5 ? 0.6 : 1);
+      const gx = bxE + bwE / 2, gy = h - 34, gr = Math.min(28, w * 0.07);
+      ctx.strokeStyle = P.border; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(gx, gy, gr, Math.PI, 2 * Math.PI); ctx.stroke();
+      ctx.strokeStyle = rpm > 0.95 ? P.ok : P.warn; ctx.beginPath(); ctx.arc(gx, gy, gr, Math.PI, Math.PI + Math.PI * rpm); ctx.stroke();
+      label(ctx, "EG " + Math.round(rpm * 1800) + " rpm", gx, gy + 12, P.text, "center", 11, 600);
+      label(ctx, "주발전기: " + (e2.msb == null ? "대기 없음" : t < 2 ? "대기" : t < e2.stbyReady ? "기동 중" : "운전"), bxM + bwM / 2, gy + 4, P.dim, "center", 11);
+    }
+    cv = SB.canvas($("cv-bo"), draw, { aspect: 0.55, minHeight: 280, maxHeight: 380 });
+    $("bo-go").addEventListener("click", () => { t = 0; running = true; upd(); });
+    ["bo-fail", "bo-nostby"].forEach((id) => $(id).addEventListener("change", () => { upd(); cv.redraw(); }));
+    upd();
+    SB.loop($("cv-bo"), (dt) => {
+      if (running) { t += dt * Number(gSpd()); if (t > 60) { t = 60; running = false; } upd(); }
+      cv.redraw();
+    });
+  });
+
+  /* =================================================== Sim 7: 디젤-전기 vs 기계식 */
+  sim("de", () => {
+    const PMAX = 16000, PG = 5500, NG = 4, PAUX = 2500;
+    let cv = null;
+    const gP = SB.range("de-p", (v) => v + " % (" + fmtK(PMAX * v / 100 / 1000, 1) + " MW)", upd);
+    const gH = SB.range("de-h", (v) => v.toFixed(1) + " MW", upd);
+    const gE = SB.range("de-eta", (v) => v.toFixed(3), upd);
+    $("de-all").addEventListener("change", upd);
+    const gRef = SB.seg("de-ref", upd);
+    function de(pp, hotel, eta, all) {
+      const Pe = pp / eta + hotel;
+      let best = null;
+      for (let n = 1; n <= NG; n++) {
+        const x = Pe / (n * PG); if (x > 1.0) continue;
+        const f = Pe * sfoc4(x);
+        if (!best || f < best.f) best = { n, x, f };
+      }
+      if (all || !best) { const x = Pe / (NG * PG); best = { n: NG, x, f: Pe * sfoc4(x) }; }
+      return best; // f: g/h
+    }
+    function aux(hotel) {
+      let best = null;
+      for (let n = 1; n <= 3; n++) { const x = hotel / (n * PAUX); if (x > 1) continue; const f = hotel * sfoc4(x); if (!best || f < best.f) best = { n, x, f }; }
+      return best || { n: 3, x: hotel / (3 * PAUX), f: hotel * sfoc4(hotel / (3 * PAUX)) };
+    }
+    function mech(pp, hotel) {
+      const x = pp / PMAX, f = gRef() === "2s" ? pp * sfoc2(x) / 0.99 : pp * sfoc4(x) / 0.98;
+      const a = hotel > 0 ? aux(hotel) : { f: 0, n: 0, x: 0 };
+      return { f: f + a.f, x, a };
+    }
+    function upd() {
+      const pp = PMAX * gP() / 100, hotel = gH() * 1000, eta = gE(), all = $("de-all").checked;
+      const d = de(pp, hotel, eta, all), m = mech(pp, hotel);
+      SB.stat("o-de-n", sm(d.n + " / 4", "대") + " <small>(부하율 " + Math.round(d.x * 100) + "%)</small>");
+      SB.stat("o-de-fe", sm(fmtK(d.f / 1e6, 2), "t/h"));
+      SB.stat("o-de-fm", sm(fmtK(m.f / 1e6, 2), "t/h") + " <small>(ME " + Math.round(m.x * 100) + "%)</small>");
+      const diff = (d.f - m.f) / m.f * 100;
+      SB.stat("o-de-d", '<span style="color:' + (diff < 0 ? "var(--ok)" : "var(--bad)") + '">' + (diff > 0 ? "+" : "") + diff.toFixed(1) + " <small>% (전기 추진)</small></span>");
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), hotel = gH() * 1000, eta = gE(), all = $("de-all").checked;
+      const d1 = [], d2 = [], d3 = [];
+      for (let p = 2; p <= 100; p += 1) {
+        const pp = PMAX * p / 100, tot = pp + hotel;
+        d1.push([p, de(pp, hotel, eta, false).f / tot]);
+        d2.push([p, de(pp, hotel, eta, true).f / tot]);
+        d3.push([p, mech(pp, hotel).f / tot]);
+      }
+      const ch = h - 92;
+      const pc = gP(), ppc = PMAX * pc / 100, tot = ppc + hotel;
+      const dcur = de(ppc, hotel, eta, all), mcur = mech(ppc, hotel);
+      SB.chart(ctx, { x: 58, y: 12, w: w - 76, h: ch - 50 }, { x: [0, 100], y: [160, 260], xLabel: "추진 부하 (% of 16 MW)", yLabel: "연료 / 유효 출력 (g/kWh)",
+        series: [{ data: d3, color: P.accent2, width: 2.4 }, { data: d2, color: P.faint, width: 1.6, dash: [5, 4] }, { data: d1, color: P.accent, width: 2.6 }],
+        vlines: [{ x: pc, color: P.dim }],
+        points: [{ x: pc, y: dcur.f / tot, color: P.accent, r: 5 }, { x: pc, y: mcur.f / tot, color: P.accent2, r: 5 }] });
+      const lg = [["디젤-전기(대수 제어)", P.accent], [gRef() === "2s" ? "저속 2행정 직결 + 발전기" : "중속 기어 구동 + 발전기", P.accent2], ["디젤-전기(4대 상시)", P.faint]];
+      lg.forEach(([n, c], i) => { ctx.fillStyle = c; ctx.fillRect(70, 18 + i * 16, 14, 3); label(ctx, n, 90, 20 + i * 16, P.dim, "left", 11); });
+      // 엔진 막대
+      const by = ch + 8, bw = (w - 76) / NG;
+      label(ctx, "디젤-전기 발전기 부하율", 58, by - 2, P.dim, "left", 11);
+      for (let k = 0; k < NG; k++) {
+        const x = 58 + k * bw + 6, ww = bw - 12, run = k < dcur.n, xr = run ? dcur.x : 0;
+        rr(ctx, x, by + 10, ww, 58, 6); ctx.fillStyle = P.surface; ctx.fill();
+        ctx.fillStyle = "rgba(63,207,127,0.18)"; ctx.fillRect(x, by + 10 + 58 * (1 - 0.9), ww, 58 * 0.2);
+        if (run) { ctx.fillStyle = xr > 0.7 ? P.ok : xr > 0.45 ? P.warn : P.bad; ctx.fillRect(x + 3, by + 10 + 58 * (1 - xr), ww - 6, 58 * xr); }
+        label(ctx, run ? Math.round(xr * 100) + "%" : "정지", x + ww / 2, by + 39, P.text, "center", 12, 700);
+      }
+    }
+    cv = SB.canvas($("cv-de"), draw, { aspect: 0.75, minHeight: 360, maxHeight: 480 });
+    upd();
+  });
+
+  /* =================================================== Sim 8: 포드 조종 */
+  sim("pod", () => {
+    const LEN = 120, M = 1.5e7, TMAX = 6e5, BTMAX = 2e5;
+    const MX = 1.05 * M, MY = 1.6 * M, IZ = M * Math.pow(0.25 * LEN, 2) * 1.3;
+    const pods = [{ x: -52, y: -8 }, { x: -52, y: 8 }], bt = { x: 50 };
+    let st, trail = [], cv = null, ext = { x: 260, y: 200 };
+    const VIEW = 330; // m
+    function reset() { st = { x: 0, y: 0, psi: 0, u: 0, v: 0, r: 0 }; trail = []; }
+    reset();
+    const gA1 = SB.range("pd-a1", (v) => v + "°", upd), gT1 = SB.range("pd-t1", (v) => v + " %", upd);
+    const gA2 = SB.range("pd-a2", (v) => v + "°", upd), gT2 = SB.range("pd-t2", (v) => v + " %", upd);
+    const gBT = SB.range("pd-bt", (v) => (v > 0 ? "우현 " : v < 0 ? "좌현 " : "") + Math.abs(v) + " %", upd);
+    function forces() {
+      const T = [gT1() / 100 * TMAX, gT2() / 100 * TMAX], A = [SB.rad(gA1()), SB.rad(gA2())];
+      let Fx = 0, Fy = 0, N = 0;
+      pods.forEach((p, i) => { const fx = T[i] * Math.cos(A[i]), fy = T[i] * Math.sin(A[i]); Fx += fx; Fy += fy; N += p.x * fy - p.y * fx; });
+      const fb = gBT() / 100 * BTMAX; Fy += fb; N += bt.x * fb;
+      return { Fx, Fy, N, T, A, fb };
+    }
+    function upd() {
+      const f = forces();
+      SB.stat("o-pd-f", sm(Math.round(Math.hypot(f.Fx, f.Fy) / 1000), "kN") + " / " + sm(fmtK(f.N / 1e6, 1), "MN·m"));
+      if (cv) cv.redraw();
+    }
+    function step(dt) {
+      const f = forces(), { u, v, r } = st;
+      const X = f.Fx - (2.2e4 * u * Math.abs(u) + 3e4 * u);
+      const Y = f.Fy - (3.7e5 * v * Math.abs(v) + 2e5 * v);
+      const N = f.N - (2e10 * r * Math.abs(r) + 4e9 * r);
+      st.u += (X / MX + v * r) * dt;
+      st.v += (Y / MY - u * r) * dt;
+      st.r += (N / IZ) * dt;
+      st.x += (st.u * Math.cos(st.psi) - st.v * Math.sin(st.psi)) * dt;
+      st.y += (st.u * Math.sin(st.psi) + st.v * Math.cos(st.psi)) * dt;
+      st.psi += st.r * dt;
+      if (Math.abs(st.x) > ext.x) { st.x = -Math.sign(st.x) * ext.x * 0.95; trail = []; }
+      if (Math.abs(st.y) > ext.y) { st.y = -Math.sign(st.y) * ext.y * 0.95; trail = []; }
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), s = Math.min(w / (VIEW * 1.25), h / VIEW), cx = w / 2, cy = h / 2;
+      ext = { x: w / 2 / s - 20, y: (h / 2 - 18) / s - 15 };
+      // 격자
+      ctx.strokeStyle = P.grid; ctx.lineWidth = 1;
+      for (let g = -300; g <= 300; g += 50) { line(ctx, cx + g * s, 0, cx + g * s, h); line(ctx, 0, cy + g * s, w, cy + g * s); }
+      // 부두
+      ctx.fillStyle = P.surface; ctx.fillRect(0, h - 18, w, 18); label(ctx, "부두", 8, h - 9, P.dim, "left", 11);
+      // 항적
+      ctx.strokeStyle = P.faint; ctx.lineWidth = 1.5; ctx.beginPath(); trail.forEach((p, i) => (i ? ctx.lineTo(cx + p[0] * s, cy + p[1] * s) : ctx.moveTo(cx + p[0] * s, cy + p[1] * s))); ctx.stroke();
+      const sx = cx + st.x * s, sy = cy + st.y * s;
+      SB.shipTop(ctx, sx, sy, st.psi, { len: LEN * s, wid: 20 * s, color: P.dim, full: 0.75 });
+      const f = forces();
+      const toW = (bx, by) => [sx + (bx * Math.cos(st.psi) - by * Math.sin(st.psi)) * s, sy + (bx * Math.sin(st.psi) + by * Math.cos(st.psi)) * s];
+      const ksc = 70 / TMAX; // px per N
+      pods.forEach((p, i) => {
+        const [px, py] = toW(p.x, p.y), a = st.psi + f.A[i];
+        ctx.save(); ctx.translate(px, py); ctx.rotate(a); ctx.fillStyle = P.warn; rr(ctx, -9, -3.5, 18, 7, 3); ctx.fill(); ctx.restore();
+        if (f.T[i] > 1) SB.arrow(ctx, px, py, px + Math.cos(a) * f.T[i] * ksc, py + Math.sin(a) * f.T[i] * ksc, P.accent2, 2.5);
+      });
+      if (Math.abs(f.fb) > 1) { const [bx, by] = toW(bt.x, 0), a = st.psi + Math.PI / 2 * Math.sign(f.fb); SB.arrow(ctx, bx, by, bx + Math.cos(a) * Math.abs(f.fb) * ksc, by + Math.sin(a) * Math.abs(f.fb) * ksc, P.accent, 2.5); }
+      // 합력(중심)
+      const Fw = [f.Fx * Math.cos(st.psi) - f.Fy * Math.sin(st.psi), f.Fx * Math.sin(st.psi) + f.Fy * Math.cos(st.psi)];
+      if (Math.hypot(Fw[0], Fw[1]) > 1e3) SB.arrow(ctx, sx, sy, sx + Fw[0] * ksc, sy + Fw[1] * ksc, P.ok, 3);
+      if (Math.abs(f.N) > 1e6) { ctx.strokeStyle = P.ok; ctx.lineWidth = 2; const rr2 = 26, a0 = -Math.PI / 2, a1 = a0 + SB.clamp(f.N / 6e7, -1, 1) * Math.PI * 1.2; ctx.beginPath(); ctx.arc(sx, sy, rr2, Math.min(a0, a1), Math.max(a0, a1)); ctx.stroke(); }
+      label(ctx, "50 m 격자 · 초록: 합력·모멘트", 8, 12, P.dim, "left", 11);
+    }
+    cv = SB.canvas($("cv-pod"), draw, { aspect: 0.8, minHeight: 320, maxHeight: 460 });
+    const preset = (a1, t1, a2, t2, b) => { gA1.set(a1); gT1.set(t1); gA2.set(a2); gT2.set(t2); gBT.set(b); };
+    $("pd-fwd").addEventListener("click", () => preset(0, 40, 0, 40, 0));
+    $("pd-spin").addEventListener("click", () => preset(-90, 17, -90, 17, 100));
+    $("pd-crab").addEventListener("click", () => preset(90, 17, 90, 17, 100));
+    $("pd-stop").addEventListener("click", () => { preset(0, 0, 0, 0, 0); reset(); upd(); });
+    upd();
+    let acc = 0;
+    SB.loop($("cv-pod"), (dt) => {
+      const DT = dt * 5;
+      for (let k = 0; k < 5; k++) step(DT / 5);
+      acc += dt; if (acc > 0.25) { acc = 0; trail.push([st.x, st.y]); if (trail.length > 300) trail.shift(); }
+      SB.stat("o-pd-u", sm(SB.kn(st.u).toFixed(1), "kn"));
+      SB.stat("o-pd-v", sm(st.v.toFixed(2), "m/s"));
+      SB.stat("o-pd-r", sm((st.r * 180 / Math.PI * 60).toFixed(0), "°/min"));
+      cv.redraw();
+    });
+  });
+
+  /* =================================================== Sim 9: 배터리 하이브리드 */
+  sim("bat", () => {
+    const PG = 1000, NG = 4, RES = 500, DT = 5, TEND = 7200;
+    let seed = 7, prof = [], res = {}, cv = null;
+    const gMode = SB.seg("bt-mode", upd);
+    const gCap = SB.range("bt-cap", (v) => fmtK(v) + " kWh", upd);
+    $("bt-zero").addEventListener("change", upd);
+    function rng(a) { return function () { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+    function makeProfile() {
+      const R = rng(seed), n = TEND / DT, p = new Array(n + 1).fill(0);
+      let nx = 60 + R() * 120;
+      const lifts = [];
+      while (nx < TEND - 1300) { const dur = 50 + R() * 50, amp = 450 + R() * 350; lifts.push([nx, dur, amp]); nx += dur + 90 + R() * 200; }
+      const thr = []; for (let k = 0; k < 4; k++) thr.push([R() * (TEND - 1500), 100 + R() * 140, 250 + R() * 250]);
+      let nz = 0;
+      for (let i = 0; i <= n; i++) {
+        const t = i * DT;
+        nz = nz * 0.9 + (R() - 0.5) * 60;
+        let v = 900 + 140 * Math.sin(2 * Math.PI * t / 2400) + nz;
+        lifts.forEach(([t0, d, a]) => { if (t >= t0 && t <= t0 + d) { const k = (t - t0) / d; v += a * Math.min(1, k * 5) * Math.min(1, (1 - k) * 4); } });
+        thr.forEach(([t0, d, a]) => { if (t >= t0 && t <= t0 + d) v += a; });
+        if (t > TEND - 1200) v = 520 + 60 * Math.sin(t / 90) + nz * 0.5; // 입항 접근: 저부하
+        p[i] = Math.max(250, v);
+      }
+      prof = p;
+    }
+    function run(mode, cap, zero) {
+      const n = prof.length, eng = [], bat = [], soc = [], nr = [];
+      const Pmax = mode === "none" ? 0 : Math.min(2 * cap, 2000);
+      let S = 0.6, ema = prof[0], fuel = 0, nOn = 2, lowSince = 0, sumN = 0, sumX = 0, cntX = 0;
+      for (let i = 0; i < n; i++) {
+        const t = i * DT, L = prof[i];
+        ema += (L - ema) * DT / 600;
+        let Pb = 0;
+        const zeroNow = zero && mode !== "none" && t > TEND - 1200;
+        if (mode !== "none") {
+          let set = zeroNow ? 0 : ema + (0.6 - S) * cap * 1.5;
+          Pb = L - Math.max(0, set);
+          Pb = SB.clamp(Pb, -Pmax, Pmax);
+          if (Pb > 0 && S <= 0.2) Pb = 0;
+          if (Pb < 0 && S >= 0.9) Pb = 0;
+          if (Pb > 0) Pb = Math.min(Pb, (S - 0.2) * cap * 3600 / DT * 0.95);
+        }
+        let Pe = L - Pb;
+        // 운전 대수 결정
+        const canRes = mode === "res" && Pmax >= RES && (S - 0.2) * cap >= RES * 0.25;
+        const R = canRes ? 0 : RES;
+        let need = Pe <= 1 ? 0 : Math.max(1, Math.ceil((Pe + R) / (0.9 * PG)));
+        if (zeroNow && Pe <= 1) need = 0;
+        need = Math.min(NG, need);
+        if (need > nOn) { nOn = need; lowSince = t; }
+        else if (need < nOn) { if (t - lowSince > 180 || need === 0) nOn = need; }
+        else lowSince = t;
+        if (nOn === 0 && Pe > 1) nOn = 1;
+        if (Pb > 0) S -= Pb * DT / 3600 / cap / 0.95; else if (Pb < 0) S -= Pb * DT / 3600 / cap * 0.95;
+        if (nOn > 0) { const x = Pe / (nOn * PG); fuel += Pe * sfoc4(x) * DT / 3600 / 1000; sumX += x; cntX++; }
+        sumN += nOn;
+        eng.push([t / 60, Pe]); bat.push([t / 60, Pb]); soc.push([t / 60, S * 100]); nr.push(nOn);
+      }
+      if (mode !== "none") fuel -= (S - 0.6) * cap * 190 / 1000; // 끝 SOC 차이를 연료로 환산해 공정하게 비교
+      return { eng, bat, soc, nr, fuel, avgN: sumN / n, avgX: cntX ? sumX / cntX : 0 };
+    }
+    function upd() {
+      const cap = gCap(), mode = gMode(), zero = $("bt-zero").checked;
+      res = run(mode, cap, zero);
+      const base = run("none", cap, false);
+      res.base = base;
+      SB.stat("o-bt-f", sm(fmtK(res.fuel, 0), "kg"));
+      const sv = (1 - res.fuel / base.fuel) * 100;
+      SB.stat("o-bt-s", mode === "none" ? "기준" : '<span style="color:' + (sv > 0 ? "var(--ok)" : "var(--bad)") + '">' + (sv > 0 ? "−" : "+") + Math.abs(sv).toFixed(1) + " <small>%</small></span>");
+      SB.stat("o-bt-n", sm(res.avgN.toFixed(2), "대") + " <small>(기준 " + base.avgN.toFixed(2) + ")</small>");
+      SB.stat("o-bt-x", sm(Math.round(res.avgX * 100), "%") + " <small>(기준 " + Math.round(base.avgX * 100) + "%)</small>");
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette();
+      if (!res.eng) return;
+      const h1 = h * 0.64;
+      const load = prof.map((v, i) => [i * DT / 60, v]);
+      const C = SB.chart(ctx, { x: 58, y: 12, w: w - 76, h: h1 - 30 }, { x: [0, 120], y: [-1000, 2200], yLabel: "전력 (kW)", xTicks: [0, 20, 40, 60, 80, 100, 120],
+        bands: $("bt-zero").checked && gMode() !== "none" ? [{ x0: 100, x1: 120, color: "rgba(63,207,127,0.10)" }] : [],
+        series: [{ data: load, color: P.faint, width: 1.2 }, { data: res.bat, color: P.accent2, width: 1.4, fill: "rgba(217,72,59,0.12)" }, { data: res.eng, color: P.accent, width: 2.2 }],
+        hlines: [{ y: 0, color: P.axis, dash: [] }] });
+      // 운전 대수 띠
+      for (let i = 0; i < res.nr.length; i += 6) {
+        const n = res.nr[i]; ctx.fillStyle = ["rgba(63,207,127,0.6)", "#5b8cff", "#f0a030", "#d9483b", "#8a63c9"][n] || P.faint;
+        ctx.fillRect(C.X(i * DT / 60), C.box.y + C.box.h - 6, Math.max(1, C.X(6 * DT / 60) - C.X(0)), 6);
+      }
+      const lg = [["부하", P.faint], ["엔진", P.accent], ["배터리(+방전)", P.accent2]];
+      lg.forEach(([n, c], i) => { ctx.fillStyle = c; ctx.fillRect(70 + i * 90, 18, 14, 3); label(ctx, n, 88 + i * 90, 20, P.dim, "left", 11); });
+      const bandC = ["rgba(63,207,127,0.6)", "#5b8cff", "#f0a030", "#d9483b", "#8a63c9"];
+      for (let k = 4; k >= 0; k--) { const lx = C.box.x + C.box.w - 4 - (4 - k) * 26; ctx.fillStyle = bandC[k]; ctx.fillRect(lx - 18, C.box.y + C.box.h - 22, 8, 8); label(ctx, String(k), lx - 7, C.box.y + C.box.h - 18, P.dim, "left", 10); }
+      label(ctx, "운전 대수", C.box.x + C.box.w - 140, C.box.y + C.box.h - 18, P.dim, "right", 10);
+      SB.chart(ctx, { x: 58, y: h1 + 4, w: w - 76, h: h - h1 - 44 }, { x: [0, 120], y: [0, 100], yLabel: "SOC %", xLabel: "시간 (분)", xTicks: [0, 20, 40, 60, 80, 100, 120], yTicks: [0, 20, 60, 90],
+        series: [{ data: res.soc, color: P.ok, width: 2 }], hlines: [{ y: 20, color: P.bad }, { y: 90, color: P.bad }] });
+    }
+    makeProfile();
+    cv = SB.canvas($("cv-bat"), draw, { aspect: 0.55, minHeight: 360, maxHeight: 480 });
+    $("bt-new").addEventListener("click", () => { seed = (seed * 31 + 17) % 100000; makeProfile(); upd(); });
+    upd();
+  });
+
+  /* =================================================== Sim 10: 육상 전원 */
+  sim("amp", () => {
+    let cv = null, r = {};
+    const gType = SB.seg("am-type", upd);
+    const gH = SB.range("am-h", (v) => v + " h", upd);
+    const gN = SB.range("am-n", (v) => v + " 회", upd);
+    const gCI = SB.range("am-ci", (v) => v + " g/kWh", upd);
+    function upd() {
+      const P = Number(gType()), E = P * gH() * gN(); // kWh
+      const fuel = E * 0.215 / 1000; // t
+      const co2s = fuel * 3.206, co2g = E / 0.95 * gCI() / 1e6;
+      const nox = E * 10 / 1e6, pm = E * 0.2 / 1e6;
+      r = { E, fuel, co2s, co2g, nox, pm };
+      SB.stat("o-am-e", sm(fmtK(E / 1000), "MWh"));
+      const d = co2s - co2g;
+      SB.stat("o-am-co2", '<span style="color:' + (d >= 0 ? "var(--ok)" : "var(--bad)") + '">' + fmtK(d) + " <small>t (" + Math.round(d / co2s * 100) + "%)</small></span>");
+      SB.stat("o-am-nox", sm(fmtK(nox, 1), "t"));
+      SB.stat("o-am-f", sm(fmtK(fuel), "t"));
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette();
+      const max = Math.max(r.co2s, r.co2g) * 1.15 || 1;
+      const bx = 20, bw = w - 40, top = 40;
+      label(ctx, "연간 CO₂ 배출 (t)", bx, 16, P.dim, "left", 12, 600);
+      const bars = [["선박 발전기", r.co2s, P.accent2], ["육상 전원", r.co2g, P.accent]];
+      bars.forEach(([n, v, c], i) => {
+        const y = top + i * 56;
+        ctx.fillStyle = c; ctx.fillRect(bx, y + 18, bw * v / max, 22);
+        label(ctx, n + "  " + fmtK(v) + " t", bx, y + 8, P.text, "left", 12, 600);
+      });
+      const y2 = top + 130;
+      label(ctx, "국지 배출 (항구 도시 대기)", bx, y2, P.dim, "left", 12, 600);
+      const loc = [["NOx", r.nox, 1], ["PM", r.pm, 50]];
+      loc.forEach(([n, v], i) => {
+        const y = y2 + 18 + i * 34;
+        ctx.fillStyle = P.accent2; ctx.fillRect(bx + 50, y, bw - 60, 14);
+        ctx.fillStyle = P.accent; ctx.fillRect(bx + 50, y + 16, 2, 10);
+        label(ctx, n, bx, y + 10, P.text, "left", 12, 600);
+        label(ctx, fmtK(v, 1) + " t → 0", bx + bw - 14, y + 7, "#fff", "right", 11, 700);
+      });
+      // 플러그 그림
+      const py = h - 34;
+      ctx.strokeStyle = P.accent; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(bx, py); ctx.bezierCurveTo(bx + bw * 0.3, py + 20, bx + bw * 0.6, py - 20, bx + bw - 30, py); ctx.stroke();
+      label(ctx, "부두 변전소", bx, py - 14, P.dim, "left", 11);
+      label(ctx, "6.6/11 kV 케이블 → 선박", bx + bw, py - 14, P.dim, "right", 11);
+    }
+    cv = SB.canvas($("cv-amp"), draw, { aspect: 0.6, minHeight: 300, maxHeight: 360 });
+    upd();
+  });
+
+  /* =================================================== Sim 11: THD */
+  sim("thd", () => {
+    let cv = null, H = [];
+    const gT = SB.seg("th-type", upd);
+    const gS = SB.range("th-share", (v) => v + " %", upd);
+    const gN = SB.range("th-n", (v) => v + " 대", upd);
+    function harmonics() {
+      const type = gT(), share = gS() / 100, X = 0.14 / gN(); // pu 리액턴스(대수 증가 시 감소)
+      const out = [];
+      [5, 7, 11, 13, 17, 19, 23, 25].forEach((h) => {
+        let ih = 0;
+        const ov = Math.pow(5 / h, 0.6); // 전류 겹침(commutation overlap)으로 고차일수록 더 작아짐
+        if (type === "6") ih = ov / h;
+        else if (type === "12") ih = (h === 11 || h === 13 || h === 23 || h === 25 ? 1 : 0.1) * ov / h;
+        else ih = 0.03 / Math.sqrt(h);
+        out.push([h, h * X * ih * share]);
+      });
+      return out;
+    }
+    function upd() {
+      H = harmonics();
+      const thd = Math.sqrt(H.reduce((s, [, v]) => s + v * v, 0)) * 100;
+      const mx = H.reduce((a, b) => (b[1] > a[1] ? b : a), [0, 0]);
+      SB.stat("o-th-thd", sm(thd.toFixed(1), "%"));
+      SB.stat("o-th-max", sm((mx[1] * 100).toFixed(1), "%") + " <small>(" + mx[0] + "차)</small>");
+      SB.stat("o-th-ok", thd <= 8 ? '<span style="color:var(--ok)">적합</span>' : '<span style="color:var(--bad)">초과 — 필터 필요</span>');
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette();
+      const h1 = h * 0.58;
+      const d0 = [], d1 = [];
+      for (let i = 0; i <= 300; i++) {
+        const x = i / 300 * 2, th = x * 2 * Math.PI;
+        d0.push([x, Math.sin(th)]);
+        let v = Math.sin(th);
+        H.forEach(([hh, a], k) => { v += a * Math.sin(hh * th + (k % 2 ? Math.PI : 0)); });
+        d1.push([x, v]);
+      }
+      SB.chart(ctx, { x: 48, y: 12, w: w - 64, h: h1 - 50 }, { x: [0, 2], y: [-1.5, 1.5], xLabel: "주기", yLabel: "전압 (pu)", xTicks: [0, 0.5, 1, 1.5, 2], yTicks: [-1, 0, 1],
+        series: [{ data: d0, color: P.faint, width: 1.4, dash: [4, 4] }, { data: d1, color: P.accent, width: 2.2 }] });
+      const C = SB.chart(ctx, { x: 48, y: h1 + 6, w: w - 64, h: h - h1 - 44 }, { x: [0, 27], y: [0, 10], xLabel: "고조파 차수 h", yLabel: "Vh/V1 (%)", xTicks: [1, 5, 7, 11, 13, 17, 19, 23, 25], hlines: [{ y: 5, color: P.warn, label: "개별 5%" }] });
+      const bw = Math.max(4, C.box.w / 40);
+      ctx.fillStyle = P.dim; ctx.fillRect(C.X(1) - bw / 2, C.Y(10), bw, C.Y(0) - C.Y(10));
+      label(ctx, "100", C.X(1) + bw, C.Y(9.5), P.dim, "left", 10);
+      H.forEach(([hh, a]) => { const v = Math.min(10, a * 100); ctx.fillStyle = a * 100 > 5 ? P.bad : P.accent; ctx.fillRect(C.X(hh) - bw / 2, C.Y(v), bw, C.Y(0) - C.Y(v)); });
+    }
+    cv = SB.canvas($("cv-thd"), draw, { aspect: 0.75, minHeight: 340, maxHeight: 440 });
+    upd();
+  });
+})();
+</script>
+</body>
+</html>

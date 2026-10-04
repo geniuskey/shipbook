@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>ShipBook · 인터랙티브 선박 교과서</title>
+<meta name="description" content="부력과 복원성에서 프로펠러, 파도, 선체 구조, 친환경 연료와 자율운항까지 — 슬라이더를 움직이고 3D 모델을 돌려 보며 배우는 인터랙티브 선박 교과서. 23개 챕터, 약 220개 시뮬레이터.">
+<link rel="canonical" href="https://shipbook.euiyun.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ShipBook">
+<meta property="og:title" content="ShipBook · 인터랙티브 선박 교과서">
+<meta property="og:description" content="부력과 복원성에서 프로펠러, 파도, 선체 구조, 친환경 연료와 자율운항까지 — 슬라이더를 움직이고 3D 모델을 돌려 보며 배우는 인터랙티브 선박 교과서. 23개 챕터, 약 220개 시뮬레이터.">
+<meta property="og:url" content="https://shipbook.euiyun.com/">
+<meta property="og:image" content="https://shipbook.euiyun.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://shipbook.euiyun.com/#site","name":"ShipBook","alternateName":"선박 교과서","url":"https://shipbook.euiyun.com/","inLanguage":"ko"},{"@type":"Book","@id":"https://shipbook.euiyun.com/#book","name":"ShipBook — 인터랙티브 선박 교과서","url":"https://shipbook.euiyun.com/","inLanguage":"ko","isAccessibleForFree":true,"educationalLevel":"일반·대학 학부","about":["조선해양공학","선박 유체역학","항해와 자율운항"],"image":"https://shipbook.euiyun.com/og.png","hasPart":[{"@type":"Chapter","position":1,"name":"배의 전체 그림","url":"https://shipbook.euiyun.com/chapters/overview.html"},{"@type":"Chapter","position":2,"name":"부력과 배수량","url":"https://shipbook.euiyun.com/chapters/buoyancy.html"},{"@type":"Chapter","position":3,"name":"복원성","url":"https://shipbook.euiyun.com/chapters/stability.html"},{"@type":"Chapter","position":4,"name":"무게 이동과 트림","url":"https://shipbook.euiyun.com/chapters/trim.html"},{"@type":"Chapter","position":5,"name":"손상 복원성과 구획","url":"https://shipbook.euiyun.com/chapters/damage.html"},{"@type":"Chapter","position":6,"name":"선체 저항","url":"https://shipbook.euiyun.com/chapters/resistance.html"},{"@type":"Chapter","position":7,"name":"프로펠러","url":"https://shipbook.euiyun.com/chapters/propeller.html"},{"@type":"Chapter","position":8,"name":"추진 효율과 동력","url":"https://shipbook.euiyun.com/chapters/propulsion.html"},{"@type":"Chapter","position":9,"name":"선박 주기관","url":"https://shipbook.euiyun.com/chapters/engine.html"},{"@type":"Chapter","position":10,"name":"바다의 파도","url":"https://shipbook.euiyun.com/chapters/waves.html"},{"@type":"Chapter","position":11,"name":"내항성: 파도 속의 배","url":"https://shipbook.euiyun.com/chapters/seakeeping.html"},{"@type":"Chapter","position":12,"name":"조종성과 계류","url":"https://shipbook.euiyun.com/chapters/maneuvering.html"},{"@type":"Chapter","position":13,"name":"선체 구조와 강도","url":"https://shipbook.euiyun.com/chapters/structure.html"},{"@type":"Chapter","position":14,"name":"선박 설계","url":"https://shipbook.euiyun.com/chapters/design.html"},{"@type":"Chapter","position":15,"name":"조선소와 건조","url":"https://shipbook.euiyun.com/chapters/building.html"},{"@type":"Chapter","position":16,"name":"상선과 화물","url":"https://shipbook.euiyun.com/chapters/cargo.html"},{"@type":"Chapter","position":17,"name":"특수선과 고속선","url":"https://shipbook.euiyun.com/chapters/special.html"},{"@type":"Chapter","position":18,"name":"선박 전력과 전기 추진","url":"https://shipbook.euiyun.com/chapters/electric.html"},{"@type":"Chapter","position":19,"name":"친환경 선박","url":"https://shipbook.euiyun.com/chapters/green.html"},{"@type":"Chapter","position":20,"name":"항해술","url":"https://shipbook.euiyun.com/chapters/navigation.html"},{"@type":"Chapter","position":21,"name":"선교 장비와 충돌 회피","url":"https://shipbook.euiyun.com/chapters/bridge.html"},{"@type":"Chapter","position":22,"name":"자율운항선박과 DP","url":"https://shipbook.euiyun.com/chapters/autonomous.html"},{"@type":"Chapter","position":23,"name":"용어집 & 종합 퀴즈","url":"https://shipbook.euiyun.com/chapters/glossary.html"}],"description":"부력과 복원성에서 프로펠러, 파도, 선체 구조, 친환경 연료와 자율운항까지 — 슬라이더를 움직이고 3D 모델을 돌려 보며 배우는 인터랙티브 선박 교과서. 23개 챕터, 약 220개 시뮬레이터."}]}</script>
+<link rel="stylesheet" href="css/style.css">
+<script src="js/common.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<style>
+  .chain { overflow-x: auto; }
+  .chain svg { min-width: 760px; }
+  .paths { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .path { padding: 18px 20px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg-elev); }
+  .path h3 { margin: 0 0 6px; font-size: 17px; }
+  .path p { margin: 0 0 10px; color: var(--text-dim); font-size: 14.5px; }
+  .path .steps { display: flex; flex-wrap: wrap; gap: 6px; }
+  .path .steps a { font-family: var(--mono); font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+  .path .steps a:hover { text-decoration: none; filter: brightness(1.1); }
+  .numbers { display: grid; gap: 1px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .numbers div { background: var(--bg-elev); padding: 18px 20px; }
+  .numbers b { display: block; font-family: var(--mono); font-size: 26px; letter-spacing: -0.02em; color: var(--text); }
+  .numbers span { color: var(--text-dim); font-size: 14px; }
+  .hero-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+  .hero-badges span { font-size: 13px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-dim); background: var(--bg-elev); }
+  .hero-seg { position: absolute; left: 12px; top: 12px; z-index: 2; }
+  .hero-3d { background: radial-gradient(ellipse at 50% 30%, var(--accent-soft), transparent 70%), var(--bg-elev); }
+  .part-h { margin: 36px 0 14px; font-size: 13px; font-family: var(--mono); letter-spacing: .12em; color: var(--text-faint); text-transform: uppercase; }
+  .part-h:first-child { margin-top: 0; }
+  .part-h b { color: var(--accent); margin-right: 8px; }
+  .float-demo { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); align-items: center; }
+  @media (min-width: 820px) { .float-demo { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); } }
+  .float-demo .sim { margin: 0; }
+</style>
+</head>
+<body data-root="">
+
+<section class="home-hero">
+  <div class="inner">
+    <div>
+      <div class="eyebrow">Interactive Naval Architecture Textbook</div>
+      <h1>수만 톤의 강철이<br><span class="grad">어떻게 바다를 건너는가</span></h1>
+      <p>강철 덩어리는 가라앉는데 강철로 만든 배는 왜 뜰까요? 파도에 기울어도 다시 일어서는 이유는? 축구장 네 개 길이의 배를 프로펠러 하나로 움직이는 비결은? 부력과 복원성, 저항과 추진, 파도와 구조, 그리고 스스로 항해하는 배까지 — 직접 슬라이더를 움직이고 3D 모델을 돌려 보며 배우는 선박 교과서입니다.</p>
+      <div class="cta">
+        <a class="primary" href="chapters/overview.html">1장부터 시작하기 →</a>
+        <a class="ghost" href="chapters/stability.html">배 기울여 보기</a>
+      </div>
+      <div class="hero-badges">
+        <span>23개 챕터</span><span>약 220개 시뮬레이터</span><span>3D 선박 모델</span><span>부력부터 자율운항까지</span>
+      </div>
+    </div>
+    <div class="hero-3d" id="hero3d">
+      <div class="seg hero-seg" id="hero-mode"><button data-value="box" class="on">컨테이너선</button><button data-value="tanker">유조선</button><button data-value="xray">투시도</button></div>
+      <span class="hint">드래그해서 돌려 보세요 · 파도 위에서 배가 움직입니다</span>
+    </div>
+  </div>
+</section>
+
+<section class="home-section">
+  <h2>배는 무엇을 하는가</h2>
+  <p class="sub">한 문장으로: <b>물을 밀어내 뜨고, 기울어도 다시 서고, 물을 뒤로 밀어 나아가며, 파도와 무게를 견디고, 길을 찾아 목적지에 닿는다.</b> 그 과정이 이 교과서의 목차입니다.</p>
+  <figure class="diagram chain">
+    <svg viewBox="0 0 1100 270" role="img" aria-label="배의 다섯 가지 기능과 해당 챕터">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/></marker>
+      </defs>
+      <!-- float -->
+      <g transform="translate(20,40)">
+        <rect width="150" height="130" rx="12" class="f-elev"/>
+        <rect x="14" y="62" width="122" height="48" rx="4" class="f-water"/>
+        <path d="M14 62 H136" class="s-water"/>
+        <path d="M40 46 H110 L102 76 H48 Z" class="f-hull"/>
+        <path d="M75 100 V80" class="s-acc" marker-end="url(#arr)"/>
+        <path d="M75 26 V44" stroke="var(--text-dim)" stroke-width="2" marker-end="url(#arr)"/>
+        <text x="75" y="156" text-anchor="middle" class="t">뜨기 · 서기</text>
+        <text x="75" y="174" text-anchor="middle" class="t-mono">부력·복원성 Ch.02–05</text>
+      </g>
+      <path d="M180 105 H205" class="s-acc" marker-end="url(#arr)"/>
+      <!-- engine -->
+      <g transform="translate(215,40)">
+        <rect width="150" height="130" rx="12" class="f-elev"/>
+        <rect x="40" y="24" width="70" height="60" rx="5" class="f-surface"/>
+        <rect x="48" y="34" width="16" height="40" rx="2" class="f-acc"/><rect x="68" y="34" width="16" height="40" rx="2" class="f-acc"/><rect x="88" y="34" width="14" height="40" rx="2" class="f-acc"/>
+        <line x1="40" y1="100" x2="140" y2="100" stroke="var(--text-dim)" stroke-width="5"/>
+        <text x="75" y="156" text-anchor="middle" class="t">동력 만들기</text>
+        <text x="75" y="174" text-anchor="middle" class="t-mono">주기관·전력 Ch.09, 18</text>
+      </g>
+      <path d="M375 105 H400" class="s-acc" marker-end="url(#arr)"/>
+      <!-- propeller -->
+      <g transform="translate(410,40)">
+        <rect width="150" height="130" rx="12" class="f-elev"/>
+        <ellipse cx="60" cy="62" rx="9" ry="40" fill="#c9a227"/>
+        <circle cx="60" cy="62" r="7" class="f-surface"/>
+        <path d="M80 50 H128 M80 62 H134 M80 74 H128" class="s-water" marker-end="url(#arr)"/>
+        <path d="M44 62 H14" class="s-acc" marker-end="url(#arr)"/>
+        <text x="75" y="156" text-anchor="middle" class="t">나아가기</text>
+        <text x="75" y="174" text-anchor="middle" class="t-mono">저항·추진 Ch.06–08</text>
+      </g>
+      <path d="M570 105 H595" class="s-acc" marker-end="url(#arr)"/>
+      <!-- waves & structure -->
+      <g transform="translate(605,40)">
+        <rect width="150" height="130" rx="12" class="f-elev"/>
+        <path d="M10 88 Q32 64 54 88 T98 88 T142 88 V112 H10 Z" class="f-water"/>
+        <path d="M10 88 Q32 64 54 88 T98 88 T142 88" class="s-water"/>
+        <path d="M24 60 Q75 84 126 60 L120 76 Q75 98 30 76 Z" class="f-hull"/>
+        <text x="75" y="156" text-anchor="middle" class="t">파도 견디기</text>
+        <text x="75" y="174" text-anchor="middle" class="t-mono">파도·내항성·구조 Ch.10–13</text>
+      </g>
+      <path d="M765 105 H790" class="s-acc" marker-end="url(#arr)"/>
+      <!-- navigate -->
+      <g transform="translate(800,40)">
+        <rect width="150" height="130" rx="12" class="f-elev"/>
+        <circle cx="75" cy="62" r="40" class="f-acc2-soft"/>
+        <circle cx="75" cy="62" r="24" fill="none" stroke="var(--accent-2)" stroke-dasharray="3 3"/>
+        <path d="M75 62 L106 34" stroke="var(--accent-2)" stroke-width="2"/>
+        <circle cx="96" cy="50" r="3" fill="var(--accent-2)"/><circle cx="56" cy="80" r="3" fill="var(--accent-2)"/>
+        <text x="75" y="156" text-anchor="middle" class="t">길 찾기 · 피하기</text>
+        <text x="75" y="174" text-anchor="middle" class="t-mono">조종·항해·자율 Ch.12, 20–22</text>
+      </g>
+      <!-- design & build -->
+      <g transform="translate(965,40)">
+        <rect width="120" height="130" rx="12" class="f-surface"/>
+        <rect x="22" y="26" width="34" height="24" rx="3" class="f-acc-soft"/><rect x="62" y="26" width="34" height="24" rx="3" class="f-acc-soft"/>
+        <rect x="22" y="56" width="74" height="24" rx="3" class="f-acc2-soft"/>
+        <path d="M60 20 V8 M40 8 H96" stroke="var(--text-dim)" stroke-width="2"/>
+        <text x="60" y="156" text-anchor="middle" class="t">설계 · 건조</text>
+        <text x="60" y="174" text-anchor="middle" class="t-mono">Ch.14–17, 19</text>
+      </g>
+      <path d="M960 30 V14 H95 V36" stroke="var(--accent-2)" stroke-width="1.6" fill="none" stroke-dasharray="5 4"/>
+      <text x="530" y="10" text-anchor="middle" class="t-dim" style="fill:var(--accent-2)">모든 기능을 한 척의 배 안에서 동시에 만족시키는 일 = 선박 설계</text>
+      <text x="550" y="250" text-anchor="middle" class="t-dim">연료 → 주기관의 회전력 → 프로펠러의 추력 → 선체 저항을 이기고 전진 · 그 사이 내내 부력과 복원력이 배를 떠받친다</text>
+    </svg>
+    <figcaption><b>그림 0-1.</b> 배가 해내야 하는 일과 그것을 다루는 챕터. 점선은 설계가 모든 기능을 묶는다는 뜻입니다.</figcaption>
+  </figure>
+</section>
+
+<section class="home-section" style="padding-top:0">
+  <h2>먼저 만져 보기</h2>
+  <p class="sub">이 교과서의 시뮬레이터는 이런 식입니다. 화물을 실어 보세요. 배가 가라앉는 깊이(흘수)가 어떻게 변하는지, 언제 위험해지는지 바로 보입니다. 자세한 원리는 <a href="chapters/buoyancy.html">2장</a>과 <a href="chapters/stability.html">3장</a>에서.</p>
+  <div class="float-demo">
+    <div class="sim" id="sim-home">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>화물을 싣는 바지선</h3></div>
+      <div class="sim-body">
+        <div class="sim-view"><canvas id="cv-home" style="touch-action:none"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>화물 무게 <output id="h-load-out"></output></span><input type="range" id="h-load" min="0" max="2400" step="20" value="800"></label>
+          <label class="ctrl"><span>화물 높이(갑판 위) <output id="h-kg-out"></output></span><input type="range" id="h-kg" min="0" max="8" step="0.1" value="2"></label>
+          <div class="ctrl"><span>물</span><div class="seg" id="h-water"><button data-value="1.025" class="on">바닷물</button><button data-value="1.000">민물</button></div></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">흘수</span><span class="v" id="h-T">—</span></div>
+        <div class="stat"><span class="k">건현</span><span class="v" id="h-F">—</span></div>
+        <div class="stat"><span class="k">GM</span><span class="v" id="h-GM">—</span></div>
+        <div class="stat"><span class="k">상태</span><span class="v" id="h-st">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 화물을 무겁게 하면 흘수가 깊어지고, 화물을 높이 쌓으면 GM이 작아져 바람과 파도에 쉽게 기운다. 민물로 바꾸면 같은 무게에도 더 깊이 잠긴다.</div>
+    </div>
+    <div class="callout tip"><b>바지선 한 척으로 배운 것</b><br>길이 40 m, 폭 12 m, 깊이 4 m인 상자형 바지선(자체 무게 400 t)이다. 흘수는 <i>무게 ÷ (물 밀도 × 수선면 면적)</i>, 복원성은 <i>GM = KB + BM − KG</i>로 정해진다. 이 두 식이 1~5장의 뼈대이며, 실제 배는 모양이 복잡할 뿐 원리는 같다.</div>
+  </div>
+</section>
+
+<section class="home-section" style="padding-top:0">
+  <h2>숫자로 보는 배</h2>
+  <p class="sub">이 교과서를 끝내면 아래 숫자가 어디서 나오는지, 서로 어떻게 얽혀 있는지 설명할 수 있게 됩니다.</p>
+  <div class="numbers">
+    <div><b>~80 %</b><span>세계 교역 물동량 중 바다로 운반되는 비율</span></div>
+    <div><b>24,000 TEU</b><span>최대급 컨테이너선 한 척이 싣는 20피트 컨테이너 수</span></div>
+    <div><b>50 %+</b><span>대형 저속 2행정 디젤 엔진의 열효율. 지상 최고 수준의 열기관</span></div>
+    <div><b>~80 rpm</b><span>지름 10 m급 프로펠러의 회전수. 크고 느릴수록 효율이 좋다</span></div>
+    <div><b>V³</b><span>배를 움직이는 데 드는 동력은 속도의 세제곱에 비례 — 감속 운항의 근거</span></div>
+    <div><b>1,852 m</b><span>1해리. 위도 1분의 길이. 1노트는 1시간에 1해리</span></div>
+  </div>
+</section>
+
+<section class="home-section" style="padding-top:0">
+  <h2>전체 챕터</h2>
+  <p class="sub">순서대로 읽어도 좋고, 관심 있는 장부터 골라 읽어도 됩니다. 각 장은 개념 → 그림 → 수식 → 시뮬레이터 → 퀴즈 순서로 구성됩니다.</p>
+  <div id="chparts"></div>
+</section>
+
+<section class="home-section" style="padding-top:0">
+  <h2>추천 학습 경로</h2>
+  <p class="sub">관심사에 따라 이렇게 읽어 보세요.</p>
+  <div class="paths">
+    <div class="path"><h3>입문 · 전체 그림</h3><p>배가 처음이라면. 뜨고, 서고, 나아가는 원리의 뼈대를 잡는다.</p><div class="steps"><a href="chapters/overview.html">01</a><a href="chapters/buoyancy.html">02</a><a href="chapters/stability.html">03</a><a href="chapters/resistance.html">06</a><a href="chapters/propeller.html">07</a><a href="chapters/cargo.html">16</a></div></div>
+    <div class="path"><h3>선박 정역학 · 안전</h3><p>배가 뒤집히거나 가라앉지 않는 조건. 항해사·선박 설계자의 기본기.</p><div class="steps"><a href="chapters/buoyancy.html">02</a><a href="chapters/stability.html">03</a><a href="chapters/trim.html">04</a><a href="chapters/damage.html">05</a><a href="chapters/structure.html">13</a></div></div>
+    <div class="path"><h3>유체역학 · 추진</h3><p>물의 저항을 이기고 나아가는 법. 파도 속에서 배가 어떻게 움직이는가.</p><div class="steps"><a href="chapters/resistance.html">06</a><a href="chapters/propeller.html">07</a><a href="chapters/propulsion.html">08</a><a href="chapters/waves.html">10</a><a href="chapters/seakeeping.html">11</a><a href="chapters/maneuvering.html">12</a></div></div>
+    <div class="path"><h3>설계 · 건조</h3><p>요구 조건에서 도면으로, 도면에서 강철 배로. 조선소에서 일어나는 일.</p><div class="steps"><a href="chapters/structure.html">13</a><a href="chapters/design.html">14</a><a href="chapters/building.html">15</a><a href="chapters/cargo.html">16</a><a href="chapters/special.html">17</a></div></div>
+    <div class="path"><h3>기관 · 친환경</h3><p>엔진과 전력, 그리고 탄소 없는 해운으로 가는 길.</p><div class="steps"><a href="chapters/propulsion.html">08</a><a href="chapters/engine.html">09</a><a href="chapters/electric.html">18</a><a href="chapters/green.html">19</a></div></div>
+    <div class="path"><h3>항해 · 자율운항</h3><p>해도와 레이더, 충돌 회피 규칙에서 스스로 항해하는 배까지.</p><div class="steps"><a href="chapters/maneuvering.html">12</a><a href="chapters/navigation.html">20</a><a href="chapters/bridge.html">21</a><a href="chapters/autonomous.html">22</a></div></div>
+  </div>
+</section>
+
+<section class="home-section" style="padding-top:0">
+  <h2>이 사이트 사용법</h2>
+  <div class="flow">
+    <div><b>읽기</b>개념과 직관을 먼저. 영어 용어는 괄호로 병기합니다.</div>
+    <div><b>보기</b>도해와 3D 모델로 선체와 장비의 생김새와 위치를 머릿속에 그립니다.</div>
+    <div><b>만지기</b>슬라이더를 끝까지 움직이고 그림을 직접 끌어 보세요. 극단에서 배웁니다.</div>
+    <div><b>계산하기</b>예제 수치를 직접 따라가며 감을 잡습니다.</div>
+    <div><b>확인하기</b>장마다 퀴즈, 마지막 장에서 종합 퀴즈로 마무리합니다.</div>
+  </div>
+</section>
+
+<script>
+(function () {
+  // chapter cards grouped by part
+  const PARTS = [
+    ["기초와 정역학", ["overview", "buoyancy", "stability", "trim", "damage"]],
+    ["저항과 추진", ["resistance", "propeller", "propulsion", "engine"]],
+    ["파도·운동·조종", ["waves", "seakeeping", "maneuvering"]],
+    ["구조·설계·건조", ["structure", "design", "building"]],
+    ["선종", ["cargo", "special"]],
+    ["전력과 친환경", ["electric", "green"]],
+    ["항해와 자율운항", ["navigation", "bridge", "autonomous"]],
+    ["정리", ["glossary"]],
+  ];
+  const tagName = { sim: "시뮬레이터", "3d": "3D" };
+  const bySlug = Object.fromEntries(SB.CHAPTERS.map((c) => [c.slug, c]));
+  document.getElementById("chparts").innerHTML = PARTS.map(([name, slugs], i) => `
+    <h3 class="part-h"><b>PART ${i + 1}</b>${name}</h3>
+    <div class="ch-grid">${slugs.map((s) => bySlug[s]).map((c) => `
+      <a class="ch-card" href="chapters/${c.slug}.html">
+        <span class="num">CHAPTER ${c.num}</span>
+        <h3>${c.title}</h3>
+        <p>${c.desc}</p>
+        <span class="tags">${c.tags.map((t) => `<span class="${t === "sim" ? "sim" : t === "3d" ? "d3" : ""}">${tagName[t] || t}</span>`).join("")}</span>
+      </a>`).join("")}</div>`).join("");
+})();
+
+(function () {
+  // 바지선 데모: 상자형 L×B×D, 경하 400 t (KG 2.0 m)
+  const L = 40, B = 12, D = 4, LW = 400, KGlw = 2.0;
+  let heel = 0, vel = 0, push = 0;
+  const load = SB.range("h-load", (v) => v.toLocaleString() + " t");
+  const kg = SB.range("h-kg", (v) => v.toFixed(1) + " m");
+  const water = SB.seg("h-water");
+  function state() {
+    const rho = Number(water()), W = LW + load(), T = W / (rho * L * B);
+    const ch = Math.max(0.6, load() / 400);
+    const KG = (LW * KGlw + load() * (D + kg() + ch / 2)) / W;
+    const KB = T / 2, BM = (B * B) / (12 * T), GM = KB + BM - KG;
+    return { rho, W, T, KG, GM, F: D - T };
+  }
+  const cv = SB.canvas("#cv-home", (ctx, w, h) => {
+    const s = state(), P = SB.palette();
+    const sc = Math.min(w / 26, h / 13), cx = w / 2, wy = h * 0.5;
+    // 단면 (선미에서 본 모습) — 기울기 heel
+    const tilt = s.F < 0 ? 0 : heel;
+    ctx.save();
+    ctx.translate(cx, wy); ctx.rotate(tilt);
+    const yK = s.T * sc, yD = (s.T - D) * sc;
+    // 화물
+    const ch = Math.max(0.6, load() / 400), cw = Math.min(B * 0.8, 3 + load() / 300);
+    if (load() > 0) {
+      ctx.fillStyle = "#e0a93a";
+      ctx.fillRect(-cw / 2 * sc, yD - (kg() + ch) * sc, cw * sc, ch * sc);
+      ctx.strokeStyle = "rgba(0,0,0,0.35)"; ctx.strokeRect(-cw / 2 * sc, yD - (kg() + ch) * sc, cw * sc, ch * sc);
+      if (kg() > 0.05) { ctx.fillStyle = P.dim; ctx.fillRect(-0.15 * sc, yD - kg() * sc, 0.3 * sc, kg() * sc); }
+    }
+    ctx.fillStyle = "#2b3445"; ctx.fillRect(-B / 2 * sc, yD, B * sc, (D - Math.max(0, s.T)) * sc);
+    ctx.fillStyle = "#c8443a"; ctx.fillRect(-B / 2 * sc, 0, B * sc, Math.min(D, s.T) * sc);
+    // G and M markers
+    const gy = yK - s.KG * sc, my = yK - (s.T / 2 + (B * B) / (12 * s.T)) * sc;
+    ctx.fillStyle = P.text; ctx.beginPath(); ctx.arc(0, gy, 4, 0, 7); ctx.fill();
+    ctx.font = "12px " + getComputedStyle(document.body).getPropertyValue("--font");
+    ctx.fillText("G", 7, gy + 4);
+    if (my > -h) { ctx.fillStyle = P.accent; ctx.beginPath(); ctx.arc(0, my, 4, 0, 7); ctx.fill(); ctx.fillText("M", 7, my + 4); }
+    ctx.restore();
+    SB.water(ctx, w, h, wy, { wave: (x) => 1.5 * Math.sin(x / 30 + performance.now() / 600) });
+    // 흘수 표시
+    ctx.fillStyle = P.dim; ctx.font = "12px " + getComputedStyle(document.body).getPropertyValue("--mono");
+    ctx.fillText("흘수선", 8, wy - 6);
+    if (s.F < 0) { ctx.fillStyle = P.bad; ctx.font = "bold 15px " + getComputedStyle(document.body).getPropertyValue("--font"); ctx.fillText("갑판이 물에 잠겼다 — 침몰!", 12, 24); }
+  }, { aspect: 0.55, maxHeight: 360 });
+  function readout() {
+    const s = state();
+    SB.stat("h-T", s.T.toFixed(2) + " m");
+    SB.stat("h-F", s.F.toFixed(2) + " m");
+    SB.stat("h-GM", s.GM.toFixed(2) + " m");
+    SB.stat("h-st", s.F < 0 ? '<span style="color:var(--bad)">침몰</span>' : s.GM < 0 ? '<span style="color:var(--bad)">전복 위험</span>' : s.GM < 0.5 || s.F < 0.5 ? '<span style="color:var(--warn)">주의</span>' : '<span style="color:var(--ok)">안전</span>');
+  }
+  [load.el, kg.el].forEach((e) => e.addEventListener("input", readout));
+  document.getElementById("h-water").addEventListener("click", () => setTimeout(readout, 0));
+  readout();
+  // 롤 운동: φ'' = -(g GM / k²) sin φ - c φ' + 바람 펄스 (GM<0이면 롤(loll) 각으로 기운다)
+  SB.loop(document.getElementById("cv-home"), (dt, t) => {
+    const s = state();
+    const k = 0.4 * B, w2 = (SB.G * s.GM) / (k * k);
+    push = 0.03 * Math.sin(t * 0.9) + 0.02 * Math.sin(t * 2.3);
+    const acc = -w2 * Math.sin(heel) - (SB.G * (B * B) / (24 * s.T) / (k * k)) * Math.pow(Math.tan(heel), 2) * Math.sin(heel) - 0.6 * vel + push;
+    vel += acc * dt; heel += vel * dt;
+    heel = SB.clamp(heel, -1.2, 1.2);
+    cv.redraw();
+  });
+})();
+
+(function () {
+  // hero 3D: 파도 위의 선박
+  const el = document.getElementById("hero3d");
+  const T = SB.three(el, { camera: [8.5, 4.2, 9.5], target: [0, 0.3, 0], fov: 36, autoRotate: true, autoRotateSpeed: 0.4, pan: false, minDistance: 7, maxDistance: 28 });
+  if (!T) return;
+  const { THREE, scene } = T;
+  const sea = SB.sea3d(T, { size: 36, seg: 90, opacity: 0.55 });
+  const mk = (o) => { const s = SB.ship3d(T, o); s.group.visible = false; return s; };
+  const ships = {
+    box: mk({ L: 10, B: 1.5, D: 0.85, T: 0.48, full: 0.62, cargo: "container" }),
+    tanker: mk({ L: 10, B: 1.75, D: 0.95, T: 0.62, full: 0.86, color: 0x26303f, deckColor: 0x6b7a8c }),
+    xray: mk({ L: 10, B: 1.5, D: 0.85, T: 0.48, full: 0.62, opacity: 0.22, deck: false }),
+  };
+  // 투시도 내부: 기관, 축, 프로펠러, 화물창, 밸러스트 탱크
+  const X = ships.xray, D = 0.85, Tm = 0.48, yK = -Tm;
+  const box = (w, h, d, color, x, y, z, o) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), T.material(color, o)); m.position.set(x, y, z); X.group.add(m); return m; };
+  box(0.9, 0.5, 0.6, 0xdd5a16, -3.55, yK + 0.38, 0, { metalness: 0.4, roughness: 0.4 });
+  for (let i = 0; i < 6; i++) box(1.0, 0.62, 1.15, 0x2f6fb0, -2.4 + i * 1.08, yK + 0.47, 0, { transparent: true, opacity: 0.55 });
+  box(7.2, 0.12, 1.2, 0x3d8f6a, -0.2, yK + 0.07, 0, { transparent: true, opacity: 0.7 });
+  const shaftG = new THREE.CylinderGeometry(0.035, 0.035, 1.1, 12); shaftG.rotateZ(Math.PI / 2);
+  const shaft = new THREE.Mesh(shaftG, T.material(0xb8c0cf, { metalness: 0.8, roughness: 0.3 })); shaft.position.set(-4.45, yK + 0.2, 0); X.group.add(shaft);
+  const prop = new THREE.Group(); prop.position.set(-4.95, yK + 0.2, 0); X.group.add(prop);
+  for (let i = 0; i < 4; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.19, 0.07), T.material(0xc9a227, { metalness: 0.7, roughness: 0.3 })); b.position.y = 0.1; const g = new THREE.Group(); g.rotation.x = (i * Math.PI) / 2; g.add(b); b.rotation.y = 0.5; prop.add(g); }
+  const rud = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.34, 0.03), T.material(0x4a5266)); rud.position.set(-5.12, yK + 0.24, 0); X.group.add(rud);
+  const labels = [
+    T.label("기관실", [-3.55, 0.6, 0]), T.label("화물창", [0.4, 0.55, 0]), T.label("이중 선저 · 밸러스트", [0.6, yK + 0.05, 0.8]),
+    T.label("프로펠러", [-5.0, yK - 0.05, 0.4]), T.label("선교", [-3.7, 1.75, 0]),
+  ];
+  labels.forEach((l) => (l.obj = X.group));
+  let cur = "box";
+  const setMode = (m) => { cur = m; Object.entries(ships).forEach(([k, s]) => (s.group.visible = k === m)); labels.forEach((l) => l.setVisible(m === "xray")); };
+  SB.seg("hero-mode", setMode); setMode("box");
+
+  // 파: 두 성분의 진행파 (+x 방향에서 비스듬히)
+  const A1 = 0.12, k1 = 0.55, w1 = Math.sqrt(9.81 * k1 * 0.12), A2 = 0.05, k2 = 1.2, w2 = Math.sqrt(9.81 * k2 * 0.12);
+  const eta = (x, z, t) => A1 * Math.sin(k1 * (0.9 * x + 0.44 * z) - w1 * t * 3) + A2 * Math.sin(k2 * (0.5 * x - 0.86 * z) - w2 * t * 3);
+  const speed = 0.6;
+  T.onFrame((dt, t) => {
+    sea.update(t, (x, z, tt) => eta(x + speed * tt, z, tt));
+    const s = ships[cur], tt = t, ex = (x, z) => eta(x + speed * tt, z, tt);
+    // 선체 위 5점에서 파면을 샘플링해 heave/pitch/roll 근사(선체가 파를 평균한다)
+    const L2 = 4, B2 = 0.7;
+    const hb = ex(L2, 0), hs = ex(-L2, 0), hp = ex(0, -B2), hst = ex(0, B2), hm = ex(0, 0);
+    const heave = (hb + hs + hp + hst + hm) / 5 * 0.7;
+    s.group.position.y += (heave - s.group.position.y) * Math.min(1, dt * 3);
+    const pitch = Math.atan2(hb - hs, 2 * L2) * 0.6, roll = Math.atan2(hp - hst, 2 * B2) * 0.35;
+    s.group.rotation.z += (pitch - s.group.rotation.z) * Math.min(1, dt * 3);
+    s.group.rotation.x += (roll - s.group.rotation.x) * Math.min(1, dt * 2);
+    prop.rotation.x += dt * 8;
+  });
+})();
+</script>
+</body>
+</html>

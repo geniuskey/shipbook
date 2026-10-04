@@ -1,0 +1,1324 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<title>친환경 선박 · ShipBook</title>
+<meta name="description" content="IMO 온실가스 전략과 EEXI·CII 등급, 감속 운항의 경제학, LNG·메탄올·암모니아·수소 연료의 저장과 Well-to-Wake 배출, 메탄 슬립, 로터 세일과 공기 윤활, 탄소 가격과 연료 전환 손익을 시뮬레이터로 배운다.">
+<link rel="canonical" href="https://shipbook.euiyun.com/chapters/green.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="ShipBook">
+<meta property="og:title" content="친환경 선박 · ShipBook">
+<meta property="og:description" content="IMO 온실가스 전략과 EEXI·CII 등급, 감속 운항의 경제학, LNG·메탄올·암모니아·수소 연료의 저장과 Well-to-Wake 배출, 메탄 슬립, 로터 세일과 공기 윤활, 탄소 가격과 연료 전환 손익을 시뮬레이터로 배운다.">
+<meta property="og:url" content="https://shipbook.euiyun.com/chapters/green.html">
+<meta property="og:image" content="https://shipbook.euiyun.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"친환경 선박","name":"친환경 선박 · ShipBook","url":"https://shipbook.euiyun.com/chapters/green.html","mainEntityOfPage":"https://shipbook.euiyun.com/chapters/green.html","inLanguage":"ko","isAccessibleForFree":true,"learningResourceType":"interactive textbook chapter","position":19,"image":"https://shipbook.euiyun.com/og.png","dateModified":"2026-10-04","isPartOf":{"@type":"Book","@id":"https://shipbook.euiyun.com/#book","name":"ShipBook — 인터랙티브 선박 교과서","url":"https://shipbook.euiyun.com/"},"publisher":{"@type":"Organization","name":"ShipBook","url":"https://shipbook.euiyun.com/"},"description":"IMO 온실가스 전략과 EEXI·CII 등급, 감속 운항의 경제학, LNG·메탄올·암모니아·수소 연료의 저장과 Well-to-Wake 배출, 메탄 슬립, 로터 세일과 공기 윤활, 탄소 가격과 연료 전환 손익을 시뮬레이터로 배운다."},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ShipBook","item":"https://shipbook.euiyun.com/"},{"@type":"ListItem","position":2,"name":"19 친환경 선박","item":"https://shipbook.euiyun.com/chapters/green.html"}]}]}</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../css/style.css">
+<script src="../js/common.js"></script>
+<style>
+  .sim-view canvas.click { cursor: pointer; touch-action: manipulation; }
+  .tl-desc { margin: 0 14px 4px; padding: 10px 14px; border-left: 3px solid var(--accent); background: var(--surface); border-radius: 0 8px 8px 0; font-size: 14px; color: var(--text); min-height: 4.2em; }
+  .tl-desc b { color: var(--accent); }
+  .chk-list { display: grid; grid-template-columns: 1fr; gap: 4px; }
+  .chk-list .check { font-size: 13.5px; }
+  .fig-lg svg .t, .fig-lg svg .t-acc { font-size: 15px; }
+</style>
+</head>
+<body data-chapter="green">
+<main class="chapter">
+  <header class="chapter-hero">
+    <div class="eyebrow">Chapter 19</div>
+    <h1>친환경 선박</h1>
+    <p class="lead">세계 교역량의 80% 이상이 배로 움직인다. 톤-마일당으로 보면 배는 가장 깨끗한 운송 수단이지만, 실어 나르는 양이 워낙 많아 해운 전체의 온실가스 배출은 한 해 약 10억 톤으로 일본 한 나라의 배출과 비슷하다. 국제 해운은 어느 나라에도 속하지 않는 공해 위에서 배출하므로 국제해사기구(IMO)가 규제를 맡는다. 이 장에서는 탄소 규제의 숫자가 어떻게 계산되는지, 배를 천천히 몰면 왜 연료가 크게 주는지, 차세대 연료들이 무엇을 얻고 무엇을 잃는지, 바람과 공기로 저항을 줄이는 기술이 실제로 얼마나 효과적인지를 직접 계산해 본다.</p>
+    <ul class="objectives">
+      <li>해운의 배출 규모와 IMO 2023 온실가스 전략의 목표·중간 점검 시점을 안다.</li>
+      <li>EEDI/EEXI와 CII를 계산하고, 엔진 출력 제한·감속·연료 전환이 등급을 어떻게 바꾸는지 설명한다.</li>
+      <li>감속 운항에서 연료가 속력의 세제곱·제곱에 비례하는 이유와 선대 규모·재고 비용의 상충을 정량화한다.</li>
+      <li>LNG·메탄올·암모니아·수소·배터리의 에너지 밀도, 저장 조건, Well-to-Wake 배출과 메탄 슬립을 비교한다.</li>
+      <li>로터 세일(마그누스 효과), 윙 세일, 공기 윤활, 선체 관리의 원리와 순 절감량을 계산한다.</li>
+      <li>탄소 가격과 연료 가격 차이로 연료 전환의 손익분기점을 구한다.</li>
+    </ul>
+  </header>
+
+  <!-- =============================================================== 1 -->
+  <section id="climate">
+    <h2>해운과 기후: IMO 온실가스 전략</h2>
+    <p>IMO의 4차 온실가스 연구에 따르면 2018년 해운(국제+연안)은 약 10억 톤(CO₂ 환산)을 배출해 인류 배출의 약 2.9%를 차지했다. 같은 기간 해운 물동량은 크게 늘었지만 운송 작업(톤-마일)당 탄소 집약도가 2008년보다 20~30% 개선되어, 국제 해운의 총배출은 2008년보다 약간 낮은 수준이었다. 아무 조치도 하지 않으면 물동량 증가 때문에 2050년 배출은 2008년의 90~130% 수준이 될 것으로 전망되었다.</p>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 250" role="img" aria-label="세계 온실가스 배출에서 해운의 비중">
+        <text x="20" y="28" class="t-acc">세계 인위적 온실가스 배출 중 비중 (대략)</text>
+        <g font-size="13">
+          <text x="20" y="62" class="t">도로 수송</text><rect x="150" y="48" width="384" height="22" class="f-acc2-soft" stroke="var(--accent-2)"/><text x="544" y="64" class="t-mono">~12%</text>
+          <text x="20" y="98" class="t">해운</text><rect x="150" y="84" width="93" height="22" fill="var(--accent)"/><text x="253" y="100" class="t-mono">~2.9%</text>
+          <text x="20" y="134" class="t">항공</text><rect x="150" y="120" width="80" height="22" class="f-acc2-soft" stroke="var(--accent-2)"/><text x="240" y="136" class="t-mono">~2.5%</text>
+          <text x="20" y="170" class="t">철강 산업</text><rect x="150" y="156" width="230" height="22" class="f-acc2-soft" stroke="var(--accent-2)"/><text x="390" y="172" class="t-mono">~7%</text>
+        </g>
+        <line x1="150" y1="40" x2="150" y2="186" stroke="var(--axis)"/>
+        <text x="20" y="214" class="t-dim">해운 ≈ 연간 약 10억 t CO₂e — 일본 한 나라의 배출과 비슷한 규모</text>
+        <text x="20" y="236" class="t-dim">톤-마일당 CO₂: 대형 컨테이너선 ~10 g, 화물 트럭 ~60~100 g, 화물기 ~500 g 이상</text>
+      </svg>
+      <figcaption><b>그림 19-1.</b> 해운 배출의 상대적 규모(여러 통계의 대략적인 값). 단위 운송량당 배출은 매우 작지만 총량은 작지 않다.</figcaption>
+    </figure>
+
+    <p>IMO는 2018년 "2050년까지 2008년 대비 50% 감축"이라는 초기 전략을 세웠고, 2023년 7월 MEPC 80에서 이를 크게 강화한 <span class="term">2023 IMO 온실가스 감축 전략</span>을 채택했다.</p>
+    <ul>
+      <li><b>2050년경(by or around, i.e. close to 2050) 넷제로</b> 온실가스 배출.</li>
+      <li>중간 점검(indicative checkpoints): 2030년까지 총배출 2008년 대비 <b>최소 20%, 노력 목표 30%</b> 감축, 2040년까지 <b>최소 70%, 노력 목표 80%</b> 감축.</li>
+      <li>2030년까지 운송 작업당 탄소 집약도 <b>최소 40%</b> 개선, 무배출·준무배출 연료·기술의 에너지 비중 <b>최소 5%, 노력 목표 10%</b>.</li>
+      <li>배출 범위를 연소 시점(Tank-to-Wake)만이 아니라 연료의 생산부터 연소까지 전 과정(Well-to-Wake)으로 본다.</li>
+    </ul>
+
+    <div class="sim" id="sim-tl">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>해운 탄소 규제 타임라인</h3></div>
+      <div class="sim-body">
+        <div class="sim-view"><canvas id="cv-tl" class="click"></canvas></div>
+      </div>
+      <div class="tl-desc" id="tl-desc">타임라인의 점을 눌러 보라.</div>
+      <div class="sim-note">해볼 것: 각 점을 눌러 규제가 "설계(EEDI) → 기존선 설계(EEXI) → 운항(CII) → 연료 전 과정(WtW)과 가격"으로 넓어져 온 흐름을 따라가 보라. ← → 키로도 이동할 수 있다. 2025년 이후 일정은 IMO·EU 결정에 따라 바뀔 수 있으므로 최신 발표를 확인할 것.</div>
+    </div>
+
+    <p>총배출은 물동량과 집약도의 곱이다. 물동량이 매년 늘면 집약도를 그보다 빨리 줄여야 총배출이 준다. 연 1~2%의 효율 개선(신조선 교체, 운항 최적화)만으로는 물동량 증가를 따라잡기 어렵다는 것이 무배출 연료가 필요한 근본 이유다.</p>
+    <div class="formula">$$E = W \times I,\qquad \frac{E_{2030}}{E_{2008}} = \frac{W_{2030}}{W_{2008}}\cdot\frac{I_{2030}}{I_{2008}}$$
+      <div class="where">\(E\): 총배출, \(W\): 운송 작업(톤-마일), \(I\): 탄소 집약도(g CO₂/톤-마일).</div>
+    </div>
+
+    <div class="sim" id="sim-path">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>감축 경로 계산기: 물동량 vs 집약도</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-path"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>물동량 증가율(2018 이후) <output id="pa-g-out"></output></span><input type="range" id="pa-g" min="0" max="4" step="0.1" value="2"></label>
+          <label class="ctrl"><span>효율 개선율(기존 기술) <output id="pa-e-out"></output></span><input type="range" id="pa-e" min="0" max="4" step="0.1" value="1.5"></label>
+          <label class="ctrl"><span>무배출 연료 비중 2030 <output id="pa-z-out"></output></span><input type="range" id="pa-z" min="0" max="30" step="1" value="5"></label>
+          <label class="ctrl"><span>무배출 연료 비중 2050 <output id="pa-z2-out"></output></span><input type="range" id="pa-z2" min="0" max="100" step="5" value="60"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">2030 배출 (2008=100)</span><span class="v" id="o-pa-30">—</span></div>
+        <div class="stat"><span class="k">2040 배출</span><span class="v" id="o-pa-40">—</span></div>
+        <div class="stat"><span class="k">2050 배출</span><span class="v" id="o-pa-50">—</span></div>
+        <div class="stat"><span class="k">2030 집약도 개선</span><span class="v" id="o-pa-ci">—</span></div>
+      </div>
+      <div class="sim-note">근사 모델: 2008년 배출=100, 2018년 약 93(물동량 약 1.33배 × 집약도 약 0.70)에서 출발해 물동량·효율 개선을 지수적으로, 무배출 연료 비중을 2030·2050 사이 직선으로 넣는다. 해볼 것: 무배출 연료 비중을 0으로 두면 효율을 4%/년 개선해도 2050 넷제로에 닿지 못한다. 2040년 −70% 점검점을 지나려면 2040년 무렵 무배출 연료가 에너지의 절반 이상이어야 함을 확인하라.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 2 -->
+  <section id="eexi">
+    <h2>탄소 집약도 지표: EEDI·EEXI와 CII</h2>
+    <p>IMO의 탄소 집약도 규제는 두 축이다. 하나는 <b>설계</b>가 얼마나 효율적인가를 보는 <span class="term">EEDI</span><span class="en">(Energy Efficiency Design Index, 2013~ 신조선)</span>와 그 기존선 버전인 <span class="term">EEXI</span><span class="en">(Existing Ship Energy Efficiency Index, 2023~)</span>, 다른 하나는 실제 1년간 <b>운항</b> 결과를 보는 <span class="term">CII</span><span class="en">(Carbon Intensity Indicator)</span>다.</p>
+
+    <h3>EEDI/EEXI: "1톤을 1해리 나르는 데 설계상 몇 g의 CO₂를 내는가"</h3>
+    <div class="formula">$$\text{EEXI} \approx \frac{P_{ME}\,\text{SFC}_{ME}\,C_{F,ME} + P_{AE}\,\text{SFC}_{AE}\,C_{F,AE}}{\text{Capacity}\times V_{ref}}\quad[\text{g CO}_2/(\text{t}\cdot\text{nm})]$$
+      <div class="where">\(P_{ME}\): 주기관 출력(MCR의 75%, 출력 제한 시 제한 출력의 75%), \(P_{AE}\): 보조 출력(대략 \(0.025\,\text{MCR}+250\) kW), SFC: 연료 소비율(g/kWh), \(C_F\): 연료 1 g당 CO₂ g(HFO 3.114, LNG 2.750, 메탄올 1.375), Capacity: 재화중량(컨테이너선은 DWT의 70%), \(V_{ref}\): 그 출력에서의 속력(kn). 실제 규정에는 보정 계수가 더 붙는다. 여기서는 단순화한 식이다.</div>
+    </div>
+    <p>요구치는 선종·크기별 <b>기준선</b>(2000~2010년 건조선 평균) \(a\cdot \text{DWT}^{-c}\)에서 감축률 X%를 뺀 값이다. 기존선 상당수가 EEXI를 넘자 가장 많이 쓰인 해결책이 <span class="term">엔진 출력 제한</span><span class="en">(EPL, Engine Power Limitation)</span>이다. 출력을 제한하면 속력은 대략 \(V \propto P^{1/3}\)으로만 줄므로 지수는 \(P/V \propto P^{2/3}\)으로 내려간다. 설계 지표는 "최고 속력에서의 효율"을 보므로, 실제로 그 속력을 쓰지 않는 배에게 EPL은 비용이 거의 없는 해결책이다.</p>
+
+    <div class="sim" id="sim-eexi">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>EEXI 계산기와 엔진 출력 제한</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-eexi"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>선종(대표 사례)</span><div class="seg" id="ex-type"><button data-value="bulk" class="on">벌크선</button><button data-value="tanker">VLCC</button><button data-value="cont">컨테이너선</button></div></div>
+          <label class="ctrl"><span>엔진 출력 제한 EPL <output id="ex-epl-out"></output></span><input type="range" id="ex-epl" min="0" max="60" step="1" value="0"></label>
+          <div class="ctrl"><span>연료</span><div class="seg" id="ex-fuel"><button data-value="hfo" class="on">HFO</button><button data-value="lng">LNG(이중연료)</button><button data-value="meoh">메탄올</button></div></div>
+          <label class="ctrl"><span>설계 개선(에너지 절감 장치) <output id="ex-esd-out"></output></span><input type="range" id="ex-esd" min="0" max="15" step="0.5" value="0"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">달성 EEXI</span><span class="v" id="o-ex-att">—</span></div>
+        <div class="stat"><span class="k">요구 EEXI</span><span class="v" id="o-ex-req">—</span></div>
+        <div class="stat"><span class="k">기준 속력 Vref</span><span class="v" id="o-ex-v">—</span></div>
+        <div class="stat"><span class="k">판정</span><span class="v" id="o-ex-ok">—</span></div>
+      </div>
+      <div class="sim-note">대표값: 벌크선 18만 DWT·MCR 16 MW·14.5 kn, VLCC 30만 DWT·25 MW·15.5 kn, 컨테이너선 15만 DWT(약 14,000 TEU)·60 MW·23 kn. SFC는 HFO 190, LNG 158(+파일럿 유), 메탄올 380 g/kWh로 가정했다. 해볼 것: 각 선종에서 합격에 필요한 최소 EPL을 찾아보라. 컨테이너선은 감축률(45%)이 커서 30% 이상 제한해야 한다. 연료를 LNG로 바꾸면 EPL 없이도 통과하는 경우가 있다(단, 메탄 슬립은 이 지표에 들어가지 않는다).</div>
+    </div>
+
+    <h3>CII: 1년 동안 실제로 얼마나 냈는가</h3>
+    <div class="formula">$$\text{CII}_{att} = \frac{\sum_j \text{FC}_j \, C_{F,j}}{\text{DWT}\times D_t},\qquad \text{CII}_{req} = \left(1-\frac{Z}{100}\right)\text{CII}_{ref},\qquad \text{CII}_{ref}=a\,\text{DWT}^{-c}$$
+      <div class="where">\(\text{FC}_j\): 연간 연료 \(j\) 소비량(g), \(D_t\): 연간 항해 거리(nm), \(Z\): 연도별 감축률(2023년 5% → 2026년 11% → 2030년 21.5%). 달성값/요구값의 비율로 A~E 등급을 매긴다. D를 3년 연속 받거나 E를 한 번 받으면 개선 계획을 SEEMP에 넣어 승인받아야 한다.</div>
+    </div>
+    <figure class="diagram">
+      <svg viewBox="0 0 760 170" role="img" aria-label="CII 등급 경계">
+        <rect x="40" y="40" width="150" height="50" fill="#2da44e" opacity="0.85"/><rect x="190" y="40" width="110" height="50" fill="#7cc35b" opacity="0.85"/>
+        <rect x="300" y="40" width="150" height="50" fill="#e8c547" opacity="0.9"/><rect x="450" y="40" width="130" height="50" fill="#f08a3c" opacity="0.9"/><rect x="580" y="40" width="140" height="50" fill="#d64545" opacity="0.9"/>
+        <g font-size="22" font-weight="700" fill="#fff" text-anchor="middle"><text x="115" y="73">A</text><text x="245" y="73">B</text><text x="375" y="73">C</text><text x="515" y="73">D</text><text x="650" y="73">E</text></g>
+        <line x1="375" y1="30" x2="375" y2="100" stroke="var(--text)" stroke-width="2" stroke-dasharray="4 3"/>
+        <text x="375" y="22" class="t" text-anchor="middle">요구치(비율 1.0)</text>
+        <g class="t-mono" text-anchor="middle"><text x="190" y="118">d1 0.86</text><text x="300" y="118">d2 0.94</text><text x="450" y="118">d3 1.06</text><text x="580" y="118">d4 1.18</text></g>
+        <text x="40" y="150" class="t-dim">달성 CII / 요구 CII (벌크선 경계값 예시). 해마다 요구치가 낮아지므로 아무것도 안 하면 등급이 내려간다.</text>
+      </svg>
+      <figcaption><b>그림 19-2.</b> CII 등급. 경계값 d1~d4는 선종마다 다르다(벌크선 0.86/0.94/1.06/1.18, 탱커 0.82/0.93/1.08/1.28, 컨테이너선 0.83/0.94/1.07/1.19).</figcaption>
+    </figure>
+
+    <div class="sim" id="sim-cii">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>CII 등급 시뮬레이터</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-cii"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>선종(대표 사례)</span><div class="seg" id="ci-type"><button data-value="bulk" class="on">벌크선</button><button data-value="tanker">VLCC</button><button data-value="cont">컨테이너선</button></div></div>
+          <label class="ctrl"><span>항해 속력 <output id="ci-v-out"></output></span><input type="range" id="ci-v" min="8" max="24" step="0.5" value="13.5"></label>
+          <label class="ctrl"><span>연간 항해일 <output id="ci-d-out"></output></span><input type="range" id="ci-d" min="150" max="320" step="5" value="250"></label>
+          <div class="ctrl"><span>연료</span><div class="seg" id="ci-fuel"><button data-value="hfo" class="on">HFO</button><button data-value="lng">LNG</button><button data-value="meoh">메탄올</button></div></div>
+          <label class="ctrl"><span>평가 연도 <output id="ci-y-out"></output></span><input type="range" id="ci-y" min="2023" max="2030" step="1" value="2026"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">연간 CO₂</span><span class="v" id="o-ci-co2">—</span></div>
+        <div class="stat"><span class="k">달성 CII</span><span class="v" id="o-ci-att">—</span></div>
+        <div class="stat"><span class="k">달성/요구</span><span class="v" id="o-ci-r">—</span></div>
+        <div class="stat"><span class="k">등급</span><span class="v" id="o-ci-g">—</span></div>
+      </div>
+      <div class="sim-note">근사 모델: 하루 연료 ∝ 속력³(설계 속력 기준), 정박일에는 보조 발전 연료만 쓴다. 항해일이 고정이므로 속력을 낮추면 거리도 줄어 CII ∝ 속력²에 가깝다. 해볼 것: 2026년에 C인 배를 그대로 두고 연도만 2030년으로 옮기면 등급이 어떻게 되는가? 속력을 1노트 낮추면 몇 등급 오르는가? 정박이 긴 운항(항해일 축소)이 오히려 CII를 나쁘게 만드는 이유도 생각해 보라.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 3 -->
+  <section id="slow">
+    <h2>감속 운항의 물리와 경제학</h2>
+    <p>배의 저항은 대략 속력의 제곱에 비례하고(<a href="resistance.html">6장</a>), 동력은 저항×속력이므로 속력의 세제곱에 비례한다. 실제로는 조파 저항 때문에 지수가 3보다 큰 구간도 있지만, 세제곱 법칙은 좋은 첫 근사다.</p>
+    <div class="formula">$$P \propto V^3,\qquad \dot m_{day} \propto V^3,\qquad \frac{\text{fuel}}{\text{distance}} = \frac{\dot m_{day}}{24V} \propto V^2$$
+      <div class="where">속력을 20% 낮추면(22 → 17.6 kn) 하루 연료는 \(0.8^3 = 0.51\)배, 같은 거리를 가는 데 드는 연료는 \(0.8^2=0.64\)배가 된다.</div>
+    </div>
+    <p>2008년 금융 위기 뒤 연료값이 오르고 물동량이 줄자 컨테이너 선사들은 24~25 kn이던 운항 속력을 16~18 kn으로 낮췄다. 이를 <span class="term">감속 운항</span><span class="en">(Slow Steaming)</span>이라 한다. 하지만 공짜는 아니다. 주 1회 정기 서비스를 유지하려면 한 바퀴(loop)가 길어진 만큼 배를 더 투입해야 하고, 화주는 화물이 바다에 더 오래 떠 있는 동안의 <b>재고 비용</b>(자본 비용)을 부담한다. 최적 속력은 연료비, 선박 비용, 재고 비용, 그리고 이제는 탄소 비용의 균형으로 정해진다.</p>
+
+    <div class="sim" id="sim-fleet">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>선대 감속 운항 시뮬레이터 (아시아–북유럽 주간 서비스)</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-fleet"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>운항 속력 <output id="fl-v-out"></output></span><input type="range" id="fl-v" min="12" max="24" step="0.25" value="20"></label>
+          <label class="ctrl"><span>연료 가격 <output id="fl-fp-out"></output></span><input type="range" id="fl-fp" min="300" max="1200" step="25" value="600"></label>
+          <label class="ctrl"><span>탄소 가격 <output id="fl-cp-out"></output></span><input type="range" id="fl-cp" min="0" max="300" step="5" value="0"></label>
+          <label class="ctrl"><span>선박 용선료 <output id="fl-ch-out"></output></span><input type="range" id="fl-ch" min="15" max="150" step="5" value="50"></label>
+          <label class="ctrl"><span>화물 가치 / TEU <output id="fl-cv-out"></output></span><input type="range" id="fl-cv" min="5" max="100" step="5" value="30"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">필요 선박 수</span><span class="v" id="o-fl-n">—</span></div>
+        <div class="stat"><span class="k">선대 연간 연료</span><span class="v" id="o-fl-f">—</span></div>
+        <div class="stat"><span class="k">연간 CO₂</span><span class="v" id="o-fl-co2">—</span></div>
+        <div class="stat"><span class="k">연간 총비용</span><span class="v" id="o-fl-c">—</span></div>
+      </div>
+      <div class="sim-note">가정: 14,000 TEU급, 왕복 22,000 해리, 한 바퀴 기항 12일, 22 kn에서 하루 200 t(속력³ 비례) + 보조 6 t, 적재율 85%, 재고 이자율 연 8%. 해볼 것: 연료 가격을 올리거나 탄소 가격을 넣으면 최적 속력(◆)이 내려간다. 고가 화물(100 k$/TEU)은 재고 비용 때문에 빠른 속력이 유리하다. 선박 수는 정수이므로 같은 척수 안에서 속력을 조금 낮출 여지가 생기는 계단도 확인하라.</div>
+    </div>
+    <div class="callout warn"><strong>감속 운항의 함정</strong><p>엔진은 원래 최대 출력의 85% 근처에 맞춰 설계되었으므로 장기간 20~40% 부하로 돌리면 연소실 오염, 과급기 효율 저하, 실린더 마모가 생긴다. 그래서 실제로는 과급기 한 대를 끊거나(turbocharger cut-out), 저부하용 튜닝을 적용하고, 프로펠러·선수 벌브를 새 속력에 맞게 교체하는 개조가 함께 이루어진다.</p></div>
+  </section>
+
+  <!-- =============================================================== 4 -->
+  <section id="fuels">
+    <h2>대체 연료: 에너지 밀도와 저장</h2>
+    <p>무배출에 가까운 연료 후보는 모두 기존 중유보다 에너지를 덜 담는다. 연료 탱크는 화물 공간을 잠식하므로, 질량당 에너지(MJ/kg)보다 <b>부피당 에너지</b>(MJ/L)가 더 중요한 경우가 많다. 수소는 질량당 에너지가 중유의 3배지만, −253 °C로 액화해도 밀도가 물의 1/14에 불과하다. 극저온·가압 탱크는 단열재와 원통형 구조 때문에 실제 차지하는 공간이 연료 부피의 1.5~2배다.</p>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>연료</th><th class="num">LHV (MJ/kg)</th><th class="num">밀도 (kg/m³)</th><th>저장 조건</th><th>독성</th><th>인화·폭발</th><th>비고</th></tr></thead>
+      <tbody>
+        <tr><td>중유(HFO/VLSFO)</td><td class="num">40~41</td><td class="num">~990</td><td>상온·상압(가열)</td><td>낮음</td><td>낮음(인화점 60 °C↑)</td><td>황·PM 배출, 기준 연료</td></tr>
+        <tr><td>LNG(메탄)</td><td class="num">~49</td><td class="num">~450</td><td>−162 °C 극저온</td><td>낮음(질식)</td><td>높음</td><td>메탄 슬립, 증발 가스(BOG)</td></tr>
+        <tr><td>메탄올</td><td class="num">19.9</td><td class="num">~795</td><td>상온·상압 액체</td><td>있음(섭취·흡입)</td><td>높음(인화점 12 °C, 화염이 잘 안 보임)</td><td>기존 탱크 개조 용이</td></tr>
+        <tr><td>암모니아</td><td class="num">18.6</td><td class="num">~680</td><td>−33 °C 또는 약 10 bar</td><td><b>매우 높음</b></td><td>낮음(연소가 어려움)</td><td>N₂O 배출, 파일럿 연료 필요</td></tr>
+        <tr><td>액화수소</td><td class="num">120</td><td class="num">~71</td><td>−253 °C 극저온</td><td>없음</td><td><b>매우 높음</b>(넓은 폭발 범위)</td><td>증발 손실, 수소 취성</td></tr>
+        <tr><td>리튬이온 배터리</td><td class="num">~0.45</td><td class="num">(시스템)</td><td>상온</td><td>화재 시 독성 가스</td><td>열폭주</td><td>단거리선·하이브리드</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="sim" id="sim-tank">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>같은 항해에 필요한 연료 탱크 크기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-tank"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>항로</span><div class="seg" id="tk-route"><button data-value="300">연안 300 nm</button><button data-value="6000" class="on">태평양 6,000 nm</button><button data-value="11000">아시아–유럽 11,000 nm</button></div></div>
+          <label class="ctrl"><span>평균 추진 출력 <output id="tk-p-out"></output></span><input type="range" id="tk-p" min="2" max="60" step="1" value="30"></label>
+          <label class="ctrl"><span>속력 <output id="tk-v-out"></output></span><input type="range" id="tk-v" min="8" max="24" step="0.5" value="18"></label>
+          <div class="ctrl"><span>막대 보기</span><div class="seg" id="tk-view"><button data-value="vol" class="on">탱크 체적</button><button data-value="mass">연료 질량</button><button data-value="dens">에너지 밀도</button></div></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">항해 시간</span><span class="v" id="o-tk-t">—</span></div>
+        <div class="stat"><span class="k">축 에너지</span><span class="v" id="o-tk-e">—</span></div>
+        <div class="stat"><span class="k">HFO 탱크</span><span class="v" id="o-tk-hfo">—</span></div>
+        <div class="stat"><span class="k">액화수소 탱크</span><span class="v" id="o-tk-h2">—</span></div>
+      </div>
+      <div class="sim-note">가정: 기관 효율 HFO·LNG·메탄올 50%, 암모니아 48%, 수소 연료전지 50%, 배터리 계통 90%. 탱크 체적 계수(단열·형상 포함) HFO 1.05, LNG 1.6, 메탄올 1.15, 암모니아 1.6, 액화수소 2.0. TEU 환산은 40 ft 컨테이너 내부 약 67 m³의 절반(33.5 m³)을 1 TEU로 본다. 해볼 것: 연안 300 nm 항로에서는 배터리도 현실적인 크기지만, 태평양 횡단에서는 배터리 질량이 배의 재화중량을 넘는다. 대양 항로에서 수소 대신 암모니아·메탄올이 거론되는 이유를 막대에서 읽어 보라.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 5 -->
+  <section id="wtw">
+    <h2>Well-to-Wake와 메탄 슬립</h2>
+    <p>배의 굴뚝에서 나오는 CO₂만 보면(<span class="term">Tank-to-Wake</span>, TtW) 암모니아와 수소는 "무탄소"다. 하지만 오늘날 생산되는 수소의 대부분은 천연가스를 개질해 만들며 그 과정에서 수소 1 kg당 약 9~10 kg의 CO₂를 낸다. 연료를 캐고(또는 만들고) 운반하는 과정(<span class="term">Well-to-Tank</span>, WtT)을 합친 <span class="term">Well-to-Wake</span>(WtW) 배출로 비교해야 공정하다. 생산 경로에 따라 색으로 구분한다.</p>
+    <ul>
+      <li><b>그레이</b>: 화석 연료로 생산, 부산 CO₂를 대기로 배출.</li>
+      <li><b>블루</b>: 화석 연료로 생산하되 CO₂를 포집·저장(CCS). 포집률과 상류의 메탄 누출에 따라 효과가 달라진다.</li>
+      <li><b>그린</b>(e-연료): 재생 전력으로 물을 전기분해한 수소, 그 수소로 만든 암모니아, 수소와 포집 CO₂로 합성한 e-메탄올. 바이오매스에서 만든 바이오 연료도 상류에서 흡수한 탄소를 상쇄해 WtW가 작다.</li>
+    </ul>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 780 200" role="img" aria-label="Well-to-Tank와 Tank-to-Wake">
+        <rect x="20" y="60" width="140" height="64" rx="10" class="f-surface" stroke="var(--border)"/><text x="90" y="88" class="t" text-anchor="middle">원료</text><text x="90" y="108" class="t-dim" text-anchor="middle">가스전·재생 전력</text>
+        <rect x="200" y="60" width="140" height="64" rx="10" class="f-surface" stroke="var(--border)"/><text x="270" y="88" class="t" text-anchor="middle">생산·변환</text><text x="270" y="108" class="t-dim" text-anchor="middle">개질·전해·합성</text>
+        <rect x="380" y="60" width="140" height="64" rx="10" class="f-surface" stroke="var(--border)"/><text x="450" y="88" class="t" text-anchor="middle">운송·벙커링</text><text x="450" y="108" class="t-dim" text-anchor="middle">액화·저장</text>
+        <rect x="580" y="60" width="180" height="64" rx="10" class="f-acc-soft" stroke="var(--accent)"/><text x="670" y="88" class="t" text-anchor="middle">선박 연소</text><text x="670" y="108" class="t-dim" text-anchor="middle">CO₂·CH₄·N₂O</text>
+        <g stroke="var(--text-dim)" stroke-width="2"><line x1="160" y1="92" x2="200" y2="92"/><line x1="340" y1="92" x2="380" y2="92"/><line x1="520" y1="92" x2="580" y2="92"/></g>
+        <path d="M20 40 L520 40" stroke="var(--accent-2)" stroke-width="3"/><text x="270" y="30" class="t-acc" text-anchor="middle">Well-to-Tank (상류)</text>
+        <path d="M580 40 L760 40" stroke="var(--accent)" stroke-width="3"/><text x="670" y="30" class="t" text-anchor="middle">Tank-to-Wake</text>
+        <path d="M20 150 L760 150" stroke="var(--ok)" stroke-width="3"/><text x="390" y="176" class="t" text-anchor="middle">Well-to-Wake = WtT + TtW (gCO₂e/MJ)</text>
+      </svg>
+      <figcaption><b>그림 19-3.</b> 연료의 전 과정 배출. IMO의 연료 수명 주기 평가(LCA) 지침과 EU FuelEU Maritime은 WtW 집약도(g CO₂e/MJ)로 연료를 비교한다.</figcaption>
+    </figure>
+
+    <h3>메탄 슬립</h3>
+    <p>LNG는 탄소 대비 수소 비율이 높아 같은 에너지에서 CO₂가 중유보다 약 25% 적다. 그러나 엔진에서 다 타지 못하고 빠져나가는 메탄, 즉 <span class="term">메탄 슬립</span><span class="en">(Methane Slip)</span>이 문제다. 메탄은 100년 기준 지구 온난화 지수(GWP₁₀₀)가 CO₂의 약 28~30배, 20년 기준으로는 80배 이상이다. 저압 오토 사이클 4행정 엔진은 연료의 수 %를 흘리지만, 고압 직접 분사 디젤 사이클 2행정 엔진은 0.2% 수준이다.</p>
+    <div class="formula">$$\text{WtW} = \text{WtT} + (1-s)\,\frac{C_F}{\text{LHV}} + s\,\frac{\text{GWP}_{CH_4}}{\text{LHV}}$$
+      <div class="where">\(s\): 슬립률(연료 질량 대비 미연소 메탄 비율), \(C_F = 2.75\) g CO₂/g, LHV ≈ 49 MJ/kg. 슬립 1%마다 약 \(0.01\times 28/0.049 \approx 5.7\) g CO₂e/MJ가 더해진다.</div>
+    </div>
+
+    <div class="sim" id="sim-slip">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>메탄 슬립과 LNG의 실질 이득</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-slip"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>엔진 형식(기본 슬립률)</span><div class="seg" id="sl-eng"><button data-value="3.1" class="on">저압 4행정 오토</button><button data-value="1.7">저압 2행정 오토</button><button data-value="0.2">고압 2행정 디젤</button></div></div>
+          <label class="ctrl"><span>슬립률 <output id="sl-s-out"></output></span><input type="range" id="sl-s" min="0" max="6" step="0.1" value="3.1"></label>
+          <label class="ctrl"><span>메탄 GWP <output id="sl-g-out"></output></span><input type="range" id="sl-g" min="20" max="90" step="1" value="28"></label>
+          <label class="check"><input type="checkbox" id="sl-wtt" checked> 상류(Well-to-Tank) 포함</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">HFO WtW</span><span class="v" id="o-sl-hfo">—</span></div>
+        <div class="stat"><span class="k">LNG WtW</span><span class="v" id="o-sl-lng">—</span></div>
+        <div class="stat"><span class="k">LNG 이득</span><span class="v" id="o-sl-gain">—</span></div>
+        <div class="stat"><span class="k">손익분기 슬립률</span><span class="v" id="o-sl-be">—</span></div>
+      </div>
+      <div class="sim-note">대표값(EU FuelEU 기본값 수준): HFO WtT 13.5·TtW 77.5, LNG WtT 18.5·TtW 56 g CO₂e/MJ. 해볼 것: GWP를 20년 기준(약 83)으로 바꾸면 저압 4행정 오토 엔진의 LNG는 중유보다 나빠진다. 고압 디젤 사이클 엔진에서는 GWP와 무관하게 이득이 유지된다. 상류 배출을 끄면(TtW만) LNG가 실제보다 좋아 보인다.</div>
+    </div>
+
+    <div class="sim" id="sim-wtw">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>연료 경로별 Well-to-Wake 비교</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-wtw"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>생산 경로(메탄올·암모니아·수소)</span><div class="seg" id="ww-col"><button data-value="grey" class="on">그레이</button><button data-value="blue">블루 / 바이오</button><button data-value="green">그린(e-연료)</button></div></div>
+          <label class="check"><input type="checkbox" id="ww-ttw"> 굴뚝 배출(TtW)만 보기</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">가장 낮은 연료</span><span class="v" id="o-ww-best">—</span></div>
+        <div class="stat"><span class="k">HFO 대비</span><span class="v" id="o-ww-red">—</span></div>
+      </div>
+      <div class="sim-note">값은 문헌에 흔히 나오는 대략적인 대표값이며 생산 방식·전력원·누출률에 따라 ±30% 이상 달라진다. 메탄올의 가운데 경로는 바이오 메탄올(상류의 생물 탄소 흡수를 음수로 반영)이다. 암모니아 TtW에는 N₂O와 파일럿 연료 배출을 포함했다. 해볼 것: "TtW만 보기"를 켜면 그레이 암모니아·수소가 최고의 연료처럼 보인다. 끄고 보면 그레이 수소는 중유보다 나쁘다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 6 -->
+  <section id="wind">
+    <h2>풍력 보조 추진: 로터 세일과 윙 세일</h2>
+    <p>범선의 시대는 끝났지만 바람은 여전히 공짜다. 현대 풍력 보조 추진은 주기관을 그대로 두고 바람에서 얻은 추력만큼 엔진 출력을 줄인다. 대표적인 장치가 <span class="term">로터 세일</span><span class="en">(Rotor Sail, Flettner Rotor)</span>이다. 높이 20~35 m의 원통을 전동기로 빠르게 돌리면, 원통 표면이 공기를 끌고 돌아 한쪽은 유속이 빨라지고 반대쪽은 느려진다. 베르누이 원리에 따라 압력 차가 생기고, 바람과 수직인 방향으로 큰 양력이 나온다. 이것이 <span class="term">마그누스 효과</span><span class="en">(Magnus Effect)</span>다.</p>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 250" role="img" aria-label="마그누스 효과">
+        <g stroke="var(--accent)" stroke-width="2" fill="none">
+          <path d="M40 70 C200 70 230 40 380 40 C530 40 560 70 720 70"/>
+          <path d="M40 100 C200 100 240 70 380 70 C520 70 560 100 720 100"/>
+          <path d="M40 160 C200 160 250 180 380 185 C510 180 560 160 720 160" stroke-dasharray="6 4"/>
+          <path d="M40 190 C200 190 260 215 380 220 C500 215 560 190 720 190" stroke-dasharray="6 4"/>
+        </g>
+        <circle cx="380" cy="128" r="44" class="f-elev" stroke="var(--text-dim)" stroke-width="2"/>
+        <path d="M380 92 A36 36 0 1 1 344 128" fill="none" stroke="var(--accent-2)" stroke-width="3" marker-end="url(#mg-ar)"/>
+        <defs><marker id="mg-ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="var(--accent-2)"/></marker>
+        <marker id="mg-ar2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="var(--ok)"/></marker></defs>
+        <text x="380" y="133" class="t" text-anchor="middle">회전</text>
+        <text x="40" y="58" class="t-dim">바람 →</text>
+        <text x="560" y="30" class="t">빠른 흐름 · 낮은 압력</text>
+        <text x="560" y="236" class="t-dim">느린 흐름 · 높은 압력</text>
+        <line x1="380" y1="84" x2="380" y2="18" stroke="var(--ok)" stroke-width="4" marker-end="url(#mg-ar2)"/>
+        <text x="392" y="22" class="t" fill="var(--ok)">양력 L</text>
+      </svg>
+      <figcaption><b>그림 19-4.</b> 마그누스 효과. 시계 방향으로 도는 원통 위쪽은 표면이 흐름과 같은 방향으로 움직여 유속이 빨라지고 압력이 낮아진다. 양력은 바람과 수직이며, 크기는 스핀비(표면 속도/풍속)에 따라 커진다.</figcaption>
+    </figure>
+
+    <div class="formula">$$L = \tfrac12 \rho_{air} A V_a^2 C_L(SR),\qquad SR = \frac{\omega r}{V_a},\qquad T = L\sin\beta - D\cos\beta$$
+      <div class="where">\(V_a\): 겉보기 바람 속도, \(\beta\): 겉보기 바람이 불어오는 방향의 선수 기준 각도, \(A\): 투영 면적(높이×지름), \(C_L\): 스핀비 3~4에서 8~10 정도(날개의 5배 이상). 배에서 느끼는 바람은 실제 바람에서 배의 속도를 뺀 <span class="term">겉보기 바람</span>이다.</div>
+    </div>
+    <p>로터의 양력은 바람에 수직이므로 <b>옆바람</b>(겉보기 바람각 90° 근처)에서 추력이 최대이고, 맞바람에서는 저항만 생긴다. 윙 세일은 비행기 날개처럼 받음각으로 양력을 만든다. \(C_L\)은 1.5~2 정도로 작지만 면적을 크게 만들 수 있고 회전 동력이 필요 없다. 연(kite)은 바람이 강하고 일정한 고도 100~300 m에서 끌어 주는 방식이다. 실제 연간 절감은 항로의 바람 조건에 크게 좌우되며 보통 주기관 연료의 수 %~10% 남짓이다.</p>
+
+    <div class="sim" id="sim-wind">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>겉보기 바람과 풍력 보조 추력</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-wind" style="touch-action:none"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>장치</span><div class="seg" id="wd-dev"><button data-value="rotor" class="on">로터 세일</button><button data-value="wing">윙 세일</button></div></div>
+          <label class="ctrl"><span>실제 풍속 <output id="wd-tws-out"></output></span><input type="range" id="wd-tws" min="0" max="20" step="0.5" value="10"></label>
+          <label class="ctrl"><span>실제 바람 방향(선수 기준) <output id="wd-twa-out"></output></span><input type="range" id="wd-twa" min="0" max="180" step="5" value="100"></label>
+          <label class="ctrl"><span>선속 <output id="wd-vs-out"></output></span><input type="range" id="wd-vs" min="0" max="20" step="0.5" value="12"></label>
+          <label class="ctrl"><span>스핀비 목표(로터) <output id="wd-sr-out"></output></span><input type="range" id="wd-sr" min="0" max="5" step="0.1" value="3"></label>
+          <label class="ctrl"><span>장치 수 <output id="wd-n-out"></output></span><input type="range" id="wd-n" min="1" max="4" step="1" value="2"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">겉보기 바람</span><span class="v" id="o-wd-aw">—</span></div>
+        <div class="stat"><span class="k">추력(전방)</span><span class="v" id="o-wd-t">—</span></div>
+        <div class="stat"><span class="k">순 절감 동력</span><span class="v" id="o-wd-p">—</span></div>
+        <div class="stat"><span class="k">주기관 출력 대비</span><span class="v" id="o-wd-pct">—</span></div>
+      </div>
+      <div class="sim-note">로터 1기: 높이 30 m·지름 5 m, 최대 표면 속도 47 m/s. 윙 1기: 높이 35 m·시위 13 m, 최적 받음각 자동. 선박은 12 kn에서 8 MW가 드는 벌크선, 추진 효율 0.7로 가정. 오른쪽 극좌표의 반지름은 추력, 각도는 실제 바람 방향이다. 표시되는 절감률은 이 바람 조건에서의 순간값이며, 바람의 방향·세기가 계속 바뀌므로 연평균 절감은 이보다 훨씬 작다. 해볼 것: 왼쪽 그림을 끌어 바람 방향을 바꿔 보라. 선속을 올리면 겉보기 바람이 선수 쪽으로 돌아가 추력이 줄어든다. 맞바람 근처(0~30°)에서는 로터를 멈추는 편이 낫다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 7 -->
+  <section id="air">
+    <h2>공기 윤활</h2>
+    <p>평저선(벌크선·탱커·컨테이너선)의 저항 중 마찰 저항은 60~80%를 차지하고, 넓고 평평한 선저는 젖은 표면적의 큰 부분이다. <span class="term">공기 윤활 시스템</span><span class="en">(ALS, Air Lubrication System)</span>은 선저 앞쪽의 여러 줄 노즐에서 압축 공기를 내보내 선저를 따라 미세 기포층이나 얇은 공기막을 깐다. 물보다 점성과 밀도가 훨씬 작은 공기가 선체와 물 사이에 끼어 그 면적의 마찰 저항을 크게 줄인다.</p>
+    <figure class="diagram">
+      <svg viewBox="0 0 760 210" role="img" aria-label="공기 윤활 단면">
+        <rect x="0" y="60" width="760" height="150" fill="var(--water-soft, rgba(59,143,224,0.12))"/>
+        <line x1="0" y1="60" x2="760" y2="60" stroke="var(--accent)" stroke-width="2"/>
+        <path d="M60 20 L700 20 L700 60 L690 130 L80 130 L60 60 Z" class="f-elev" stroke="var(--text-dim)" stroke-width="2"/>
+        <text x="380" y="90" class="t" text-anchor="middle">선체 (평평한 선저)</text>
+        <g fill="var(--bg-elev)" stroke="var(--accent)" stroke-width="1">
+          <circle cx="150" cy="138" r="5"/><circle cx="180" cy="142" r="4"/><circle cx="210" cy="137" r="6"/><circle cx="250" cy="141" r="4"/><circle cx="290" cy="137" r="5"/><circle cx="330" cy="142" r="6"/><circle cx="370" cy="138" r="4"/><circle cx="410" cy="141" r="5"/><circle cx="450" cy="137" r="6"/><circle cx="490" cy="142" r="4"/><circle cx="530" cy="138" r="5"/><circle cx="570" cy="141" r="4"/><circle cx="610" cy="138" r="5"/><circle cx="645" cy="142" r="4"/>
+        </g>
+        <rect x="610" y="104" width="22" height="26" fill="var(--accent-2)"/><text x="621" y="168" class="t-dim" text-anchor="middle">공기 노즐</text>
+        <rect x="560" y="30" width="80" height="34" rx="6" class="f-acc2-soft" stroke="var(--accent-2)"/><text x="600" y="52" class="t" text-anchor="middle">압축기</text>
+        <line x1="600" y1="64" x2="621" y2="104" stroke="var(--accent-2)" stroke-width="2"/>
+        <text x="40" y="192" class="t-dim">← 진행 방향 반대로 기포층이 선저를 따라 흐른다</text>
+        <text x="720" y="192" class="t-dim" text-anchor="end">선수 →</text>
+      </svg>
+      <figcaption><b>그림 19-5.</b> 공기 윤활. 공기를 불어넣으려면 흘수에 해당하는 정수압 \(\rho g T\)(흘수 15 m면 약 1.5 bar)을 이겨야 하므로, 압축기 동력이 절감량을 일부 깎아 먹는다.</figcaption>
+    </figure>
+    <div class="formula">$$\Delta P_{net} = P_{prop}\,\frac{R_F}{R_T}\,c\,r(Q) - \frac{p\,Q\ln(p/p_0)}{\eta_c},\qquad p = p_0 + \rho g T + \Delta p$$
+      <div class="where">\(c\): 공기층이 덮는 젖은 면적 비율, \(r(Q)\): 덮인 면적의 마찰 감소율(공기량 \(Q\)에 따라 포화), \(p\): 노즐 절대 압력, \(\eta_c\): 압축기 효율. 압축 동력은 등온 압축으로 근사했다.</div>
+    </div>
+
+    <div class="sim" id="sim-als">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>공기 윤활: 절감 vs 공기 공급 동력</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-als"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>선속 <output id="al-v-out"></output></span><input type="range" id="al-v" min="10" max="24" step="0.5" value="18"></label>
+          <label class="ctrl"><span>흘수 <output id="al-t-out"></output></span><input type="range" id="al-t" min="6" max="20" step="0.5" value="14"></label>
+          <label class="ctrl"><span>공기층 덮는 면적 비율 <output id="al-c-out"></output></span><input type="range" id="al-c" min="10" max="50" step="1" value="30"></label>
+          <label class="ctrl"><span>공기 유량 <output id="al-q-out"></output></span><input type="range" id="al-q" min="0" max="5" step="0.05" value="1.2"></label>
+          <button class="btn" id="al-opt">최적 유량 찾기</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">추진 동력</span><span class="v" id="o-al-p">—</span></div>
+        <div class="stat"><span class="k">총 절감</span><span class="v" id="o-al-g">—</span></div>
+        <div class="stat"><span class="k">압축기 동력</span><span class="v" id="o-al-c">—</span></div>
+        <div class="stat"><span class="k">순 절감</span><span class="v" id="o-al-n">—</span></div>
+      </div>
+      <div class="sim-note">대형 컨테이너선(22 kn에서 40 MW, 마찰 저항 비율 65%)을 가정한 근사 모델. 마찰 감소율은 \(r = 0.6\,(1-e^{-Q/Q_0})\), \(Q_0 \propto\) 선속 × 선폭. 해볼 것: 공기를 너무 많이 넣으면 순 절감이 오히려 줄어드는 최적점이 있다. 흘수를 깊게 하면 압축 동력이 커져 최적 유량이 줄어든다. 선속을 낮추면 추진 동력이 \(V^3\)으로 줄어 절대 절감량도 작아진다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 8 -->
+  <section id="esd">
+    <h2>그 밖의 에너지 절감 기술</h2>
+    <p>"가장 깨끗한 연료는 태우지 않은 연료"라는 말처럼, 연료 전환 이전에 수요 자체를 줄이는 기술이 많다. 각각은 몇 %씩이지만 합치면 무시할 수 없다.</p>
+    <ul>
+      <li><b>선체 도료와 청소</b>: 따뜻한 바다에서 따개비·해조류가 붙으면 몇 달 만에 마찰 저항이 10~20% 이상 늘 수 있다. 자기마모형(SPC) 방오 도료, 실리콘계 오손 방출(foul-release) 도료, 수중 청소 로봇이 쓰인다.</li>
+      <li><b>선형과 프로펠러 최적화</b>: 감속 운항 속력에 맞춘 선수 벌브 개조, 프로펠러 교체·연마, 프로펠러 앞 덕트·핀(PSD), 보스캡 핀(PBCF) 같은 에너지 절감 장치(ESD)로 반류와 회전 손실을 회수한다(<a href="propulsion.html">8장</a>).</li>
+      <li><b>폐열 회수</b>(WHRS): 배기가스의 열로 증기 터빈이나 유기 랭킨 사이클(ORC)을 돌려 전기를 만든다. 주기관 출력의 3~8%를 회수한다.</li>
+      <li><b>운항 최적화</b>: 기상 항로, 트림 최적화, 항만 도착 시간 조율(Just-in-Time arrival)로 불필요한 고속 운항과 묘박 대기를 줄인다.</li>
+      <li><b>선상 탄소 포집</b>(OCCS): 배기가스에서 아민 흡수 등으로 CO₂를 분리해 액화 저장한 뒤 항구에서 내린다. 포집률을 높일수록 에너지 소비(연료 10~30% 증가 수준)와 저장 공간이 커져, 아직 실증 단계다.</li>
+    </ul>
+
+    <div class="sim" id="sim-foul">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>선체 오손과 청소 주기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-foul"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>운항 해역</span><div class="seg" id="fo-sea"><button data-value="1" class="on">온대</button><button data-value="1.8">열대</button></div></div>
+          <div class="ctrl"><span>도료</span><div class="seg" id="fo-coat"><button data-value="spc" class="on">자기마모형(SPC)</button><button data-value="fr">오손 방출(실리콘)</button></div></div>
+          <label class="ctrl"><span>수중 청소 주기 <output id="fo-i-out"></output></span><input type="range" id="fo-i" min="2" max="60" step="1" value="12"></label>
+          <label class="ctrl"><span>연료 가격 <output id="fo-fp-out"></output></span><input type="range" id="fo-fp" min="300" max="1200" step="25" value="600"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">평균 동력 증가</span><span class="v" id="o-fo-pen">—</span></div>
+        <div class="stat"><span class="k">연간 추가 연료</span><span class="v" id="o-fo-f">—</span></div>
+        <div class="stat"><span class="k">연간 비용(연료+청소)</span><span class="v" id="o-fo-c">—</span></div>
+        <div class="stat"><span class="k">비용 최적 주기</span><span class="v" id="o-fo-opt">—</span></div>
+      </div>
+      <div class="sim-note">근사 모델: 동력 증가 \(\Delta(t) = a\,(1-e^{-t/\tau})\), 청소하면 0으로 돌아간다고 가정. 기준 연료 연 20,000 t, 청소 1회 비용(작업+운항 손실) 15만 달러, 5년마다 입거 재도장. 해볼 것: 열대 해역에서 청소 주기를 늘리면 비용이 빠르게 커진다. 오손 방출 도료는 오손이 느리게 쌓여 청소 주기를 길게 잡을 수 있다.</div>
+    </div>
+
+    <div class="sim" id="sim-combo">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>에너지 절감 조합기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-combo"></canvas></div>
+        <div class="sim-controls">
+          <div class="chk-list" id="cb-list"></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">단순 합</span><span class="v" id="o-cb-sum">—</span></div>
+        <div class="stat"><span class="k">실제 조합(곱셈)</span><span class="v" id="o-cb-mul">—</span></div>
+        <div class="stat"><span class="k">연료 20,000 t 기준 절감</span><span class="v" id="o-cb-t">—</span></div>
+      </div>
+      <div class="sim-note">각 값은 문헌의 대표적 범위 중간값이다. 절감은 "남은 연료"에 대해 차례로 적용되므로 \(1-\prod(1-s_i)\)로 합쳐지며 단순 합보다 작다. 또 같은 손실(예: 프로펠러 후류 회전)을 노리는 장치끼리는 효과가 겹쳐 실제로는 더 작아질 수 있다. 해볼 것: 모든 항목을 켜도 30%를 넘기 어렵다. IMO의 2050 넷제로에는 연료 전환이 필수인 이유다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 9 -->
+  <section id="economics">
+    <h2>경제성: 탄소 가격과 연료 전환</h2>
+    <p>그린 연료는 대체로 중유보다 에너지당 2~4배 비싸다. 선사가 자발적으로 바꾸기 어려운 이유다. 탄소에 가격을 매기면 계산이 바뀐다. EU는 2024년부터 <span class="term">EU ETS</span>(배출권 거래제)를 해운에 적용했다. 5,000 GT 이상 선박이 EU 항만 사이 항해에서 낸 배출의 100%, EU를 드나드는 항해의 50%, EU 항만 정박 중 배출의 100%가 대상이며, 첫해 배출의 40%, 다음 해 70%, 2026년분부터 100%의 배출권을 내야 한다. 2026년부터는 메탄과 아산화질소도 포함된다. 2025년부터 시행된 <span class="term">FuelEU Maritime</span>은 선박이 쓰는 에너지의 WtW 온실가스 집약도 상한을 2020년 기준(91.16 g CO₂e/MJ)에서 2025년 −2%, 2030년 −6%, 2035년 −14.5%, 2050년 −80%로 낮춰 간다. IMO도 연료 GHG 집약도 기준과 배출 가격을 묶은 넷제로 프레임워크를 논의 중이다.</p>
+    <div class="formula">$$C_{fuel} = \frac{E}{\text{LHV}}\,p_{fuel} + \frac{E}{\text{LHV}}\,EF\cdot \kappa\cdot p_{CO_2},\qquad p^*_{CO_2} = \frac{C_{alt} - C_{ref}}{\left(\text{Emis}_{ref} - \text{Emis}_{alt}\right)\kappa}$$
+      <div class="where">\(E\): 연간 필요 에너지(GJ), \(EF\): 연료 1 t당 과금 대상 배출(t CO₂e), \(\kappa\): 과금 대상 비율(항로·단계적 적용), \(p^*_{CO_2}\): 두 연료의 연간 비용이 같아지는 손익분기 탄소 가격.</div>
+    </div>
+
+    <div class="sim" id="sim-econ">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>연료 전환 손익분기 계산기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-econ"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>대체 연료</span><div class="seg" id="ec-fuel"><button data-value="lng">LNG</button><button data-value="gmeoh">그레이 메탄올</button><button data-value="bmeoh" class="on">바이오 메탄올</button><button data-value="emeoh">e-메탄올</button><button data-value="enh3">그린 암모니아</button></div></div>
+          <label class="ctrl"><span>대체 연료 가격 <output id="ec-p-out"></output></span><input type="range" id="ec-p" min="200" max="3000" step="25" value="1100"></label>
+          <label class="ctrl"><span>VLSFO 가격 <output id="ec-r-out"></output></span><input type="range" id="ec-r" min="300" max="1200" step="25" value="600"></label>
+          <label class="ctrl"><span>탄소 가격 <output id="ec-c-out"></output></span><input type="range" id="ec-c" min="0" max="400" step="5" value="90"></label>
+          <label class="ctrl"><span>과금 대상 비율 κ <output id="ec-k-out"></output></span><input type="range" id="ec-k" min="0" max="100" step="5" value="100"></label>
+          <label class="ctrl"><span>추가 설비비(연간 환산) <output id="ec-x-out"></output></span><input type="range" id="ec-x" min="0" max="6" step="0.1" value="1.5"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">VLSFO 연간 비용</span><span class="v" id="o-ec-ref">—</span></div>
+        <div class="stat"><span class="k">대체 연료 연간 비용</span><span class="v" id="o-ec-alt">—</span></div>
+        <div class="stat"><span class="k">손익분기 탄소 가격</span><span class="v" id="o-ec-be">—</span></div>
+        <div class="stat"><span class="k">CO₂e 감축</span><span class="v" id="o-ec-red">—</span></div>
+      </div>
+      <div class="sim-note">기준 선박: VLSFO로 연 20,000 t(약 82만 GJ)을 쓰는 배. 과금 배출 계수(t CO₂e/t): VLSFO 3.15, LNG 3.18(슬립 1.7%·GWP 28 반영), 그레이 메탄올 1.375, 바이오·e-메탄올과 그린 암모니아 0(지속 가능 연료로 인정된다고 가정). 가격은 예시이며 시장에 따라 크게 변한다. 해볼 것: 바이오 메탄올의 손익분기 탄소 가격을 읽고, 대체 연료 가격을 내려 그것이 현재 탄소 가격(◆) 아래로 내려오는 지점을 찾아보라. κ를 50%(EU 출입 항로)로 낮추면 손익분기점이 두 배가 된다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== summary -->
+  <section class="keypoints" id="summary">
+    <h2>핵심 정리</h2>
+    <ol>
+      <li>해운은 세계 온실가스의 약 3%(연 약 10억 t CO₂e)를 낸다. IMO 2023 전략은 2050년경 넷제로, 2030년 20~30%, 2040년 70~80% 감축(2008년 대비)을 중간 점검으로 둔다. 총배출 = 물동량 × 집약도이므로 효율 개선만으로는 부족하고 무배출 연료가 필요하다.</li>
+      <li>EEXI는 설계 효율(g CO₂/t·nm)로, 출력을 제한하면 \(P^{2/3}\)에 비례해 낮아진다. CII는 1년 운항 결과로 A~E 등급을 매기며, 요구치가 해마다 낮아진다.</li>
+      <li>하루 연료는 \(V^3\), 거리당 연료는 \(V^2\)에 비례한다. 감속 운항은 연료와 CO₂를 크게 줄이지만 선박 수와 재고 비용을 늘리며, 최적 속력은 연료·탄소 가격이 오를수록 낮아진다.</li>
+      <li>대체 연료는 체적 에너지 밀도가 낮아 탱크가 2~5배 커진다. 액화수소와 배터리는 대양 항로에 부피·질량 면에서 불리하고, 암모니아는 독성, 메탄올은 낮은 에너지 밀도, LNG는 메탄 슬립이 과제다.</li>
+      <li>연료는 Well-to-Wake로 비교해야 한다. 그레이 수소·암모니아는 굴뚝 배출이 0이어도 전 과정 배출이 중유보다 클 수 있다. LNG의 이득은 엔진의 메탄 슬립률과 GWP 기준에 크게 좌우된다.</li>
+      <li>로터 세일은 마그누스 효과로 옆바람에서 큰 추력을 낸다. 공기 윤활은 선저 마찰을 줄이지만 정수압을 이기는 압축 동력과의 최적점이 있다. 선체 관리·ESD·폐열 회수를 모두 합쳐도 20~30% 수준이다.</li>
+      <li>탄소 가격(EU ETS)과 연료 집약도 규제(FuelEU, IMO 넷제로 프레임워크)는 연료 전환의 손익분기점을 움직인다. 손익분기 탄소 가격 = 비용 차 / 배출 차이다.</li>
+    </ol>
+  </section>
+
+  <!-- =============================================================== quiz -->
+  <section class="quiz-sec" id="quiz">
+    <h2>확인 퀴즈</h2>
+    <div class="quiz">
+      <div class="quiz-q"><p>Q1. IMO 2023 온실가스 전략의 2030년 중간 점검 목표(총배출, 2008년 대비)는?</p><div class="opts">
+        <button class="opt">최소 5%, 노력 10% 감축</button><button class="opt" data-correct>최소 20%, 노력 30% 감축</button><button class="opt">최소 50%, 노력 70% 감축</button><button class="opt">넷제로</button>
+      </div><div class="quiz-exp">2030년 20%(노력 30%), 2040년 70%(노력 80%), 2050년경 넷제로. "5%, 노력 10%"는 2030년 무배출·준무배출 연료의 에너지 비중 목표다.</div></div>
+
+      <div class="quiz-q"><p>Q2. 선속을 20 kn에서 15 kn으로 낮추면, 같은 거리를 가는 데 드는 연료는 대략 몇 배가 되는가? (세제곱 법칙 가정)</p><div class="opts">
+        <button class="opt">0.75배</button><button class="opt" data-correct>0.56배</button><button class="opt">0.42배</button><button class="opt">0.25배</button>
+      </div><div class="quiz-exp">거리당 연료 ∝ V² 이므로 (15/20)² = 0.5625. 하루 연료는 (0.75)³ = 0.42배지만 항해 일수가 1/0.75배로 늘어난다.</div></div>
+
+      <div class="quiz-q"><p>Q3. EEXI를 맞추기 위해 엔진 출력을 30% 제한하면 지표는 대략 얼마나 낮아지는가? (\(V\propto P^{1/3}\), 보조 동력 무시)</p><div class="opts">
+        <button class="opt">30%</button><button class="opt" data-correct>약 21%</button><button class="opt">약 10%</button><button class="opt">변하지 않는다</button>
+      </div><div class="quiz-exp">지표 ∝ P/V ∝ P^{2/3}. 0.7^{2/3} ≈ 0.788이므로 약 21% 낮아진다. 속력은 0.7^{1/3} ≈ 0.89배, 즉 약 11% 줄어든다.</div></div>
+
+      <div class="quiz-q"><p>Q4. CII가 해마다 요구치가 강화된다는 것의 의미로 옳은 것은?</p><div class="opts">
+        <button class="opt">같은 배라도 매년 연료를 더 써도 된다</button>
+        <button class="opt" data-correct>운항 방식을 바꾸지 않으면 해마다 등급이 내려갈 수 있다</button>
+        <button class="opt">신조선에만 적용된다</button>
+        <button class="opt">등급은 설계 단계에서 고정된다</button>
+      </div><div class="quiz-exp">요구 CII = (1−Z/100)·기준치에서 Z가 매년 커진다(2023년 5% → 2030년 21.5%). 달성값이 그대로면 비율이 커져 C → D → E로 밀려난다.</div></div>
+
+      <div class="quiz-q"><p>Q5. 같은 에너지를 실을 때 연료 탱크 체적이 가장 큰 것은? (단열·탱크 구조 포함)</p><div class="opts">
+        <button class="opt">메탄올</button><button class="opt">LNG</button><button class="opt">암모니아</button><button class="opt" data-correct>액화수소</button>
+      </div><div class="quiz-exp">액화수소는 체적 에너지 밀도가 약 8.5 MJ/L로 중유(약 39 MJ/L)의 1/4.6이고, 극저온 탱크 때문에 실제 공간은 약 2배가 더 든다. 배터리는 이보다도 훨씬 크다.</div></div>
+
+      <div class="quiz-q"><p>Q6. 그레이 암모니아가 "탄소가 없는 연료"라는 주장의 문제점은?</p><div class="opts">
+        <button class="opt">연소하면 CO₂가 대량으로 나온다</button>
+        <button class="opt" data-correct>생산(천연가스 개질) 과정에서 많은 CO₂가 나와 Well-to-Wake로는 중유보다 나쁠 수 있다</button>
+        <button class="opt">암모니아는 에너지 밀도가 수소보다 낮아서</button>
+        <button class="opt">IMO가 암모니아를 금지해서</button>
+      </div><div class="quiz-exp">굴뚝(TtW) 배출은 CO₂가 거의 없지만, 그레이 암모니아는 수소를 천연가스로 만들며 상류에서 CO₂를 대량 배출한다. 게다가 연소 시 N₂O(GWP 약 270)가 나올 수 있다.</div></div>
+
+      <div class="quiz-q"><p>Q7. 로터 세일의 추력이 가장 큰 바람 조건은?</p><div class="opts">
+        <button class="opt">정면 맞바람</button><button class="opt" data-correct>겉보기 바람이 옆(약 90~120°)에서 불 때</button><button class="opt">정확히 뒤바람</button><button class="opt">바람이 없을 때 로터를 최대로 돌릴 때</button>
+      </div><div class="quiz-exp">마그누스 양력은 겉보기 바람에 수직이므로 옆바람에서 거의 그대로 전방 추력이 된다. 맞바람에서는 저항만 생기고, 뒤바람에서는 양력이 옆으로 향해 추력 기여가 작다.</div></div>
+
+      <div class="quiz-q"><p>Q8. 대체 연료 A가 VLSFO보다 연 400만 달러 비싸고 연간 과금 배출을 50,000 t CO₂ 줄인다면 손익분기 탄소 가격은? (κ = 100%)</p><div class="opts">
+        <button class="opt">20 $/t</button><button class="opt" data-correct>80 $/t</button><button class="opt">200 $/t</button><button class="opt">800 $/t</button>
+      </div><div class="quiz-exp">p* = 비용 차 / 배출 차 = 4,000,000 / 50,000 = 80 $/t CO₂. 탄소 가격이 이보다 높으면 전환이 이득이다.</div></div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const cssv = (n) => getComputedStyle(document.body).getPropertyValue(n);
+  const font = (sz, w, mono) => (w ? w + " " : "") + sz + "px " + (mono ? cssv("--mono") : cssv("--font"));
+  const sm = (v, u) => v + " <small>" + u + "</small>";
+  const fmtK = (v, d = 0) => Number(v).toLocaleString("ko-KR", { maximumFractionDigits: d, minimumFractionDigits: d });
+  function label(ctx, s, x, y, c, a, sz, w, base) {
+    ctx.font = font(sz || 12, w); ctx.fillStyle = c; ctx.textAlign = a || "left"; ctx.textBaseline = base || "middle"; ctx.fillText(s, x, y);
+  }
+  function rr(ctx, x, y, w, h, r) {
+    r = Math.max(0, Math.min(r, Math.abs(w) / 2, Math.abs(h) / 2));
+    ctx.beginPath(); ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+  function line(ctx, x1, y1, x2, y2) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+  function sim(name, fn) { try { fn(); } catch (e) { console.error("[" + name + "]", e); } }
+  const GRADE_C = { A: "#2da44e", B: "#7cc35b", C: "#d4ad1f", D: "#f08a3c", E: "#d64545" };
+  const gradeSpan = (g) => '<span style="color:' + GRADE_C[g] + ';font-weight:800">' + g + "</span>";
+  // 선종 대표값
+  const SHIPS = {
+    bulk: { name: "벌크선", dwt: 180000, mcr: 16000, vref: 14.5, cap: 1, ea: 961.79, ec: 0.477, ca: 4745, cc: 0.622, d: [0.86, 0.94, 1.06, 1.18], v0: 14, f0: 45, port: 4, vdef: 12.5 },
+    tanker: { name: "VLCC", dwt: 300000, mcr: 25000, vref: 15.5, cap: 1, ea: 1218.8, ec: 0.488, ca: 5247, cc: 0.61, d: [0.82, 0.93, 1.08, 1.28], v0: 15, f0: 80, port: 8, vdef: 13 },
+    cont: { name: "컨테이너선", dwt: 150000, mcr: 60000, vref: 23, cap: 0.7, ea: 174.22, ec: 0.201, ca: 1984, cc: 0.489, d: [0.83, 0.94, 1.07, 1.19], v0: 22, f0: 200, port: 15, vdef: 18 },
+  };
+  const FUELS = { hfo: { cf: 3.114, sfc: 190, name: "HFO" }, lng: { cf: 2.75, sfc: 158, name: "LNG" }, meoh: { cf: 1.375, sfc: 380, name: "메탄올" } };
+  function exiX(type, dwt) {
+    if (type === "cont") return dwt >= 200000 ? 50 : dwt >= 120000 ? 45 : dwt >= 80000 ? 35 : dwt >= 40000 ? 30 : 20;
+    return dwt >= 200000 ? 15 : 20;
+  }
+
+  /* =================================================== Sim 1: 타임라인 */
+  sim("tl", () => {
+    const EV = [
+      [1997, "MARPOL 부속서 VI", "선박 대기오염 방지 협약(부속서 VI) 채택. 황산화물·질소산화물을 규제하는 틀이 생겼고, 훗날 온실가스 규제도 이 부속서에 담긴다.", "reg"],
+      [2011, "EEDI·SEEMP 채택", "MEPC 62에서 신조선 설계 효율 지수(EEDI)와 선박 에너지 효율 관리 계획(SEEMP)을 채택. 2013년 발효. 국제 해운 최초의 구속력 있는 온실가스 규제다.", "reg"],
+      [2016, "연료 소비 데이터 수집(DCS)", "5,000 GT 이상 선박의 연간 연료 소비·항해 거리 보고 의무(2019년 수집 시작). CII 계산의 바탕이 된다. EU도 별도로 MRV 제도를 2018년부터 시행.", "reg"],
+      [2018, "IMO 초기 온실가스 전략", "2050년까지 총배출을 2008년 대비 최소 50% 감축, 2030년까지 탄소 집약도 40% 개선을 목표로 제시.", "goal"],
+      [2020, "황 함량 0.5% 상한(IMO 2020)", "선박 연료유의 황 함량 상한이 3.5%에서 0.5%로 강화. 저유황유(VLSFO) 전환과 스크러버 설치가 확산됐다. 온실가스가 아닌 대기오염 규제지만 연료 시장을 크게 바꿨다.", "reg"],
+      [2021, "EEXI·CII 채택", "MEPC 76에서 기존선 설계 지표(EEXI)와 운항 탄소 집약도 등급(CII)을 채택. 2023년 1월 발효, 첫 등급은 2023년 운항 실적으로 2024년에 매겨졌다.", "reg"],
+      [2023, "2023 IMO 온실가스 전략", "MEPC 80(2023년 7월): 2050년경 넷제로, 2030년 20%(노력 30%)·2040년 70%(노력 80%) 감축 중간 점검, 2030년 무배출 연료 5%(노력 10%). 배출 범위를 Well-to-Wake로 확대.", "goal"],
+      [2024, "EU ETS 해운 적용", "EU 배출권 거래제가 해운에 확대 적용. 2024년 배출분의 40%, 2025년 70%, 2026년분부터 100%의 배출권 제출. 2026년부터 메탄·N₂O 포함.", "price"],
+      [2025, "FuelEU Maritime · IMO 넷제로 프레임워크", "EU FuelEU Maritime 시행: 선박 사용 에너지의 WtW 온실가스 집약도를 2025년 −2%부터 2050년 −80%까지 단계적 감축. 같은 해 4월 MEPC 83에서 연료 GHG 집약도 기준과 배출 가격을 담은 IMO 넷제로 프레임워크 초안이 승인되었으나, 10월 채택 회의는 1년 연기되었다.", "price"],
+      [2030, "1차 점검: −20~30%", "총배출 2008년 대비 최소 20%(노력 30%) 감축, 탄소 집약도 최소 40% 개선, 무배출·준무배출 연료 에너지 비중 5~10%.", "goal"],
+      [2040, "2차 점검: −70~80%", "총배출 2008년 대비 최소 70%(노력 80%) 감축. 이 시점에는 선대 대부분이 무배출 연료를 써야 도달할 수 있다.", "goal"],
+      [2050, "넷제로", "2050년경(by or around, i.e. close to 2050) 국제 해운 온실가스 넷제로.", "goal"],
+    ];
+    let sel = 6, cv = null;
+    const cvEl = $("cv-tl");
+    cvEl.tabIndex = 0;
+    function show() {
+      const e = EV[sel];
+      $("tl-desc").innerHTML = "<b>" + e[0] + " · " + e[1] + "</b><br>" + e[2];
+      if (cv) cv.redraw();
+    }
+    const Y0 = 1995, Y1 = 2052;
+    function xOf(y, w) { return 24 + ((y - Y0) / (Y1 - Y0)) * (w - 48); }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), ay = h * 0.56;
+      const col = { reg: P.accent, goal: P.ok, price: P.accent2 };
+      // 오늘
+      const now = 2026.75;
+      ctx.fillStyle = P.surface; ctx.fillRect(xOf(now, w), 8, w - 24 - xOf(now, w), h - 16);
+      label(ctx, "미래", xOf(now, w) + 6, 18, P.dim, "left", 11);
+      ctx.strokeStyle = P.axis; ctx.lineWidth = 2; line(ctx, 24, ay, w - 24, ay);
+      for (let y = 2000; y <= 2050; y += 10) { ctx.lineWidth = 1; line(ctx, xOf(y, w), ay - 5, xOf(y, w), ay + 5); }
+      EV.forEach((e, i) => {
+        const x = xOf(e[0], w), up = i % 2 === 0, len = 26 + (i % 4 < 2 ? 0 : 22);
+        const yy = up ? ay - len : ay + len + 12;
+        ctx.strokeStyle = P.faint; ctx.lineWidth = 1; line(ctx, x, ay, x, yy + (up ? 8 : -8));
+        ctx.fillStyle = col[e[3]]; ctx.beginPath(); ctx.arc(x, ay, i === sel ? 8 : 5.5, 0, Math.PI * 2); ctx.fill();
+        if (i === sel) { ctx.strokeStyle = P.text; ctx.lineWidth = 2; ctx.stroke(); }
+        if (w > 520 || i === sel) label(ctx, String(e[0]), x, yy, i === sel ? P.text : P.dim, "center", 11, i === sel ? 700 : 400);
+      });
+      const lg = [["규제·제도", P.accent], ["감축 목표", P.ok], ["가격·연료", P.accent2]];
+      const sp = Math.min(110, (w - 40) / 3);
+      lg.forEach(([n, c], i) => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(30 + i * sp, h - 12, 4.5, 0, Math.PI * 2); ctx.fill(); label(ctx, n, 40 + i * sp, h - 12, P.dim, "left", w < 420 ? 10 : 11); });
+    }
+    cv = SB.canvas(cvEl, draw, { aspect: 0.3, minHeight: 170, maxHeight: 230 });
+    cvEl.addEventListener("click", (ev) => {
+      const r = cvEl.getBoundingClientRect(), x = ev.clientX - r.left;
+      let best = 0, bd = 1e9; EV.forEach((e, i) => { const d = Math.abs(xOf(e[0], cv.w) - x) + (i === sel ? 0.5 : 0); if (d < bd) { bd = d; best = i; } });
+      // 같은 해 근처 클릭 반복 시 다음으로
+      if (best === sel && bd < 12) { const near = EV.map((e, i) => i).filter((i) => Math.abs(xOf(EV[i][0], cv.w) - x) < 14); if (near.length > 1) best = near[(near.indexOf(sel) + 1) % near.length]; }
+      sel = best; show();
+    });
+    cvEl.addEventListener("keydown", (e) => { if (e.key === "ArrowRight") { sel = Math.min(EV.length - 1, sel + 1); show(); e.preventDefault(); } if (e.key === "ArrowLeft") { sel = Math.max(0, sel - 1); show(); e.preventDefault(); } });
+    show();
+  });
+
+  /* =================================================== Sim 2: 감축 경로 */
+  sim("path", () => {
+    let cv = null;
+    const gG = SB.range("pa-g", (v) => v.toFixed(1) + " %/년", upd);
+    const gE = SB.range("pa-e", (v) => v.toFixed(1) + " %/년", upd);
+    const gZ = SB.range("pa-z", (v) => v + " %", upd);
+    const gZ2 = SB.range("pa-z2", (v) => v + " %", upd);
+    function model(y) {
+      // 2008→2018 실적 근사: 물동량 1.33배, 집약도 0.70배 (선형 보간)
+      if (y <= 2018) { const k = (y - 2008) / 10; return { W: 100 * (1 + 0.33 * k), I: 1 - 0.3 * k, z: 0 }; }
+      const W = 133 * Math.pow(1 + gG() / 100, y - 2018), I = 0.7 * Math.pow(1 - gE() / 100, y - 2018);
+      let z = 0;
+      if (y > 2024 && y <= 2030) z = (gZ() / 100) * (y - 2024) / 6;
+      else if (y > 2030) z = gZ() / 100 + (gZ2() / 100 - gZ() / 100) * Math.min(1, (y - 2030) / 20);
+      return { W, I, z };
+    }
+    const E = (y) => { const m = model(y); return m.W * m.I * (1 - m.z); };
+    function upd() {
+      const show = (id, y, tgt) => { const v = E(y); SB.stat(id, '<span style="color:' + (v <= tgt ? "var(--ok)" : "var(--bad)") + '">' + v.toFixed(0) + "</span> <small>목표 ≤ " + tgt + "</small>"); };
+      show("o-pa-30", 2030, 80); show("o-pa-40", 2040, 30); show("o-pa-50", 2050, 0);
+      const m = model(2030), ci = (1 - m.I * (1 - m.z)) * 100;
+      SB.stat("o-pa-ci", '<span style="color:' + (ci >= 40 ? "var(--ok)" : "var(--bad)") + '">' + ci.toFixed(0) + "%</span> <small>목표 ≥ 40%</small>");
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette();
+      const dE = [], dW = [], dBau = [];
+      for (let y = 2008; y <= 2050; y += 0.5) { const m = model(y); dE.push([y, E(y)]); dW.push([y, m.W]); dBau.push([y, m.W * m.I]); }
+      const C = SB.chart(ctx, null, { x: [2008, 2050], y: [0, 260], xLabel: "연도", yLabel: "지수 (2008 = 100)", xFmt: (v) => String(v), xTicks: [2010, 2020, 2030, 2040, 2050],
+        bands: [{ x0: 2008, x1: 2018.01, color: "rgba(128,128,128,0.08)" }],
+        series: [{ data: dW, color: P.faint, width: 1.6, dash: [5, 4] }, { data: dBau, color: P.warn, width: 1.8, dash: [3, 3] }, { data: dE, color: P.accent, width: 2.8 }],
+        hlines: [{ y: 100, color: P.axis, dash: [2, 3] }],
+        points: [{ x: 2030, y: 80, color: P.ok, r: 5, label: "−20%" }, { x: 2040, y: 30, color: P.ok, r: 5, label: "−70%" }, { x: 2050, y: 0, color: P.ok, r: 5 }] });
+      ctx.strokeStyle = P.ok; ctx.lineWidth = 1.5; ctx.setLineDash([2, 3]);
+      ctx.beginPath(); ctx.moveTo(C.X(2023), C.Y(E(2023))); ctx.lineTo(C.X(2030), C.Y(80)); ctx.lineTo(C.X(2040), C.Y(30)); ctx.lineTo(C.X(2050), C.Y(0)); ctx.stroke(); ctx.setLineDash([]);
+      const lg = [["물동량", P.faint], ["배출(연료 전환 없음)", P.warn], ["배출(연료 전환 포함)", P.accent], ["IMO 경로", P.ok]];
+      lg.forEach(([n, c], i) => { ctx.fillStyle = c; ctx.fillRect(C.box.x + 10, C.box.y + 8 + i * 15, 14, 3); label(ctx, n, C.box.x + 30, C.box.y + 10 + i * 15, P.dim, "left", 11); });
+      label(ctx, "실적(근사)", C.X(2013), C.box.y + C.box.h - 10, P.dim, "center", 10);
+    }
+    cv = SB.canvas($("cv-path"), draw, { aspect: 0.66, minHeight: 300, maxHeight: 420 });
+    upd();
+  });
+
+  /* =================================================== Sim 3: EEXI */
+  sim("eexi", () => {
+    let cv = null;
+    const gT = SB.seg("ex-type", upd), gF = SB.seg("ex-fuel", upd);
+    const gEPL = SB.range("ex-epl", (v) => v + " %", upd);
+    const gESD = SB.range("ex-esd", (v) => v.toFixed(1) + " %", upd);
+    function calc(epl) {
+      const s = SHIPS[gT()], f = FUELS[gF()];
+      const mcrL = s.mcr * (1 - epl / 100), pme = 0.75 * mcrL;
+      const v = s.vref * Math.pow(1 - epl / 100, 1 / 3);
+      const pae = s.mcr >= 10000 ? 0.025 * s.mcr + 250 : 0.05 * s.mcr;
+      let me = pme * f.sfc * f.cf;
+      if (gF() === "lng") me += pme * 6 * 3.114; // 파일럿 유
+      const ae = pae * 215 * 3.206;
+      const att = (me * (1 - gESD() / 100) + ae) / (s.dwt * s.cap * v);
+      const ref = s.ea * Math.pow(s.dwt, -s.ec), X = exiX(gT(), s.dwt), req = ref * (1 - X / 100);
+      return { att, req, ref, X, v, s };
+    }
+    function upd() {
+      const c = calc(gEPL());
+      SB.stat("o-ex-att", sm(c.att.toFixed(2), "g/t·nm"));
+      SB.stat("o-ex-req", sm(c.req.toFixed(2), "") + " <small>(기준선 −" + c.X + "%)</small>");
+      SB.stat("o-ex-v", sm(c.v.toFixed(1), "kn") + " <small>(원래 " + c.s.vref + ")</small>");
+      SB.stat("o-ex-ok", c.att <= c.req ? '<span style="color:var(--ok)">통과</span>' : '<span style="color:var(--bad)">불합격 (' + ((c.att / c.req - 1) * 100).toFixed(0) + "% 초과)</span>");
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), d = [], dv = [];
+      let need = null;
+      for (let e = 0; e <= 60; e += 1) { const c = calc(e); d.push([e, c.att]); dv.push([e, c.v]); if (need == null && c.att <= c.req) need = e; }
+      const c = calc(gEPL()), ymax = Math.max(c.ref * 1.15, d[0][1] * 1.1);
+      const C = SB.chart(ctx, { x: 58, y: 14, w: w - 76, h: h - 64 }, { x: [0, 60], y: [0, ymax], xLabel: "엔진 출력 제한 EPL (%)", yLabel: "EEXI (g CO₂ / t·nm)", yFmt: (v) => v.toFixed(v < 10 ? 1 : 0),
+        bands: need != null ? [{ x0: need, x1: 60, color: "rgba(63,207,127,0.10)" }] : [],
+        series: [{ data: d, color: P.accent, width: 2.6 }],
+        hlines: [{ y: c.ref, color: P.faint, label: "기준선 " + c.ref.toFixed(2) }, { y: c.req, color: P.bad, label: "요구치 " + c.req.toFixed(2), dash: [] }],
+        points: [{ x: gEPL(), y: c.att, color: c.att <= c.req ? P.ok : P.accent2, r: 6, label: c.att.toFixed(2) }] });
+      if (need != null) label(ctx, "최소 EPL ≈ " + need + "%", C.X(need) + 4, C.box.y + C.box.h - 12, P.ok, "left", 12, 700);
+      else label(ctx, "EPL만으로는 불가", C.box.x + C.box.w - 6, C.box.y + C.box.h - 12, P.bad, "right", 12, 700);
+      label(ctx, c.s.name + " · " + fmtK(c.s.dwt) + " DWT", C.box.x + 8, C.box.y + 10, P.dim, "left", 11);
+    }
+    cv = SB.canvas($("cv-eexi"), draw, { aspect: 0.66, minHeight: 300, maxHeight: 420 });
+    upd();
+  });
+
+  /* =================================================== Sim 4: CII */
+  sim("cii", () => {
+    let cv = null;
+    const Z = { 2023: 5, 2024: 7, 2025: 9, 2026: 11, 2027: 13.625, 2028: 16.25, 2029: 18.875, 2030: 21.5 };
+    const gT = SB.seg("ci-type", () => { gV.set(SHIPS[gT()].vdef); });
+    const gV = SB.range("ci-v", (v) => v.toFixed(1) + " kn", upd);
+    const gD = SB.range("ci-d", (v) => v + " 일", upd);
+    const gF = SB.seg("ci-fuel", upd);
+    const gY = SB.range("ci-y", (v) => String(v), upd);
+    function calc(year) {
+      const s = SHIPS[gT()], f = FUELS[gF()], V = gV(), days = gD();
+      const eRatio = 40.2 / (f === FUELS.hfo ? 40.2 : f === FUELS.lng ? 49.1 : 19.9); // HFO 대비 질량 환산
+      const seaFuel = s.f0 * Math.pow(V / s.v0, 3) * days * eRatio * (gF() === "lng" ? 0.98 : 1);
+      const portFuel = s.port * (365 - days);
+      const co2 = (seaFuel * f.cf + portFuel * 3.206) * 1e6; // g
+      const dist = V * 24 * days;
+      const att = co2 / (s.dwt * dist);
+      const ref = s.ca * Math.pow(Math.min(s.dwt, gT() === "bulk" ? 279000 : 1e9), -s.cc);
+      const req = ref * (1 - Z[year] / 100);
+      const r = att / req, d = s.d;
+      const g = r < d[0] ? "A" : r < d[1] ? "B" : r < d[2] ? "C" : r < d[3] ? "D" : "E";
+      return { co2, att, req, r, g, s, dist };
+    }
+    function upd() {
+      const c = calc(gY());
+      SB.stat("o-ci-co2", sm(fmtK(c.co2 / 1e9, 1), "천 t"));
+      SB.stat("o-ci-att", sm(c.att.toFixed(2), "g/t·nm") + " <small>(" + fmtK(c.dist) + " nm)</small>");
+      SB.stat("o-ci-r", sm(c.r.toFixed(3), ""));
+      SB.stat("o-ci-g", gradeSpan(c.g));
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), c0 = calc(gY()), d = c0.s.d;
+      const years = [2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030];
+      const reqs = years.map((y) => calc(y).req), att = c0.att;
+      const ymax = Math.max(att, reqs[0] * d[3]) * 1.15, ymin = Math.min(att, reqs[7] * d[0]) * 0.8;
+      const C = SB.chart(ctx, { x: 58, y: 14, w: w - 76, h: h - 64 }, { x: [2022.5, 2030.5], y: [ymin, ymax], xLabel: "평가 연도", yLabel: "CII (g CO₂ / t·nm)", xTicks: years, xFmt: (v) => "'" + String(v).slice(2), yFmt: (v) => v.toFixed(v < 10 ? 1 : 0) });
+      // 등급 띠
+      const cols = ["rgba(45,164,78,0.30)", "rgba(124,195,91,0.30)", "rgba(232,197,71,0.32)", "rgba(240,138,60,0.32)", "rgba(214,69,69,0.30)"];
+      const bnd = (k, req) => (k < 0 ? ymin : k > 3 ? ymax : req * d[k]);
+      ctx.save(); ctx.beginPath(); ctx.rect(C.box.x, C.box.y, C.box.w, C.box.h); ctx.clip();
+      for (let k = 0; k < 5; k++) {
+        ctx.fillStyle = cols[k]; ctx.beginPath();
+        years.forEach((y, i) => { const x0 = C.X(y - 0.5), x1 = C.X(y + 0.5); if (i === 0) ctx.moveTo(x0, C.Y(bnd(k - 1, reqs[i]))); ctx.lineTo(x0, C.Y(bnd(k - 1, reqs[i]))); ctx.lineTo(x1, C.Y(bnd(k - 1, reqs[i]))); });
+        for (let i = years.length - 1; i >= 0; i--) { const x0 = C.X(years[i] - 0.5), x1 = C.X(years[i] + 0.5); ctx.lineTo(x1, C.Y(bnd(k, reqs[i]))); ctx.lineTo(x0, C.Y(bnd(k, reqs[i]))); }
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.restore();
+      ["A", "B", "C", "D", "E"].forEach((g, k) => { const yv = k === 0 ? (ymin + reqs[0] * d[0]) / 2 : k === 4 ? (reqs[0] * d[3] + ymax) / 2 : reqs[0] * (d[k - 1] + d[k]) / 2; if (yv > ymin && yv < ymax) label(ctx, g, C.X(2022.5) + 8, C.Y(yv), GRADE_C[g], "left", 13, 800); });
+      ctx.strokeStyle = P.text; ctx.lineWidth = 2.5; line(ctx, C.box.x, C.Y(att), C.box.x + C.box.w, C.Y(att));
+      years.forEach((y) => { const c = calc(y); ctx.fillStyle = GRADE_C[c.g]; ctx.beginPath(); ctx.arc(C.X(y), C.Y(att), y === gY() ? 8 : 5, 0, Math.PI * 2); ctx.fill(); if (y === gY()) { ctx.strokeStyle = P.text; ctx.lineWidth = 2; ctx.stroke(); } label(ctx, c.g, C.X(y), C.Y(att) - 16, P.text, "center", 11, 700); });
+      label(ctx, "이 배의 달성 CII", C.box.x + C.box.w - 4, C.Y(att) + 14, P.text, "right", 11);
+    }
+    cv = SB.canvas($("cv-cii"), draw, { aspect: 0.66, minHeight: 300, maxHeight: 420 });
+    gV.set(SHIPS.bulk.vdef);
+    upd();
+  });
+
+  /* =================================================== Sim 5: 선대 감속 운항 */
+  sim("fleet", () => {
+    let cv = null;
+    const LOOP = 22000, PORT = 12, F0 = 200, V0 = 22, AUX = 6, AUXP = 4, TEU = 14000 * 0.85 * 2 * 52, CF = 3.114;
+    const gV = SB.range("fl-v", (v) => v.toFixed(2) + " kn", upd);
+    const gFP = SB.range("fl-fp", (v) => v + " $/t", upd);
+    const gCP = SB.range("fl-cp", (v) => v + " $/t CO₂", upd);
+    const gCH = SB.range("fl-ch", (v) => v + " k$/일", upd);
+    const gCV = SB.range("fl-cv", (v) => v + " k$", upd);
+    function calc(V) {
+      const sea = LOOP / (24 * V), loopD = sea + PORT, N = Math.ceil(loopD / 7 - 1e-9);
+      const fuelLoop = sea * (F0 * Math.pow(V / V0, 3) + AUX) + PORT * AUXP;
+      const fuel = fuelLoop * 52; // t/yr (주 1회 출항 = 연 52 루프)
+      const co2 = fuel * CF;
+      const cFuel = fuel * gFP() / 1e6, cCO2 = co2 * gCP() / 1e6;
+      const cShip = N * gCH() * 1000 * 365 / 1e6;
+      const transit = sea / 2 + PORT / 2;
+      const cInv = TEU * gCV() * 1000 * 0.08 * transit / 365 / 1e6;
+      return { N, fuel, co2, cFuel, cCO2, cShip, cInv, tot: cFuel + cCO2 + cShip + cInv, transit };
+    }
+    function upd() {
+      const c = calc(gV());
+      SB.stat("o-fl-n", sm(c.N, "척") + " <small>(편도 " + c.transit.toFixed(0) + "일)</small>");
+      SB.stat("o-fl-f", sm(fmtK(c.fuel / 1000), "천 t"));
+      SB.stat("o-fl-co2", sm(fmtK(c.co2 / 1e6, 2), "백만 t"));
+      SB.stat("o-fl-c", sm(fmtK(c.tot), "M$"));
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), s = { f: [], c: [], sh: [], inv: [], tot: [] };
+      let best = null;
+      for (let V = 12; V <= 24.001; V += 0.05) { const c = calc(V); s.f.push([V, c.cFuel]); s.c.push([V, c.cCO2]); s.sh.push([V, c.cShip]); s.inv.push([V, c.cInv]); s.tot.push([V, c.tot]); if (!best || c.tot < best.tot) best = { V, tot: c.tot }; }
+      const ymax = Math.max(...s.tot.map((p) => p[1])) * 1.08;
+      const cur = calc(gV());
+      const C = SB.chart(ctx, { x: 58, y: 14, w: w - 76, h: h - 64 }, { x: [12, 24], y: [0, ymax], xLabel: "운항 속력 (kn)", yLabel: "연간 비용 (백만 $)",
+        series: [{ data: s.f, color: P.accent2, width: 1.8 }, { data: s.c, color: P.warn, width: 1.8, dash: [5, 3] }, { data: s.sh, color: P.blue, width: 1.8 }, { data: s.inv, color: P.dim, width: 1.8, dash: [2, 3] }, { data: s.tot, color: P.text, width: 2.8 }],
+        vlines: [{ x: gV(), color: P.accent }],
+        points: [{ x: gV(), y: cur.tot, color: P.accent, r: 5 }] });
+      ctx.fillStyle = P.ok; const bx = C.X(best.V), by = C.Y(best.tot);
+      ctx.beginPath(); ctx.moveTo(bx, by - 8); ctx.lineTo(bx + 7, by); ctx.lineTo(bx, by + 8); ctx.lineTo(bx - 7, by); ctx.closePath(); ctx.fill();
+      label(ctx, "최적 " + best.V.toFixed(1) + " kn", bx, by - 16, P.ok, "center", 12, 700);
+      const lg = [["총비용", P.text], ["연료비", P.accent2], ["탄소 비용", P.warn], ["선박 비용", P.blue], ["재고 비용", P.dim]];
+      lg.forEach(([n, c], i) => { ctx.fillStyle = c; ctx.fillRect(C.box.x + 10 + (i % 3) * 92, C.box.y + 8 + Math.floor(i / 3) * 15, 14, 3); label(ctx, n, C.box.x + 28 + (i % 3) * 92, C.box.y + 10 + Math.floor(i / 3) * 15, P.dim, "left", 11); });
+      // 선박 수 계단 표시
+      let lastN = null;
+      for (let V = 12; V <= 24.001; V += 0.05) { const n = calc(V).N; if (n !== lastN) { if (lastN != null) { ctx.strokeStyle = P.faint; ctx.setLineDash([1, 3]); line(ctx, C.X(V), C.box.y + C.box.h - 14, C.X(V), C.box.y + C.box.h); ctx.setLineDash([]); } lastN = n; } }
+      label(ctx, "선박 " + cur.N + "척", C.X(gV()) + 5, C.box.y + C.box.h - 8, P.accent, "left", 11, 700);
+    }
+    cv = SB.canvas($("cv-fleet"), draw, { aspect: 0.66, minHeight: 320, maxHeight: 440 });
+    upd();
+  });
+
+  /* =================================================== Sim 6: 탱크 크기 */
+  sim("tank", () => {
+    let cv = null;
+    const F = [
+      { n: "HFO", lhv: 40.2, rho: 990, eta: 0.5, k: 1.05, c: "#5a6478" },
+      { n: "LNG", lhv: 49.1, rho: 450, eta: 0.5, k: 1.6, c: "#3fa7a0" },
+      { n: "메탄올", lhv: 19.9, rho: 795, eta: 0.5, k: 1.15, c: "#8a63c9" },
+      { n: "암모니아", lhv: 18.6, rho: 682, eta: 0.48, k: 1.6, c: "#d4ad1f" },
+      { n: "액화수소", lhv: 120, rho: 71, eta: 0.5, k: 2.0, c: "#2f6fe0" },
+      { n: "배터리", lhv: 0.45, rho: 1200, eta: 0.9, k: 1.0, c: "#d9483b", vol: 0.54 },
+    ];
+    const gR = SB.seg("tk-route", upd), gView = SB.seg("tk-view", upd);
+    const gP = SB.range("tk-p", (v) => v + " MW", upd);
+    const gV = SB.range("tk-v", (v) => v.toFixed(1) + " kn", upd);
+    function calc() {
+      const t = Number(gR()) / gV(); // h
+      const E = gP() * t * 3600; // GJ (MW·s = MJ → /1000)
+      const Egj = gP() * 1000 * t * 3.6 / 1000; // MWh→GJ: MW*h*3.6 GJ
+      return F.map((f) => {
+        const fuelGJ = Egj / f.eta, mass = fuelGJ / f.lhv; // t (GJ / (MJ/kg) = t)
+        const vol = f.vol ? (fuelGJ * 1000) / (f.vol * 1000) : mass / (f.rho / 1000);
+        return { f, mass, vol: vol * f.k, dens: [f.lhv, f.vol || f.lhv * f.rho / 1000] };
+      }).concat([{ t, Egj, E }]);
+    }
+    function upd() {
+      const r = calc(), m = r[6];
+      SB.stat("o-tk-t", sm(m.t.toFixed(0), "h") + " <small>(" + (m.t / 24).toFixed(1) + "일)</small>");
+      SB.stat("o-tk-e", sm(fmtK(m.Egj / 3.6), "MWh"));
+      SB.stat("o-tk-hfo", sm(fmtK(r[0].vol), "m³"));
+      SB.stat("o-tk-h2", sm(fmtK(r[4].vol), "m³") + " <small>(" + (r[4].vol / r[0].vol).toFixed(1) + "배)</small>");
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), r = calc().slice(0, 6), mode = gView();
+      const lx = Math.min(78, w * 0.2), bx = lx + 8, bw = w - bx - 70, rowH = (h - 50) / 6;
+      let vals, unit, fmt;
+      if (mode === "vol") { vals = r.map((x) => x.vol); unit = "m³"; }
+      else if (mode === "mass") { vals = r.map((x) => x.mass); unit = "t"; }
+      else { vals = null; }
+      if (vals) {
+        const mx = Math.max(...vals);
+        const useLog = mx / Math.min(...vals) > 30;
+        const X = (v) => useLog ? bx + bw * Math.log10(Math.max(v, 1)) / Math.log10(mx * 1.2) : bx + bw * v / (mx * 1.05);
+        label(ctx, (mode === "vol" ? "탱크 체적" : "연료 질량") + (useLog ? " (로그 눈금)" : ""), bx, 14, P.dim, "left", 12, 600);
+        r.forEach((x, i) => {
+          const y = 28 + i * rowH, bh = rowH * 0.62;
+          label(ctx, x.f.n, lx, y + bh / 2, P.text, "right", 12, 600);
+          ctx.fillStyle = x.f.c; ctx.fillRect(bx, y, Math.max(2, X(vals[i]) - bx), bh);
+          const teu = mode === "vol" ? " · " + fmtK(vals[i] / 33.5) + " TEU" : "";
+          const inside = X(vals[i]) + 6 > w - 120;
+          label(ctx, fmtK(vals[i]) + " " + unit + (w > 480 ? teu : ""), inside ? X(vals[i]) - 6 : X(vals[i]) + 6, y + bh / 2, inside ? "#fff" : P.dim, inside ? "right" : "left", 11, inside ? 700 : 400);
+        });
+        if (mode === "mass") { const dw = 150000; ctx.strokeStyle = P.bad; ctx.setLineDash([4, 3]); const xx = X(dw); if (xx < w - 10) { line(ctx, xx, 24, xx, h - 20); label(ctx, "15만 DWT", xx, h - 10, P.bad, "center", 10); } ctx.setLineDash([]); }
+      } else {
+        const half = (bw) / 2 - 10;
+        label(ctx, "질량당 MJ/kg", bx, 14, P.dim, "left", 12, 600);
+        label(ctx, "부피당 MJ/L", bx + half + 20, 14, P.dim, "left", 12, 600);
+        r.forEach((x, i) => {
+          const y = 28 + i * rowH, bh = rowH * 0.62;
+          label(ctx, x.f.n, lx, y + bh / 2, P.text, "right", 12, 600);
+          ctx.fillStyle = x.f.c; ctx.fillRect(bx, y, half * x.dens[0] / 125, bh);
+          label(ctx, x.dens[0].toFixed(1), bx + half * x.dens[0] / 125 + 4, y + bh / 2, P.dim, "left", 10);
+          ctx.fillRect(bx + half + 20, y, half * x.dens[1] / 42, bh);
+          label(ctx, x.dens[1].toFixed(1), bx + half + 24 + half * x.dens[1] / 42, y + bh / 2, P.dim, "left", 10);
+        });
+      }
+    }
+    cv = SB.canvas($("cv-tank"), draw, { aspect: 0.62, minHeight: 300, maxHeight: 400 });
+    upd();
+  });
+
+  /* =================================================== Sim 7: 메탄 슬립 */
+  sim("slip", () => {
+    let cv = null;
+    const HFO = { wtt: 13.5, ttw: 77.5 }, LNG = { wtt: 18.5, co2: 56.0, gPerMJ: 1000 / 49.1 };
+    const gEng = SB.seg("sl-eng", (v) => gS.set(Number(v)));
+    const gS = SB.range("sl-s", (v) => v.toFixed(1) + " %", upd);
+    const gG = SB.range("sl-g", (v) => v + (v >= 75 ? " (20년)" : v <= 32 ? " (100년)" : ""), upd);
+    $("sl-wtt").addEventListener("change", upd);
+    function lng(s) {
+      const sf = s / 100, wtt = $("sl-wtt").checked ? LNG.wtt : 0;
+      return { wtt, co2: (1 - sf) * LNG.co2, ch4: sf * LNG.gPerMJ * gG(), tot: wtt + (1 - sf) * LNG.co2 + sf * LNG.gPerMJ * gG() };
+    }
+    const hfo = () => ($("sl-wtt").checked ? HFO.wtt : 0) + HFO.ttw;
+    function upd() {
+      const L = lng(gS()), H = hfo();
+      SB.stat("o-sl-hfo", sm(H.toFixed(1), "g/MJ"));
+      SB.stat("o-sl-lng", sm(L.tot.toFixed(1), "g/MJ"));
+      const g = (1 - L.tot / H) * 100;
+      SB.stat("o-sl-gain", '<span style="color:' + (g > 0 ? "var(--ok)" : "var(--bad)") + '">' + (g > 0 ? "−" : "+") + Math.abs(g).toFixed(1) + " <small>%</small></span>");
+      // 손익분기 s: wtt + (1-s)co2 + s*k = H  → s = (H - wtt - co2)/(k - co2)
+      const k = LNG.gPerMJ * gG(), be = (H - L.wtt - LNG.co2) / (k - LNG.co2) * 100;
+      SB.stat("o-sl-be", sm(be.toFixed(1), "%"));
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), H = hfo(), d = [];
+      for (let s = 0; s <= 6.001; s += 0.1) d.push([s, lng(s).tot]);
+      const h1 = h - 90;
+      const C = SB.chart(ctx, { x: 58, y: 12, w: w - 76, h: h1 - 46 }, { x: [0, 6], y: [40, Math.max(140, d[d.length - 1][1] * 1.05)], xLabel: "메탄 슬립률 (%)", yLabel: "WtW g CO₂e/MJ",
+        series: [{ data: d, color: P.accent, width: 2.6 }], hlines: [{ y: H, color: P.accent2, dash: [], label: "HFO " + H.toFixed(1) }],
+        vlines: [{ x: 0.2, color: P.faint, label: "고압 2행정" }, { x: 1.7, color: P.faint, label: "2행정 오토" }, { x: 3.1, color: P.faint, label: "4행정" }],
+        points: [{ x: gS(), y: lng(gS()).tot, color: P.accent, r: 6 }] });
+      void C;
+      // 누적 막대
+      const L = lng(gS()), bars = [["HFO", [[$("sl-wtt").checked ? HFO.wtt : 0, P.faint, "상류"], [HFO.ttw, P.accent2, "CO₂"]]], ["LNG", [[L.wtt, P.faint, "상류"], [L.co2, P.accent, "CO₂"], [L.ch4, P.warn, "CH₄ 슬립"]]]];
+      const bx = 58, bw = w - 76, mx = Math.max(H, L.tot) * 1.1;
+      bars.forEach(([n, parts], i) => {
+        const y = h1 + 12 + i * 34; let x = bx;
+        label(ctx, n, bx - 8, y + 11, P.text, "right", 12, 700);
+        parts.forEach(([v, c, nm]) => { const ww = bw * v / mx; ctx.fillStyle = c; ctx.fillRect(x, y, ww, 22); if (ww > 44) label(ctx, nm, x + ww / 2, y + 11, "#fff", "center", 11, 700); x += ww; });
+        label(ctx, (parts.reduce((a, p) => a + p[0], 0)).toFixed(1), x + 6, y + 11, P.dim, "left", 11);
+      });
+    }
+    cv = SB.canvas($("cv-slip"), draw, { aspect: 0.72, minHeight: 330, maxHeight: 440 });
+    upd();
+  });
+
+  /* =================================================== Sim 8: 연료 경로 WtW */
+  sim("wtw", () => {
+    let cv = null;
+    // [이름, {grey/blue/green: [WtT, TtW]}]
+    const D = [
+      ["HFO", { grey: [13.5, 78], blue: [13.5, 78], green: [13.5, 78] }],
+      ["LNG(2행정 오토)", { grey: [18.5, 65], blue: [18.5, 65], green: [18.5, 65] }],
+      ["메탄올", { grey: [31, 69], blue: [-55, 69], green: [-64, 69] }],
+      ["암모니아", { grey: [121, 9], blue: [40, 9], green: [8, 9] }],
+      ["액화수소", { grey: [130, 0], blue: [45, 0], green: [10, 0] }],
+    ];
+    const gC = SB.seg("ww-col", upd);
+    $("ww-ttw").addEventListener("change", upd);
+    function vals() { const col = gC(), ttwOnly = $("ww-ttw").checked; return D.map(([n, m]) => { const [a, b] = m[col]; return { n, wtt: ttwOnly ? 0 : a, ttw: b, tot: (ttwOnly ? 0 : a) + b }; }); }
+    function upd() {
+      const v = vals(), best = v.reduce((a, b) => (b.tot < a.tot ? b : a));
+      SB.stat("o-ww-best", best.n);
+      SB.stat("o-ww-red", sm("−" + Math.round((1 - best.tot / v[0].tot) * 100), "%"));
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), v = vals();
+      const lx = Math.min(110, w * 0.28), x0 = lx + 10, ww = w - x0 - 40, rowH = (h - 50) / v.length;
+      const vmin = -80, vmax = 150, X = (val) => x0 + (val - vmin) / (vmax - vmin) * ww;
+      ctx.strokeStyle = P.grid; ctx.lineWidth = 1;
+      for (let g = -50; g <= 150; g += 50) { line(ctx, X(g), 18, X(g), h - 26); label(ctx, String(g), X(g), h - 14, P.dim, "center", 10); }
+      ctx.strokeStyle = P.axis; line(ctx, X(0), 18, X(0), h - 26);
+      ctx.strokeStyle = P.accent2; ctx.setLineDash([4, 3]); line(ctx, X(v[0].tot), 18, X(v[0].tot), h - 26); ctx.setLineDash([]);
+      label(ctx, "g CO₂e/MJ", w - 4, 10, P.dim, "right", 10);
+      v.forEach((r, i) => {
+        const y = 22 + i * rowH, bh = rowH * 0.6;
+        label(ctx, r.n, lx, y + bh / 2, P.text, "right", 12, 600);
+        // WtT
+        if (r.wtt !== 0) { ctx.fillStyle = "rgba(128,128,128,0.55)"; const a = X(Math.min(0, r.wtt)), b = X(Math.max(0, r.wtt)); ctx.fillRect(a, y, b - a, bh); }
+        // TtW (WtT 끝에서 이어서, 음수면 0에서 시작)
+        const s0 = Math.max(0, r.wtt);
+        ctx.fillStyle = P.accent; ctx.fillRect(X(s0), y, X(s0 + r.ttw) - X(s0), bh);
+        ctx.fillStyle = P.text; ctx.beginPath(); ctx.arc(X(r.tot), y + bh / 2, 4.5, 0, Math.PI * 2); ctx.fill();
+        label(ctx, r.tot.toFixed(0), X(Math.max(r.tot, s0 + r.ttw)) + 8, y + bh / 2, P.text, "left", 11, 700);
+      });
+      const lg = [["상류 WtT", "rgba(128,128,128,0.55)"], ["굴뚝 TtW", P.accent], ["● 합계 WtW", P.text]];
+      lg.forEach(([n, c], i) => { ctx.fillStyle = c; ctx.fillRect(x0 + i * 100, h - 4 - 30, 10, 8); label(ctx, n, x0 + 14 + i * 100, h - 30, P.dim, "left", 10); });
+    }
+    cv = SB.canvas($("cv-wtw"), draw, { aspect: 0.62, minHeight: 300, maxHeight: 400 });
+    upd();
+  });
+
+  /* =================================================== Sim 9: 풍력 보조 */
+  sim("wind", () => {
+    let cv = null;
+    const RHO = 1.225;
+    const gDev = SB.seg("wd-dev", upd);
+    const gTWS = SB.range("wd-tws", (v) => v.toFixed(1) + " m/s", upd);
+    const gTWA = SB.range("wd-twa", (v) => v + "°", upd);
+    const gVs = SB.range("wd-vs", (v) => v.toFixed(1) + " kn", upd);
+    const gSR = SB.range("wd-sr", (v) => v.toFixed(1), upd);
+    const gN = SB.range("wd-n", (v) => v + " 기", upd);
+    function apparent(tws, twaDeg, vsKn) {
+      const a = SB.rad(twaDeg), vs = SB.ms(vsKn);
+      // 선체 좌표: x 선수, y 우현. 바람은 (cos a, sin a) 방향에서 불어온다.
+      const ax = -tws * Math.cos(a) - vs, ay = -tws * Math.sin(a);
+      const aws = Math.hypot(ax, ay), awa = Math.atan2(-ay, -ax); // 불어오는 방향(선수 기준)
+      return { ax, ay, aws, awa };
+    }
+    function force(tws, twaDeg, vsKn) {
+      const A = apparent(tws, twaDeg, vsKn), b = Math.abs(A.awa), q = 0.5 * RHO * A.aws * A.aws;
+      let T = 0, Prot = 0, L = 0, D = 0, sr = 0;
+      if (gDev() === "rotor") {
+        const area = 150, umax = 47;
+        sr = Math.min(gSR(), A.aws > 0.1 ? umax / A.aws : 0);
+        const CL = 10 * (1 - Math.exp(-0.45 * Math.pow(sr, 1.6))), CD = 0.3 + 0.08 * sr * sr;
+        L = q * area * CL; D = q * area * CD;
+        T = L * Math.sin(b) - D * Math.cos(b);
+        const us = sr * A.aws;
+        Prot = 0.004 * 0.5 * RHO * Math.pow(us, 3) * Math.PI * 5 * 30 + 5000;
+        if (T < 0) { // 로터 정지가 낫다
+          const T0 = -q * area * 0.6 * Math.cos(b);
+          T = T0; Prot = 0; sr = 0; L = 0; D = q * area * 0.6;
+        }
+      } else {
+        const area = 455, AR = 5;
+        let best = { T: -1e12 };
+        for (let al = 0; al <= 20; al += 0.5) {
+          const CL = Math.min(2 * Math.PI * SB.rad(al) * AR / (AR + 2), 1.8), CD = 0.03 + CL * CL / (Math.PI * AR * 0.8);
+          const t = q * area * (CL * Math.sin(b) - CD * Math.cos(b));
+          if (t > best.T) best = { T: t, L: q * area * CL, D: q * area * CD };
+        }
+        T = best.T; L = best.L; D = best.D; Prot = 3000;
+        if (T < -q * area * 0.03) { T = -q * area * 0.03 * Math.max(0, Math.cos(b)); L = 0; }
+      }
+      return { A, T: T * gN(), L: L * gN(), D: D * gN(), Prot: Prot * gN(), sr };
+    }
+    function upd() {
+      const f = force(gTWS(), gTWA(), gVs()), vs = SB.ms(gVs());
+      const Pship = 8000 * Math.pow(Math.max(gVs(), 1) / 12, 3);
+      const saved = f.T * vs / 0.7 / 1000 - f.Prot / 1000;
+      SB.stat("o-wd-aw", sm(f.A.aws.toFixed(1), "m/s") + " <small>" + Math.round(Math.abs(SB.deg(f.A.awa))) + "°</small>");
+      SB.stat("o-wd-t", sm(fmtK(f.T / 1000), "kN"));
+      SB.stat("o-wd-p", '<span style="color:' + (saved >= 0 ? "var(--ok)" : "var(--bad)") + '">' + fmtK(saved) + " <small>kW</small></span>");
+      SB.stat("o-wd-pct", gVs() > 0.5 ? sm((saved / Pship * 100).toFixed(1), "%") : "—");
+      if (cv) cv.redraw();
+    }
+    let geom = null;
+    function draw(ctx, w, h) {
+      const P = SB.palette(), narrow = w < 560;
+      const f = force(gTWS(), gTWA(), gVs());
+      // 왼쪽: 벡터도 (선수 = 위)
+      const cw = narrow ? w : w * 0.55, cx = cw / 2, cy = narrow ? h * 0.3 : h / 2, R = Math.min(cw, narrow ? h * 0.58 : h) * 0.42;
+      geom = { cx, cy, R };
+      SB.shipTop(ctx, cx, cy, -Math.PI / 2, { len: R * 1.5, wid: R * 0.32, color: P.dim, full: 0.8 });
+      const sc = R / 14; // px per m/s
+      const ox = cx + R * 0.05, oy = cy - R * 0.25; // 바람 벡터가 모이는 점(앞쪽 로터)
+      const toC = (x, y) => [ox + y * sc, oy - x * sc]; // 선체(x 선수, y 우현) → 캔버스
+      const a = SB.rad(gTWA()), tws = gTWS(), vs = SB.ms(gVs());
+      // 실제 바람 벡터: 바람이 오는 쪽에서 중심으로
+      const tw0 = toC(tws * Math.cos(a), tws * Math.sin(a)), c0 = toC(0, 0);
+      SB.arrow(ctx, tw0[0], tw0[1], c0[0], c0[1], P.blue, 2.4);
+      label(ctx, "실제 바람", tw0[0] + 6, tw0[1] - 8, P.blue, "left", 11, 700);
+      // 선속에 의한 바람(맞바람)
+      const hw0 = toC(vs, 0);
+      SB.arrow(ctx, hw0[0], hw0[1], c0[0], c0[1], P.faint, 2);
+      if (vs > 0.5) label(ctx, "선속 바람", hw0[0] - 6, hw0[1], P.dim, "right", 10);
+      // 겉보기 바람
+      const aw0 = toC(-f.A.ax, -f.A.ay);
+      SB.arrow(ctx, aw0[0], aw0[1], c0[0], c0[1], P.accent2, 3.2);
+      label(ctx, "겉보기 바람", aw0[0] + 6, aw0[1] + 12, P.accent2, "left", 11, 700);
+      // 힘
+      const fsc = (R * 0.8) / 1.2e6;
+      const fx = f.T, fy = 0;
+      const fy0 = cy + R * 0.35;
+      if (Math.abs(fx) > 1) { SB.arrow(ctx, cx, fy0, cx, fy0 - fx * fsc, fx > 0 ? P.ok : P.bad, 4); label(ctx, (fx > 0 ? "추력 " : "저항 ") + fmtK(Math.abs(fx) / 1000) + " kN", cx - 10, fy0 + 6, fx > 0 ? P.ok : P.bad, "right", 12, 700); }
+      void fy;
+      if (gDev() === "rotor") { ctx.strokeStyle = P.warn; ctx.lineWidth = 2; for (let k = 0; k < gN(); k++) { const yy = cy - R * 0.45 + k * R * 0.3; ctx.beginPath(); ctx.arc(cx, yy, R * 0.07, 0, Math.PI * 2); ctx.stroke(); } }
+      else { ctx.fillStyle = P.warn; for (let k = 0; k < gN(); k++) { const yy = cy - R * 0.45 + k * R * 0.3; ctx.save(); ctx.translate(cx, yy); ctx.rotate(-f.A.awa + Math.PI / 2 - 0.25); ctx.fillRect(-R * 0.16, -2, R * 0.32, 4); ctx.restore(); } }
+      label(ctx, "선수 ↑", cx, Math.max(10, cy - R * 0.85), P.dim, "center", 10);
+      // 오른쪽: 극좌표
+      const px = narrow ? w / 2 : cw + (w - cw) / 2, py = narrow ? h * 0.78 : h / 2, PR = narrow ? Math.min(w * 0.36, h * 0.19) : Math.min((w - cw) * 0.42, h * 0.4);
+      const pts = []; let mx = 1;
+      for (let d = 0; d <= 180; d += 5) { const t = Math.max(0, force(tws, d, gVs()).T); pts.push([d, t]); mx = Math.max(mx, t); }
+      mx = Math.max(mx, 5e5);
+      ctx.strokeStyle = P.grid; ctx.lineWidth = 1;
+      [0.5, 1].forEach((k) => { ctx.beginPath(); ctx.arc(px, py, PR * k, 0, Math.PI * 2); ctx.stroke(); });
+      for (let d = 0; d < 360; d += 45) line(ctx, px, py, px + PR * Math.sin(SB.rad(d)), py - PR * Math.cos(SB.rad(d)));
+      ctx.strokeStyle = P.accent; ctx.lineWidth = 2.4; ctx.beginPath();
+      pts.forEach(([d, t], i) => { const r = PR * t / mx, X = px + r * Math.sin(SB.rad(d)), Y = py - r * Math.cos(SB.rad(d)); i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
+      for (let i = pts.length - 1; i >= 0; i--) { const [d, t] = pts[i], r = PR * t / mx; ctx.lineTo(px - r * Math.sin(SB.rad(d)), py - r * Math.cos(SB.rad(d))); }
+      ctx.stroke();
+      const tc = Math.max(0, f.T), rc = PR * tc / mx;
+      ctx.fillStyle = P.accent2; ctx.beginPath(); ctx.arc(px + rc * Math.sin(a), py - rc * Math.cos(a), 5, 0, Math.PI * 2); ctx.fill();
+      label(ctx, "0°", px, py - PR - 8, P.dim, "center", 10); label(ctx, "90°", px + PR + 4, py, P.dim, "left", 10); label(ctx, "180°", px, py + PR + 9, P.dim, "center", 10);
+      label(ctx, "추력 극선도 (최대 " + fmtK(mx / 1000) + " kN)", px, py + PR + 24, P.dim, "center", 10);
+    }
+    cv = SB.canvas($("cv-wind"), draw, { aspect: 0.62, minHeight: 360, maxHeight: 460 });
+    SB.drag($("cv-wind"), {
+      down(p) { if (!geom || Math.hypot(p.x - geom.cx, p.y - geom.cy) > geom.R * 1.15) return false; this.move(p); },
+      move(p) { if (!geom) return; const ang = Math.atan2(p.x - geom.cx, -(p.y - geom.cy)); gTWA.set(Math.round(Math.min(180, Math.abs(SB.deg(ang))) / 5) * 5); },
+    });
+    upd();
+  });
+
+  /* =================================================== Sim 10: 공기 윤활 */
+  sim("als", () => {
+    let cv = null, t = 0;
+    const gV = SB.range("al-v", (v) => v.toFixed(1) + " kn", upd);
+    const gT = SB.range("al-t", (v) => v.toFixed(1) + " m", upd);
+    const gC = SB.range("al-c", (v) => v + " %", upd);
+    const gQ = SB.range("al-q", (v) => v.toFixed(2) + " m³/s", upd);
+    const B = 51;
+    function calc(Q) {
+      const V = gV(), Pp = 40000 * Math.pow(V / 22, 3), kF = 0.65 + 0.1 * (22 - V) / 12;
+      const Q0 = 0.0022 * SB.ms(V) * B;
+      const r = 0.6 * (1 - Math.exp(-Q / Q0));
+      const gross = Pp * kF * gC() / 100 * r;
+      const p0 = 101325, p = p0 + SB.RHO * SB.G * gT() + 30000;
+      const comp = Q > 0 ? p * Q * Math.log(p / p0) / 0.7 / 1000 : 0;
+      return { Pp, gross, comp, net: gross - comp, r, Q0 };
+    }
+    function opt() { let b = { Q: 0, net: -1e9 }; for (let Q = 0; Q <= 5; Q += 0.05) { const c = calc(Q); if (c.net > b.net) b = { Q, net: c.net }; } return b; }
+    function upd() {
+      const c = calc(gQ());
+      SB.stat("o-al-p", sm(fmtK(c.Pp / 1000, 1), "MW"));
+      SB.stat("o-al-g", sm(fmtK(c.gross), "kW") + " <small>(" + (c.gross / c.Pp * 100).toFixed(1) + "%)</small>");
+      SB.stat("o-al-c", sm(fmtK(c.comp), "kW"));
+      SB.stat("o-al-n", '<span style="color:' + (c.net >= 0 ? "var(--ok)" : "var(--bad)") + '">' + (c.net / c.Pp * 100).toFixed(1) + " <small>% (" + fmtK(c.net) + " kW)</small></span>");
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), h1 = h * 0.38;
+      // 선체 측면 + 기포
+      const T = gT(), s = Math.min((w - 40) / 380, h1 * 0.55 / 40), wy = h1 * 0.62;
+      SB.shipSide(ctx, w / 2, wy, s, { L: 350, D: 30, T, cargo: "container", house: true, color: "#2b3445" });
+      SB.water(ctx, w, h1, wy, { color: "rgba(59,143,224,0.22)" });
+      const c = calc(gQ()), nb = Math.round(80 * Math.min(1, gQ() / Math.max(c.Q0 * 2, 0.1)));
+      const keel = wy + T * s, x0 = w / 2 + 150 * s, x1 = w / 2 - 160 * s, cov = gC() / 50;
+      for (let i = 0; i < nb; i++) {
+        const ph = ((i * 0.6180339 + t * 0.15) % 1);
+        const x = x0 - ph * (x0 - x1) * Math.min(1, cov * 1.3 + 0.2);
+        const y = keel + 2 + ((i * 7) % 5);
+        ctx.fillStyle = "rgba(255,255,255,0.85)"; ctx.strokeStyle = P.accent; ctx.lineWidth = 0.8;
+        ctx.beginPath(); ctx.arc(x, y, 1.8 + (i % 3) * 0.6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      }
+      label(ctx, "공기층 (선저 마찰 감소 " + Math.round(c.r * 100) + "%)", w / 2, Math.min(h1 - 8, keel + 18), P.dim, "center", 11);
+      // 그래프
+      const dg = [], dc = [], dn = [];
+      for (let Q = 0; Q <= 5.001; Q += 0.05) { const k = calc(Q); dg.push([Q, k.gross / k.Pp * 100]); dc.push([Q, k.comp / k.Pp * 100]); dn.push([Q, k.net / k.Pp * 100]); }
+      const o = opt();
+      SB.chart(ctx, { x: 58, y: h1 + 8, w: w - 76, h: h - h1 - 56 }, { x: [0, 5], y: [-4, 12], xLabel: "공기 유량 Q (m³/s, 노즐 압력 기준)", yLabel: "추진 동력 대비 %",
+        series: [{ data: dg, color: P.accent, width: 2 }, { data: dc, color: P.accent2, width: 2, dash: [5, 3] }, { data: dn, color: P.ok, width: 2.8 }],
+        hlines: [{ y: 0, color: P.axis, dash: [] }], vlines: [{ x: o.Q, color: P.ok }],
+        points: [{ x: gQ(), y: c.net / c.Pp * 100, color: P.ok, r: 6 }] });
+      const lg = [["총 절감", P.accent], ["압축기 동력", P.accent2], ["순 절감", P.ok]];
+      lg.forEach(([n, col], i) => { ctx.fillStyle = col; ctx.fillRect(70 + i * 90, h1 + 16, 14, 3); label(ctx, n, 88 + i * 90, h1 + 18, P.dim, "left", 11); });
+    }
+    cv = SB.canvas($("cv-als"), draw, { aspect: 0.75, minHeight: 360, maxHeight: 480 });
+    $("al-opt").addEventListener("click", () => gQ.set(+opt().Q.toFixed(2)));
+    upd();
+    SB.loop($("cv-als"), (dt) => { t += dt; cv.redraw(); });
+  });
+
+  /* =================================================== Sim 11: 선체 오손 */
+  sim("foul", () => {
+    let cv = null;
+    const BASE = 20000, CLEAN = 150000, YEARS = 5;
+    const gSea = SB.seg("fo-sea", upd), gCoat = SB.seg("fo-coat", upd);
+    const gI = SB.range("fo-i", (v) => v + " 개월" + (v >= 60 ? " (청소 안 함)" : ""), upd);
+    const gFP = SB.range("fo-fp", (v) => v + " $/t", upd);
+    function par() { const k = Number(gSea()); return gCoat() === "spc" ? { a: 0.12 * k, tau: 14 / k } : { a: 0.09 * k, tau: 22 / k }; }
+    const pen = (tm, p) => p.a * (1 - Math.exp(-tm / p.tau));
+    function avg(I) {
+      const p = par(), n = Math.round(YEARS * 12 / 0.25); let s = 0;
+      for (let i = 0; i < n; i++) { const tm = i * 0.25, since = I >= 60 ? tm : tm % I; s += pen(since, p); }
+      const cleans = I >= 60 ? 0 : Math.floor((YEARS * 12 - 1e-9) / I);
+      const avgP = s / n;
+      const cost = (avgP * BASE * gFP() + cleans / YEARS * CLEAN) / 1e6;
+      return { avgP, cleans, cost };
+    }
+    function upd() {
+      const a = avg(gI());
+      SB.stat("o-fo-pen", sm((a.avgP * 100).toFixed(1), "%"));
+      SB.stat("o-fo-f", sm(fmtK(a.avgP * BASE), "t") + " <small>(CO₂ " + fmtK(a.avgP * BASE * 3.114) + " t)</small>");
+      SB.stat("o-fo-c", sm(fmtK(a.cost, 2), "M$"));
+      let b = { I: 2, c: 1e9 }; for (let I = 2; I <= 60; I++) { const c = avg(I).cost; if (c < b.c) b = { I, c }; }
+      SB.stat("o-fo-opt", sm(b.I, "개월"));
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), p = par(), I = gI(), d = [];
+      for (let tm = 0; tm <= YEARS * 12; tm += 0.1) d.push([tm, pen(I >= 60 ? tm : tm % I, p) * 100]);
+      const h1 = h * 0.55;
+      SB.chart(ctx, { x: 58, y: 12, w: w - 76, h: h1 - 46 }, { x: [0, 60], y: [0, 30], xLabel: "입거 후 경과 (개월)", yLabel: "동력 증가 %", xTicks: [0, 12, 24, 36, 48, 60],
+        series: [{ data: d, color: P.accent2, width: 2, fill: "rgba(217,72,59,0.12)" }], hlines: [{ y: avg(I).avgP * 100, color: P.text, label: "평균" }] });
+      const dc = []; let b = { I: 2, c: 1e9 };
+      for (let k = 2; k <= 60; k++) { const c = avg(k).cost; dc.push([k, c]); if (c < b.c) b = { I: k, c }; }
+      const ymax = Math.max(...dc.map((q) => q[1])) * 1.1;
+      SB.chart(ctx, { x: 58, y: h1 + 8, w: w - 76, h: h - h1 - 54 }, { x: [2, 60], y: [0, ymax], xLabel: "청소 주기 (개월)", yLabel: "연간 비용 M$", xTicks: [2, 12, 24, 36, 48, 60],
+        series: [{ data: dc, color: P.accent, width: 2.4 }], points: [{ x: b.I, y: b.c, color: P.ok, r: 5, label: "최적" }, { x: I, y: avg(I).cost, color: P.accent2, r: 6 }] });
+    }
+    cv = SB.canvas($("cv-foul"), draw, { aspect: 0.75, minHeight: 360, maxHeight: 460 });
+    upd();
+  });
+
+  /* =================================================== Sim 12: 절감 조합기 */
+  sim("combo", () => {
+    let cv = null;
+    const M = [
+      ["선체 도료 개선·정기 청소", 4, 1], ["프로펠러 연마·교체", 2, 1], ["프로펠러 앞 덕트·핀(PSD)", 3, 0],
+      ["보스캡 핀(PBCF)", 1.5, 0], ["감속용 선수 벌브 개조", 3, 0], ["폐열 회수(WHRS)", 5, 0],
+      ["공기 윤활", 5, 0], ["로터 세일 2기", 6, 0], ["기상 항로·트림 최적화", 3, 1], ["Just-in-Time 입항", 2, 0],
+    ];
+    const list = $("cb-list");
+    list.innerHTML = M.map((m, i) => '<label class="check"><input type="checkbox" data-i="' + i + '"' + (m[2] ? " checked" : "") + "> " + m[0] + " (" + m[1] + "%)</label>").join("");
+    list.addEventListener("change", (e) => { const i = e.target.dataset.i; if (i != null) { M[i][2] = e.target.checked ? 1 : 0; upd(); } });
+    function upd() {
+      const on = M.filter((m) => m[2]);
+      const sum = on.reduce((a, m) => a + m[1], 0), mul = (1 - on.reduce((a, m) => a * (1 - m[1] / 100), 1)) * 100;
+      SB.stat("o-cb-sum", sm(sum.toFixed(1), "%"));
+      SB.stat("o-cb-mul", sm(mul.toFixed(1), "%"));
+      SB.stat("o-cb-t", sm(fmtK(20000 * mul / 100), "t/년"));
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), on = M.filter((m) => m[2]);
+      const bx = 50, bw = w - 70, top = 36, bot = h - 30, H = bot - top;
+      const Z = (v) => top + H * (1 - (v - 50) / 50); // 50~100% 확대
+      label(ctx, "남은 연료 소비 (%)", bx, 10, P.dim, "left", 11);
+      ctx.strokeStyle = P.grid; ctx.lineWidth = 1;
+      [100, 90, 80, 70, 60, 50].forEach((v) => { line(ctx, bx, Z(v), bx + bw, Z(v)); label(ctx, String(v), bx - 6, Z(v), P.dim, "right", 10); });
+      const n = on.length + 2, cw = bw / n;
+      const bar = (i, a, b, c, txt) => { ctx.fillStyle = c; const y1 = Z(Math.max(a, b)), y2 = Z(Math.min(a, b)); ctx.fillRect(bx + i * cw + cw * 0.15, y1, cw * 0.7, Math.max(1.5, y2 - y1)); if (txt) label(ctx, txt, bx + i * cw + cw / 2, y1 - 8, P.text, "center", 10, 600); };
+      let cur = 100;
+      bar(0, 50, 100, P.faint, "기준");
+      on.forEach((m, i) => { const nx = cur * (1 - m[1] / 100); bar(i + 1, nx, cur, P.ok, "−" + m[1]); cur = nx; });
+      bar(n - 1, 50, cur, P.accent, cur.toFixed(1));
+      label(ctx, "적용 후", bx + (n - 1) * cw + cw / 2, bot + 12, P.dim, "center", 10);
+    }
+    cv = SB.canvas($("cv-combo"), draw, { aspect: 0.55, minHeight: 260, maxHeight: 360 });
+    upd();
+  });
+
+  /* =================================================== Sim 13: 경제성 */
+  sim("econ", () => {
+    let cv = null;
+    const REF = { lhv: 41.0, ef: 3.151 }, EGJ = 20000 * 41.0; // GJ/년
+    const ALT = {
+      lng: { n: "LNG", lhv: 49.1, ef: 3.18, p: 550, wtw: 83 },
+      gmeoh: { n: "그레이 메탄올", lhv: 19.9, ef: 1.375, p: 450, wtw: 100 },
+      bmeoh: { n: "바이오 메탄올", lhv: 19.9, ef: 0, p: 1100, wtw: 14 },
+      emeoh: { n: "e-메탄올", lhv: 19.9, ef: 0, p: 1800, wtw: 5 },
+      enh3: { n: "그린 암모니아", lhv: 18.6, ef: 0.05, p: 1000, wtw: 17 },
+    };
+    const gF = SB.seg("ec-fuel", (v) => gP.set(ALT[v].p));
+    const gP = SB.range("ec-p", (v) => fmtK(v) + " $/t", upd);
+    const gR = SB.range("ec-r", (v) => v + " $/t", upd);
+    const gC = SB.range("ec-c", (v) => v + " $/t", upd);
+    const gK = SB.range("ec-k", (v) => v + " %", upd);
+    const gX = SB.range("ec-x", (v) => v.toFixed(1) + " M$", upd);
+    function cost(cp) {
+      const a = ALT[gF()], k = gK() / 100;
+      const mR = EGJ / REF.lhv, mA = EGJ / a.lhv; // t/년
+      const eR = mR * REF.ef, eA = mA * a.ef;
+      const cR = (mR * gR() + eR * k * cp) / 1e6, cA = (mA * gP() + eA * k * cp) / 1e6 + gX();
+      return { cR, cA, eR, eA, mA, mR, a };
+    }
+    function be() { const c0 = cost(0), d = c0.cA - c0.cR, de = (c0.eR - c0.eA) * gK() / 100; return de > 0 ? d * 1e6 / de : Infinity; }
+    function upd() {
+      const c = cost(gC());
+      SB.stat("o-ec-ref", sm(fmtK(c.cR, 1), "M$"));
+      SB.stat("o-ec-alt", sm(fmtK(c.cA, 1), "M$") + " <small>(" + fmtK(c.mA) + " t)</small>");
+      const b = be();
+      SB.stat("o-ec-be", isFinite(b) ? (b < 0 ? '<span style="color:var(--ok)">이미 이득</span>' : sm(fmtK(b), "$/t CO₂")) : '<span style="color:var(--bad)">없음</span>');
+      SB.stat("o-ec-red", sm(fmtK((c.eR - c.eA) / 1000, 1), "천 t") + " <small>(WtW 약 " + Math.round((1 - c.a.wtw / 91) * 100) + "%↓)</small>");
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), dR = [], dA = [];
+      for (let cp = 0; cp <= 400; cp += 5) { const c = cost(cp); dR.push([cp, c.cR]); dA.push([cp, c.cA]); }
+      const ymax = Math.max(dR[dR.length - 1][1], dA[0][1], dA[dA.length - 1][1]) * 1.1;
+      const b = be(), cur = cost(gC());
+      const pts = [{ x: gC(), y: cur.cR, color: P.accent2, r: 5 }, { x: gC(), y: cur.cA, color: P.accent, r: 5 }];
+      if (isFinite(b) && b >= 0 && b <= 400) pts.push({ x: b, y: cost(b).cR, color: P.ok, r: 6, label: "손익분기 " + fmtK(b) + " $/t" });
+      const C = SB.chart(ctx, { x: 58, y: 14, w: w - 76, h: h - 64 }, { x: [0, 400], y: [0, ymax], xLabel: "탄소 가격 ($/t CO₂e)", yLabel: "연간 연료+탄소 비용 (M$)",
+        series: [{ data: dR, color: P.accent2, width: 2.6 }, { data: dA, color: P.accent, width: 2.6 }], vlines: [{ x: gC(), color: P.dim, label: "현재" }], points: pts });
+      const lg = [["VLSFO", P.accent2], [cur.a.n, P.accent]];
+      lg.forEach(([n, c], i) => { ctx.fillStyle = c; ctx.fillRect(C.box.x + C.box.w - 130, C.box.y + C.box.h - 40 + i * 15, 14, 3); label(ctx, n, C.box.x + C.box.w - 112, C.box.y + C.box.h - 38 + i * 15, P.dim, "left", 11); });
+      ctx.fillStyle = P.text; const dx = C.X(gC()), dy = C.box.y + C.box.h;
+      ctx.beginPath(); ctx.moveTo(dx, dy - 7); ctx.lineTo(dx + 6, dy); ctx.lineTo(dx, dy + 7); ctx.lineTo(dx - 6, dy); ctx.closePath(); ctx.fill();
+    }
+    cv = SB.canvas($("cv-econ"), draw, { aspect: 0.66, minHeight: 320, maxHeight: 440 });
+    upd();
+  });
+})();
+</script>
+</body>
+</html>

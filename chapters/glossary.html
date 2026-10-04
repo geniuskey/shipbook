@@ -1,0 +1,1559 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<title>용어집 &amp; 종합 퀴즈 · ShipBook</title>
+<meta name="description" content="부력과 복원성부터 자율운항까지 선박 핵심 용어 300여 개를 한국어·영어·약어로 검색하고, 단위 변환기·톤수 계산기와 전 장 종합 퀴즈로 실력을 점검한다.">
+<link rel="canonical" href="https://shipbook.euiyun.com/chapters/glossary.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="ShipBook">
+<meta property="og:title" content="용어집 &amp; 종합 퀴즈 · ShipBook">
+<meta property="og:description" content="부력과 복원성부터 자율운항까지 선박 핵심 용어 300여 개를 한국어·영어·약어로 검색하고, 단위 변환기·톤수 계산기와 전 장 종합 퀴즈로 실력을 점검한다.">
+<meta property="og:url" content="https://shipbook.euiyun.com/chapters/glossary.html">
+<meta property="og:image" content="https://shipbook.euiyun.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"용어집 & 종합 퀴즈","name":"용어집 & 종합 퀴즈 · ShipBook","url":"https://shipbook.euiyun.com/chapters/glossary.html","mainEntityOfPage":"https://shipbook.euiyun.com/chapters/glossary.html","inLanguage":"ko","isAccessibleForFree":true,"learningResourceType":"interactive textbook chapter","position":23,"image":"https://shipbook.euiyun.com/og.png","dateModified":"2026-10-04","isPartOf":{"@type":"Book","@id":"https://shipbook.euiyun.com/#book","name":"ShipBook — 인터랙티브 선박 교과서","url":"https://shipbook.euiyun.com/"},"publisher":{"@type":"Organization","name":"ShipBook","url":"https://shipbook.euiyun.com/"},"description":"부력과 복원성부터 자율운항까지 선박 핵심 용어 300여 개를 한국어·영어·약어로 검색하고, 단위 변환기·톤수 계산기와 전 장 종합 퀴즈로 실력을 점검한다."},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ShipBook","item":"https://shipbook.euiyun.com/"},{"@type":"ListItem","position":2,"name":"23 용어집 & 종합 퀴즈","item":"https://shipbook.euiyun.com/chapters/glossary.html"}]}]}</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../css/style.css">
+<script src="../js/common.js"></script>
+<style>
+  [hidden] { display: none !important; }
+  .gl-tools { display: grid; gap: 10px; margin-bottom: 16px; }
+  .gl-tools .row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+  .gl-tools .lbl { font-size: 13px; color: var(--text-dim); flex: none; }
+  .gl-tools .seg button { font-size: 12.5px; padding: 4px 9px; }
+  .gl-search { margin-bottom: 0 !important; box-sizing: border-box; }
+  .gl-count { font-size: 13px; color: var(--text-faint); margin-left: auto; font-family: var(--mono); }
+  #gl-list { max-height: min(78vh, 980px); overflow-y: auto; overscroll-behavior: contain; padding: 2px 6px 2px 2px; border-radius: 12px; }
+  .gl-group { position: sticky; top: 0; z-index: 1; background: var(--bg); font-family: var(--mono); font-weight: 700; font-size: 13px; color: var(--accent); letter-spacing: .06em; margin: 14px 0 0; padding: 4px 0; border-bottom: 1px solid var(--border); }
+  .gl-group:first-child { margin-top: 0; }
+  .gl-item h4 { overflow-wrap: anywhere; }
+  .gl-item h4 .abbr { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--accent-2); background: var(--accent-2-soft); border-radius: 5px; padding: 1px 6px; margin-left: 6px; vertical-align: 1px; white-space: nowrap; }
+  .gl-item h4 .en { color: var(--text-dim); font-size: 14px; }
+  .gl-item .cat { font-size: 12px; color: var(--text-faint); margin-right: 8px; border: 1px solid var(--border); border-radius: 999px; padding: 1px 8px; }
+  .gl-item .ch { margin-right: 6px; }
+  .gl-item mark, #ab-body mark { background: color-mix(in srgb, var(--warn) 35%, transparent); color: inherit; border-radius: 3px; padding: 0 1px; }
+  .gl-empty { padding: 24px; text-align: center; color: var(--text-dim); border: 1px dashed var(--border); border-radius: 12px; }
+
+  .fc { display: grid; gap: 12px; padding: 18px; background: var(--canvas-bg); min-height: 220px; align-content: center; }
+  .fc-card { border: 1px solid var(--border); border-radius: 14px; background: var(--bg-elev); padding: 22px 20px; text-align: center; cursor: pointer; user-select: none; transition: transform .25s ease; min-height: 150px; display: grid; align-content: center; gap: 8px; }
+  .fc-card:hover { border-color: var(--accent); }
+  .fc-card .big { font-size: clamp(22px, 5vw, 30px); font-weight: 800; letter-spacing: -0.01em; color: var(--accent); overflow-wrap: anywhere; }
+  .fc-card .sub { color: var(--text-dim); font-size: 14px; overflow-wrap: anywhere; }
+  .fc-card .def { font-size: 15px; line-height: 1.6; text-align: left; }
+  .fc-card .fc-hint { font-size: 12px; color: var(--text-faint); }
+
+  .tmap { cursor: pointer; }
+  .tmap text { font-size: 16px; }
+  .tmap .hit { pointer-events: all; }
+  .tmap:hover .hit, .tmap.on .hit { fill: var(--accent-soft); stroke: var(--accent); }
+  .tmap .hit { fill: transparent; stroke: transparent; stroke-width: 1.5; }
+  .tmap.on text { fill: var(--accent); font-weight: 700; }
+  .tm-box { margin-top: 10px; padding: 12px 16px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); font-size: 15px; min-height: 60px; }
+  .tm-box b { color: var(--accent); }
+
+  #ab-table td:first-child { font-family: var(--mono); font-weight: 700; color: var(--accent); white-space: nowrap; }
+  #ab-table td:nth-child(2) { font-size: 14px; color: var(--text-dim); }
+  #ab-wrap { max-height: min(70vh, 720px); overflow-y: auto; }
+  #ab-table thead th { position: sticky; top: 0; background: var(--bg-elev); z-index: 1; }
+
+  .cv-in { display: flex; gap: 8px; }
+  .cv-in input[type="number"] { flex: 1; min-width: 0; width: 5em; font: inherit; font-family: var(--mono); font-size: 15px; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+  .cv-in select { max-width: 9.5em; }
+  .fq-actions select { max-width: 15em; }
+  .cv-in select, .fq-actions select { flex: none; min-width: 0; font: inherit; font-size: 14px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+  .cv-bars { padding: 14px 18px; display: grid; gap: 8px; background: var(--canvas-bg); }
+  .cv-row { display: grid; grid-template-columns: minmax(84px, 130px) minmax(0, 1fr); gap: 10px; align-items: center; font-size: 14px; }
+  .cv-row .u { color: var(--text-dim); font-size: 13px; }
+  .cv-row .val { font-family: var(--mono); font-weight: 600; font-size: 17px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .cv-row.src .val { color: var(--accent); }
+  .cv-row .bar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: var(--surface-2); overflow: hidden; margin-top: -4px; }
+  .cv-row .bar i { display: block; height: 100%; background: var(--accent); opacity: .55; }
+  .sim-readout .v small { font-size: 12px; color: var(--text-dim); font-weight: 400; margin-left: 3px; }
+
+  .ck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 8px; }
+  .ck-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-elev); font-size: 14px; cursor: pointer; }
+  .ck-item input { margin-top: 3px; accent-color: var(--accent); flex: none; }
+  .ck-item.on { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 10%, var(--bg-elev)); }
+  .ck-item .n { font-family: var(--mono); font-size: 12px; color: var(--text-faint); display: block; }
+  .ck-item a { font-weight: 600; }
+  .ck-item .tw { font-size: 12px; color: var(--bad); display: block; }
+
+  .fq-head { background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; margin-bottom: 16px; display: grid; gap: 10px; position: sticky; top: calc(var(--nav-h, 56px) + 6px); z-index: 3; box-shadow: var(--shadow); }
+  .fq-top { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; font-size: 13px; color: var(--text-dim); font-family: var(--mono); }
+  .fq-top b { color: var(--text); }
+  .fq-bar { height: 7px; background: var(--surface-2); border-radius: 4px; overflow: hidden; display: flex; }
+  .fq-bar i { display: block; height: 100%; width: 0; transition: width .3s ease; }
+  .fq-bar i.ok { background: var(--ok); } .fq-bar i.bad { background: var(--bad); }
+  .fq-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .fq-actions .lbl { font-size: 13px; color: var(--text-dim); }
+  .fq-actions .btn { font-size: 13px; padding: 6px 12px; }
+  .fq-actions .btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+  .quiz-q .q-ch { font-size: 12px !important; font-weight: 700; color: var(--accent); letter-spacing: .04em; margin: 0 0 6px !important; }
+  .quiz-q .q-ch .qn { font-family: var(--mono); color: var(--text-faint); margin-right: 6px; }
+  .quiz-q .q-text { font-weight: 700; margin-bottom: 12px; }
+  .quiz-q.missed { border-color: color-mix(in srgb, var(--bad) 50%, var(--border)); }
+  .fq-result { background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-top: 16px; text-align: center; }
+  .fq-rank { font-size: 13px; letter-spacing: .12em; color: var(--text-faint); font-weight: 700; }
+  .fq-title { font-size: clamp(22px, 5vw, 30px); font-weight: 800; letter-spacing: -0.02em; margin: 4px 0; color: var(--accent); }
+  .fq-big { font-family: var(--mono); font-size: 38px; font-weight: 700; }
+  .fq-big small { font-size: 18px; color: var(--text-dim); }
+  .fq-review { text-align: left; font-size: 14px; color: var(--text-dim); margin: 12px 0 0; }
+  .fq-review a { font-weight: 600; }
+  @media (max-width: 600px) {
+    .fq-head { padding: 10px 12px; gap: 7px; }
+    .fq-actions { gap: 6px; }
+    .fq-actions .btn { padding: 5px 9px; }
+    .fq-actions .lbl { display: none; }
+    .fq-actions select { max-width: 100%; flex: 1 1 100%; }
+  }
+</style>
+</head>
+<body data-chapter="glossary">
+<main class="chapter">
+  <header class="chapter-hero">
+    <div class="eyebrow">Chapter 23</div>
+    <h1>용어집 &amp; 종합 퀴즈</h1>
+    <p class="lead">배를 다루는 언어는 낯설다. 배수량과 재화중량, GM과 GZ, MCR과 SFOC, RAO와 CPA… 같은 단어도 조선소와 선교와 기관실에서 조금씩 다른 뜻으로 쓰인다. 이 장은 책 전체에 흩어진 핵심 용어를 한곳에 모은 사전이자, 부력부터 자율운항까지 전 범위를 점검하는 마무리 시험이다.</p>
+    <ul class="objectives">
+      <li>한국어·영어·약어 어느 쪽으로든 용어를 찾아 정의를 확인하고, 그 용어를 자세히 다루는 장으로 바로 이동할 수 있다.</li>
+      <li>노트와 km/h, 해리와 km, 메트릭 톤과 롱 톤, 그리고 질량이 아닌 "톤수(GT)"를 구별하고 서로 환산할 수 있다.</li>
+      <li>장별 종합 퀴즈로 이해도를 점검하고, 틀린 문제의 장을 체크리스트에 표시해 복습 계획을 세운다.</li>
+    </ul>
+    <p style="margin-top:16px"><a href="#glossary">→ 용어집</a> · <a href="#figure-terms">→ 그림으로 보는 용어</a> · <a href="#abbr">→ 약어 표</a> · <a href="#units">→ 단위와 상수</a> · <a href="#tonnage">→ 톤수 계산기</a> · <a href="#checklist">→ 학습 체크리스트</a> · <a href="#quiz">→ 종합 퀴즈</a></p>
+  </header>
+
+  <section id="glossary">
+    <h2>용어집</h2>
+    <p>검색창에 한국어(예: <code>복원정</code>), 영어(예: <code>wake</code>), 약어(예: <code>MCT</code>) 중 아무것이나 입력하면 바로 걸러진다. 띄어쓰기와 하이픈은 무시하고, 정의 본문도 검색 대상이다. 분류 칩으로 범위를 좁히고, 한국어 가나다순이나 영어 ABC순, 또는 장 순서로 묶어 볼 수 있다. 일치하는 글자는 노란색으로 표시되고, 각 항목 아래 링크를 누르면 그 용어를 자세히 다루는 장으로 이동한다.</p>
+    <div class="gl-tools">
+      <input type="search" class="gl-search" id="gl-q" placeholder="용어 검색: 예) 메타센터, propeller, CII" autocomplete="off" aria-label="용어 검색">
+      <div class="row">
+        <span class="lbl">분류</span>
+        <div class="seg" id="gl-cat">
+          <button data-value="all" class="on">전체</button>
+          <button data-value="S">정역학</button>
+          <button data-value="R">저항·추진</button>
+          <button data-value="E">기관</button>
+          <button data-value="W">파도·운동</button>
+          <button data-value="M">조종</button>
+          <button data-value="D">구조·설계·건조</button>
+          <button data-value="C">선종·화물</button>
+          <button data-value="G">전력·친환경</button>
+          <button data-value="N">항해·자율운항</button>
+          <button data-value="H">해운 일반</button>
+        </div>
+      </div>
+      <div class="row">
+        <span class="lbl">정렬</span>
+        <div class="seg" id="gl-sort"><button data-value="kor" class="on">가나다순</button><button data-value="abc">ABC순</button><button data-value="ch">장 순서</button></div>
+        <span class="gl-count" id="gl-count" aria-live="polite"></span>
+      </div>
+    </div>
+    <div class="gl-list no-math" id="gl-list"></div>
+
+    <p style="margin-top:24px">용어는 읽는 것보다 떠올려 보는 것이 기억에 오래 남는다. 아래 카드는 위에서 고른 분류 안에서 무작위로 용어를 하나 뽑는다. 정의를 먼저 떠올려 본 다음 카드를 눌러 확인하고, 알았으면 "알았다", 몰랐으면 "다시"를 누른다. 몰랐던 용어는 다시 나올 확률이 높아진다.</p>
+    <div class="sim" id="sim-flash">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>용어 플래시카드</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><div class="fc no-math"><div class="fc-card" id="fc-card" role="button" tabindex="0" aria-live="polite"></div></div></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>앞면</span><div class="seg" id="fc-face"><button data-value="ko" class="on">한국어</button><button data-value="en">영어·약어</button><button data-value="def">정의</button></div></div>
+          <button class="btn" id="fc-flip">뒤집기</button>
+          <button class="btn primary" id="fc-ok">알았다 → 다음</button>
+          <button class="btn" id="fc-again">다시 → 다음</button>
+          <p style="font-size:13px;color:var(--text-dim);margin:0">분류는 위 용어집의 분류 칩을 따른다.</p>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">본 카드</span><span class="v" id="o-fc-n">0</span></div>
+        <div class="stat"><span class="k">알았다</span><span class="v" id="o-fc-ok">0</span></div>
+        <div class="stat"><span class="k">기억률</span><span class="v" id="o-fc-rate">—</span></div>
+        <div class="stat"><span class="k">다시 볼 용어</span><span class="v" id="o-fc-again">0</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 앞면을 "정의"로 바꾸면 설명만 보고 용어 이름을 맞혀야 해서 훨씬 어렵다. 분류를 "정역학"으로 좁혀 KB·BM·KG·GM을 한꺼번에 정리해 보자.</div>
+    </div>
+  </section>
+
+  <section id="figure-terms">
+    <h2>그림으로 보는 용어</h2>
+    <p>주요 치수와 복원성 용어는 그림 위의 "어디"를 가리키는지 알면 절반은 이해한 셈이다. 아래 두 그림의 이름표를 누르거나 손가락으로 짚어 보면 그 용어의 정의가 그림 아래에 나타난다. 옆에서 본 그림은 <a href="overview.html">1장</a>과 <a href="buoyancy.html">2장</a>의 치수 용어를, 중앙 횡단면은 <a href="stability.html">3장</a>의 복원성 용어를 모았다.</p>
+    <figure class="diagram">
+      <svg viewBox="0 0 760 330" id="fig-side" role="img" aria-label="선박 측면도와 주요 치수">
+        <rect x="0" y="196" width="760" height="134" class="f-water"/>
+        <line x1="0" y1="196" x2="760" y2="196" class="s-water"/>
+        <!-- hull -->
+        <path d="M 96 120 L 640 120 L 668 116 Q 690 150 676 196 Q 668 232 640 238 L 140 238 Q 112 236 104 214 L 96 196 Z" class="f-surface" style="stroke:var(--text-dim);stroke-width:1.5"/>
+        <path d="M 100 206 L 104 214 Q 112 236 140 238 L 640 238 Q 668 232 676 196 L 100 196 Z" class="f-hull" opacity=".85"/>
+        <path d="M 660 214 Q 700 212 700 224 Q 698 236 660 236 Z" class="f-hull" opacity=".85"/>
+        <rect x="112" y="64" width="64" height="56" class="f-elev"/>
+        <rect x="124" y="46" width="44" height="18" class="f-elev"/>
+        <rect x="196" y="92" width="420" height="28" class="f-dim-soft" opacity=".6"/>
+        <!-- rudder & prop -->
+        <path d="M 86 200 L 98 200 L 98 236 L 84 236 Z" class="f-dim-soft"/>
+        <ellipse cx="110" cy="220" rx="4" ry="15" class="f-elev"/>
+        <!-- perpendiculars -->
+        <line x1="92" y1="104" x2="92" y2="252" class="s-axis" stroke-dasharray="4 3"/>
+        <line x1="678" y1="104" x2="678" y2="252" class="s-axis" stroke-dasharray="4 3"/>
+        <!-- LOA -->
+        <line x1="84" y1="32" x2="702" y2="32" class="s-line"/>
+        <line x1="84" y1="26" x2="84" y2="38" class="s-line"/><line x1="702" y1="26" x2="702" y2="38" class="s-line"/>
+        <!-- Lpp -->
+        <line x1="92" y1="272" x2="678" y2="272" class="s-line"/>
+        <line x1="92" y1="266" x2="92" y2="278" class="s-line"/><line x1="678" y1="266" x2="678" y2="278" class="s-line"/>
+        <!-- draft, depth, freeboard -->
+        <line x1="730" y1="120" x2="730" y2="238" class="s-line"/>
+        <line x1="722" y1="120" x2="738" y2="120" class="s-line"/><line x1="722" y1="238" x2="738" y2="238" class="s-line"/>
+        <line x1="714" y1="196" x2="714" y2="238" class="s-acc"/>
+        <line x1="714" y1="120" x2="714" y2="196" class="s-line" stroke-dasharray="3 3"/>
+        <line x1="40" y1="238" x2="680" y2="238" class="s-axis" stroke-dasharray="2 4"/>
+        <g class="tmap" data-term="전장"><rect class="hit" x="330" y="2" width="120" height="26" rx="6"/><text class="t" x="390" y="21" text-anchor="middle">전장 LOA</text></g>
+        <g class="tmap" data-term="수선간장"><rect class="hit" x="320" y="276" width="140" height="24" rx="6"/><text class="t" x="390" y="294" text-anchor="middle">수선간장 Lpp</text></g>
+        <g class="tmap" data-term="선미 수선"><rect class="hit" x="62" y="252" width="56" height="20" rx="6"/><text class="t" x="90" y="266" text-anchor="middle">AP</text></g>
+        <g class="tmap" data-term="선수 수선"><rect class="hit" x="650" y="252" width="56" height="20" rx="6"/><text class="t" x="678" y="266" text-anchor="middle">FP</text></g>
+        <g class="tmap" data-term="형심"><rect class="hit" x="736" y="140" width="24" height="50" rx="6"/><text class="t" x="748" y="170" text-anchor="middle">D</text></g>
+        <g class="tmap" data-term="흘수"><rect class="hit" x="736" y="200" width="24" height="36" rx="6"/><text class="t-acc" x="748" y="224" text-anchor="middle">T</text><line x1="738" y1="218" x2="716" y2="218" class="s-axis"/></g>
+        <g class="tmap" data-term="건현"><rect class="hit" x="640" y="146" width="70" height="26" rx="6"/><text class="t" x="706" y="164" text-anchor="end">건현 f</text></g>
+        <g class="tmap" data-term="흘수선"><rect class="hit" x="8" y="180" width="80" height="22" rx="6"/><text class="t" x="48" y="194" text-anchor="middle">흘수선</text></g>
+        <g class="tmap" data-term="기선"><rect class="hit" x="8" y="230" width="70" height="22" rx="6"/><text class="t" x="43" y="246" text-anchor="middle">기선</text></g>
+        <g class="tmap" data-term="선수 벌브"><rect class="hit" x="664" y="300" width="96" height="22" rx="6"/><text class="t" x="712" y="316" text-anchor="middle">선수 벌브</text><line x1="700" y1="300" x2="692" y2="236" class="s-axis"/></g>
+        <g class="tmap" data-term="타"><rect class="hit" x="20" y="300" width="56" height="22" rx="6"/><text class="t" x="48" y="316" text-anchor="middle">타</text><line x1="62" y1="304" x2="88" y2="232" class="s-axis"/></g>
+        <g class="tmap" data-term="피치"><rect class="hit" x="122" y="300" width="96" height="22" rx="6"/><text class="t" x="170" y="316" text-anchor="middle">프로펠러</text><line x1="140" y1="302" x2="112" y2="234" class="s-axis"/></g>
+        <g class="tmap" data-term="격벽 갑판"><rect class="hit" x="300" y="122" width="140" height="22" rx="6"/><text class="t" x="370" y="138" text-anchor="middle">건현(격벽) 갑판</text></g>
+        <g class="tmap" data-term="만재흘수선"><rect class="hit" x="470" y="166" width="104" height="24" rx="6"/><text class="t" x="522" y="182" text-anchor="middle">만재흘수선</text></g>
+        <g class="tmap" data-term="이중 선저"><rect class="hit" x="300" y="214" width="140" height="22" rx="6"/><text class="t" x="370" y="230" text-anchor="middle" style="fill:#fff">이중 선저</text></g>
+        <g class="tmap" data-term="일반 배치"><rect class="hit" x="104" y="70" width="80" height="22" rx="6"/><text class="t" x="144" y="86" text-anchor="middle">거주구</text></g>
+      </svg>
+      <figcaption><b>그림 23-1.</b> 옆에서 본 배와 주요 치수. 이름표를 누르면 정의가 나온다. LOA는 선체의 실제 최대 길이, Lpp는 두 수선(AP·FP) 사이 거리다. 흘수 T와 건현 f를 더하면 형심 D에 (갑판 두께만큼의 차이를 빼면) 해당한다.</figcaption>
+    </figure>
+    <div class="tm-box no-math" id="tm-side" aria-live="polite">그림 위의 이름표를 누르면 여기에 정의가 나온다.</div>
+
+    <figure class="diagram" style="margin-top:22px">
+      <svg viewBox="0 0 760 360" id="fig-sec" role="img" aria-label="중앙 횡단면과 복원성 기호">
+        <rect x="0" y="200" width="760" height="160" class="f-water"/>
+        <line x1="0" y1="200" x2="760" y2="200" class="s-water"/>
+        <path d="M 230 80 L 530 80 L 530 290 Q 530 320 500 320 L 260 320 Q 230 320 230 290 Z" class="f-surface" style="stroke:var(--text-dim);stroke-width:2"/>
+        <line x1="236" y1="296" x2="524" y2="296" class="s-line" stroke-dasharray="5 3"/>
+        <line x1="380" y1="40" x2="380" y2="336" class="s-axis" stroke-dasharray="6 4"/>
+        <path d="M 236 302 L 214 312" class="s-line" style="stroke-width:3"/>
+        <path d="M 524 302 L 546 312" class="s-line" style="stroke-width:3"/>
+        <!-- points -->
+        <circle cx="380" cy="320" r="5" class="f-acc"/>
+        <circle cx="380" cy="262" r="6" style="fill:var(--water)"/>
+        <circle cx="380" cy="176" r="6" style="fill:var(--accent-2)"/>
+        <circle cx="380" cy="120" r="6" class="f-acc"/>
+        <!-- dims on left -->
+        <line x1="150" y1="320" x2="150" y2="262" class="s-line"/><line x1="144" y1="262" x2="156" y2="262" class="s-line"/><line x1="144" y1="320" x2="156" y2="320" class="s-line"/>
+        <line x1="190" y1="320" x2="190" y2="176" class="s-line"/><line x1="184" y1="176" x2="196" y2="176" class="s-line"/><line x1="184" y1="320" x2="196" y2="320" class="s-line"/>
+        <line x1="600" y1="176" x2="600" y2="120" class="s-acc"/><line x1="594" y1="120" x2="606" y2="120" class="s-acc"/><line x1="594" y1="176" x2="606" y2="176" class="s-acc"/>
+        <line x1="640" y1="262" x2="640" y2="120" class="s-line"/><line x1="634" y1="262" x2="646" y2="262" class="s-line"/><line x1="634" y1="120" x2="646" y2="120" class="s-line"/>
+        <line x1="680" y1="320" x2="680" y2="120" class="s-line"/><line x1="674" y1="320" x2="686" y2="320" class="s-line"/><line x1="674" y1="120" x2="686" y2="120" class="s-line"/>
+        <line x1="230" y1="350" x2="530" y2="350" class="s-line"/><line x1="230" y1="344" x2="230" y2="356" class="s-line"/><line x1="530" y1="344" x2="530" y2="356" class="s-line"/>
+        <g class="tmap" data-term="메타센터"><rect class="hit" x="392" y="106" width="84" height="26" rx="6"/><text class="t-acc" x="398" y="124">M 메타센터</text></g>
+        <g class="tmap" data-term="무게중심"><rect class="hit" x="392" y="162" width="96" height="26" rx="6"/><text class="t" x="398" y="180" style="font-weight:700">G 무게중심</text></g>
+        <g class="tmap" data-term="부심"><rect class="hit" x="392" y="248" width="72" height="26" rx="6"/><text class="t" x="398" y="266" style="font-weight:700">B 부심</text></g>
+        <g class="tmap" data-term="기선"><rect class="hit" x="392" y="300" width="72" height="18" rx="6"/><text class="t" x="398" y="314" style="font-weight:700">K 용골</text></g>
+        <g class="tmap" data-term="KB"><rect class="hit" x="112" y="278" width="36" height="24" rx="6"/><text class="t" x="130" y="295" text-anchor="middle">KB</text></g>
+        <g class="tmap" data-term="KG"><rect class="hit" x="194" y="236" width="34" height="24" rx="6"/><text class="t" x="211" y="253" text-anchor="middle">KG</text></g>
+        <g class="tmap" data-term="GM"><rect class="hit" x="566" y="136" width="32" height="24" rx="6"/><text class="t-acc" x="582" y="153" text-anchor="middle">GM</text></g>
+        <g class="tmap" data-term="BM"><rect class="hit" x="604" y="178" width="34" height="24" rx="6"/><text class="t" x="621" y="195" text-anchor="middle">BM</text></g>
+        <g class="tmap" data-term="KM"><rect class="hit" x="684" y="218" width="36" height="24" rx="6"/><text class="t" x="702" y="235" text-anchor="middle">KM</text></g>
+        <g class="tmap" data-term="형폭"><rect class="hit" x="350" y="334" width="60" height="22" rx="6"/><text class="t" x="380" y="349" text-anchor="middle" dy="-4">B 형폭</text></g>
+        <g class="tmap" data-term="이중 선저"><rect class="hit" x="252" y="298" width="88" height="20" rx="6"/><text class="t-dim" x="296" y="312" text-anchor="middle">이중 선저</text></g>
+        <g class="tmap" data-term="빌지 킬"><rect class="hit" x="540" y="304" width="72" height="22" rx="6"/><text class="t-dim" x="576" y="320" text-anchor="middle">빌지 킬</text></g>
+        <g class="tmap" data-term="중심선"><rect class="hit" x="340" y="44" width="80" height="22" rx="6"/><text class="t-dim" x="380" y="60" text-anchor="middle">중심선 CL</text></g>
+        <g class="tmap" data-term="자유수면 효과"><rect class="hit" x="250" y="88" width="110" height="22" rx="6"/><text class="t-dim" x="305" y="104" text-anchor="middle">탱크·자유수면</text></g>
+        <g class="tmap" data-term="흘수선"><rect class="hit" x="456" y="182" width="70" height="20" rx="6"/><text class="t-dim" x="491" y="196" text-anchor="middle">WL</text></g>
+      </svg>
+      <figcaption><b>그림 23-2.</b> 중앙 횡단면의 복원성 기호. 높이는 모두 용골 K에서 잰다. \(GM = KB + BM - KG = KM - KG\)이고, M이 G보다 위에 있으면(GM &gt; 0) 작은 경사에서 배는 스스로 일어선다.</figcaption>
+    </figure>
+    <div class="tm-box no-math" id="tm-sec" aria-live="polite">K, B, G, M과 그 사이 거리 이름표를 눌러 보자.</div>
+  </section>
+
+  <section id="abbr">
+    <h2>약어 표</h2>
+    <p>제원표, 선급 문서, 항해 일지, 기관 일지에 가장 자주 나오는 약어를 추렸다. 같은 글자가 분야마다 다른 뜻을 갖기도 한다. 예를 들어 <b>B</b>는 치수에서는 형폭, 복원성에서는 부심이고, <b>DP</b>는 동적 위치 유지(Dynamic Positioning)지만 기관에서는 차압(differential pressure)을 가리키기도 한다. 위 용어집 검색창에 입력한 글자는 이 표에도 함께 적용된다.</p>
+    <div class="table-wrap" id="ab-wrap">
+      <table id="ab-table" class="no-math">
+        <thead><tr><th>약어</th><th>원어</th><th>한국어</th><th>장</th></tr></thead>
+        <tbody id="ab-body"></tbody>
+      </table>
+    </div>
+    <p style="font-size:14px;color:var(--text-dim)" id="ab-count"></p>
+  </section>
+
+  <section id="units">
+    <h2>단위와 상수</h2>
+    <p>해운은 SI 단위와 오래된 관용 단위가 섞여 쓰이는 대표적인 분야다. 속도는 <b>노트</b>, 거리는 <b>해리</b>, 질량은 <b>메트릭 톤</b>(가끔 롱 톤), 크기는 질량이 아닌 <b>총톤수</b>, 출력은 kW와 마력이 함께 돌아다닌다. 해리가 지구 위도 1분의 길이에서 나왔기 때문에 해도 위에서 거리를 잴 때 위도 눈금을 그대로 자로 쓸 수 있다는 것이 노트·해리가 살아남은 이유다(<a href="navigation.html">20장</a>).</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>양</th><th>단위·상수</th><th>값</th><th>메모</th></tr></thead>
+        <tbody>
+          <tr><td>거리</td><td>해리 (nautical mile, nm)</td><td>1 nm = 1,852 m</td><td>위도 1분(1′)의 평균 길이. 위도 1° = 60 nm</td></tr>
+          <tr><td>속도</td><td>노트 (knot, kn)</td><td>1 kn = 1 nm/h = 1.852 km/h ≈ 0.5144 m/s</td><td>20 kn ≈ 37 km/h ≈ 10.3 m/s</td></tr>
+          <tr><td>짧은 거리</td><td>케이블 (cable)</td><td>0.1 nm ≈ 185 m</td><td>레이더 거리, 묘쇄 길이 표현</td></tr>
+          <tr><td>수심</td><td>패덤 (fathom)</td><td>1.8288 m (6 ft)</td><td>옛 해도. 지금은 대부분 m</td></tr>
+          <tr><td>질량</td><td>메트릭 톤 (t)</td><td>1,000 kg</td><td>배수량·재화중량의 기본 단위</td></tr>
+          <tr><td>질량</td><td>롱 톤 (long ton)</td><td>1,016.05 kg (2,240 lb)</td><td>영국 관용. 오래된 군함 배수량</td></tr>
+          <tr><td>질량</td><td>쇼트 톤 (short ton)</td><td>907.18 kg (2,000 lb)</td><td>미국 관용</td></tr>
+          <tr><td>크기(용적)</td><td>총톤수 GT·순톤수 NT</td><td>단위 없음</td><td>\(GT = K_1 V,\ K_1 = 0.2 + 0.02\log_{10}V\) (V: 폐위 용적 m³). 질량이 아니다</td></tr>
+          <tr><td>밀도</td><td>해수 \(\rho_{sw}\)</td><td>1.025 t/m³</td><td>담수 1.000 t/m³. 온도·염분에 따라 1.020~1.030</td></tr>
+          <tr><td>점성</td><td>해수 동점성 계수 \(\nu\)</td><td>1.188×10⁻⁶ m²/s</td><td>15 °C 기준(ITTC). 레이놀즈수 계산에 사용</td></tr>
+          <tr><td>중력</td><td>\(g\)</td><td>9.81 m/s²</td><td>프루드수·복원 모멘트</td></tr>
+          <tr><td>출력</td><td>kW, 마력</td><td>1 PS(미터 마력) = 0.7355 kW, 1 hp = 0.7457 kW</td><td>옛 기관 제원은 bhp·PS로 적힌 경우가 많다</td></tr>
+          <tr><td>압력</td><td>bar</td><td>1 bar = 100 kPa ≈ 10.2 m 수주</td><td>수심 10 m마다 약 1 bar 증가</td></tr>
+          <tr><td>부피</td><td>배럴 (bbl)</td><td>158.99 L</td><td>원유 화물. VLCC ≈ 200만 bbl</td></tr>
+          <tr><td>컨테이너</td><td>TEU / FEU</td><td>20 ft / 40 ft 상자 1개</td><td>1 FEU = 2 TEU. 외부 길이 6.06 m / 12.19 m</td></tr>
+          <tr><td>연료 에너지</td><td>저위 발열량 LCV</td><td>HFO ≈ 40.2 MJ/kg, MGO ≈ 42.7, LNG ≈ 48</td><td>SFOC 환산은 42.7 MJ/kg 기준이 관례</td></tr>
+          <tr><td>탄소 계수</td><td>\(C_F\) (t-CO₂ / t-연료)</td><td>HFO 3.114, MGO 3.206, LNG 2.750</td><td>IMO EEDI·CII 계산에 쓰는 값</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="formula">$$1\ \mathrm{kn} = \frac{1852\ \mathrm{m}}{3600\ \mathrm{s}} \approx 0.5144\ \mathrm{m/s}, \qquad F_n = \frac{V}{\sqrt{gL}}, \qquad Re = \frac{VL}{\nu}$$
+      <div class="where">여기서 \(V\)는 배의 속도(m/s), \(L\)은 수선 길이(m)다. 프루드수와 레이놀즈수를 계산할 때는 반드시 노트를 m/s로 바꾼 뒤 넣는다(<a href="resistance.html">6장</a>).</div>
+    </div>
+
+    <div class="sim" id="sim-conv">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>해운 단위 변환기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><div class="cv-bars no-math" id="cv-out" aria-live="polite"></div></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>물리량</span>
+            <div class="seg" id="cv-kind">
+              <button data-value="speed" class="on">속도</button>
+              <button data-value="dist">거리</button>
+              <button data-value="mass">질량(톤)</button>
+              <button data-value="power">출력</button>
+              <button data-value="vol">부피</button>
+              <button data-value="press">압력·수심</button>
+            </div>
+          </div>
+          <div class="ctrl"><span>값과 단위</span>
+            <div class="cv-in"><input type="number" id="cv-val" value="20" step="any" aria-label="변환할 값"><select id="cv-unit" aria-label="입력 단위"></select></div>
+          </div>
+          <label class="ctrl"><span>값 조절 <output id="cv-fine-out"></output></span><input type="range" id="cv-fine" min="-90" max="200" value="0" step="1"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">입력</span><span class="v" id="o-cv-in">—</span></div>
+        <div class="stat"><span class="k">기준 단위(SI)</span><span class="v" id="o-cv-si">—</span></div>
+        <div class="stat" style="flex:2 1 220px"><span class="k">감 잡기</span><span class="v" id="o-cv-hint" style="font-size:13px;font-family:inherit;font-weight:500">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 컨테이너선의 22 kn이 몇 km/h인지 보자(약 41 km/h). 자동차보다 느려 보여도 "감 잡기"의 하루 항해 거리를 보면 하루에 서울–부산을 한 번 반 왕복하는 거리다. 질량에서 10,000 롱 톤을 메트릭 톤으로 바꾸면 160 t 차이가 난다. 압력에서 수심 20 m의 수압도 확인해 보자.</div>
+    </div>
+
+    <div class="callout warn"><strong>톤은 세 가지, "톤수"는 또 다르다</strong>
+      <p>"10만 톤급"이라는 말은 배의 종류에 따라 뜻이 다르다. 유조선·벌크선은 보통 <b>재화중량(DWT)</b>, 즉 실을 수 있는 질량을 말하고, 여객선·크루즈선은 <b>총톤수(GT)</b>, 즉 폐위된 용적을 바탕으로 한 무차원 크기를 말하며, 군함은 <b>배수량</b>을 말한다. 같은 배라도 이 세 숫자는 크게 다르다. 아래 계산기로 직접 확인해 보자.</p>
+    </div>
+  </section>
+
+  <section id="tonnage">
+    <h2>배수량·재화중량·총톤수 계산기</h2>
+    <p>배수량 \(\Delta\)는 아르키메데스의 원리로 정해지는 배 전체의 질량이고(<a href="buoyancy.html">2장</a>), 이것을 빈 배의 무게인 <b>경하중량(LWT)</b>과 실을 수 있는 무게인 <b>재화중량(DWT)</b>으로 나눈다. 반면 총톤수는 1969년 톤수 측정 협약에 따라 선체 내부의 폐위 용적 \(V\)로 계산하는 크기의 척도다.</p>
+    <div class="formula">$$\Delta = \rho\, C_b\, L\, B\, T, \qquad DWT = \Delta - LWT, \qquad GT = \left(0.2 + 0.02\log_{10} V\right) V$$
+      <div class="where">여기서 \(\rho\)는 해수 밀도(1.025 t/m³), \(C_b\)는 블록 계수, \(L\)은 수선간장, \(B\)는 형폭, \(T\)는 흘수다. 계산기는 경하중량을 선종별 대표 비율(컨테이너선 Δ의 약 27 %, 벌크선 약 16 %, 탱커 약 14 %)로, 폐위 용적 \(V\)를 형심까지의 선체 부피에 상부 구조 몫을 더한 값으로 근사한다. 실제 값은 설계마다 다르므로 크기 감각을 잡는 용도로만 쓴다.</div>
+    </div>
+    <div class="sim" id="sim-ton">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>배 한 척의 세 가지 "톤"</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-ton"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>선종 프리셋</span><div class="seg" id="tn-type"><button data-value="container" class="on">컨테이너선</button><button data-value="bulk">벌크선</button><button data-value="tanker">탱커</button></div></div>
+          <label class="ctrl"><span>수선간장 L <output id="tn-L-out"></output></span><input type="range" id="tn-L" min="80" max="400" value="350" step="5"></label>
+          <label class="ctrl"><span>형폭 B <output id="tn-B-out"></output></span><input type="range" id="tn-B" min="12" max="66" value="51" step="0.5"></label>
+          <label class="ctrl"><span>흘수 T <output id="tn-T-out"></output></span><input type="range" id="tn-T" min="4" max="24" value="15" step="0.1"></label>
+          <label class="ctrl"><span>형심 D <output id="tn-D-out"></output></span><input type="range" id="tn-D" min="6" max="36" value="30" step="0.1"></label>
+          <label class="ctrl"><span>블록 계수 Cb <output id="tn-Cb-out"></output></span><input type="range" id="tn-Cb" min="0.5" max="0.88" value="0.65" step="0.01"></label>
+          <label class="ctrl"><span>바다 <output id="tn-rho-out"></output></span><input type="range" id="tn-rho" min="1.000" max="1.030" value="1.025" step="0.005"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">배수량 Δ</span><span class="v" id="o-tn-disp">—</span></div>
+        <div class="stat"><span class="k">경하중량 LWT</span><span class="v" id="o-tn-lwt">—</span></div>
+        <div class="stat"><span class="k">재화중량 DWT</span><span class="v" id="o-tn-dwt">—</span></div>
+        <div class="stat"><span class="k">총톤수 GT</span><span class="v" id="o-tn-gt">—</span></div>
+        <div class="stat"><span class="k">TPC</span><span class="v" id="o-tn-tpc">—</span></div>
+        <div class="stat"><span class="k">L/B · B/T</span><span class="v" id="o-tn-ratio">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: "탱커"를 누르면 대표적인 VLCC(320 m × 60 m × 21 m, Cb 0.82)가 된다. 배수량은 약 34만 t, 재화중량은 약 29만 t인데 총톤수는 16만 정도로 훨씬 작다. 흘수만 줄여 보면 배수량과 DWT는 크게 줄지만 GT는 그대로다. GT는 싣는 양이 아니라 "선체 안의 공간"으로 정해지기 때문이다. 바다를 1.000(담수)으로 바꾸면 같은 흘수에서 배수량이 약 2.4 % 줄어든다.</div>
+    </div>
+  </section>
+
+  <section id="checklist">
+    <h2>학습 체크리스트</h2>
+    <p>다 읽은 장에 체크해 두자. 체크 상태는 이 브라우저에만 저장되고(다른 기기와 공유되지 않는다), 아래 종합 퀴즈에서 틀린 문제가 있는 장에는 빨간 표시가 붙는다. 표시된 장으로 돌아가 시뮬레이터를 다시 만져 보는 것이 가장 빠른 복습이다.</p>
+    <div class="sim" id="sim-check">
+      <div class="sim-head"><span class="sim-tag">TRACKER</span><h3>장별 읽음 체크</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-check"></canvas></div>
+        <div class="sim-controls">
+          <button class="btn primary" id="ck-all">모두 체크</button>
+          <button class="btn" id="ck-none">모두 해제</button>
+          <button class="btn" id="ck-wrong">퀴즈에서 틀린 장만 해제</button>
+          <p style="font-size:13px;color:var(--text-dim);margin:0">원 그래프의 조각은 분야별 장을 나타낸다. 체크하면 조각이 채워진다.</p>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">읽은 장</span><span class="v" id="o-ck-n">0 / 22</span></div>
+        <div class="stat"><span class="k">진도</span><span class="v" id="o-ck-pct">0 %</span></div>
+        <div class="stat"><span class="k">다음 추천</span><span class="v" id="o-ck-next" style="font-size:14px;font-family:inherit">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 종합 퀴즈를 끝까지 푼 뒤 "퀴즈에서 틀린 장만 해제"를 누르면 복습해야 할 장이 다시 비워진다.</div>
+    </div>
+    <div class="ck-grid" id="ck-grid" style="margin-top:14px"></div>
+  </section>
+
+  <section class="keypoints" id="summary">
+    <h2>핵심 정리</h2>
+    <ol>
+      <li>배가 뜨는 것은 <b>부력 = 무게</b>, 서 있는 것은 <b>M이 G보다 위</b>(GM &gt; 0)이기 때문이다. 정역학의 거의 모든 계산은 배수량 Δ와 KB·BM·KG 세 높이로 돌아온다.</li>
+      <li>배를 미는 일은 <b>저항 × 속도</b>이고, 그 동력은 반류·추력 감소·프로펠러 효율을 거쳐 엔진에 요구된다. 동력은 속도의 약 세제곱에 비례하므로 감속 운항이 가장 강력한 연료 절감 수단이다.</li>
+      <li>바다는 <b>스펙트럼</b>으로 기술되고, 배의 응답은 RAO와 조우 주파수로 정해진다. 공진을 피하는 것이 내항성 설계의 핵심이다.</li>
+      <li>선체는 바다 위의 <b>거대한 보</b>다. 호깅·새깅 굽힘 모멘트를 단면 계수로 견디고, 좌굴과 피로까지 고려해 선급 규칙에 맞게 설계·건조한다.</li>
+      <li>화물이 배의 모양을 정한다. TEU, 벌크, 원유, LNG, 자동차는 각기 다른 선형·구조·안전 장치를 요구한다.</li>
+      <li>항해는 위치·침로·속력을 아는 일이고, 충돌 회피는 <b>CPA·TCPA</b>와 COLREG로 판단한다. 자율운항선은 이 판단을 센서 융합과 알고리즘으로 옮기는 중이다.</li>
+      <li>단위는 해운의 언어다. 1 kn = 1.852 km/h, 1 nm = 1,852 m, 해수 1.025 t/m³, 그리고 "톤"은 질량(Δ·DWT)과 크기(GT)를 구별해서 읽는다.</li>
+    </ol>
+  </section>
+
+  <section class="quiz-sec" id="quiz">
+    <h2>종합 퀴즈</h2>
+    <p>1장부터 22장까지 각 장에서 두 문항씩, 모두 44문항이다. 보기를 누르면 바로 채점되고 해설과 관련 장 링크가 나온다. 위쪽 점수판은 화면을 따라 내려오므로 어디서든 진행 상황을 볼 수 있다. 장 필터로 특정 장만 골라 풀 수 있고, <b>틀린 문제만 보기</b>로 복습하고, <b>섞기</b>로 문제와 보기 순서를 바꾸고, <b>다시 풀기</b>로 처음부터 시작한다.</p>
+    <div class="fq-head">
+      <div class="fq-top"><span id="fq-count">푼 문제 0 / 44</span><span id="fq-score">정답 0 · 오답 0 · 정답률 —</span></div>
+      <div class="fq-bar" aria-hidden="true"><i class="ok" id="fq-fill-ok"></i><i class="bad" id="fq-fill-bad"></i></div>
+      <div class="fq-actions">
+        <span class="lbl">장</span>
+        <select id="fq-ch" aria-label="장 필터"><option value="all">전체 장</option></select>
+        <button class="btn" id="fq-wrong" aria-pressed="false">틀린 문제만 보기</button>
+        <button class="btn" id="fq-shuffle">섞기</button>
+        <button class="btn primary" id="fq-retry">다시 풀기</button>
+      </div>
+    </div>
+    <div class="quiz" id="fq-list">
+      <div class="quiz-q" data-ch="overview"><p class="q-ch"></p><p class="q-text">수선간장(Lpp)은 어디부터 어디까지의 거리인가?</p><div class="opts">
+        <button class="opt">선미 끝에서 선수 끝까지의 최대 길이</button><button class="opt" data-correct>선미 수선(AP)에서 선수 수선(FP)까지</button><button class="opt">설계 흘수선이 선체와 만나는 앞뒤 끝 사이</button><button class="opt">용골의 앞끝에서 뒤끝까지</button>
+      </div><div class="quiz-exp">Lpp는 보통 타두재 중심의 AP에서 설계 흘수선과 선수재가 만나는 FP까지다. 선체의 실제 최대 길이는 LOA, 수선 위 길이는 LWL로 따로 부른다. <a href="overview.html">1장 배의 전체 그림 →</a></div></div>
+
+      <div class="quiz-q" data-ch="overview"><p class="q-ch"></p><p class="q-text">건현(freeboard)에 대한 설명으로 옳은 것은?</p><div class="opts">
+        <button class="opt">용골에서 흘수선까지의 높이</button><button class="opt">갑판에서 마스트 꼭대기까지의 높이</button><button class="opt">선체 바깥판과 안쪽판 사이의 간격</button><button class="opt" data-correct>흘수선에서 건현 갑판 윗면까지의 수직 거리</button>
+      </div><div class="quiz-exp">건현은 물 위로 드러난 선체 높이로, 예비 부력과 갑판 침수 여유를 나타낸다. 최소 건현은 만재흘수선 협약이 정한다. <a href="overview.html">1장 →</a></div></div>
+
+      <div class="quiz-q" data-ch="buoyancy"><p class="q-ch"></p><p class="q-text">해상에서 만재 상태로 떠 있던 배가 강을 거슬러 올라가 담수 항구에 들어갔다. 무게는 그대로일 때 흘수는?</p><div class="opts">
+        <button class="opt" data-correct>깊어진다</button><button class="opt">얕아진다</button><button class="opt">변하지 않는다</button><button class="opt">선수만 깊어지고 선미는 얕아진다</button>
+      </div><div class="quiz-exp">담수(1.000 t/m³)는 해수(1.025 t/m³)보다 가벼우므로 같은 질량을 떠받치려면 약 2.5 % 더 큰 부피가 잠겨야 한다. 그래서 만재흘수선 표에는 담수 흘수(F)가 해수 하기(S)보다 높게 표시된다. <a href="buoyancy.html">2장 부력과 배수량 →</a></div></div>
+
+      <div class="quiz-q" data-ch="buoyancy"><p class="q-ch"></p><p class="q-text">수선면 면적이 6,000 m²인 배가 해수(1.025 t/m³)에 떠 있다. TPC는 약 얼마인가?</p><div class="opts">
+        <button class="opt">6.15 t/cm</button><button class="opt">58.5 t/cm</button><button class="opt" data-correct>61.5 t/cm</button><button class="opt">615 t/cm</button>
+      </div><div class="quiz-exp">TPC = A<sub>w</sub>·ρ/100 = 6,000 × 1.025 / 100 = 61.5 t/cm. 흘수를 1 cm 늘리려면 61.5 t을 더 실어야 한다. <a href="buoyancy.html">2장 →</a></div></div>
+
+      <div class="quiz-q" data-ch="stability"><p class="q-ch"></p><p class="q-text">KB = 6.0 m, BM = 5.0 m, KG = 9.5 m일 때 GM은?</p><div class="opts">
+        <button class="opt">0.5 m</button><button class="opt" data-correct>1.5 m</button><button class="opt">11.0 m</button><button class="opt">−1.5 m</button>
+      </div><div class="quiz-exp">GM = KB + BM − KG = 6.0 + 5.0 − 9.5 = 1.5 m. KM = KB + BM = 11.0 m이고, G가 M보다 1.5 m 아래에 있으므로 초기 복원성이 있다. <a href="stability.html">3장 복원성 →</a></div></div>
+
+      <div class="quiz-q" data-ch="stability"><p class="q-ch"></p><p class="q-text">GM이 지나치게 큰 배(stiff ship)에서 생기는 문제는?</p><div class="opts">
+        <button class="opt">조금만 바람이 불어도 크게 기운다</button><button class="opt">횡동요 주기가 매우 길어진다</button><button class="opt" data-correct>횡동요 주기가 짧아져 흔들림이 급격하고 화물·승무원에게 큰 가속도가 걸린다</button><button class="opt">부력이 줄어 흘수가 깊어진다</button>
+      </div><div class="quiz-exp">횡동요 고유 주기는 대략 \(T_\phi \approx 2\pi k/\sqrt{g\,GM}\)이므로 GM이 크면 주기가 짧아진다. 복원성은 넉넉하지만 흔들림이 날카로워 래싱 하중과 승선감이 나빠진다. <a href="stability.html">3장 →</a></div></div>
+
+      <div class="quiz-q" data-ch="trim"><p class="q-ch"></p><p class="q-text">이중 선저 탱크 하나가 반쯤 찬 상태(자유수면)가 되었다. 복원성에 미치는 영향은?</p><div class="opts">
+        <button class="opt">액체가 아래에 있으므로 GM이 커진다</button><button class="opt" data-correct>액체가 경사 쪽으로 쏠려 유효 KG가 올라간 것처럼 작용해 GM이 줄어든다</button><button class="opt">탱크가 가득 찼을 때와 똑같다</button><button class="opt">트림만 바뀌고 횡복원성은 변하지 않는다</button>
+      </div><div class="quiz-exp">자유수면 효과에 의한 GM 감소량은 \(\rho_l\,i/\Delta\)(i: 자유수면의 관성 모멘트)이다. 탱크 폭의 세제곱에 비례하므로 넓은 탱크를 칸막이로 나누면 크게 줄어든다. <a href="trim.html">4장 무게 이동과 트림 →</a></div></div>
+
+      <div class="quiz-q" data-ch="trim"><p class="q-ch"></p><p class="q-text">MCT가 100 t·m/cm인 배에서 200 t 화물을 선미 쪽에서 선수 쪽으로 50 m 옮겼다. 트림 변화는?</p><div class="opts">
+        <button class="opt">선미 쪽으로 1.0 m</button><button class="opt">선수 쪽으로 0.25 m</button><button class="opt">선수 쪽으로 4.0 m</button><button class="opt" data-correct>선수 쪽으로 1.0 m</button>
+      </div><div class="quiz-exp">트림 변화(cm) = 이동 모멘트 / MCT = 200 × 50 / 100 = 100 cm. 무게가 앞으로 갔으니 선수가 숙여지는 쪽이다. 선수·선미 흘수 변화는 LCF 위치에 따라 나뉜다. <a href="trim.html">4장 →</a></div></div>
+
+      <div class="quiz-q" data-ch="damage"><p class="q-ch"></p><p class="q-text">손상 복원성 계산에서 기관실의 투과율이 약 0.85라는 것은 무슨 뜻인가?</p><div class="opts">
+        <button class="opt" data-correct>구획 부피의 약 85 %에 물이 찰 수 있고 나머지는 기계 등이 차지한다</button><button class="opt">침수될 확률이 85 %다</button><button class="opt">격벽의 85 %가 수밀이다</button><button class="opt">구획에 물이 차는 데 85분이 걸린다</button>
+      </div><div class="quiz-exp">투과율 μ는 구획 용적 중 침수된 물이 차지할 수 있는 비율이다. 대표값은 거주구 0.95, 기관실 0.85, 화물·창고 0.6~0.95 정도다. <a href="damage.html">5장 손상 복원성과 구획 →</a></div></div>
+
+      <div class="quiz-q" data-ch="damage"><p class="q-ch"></p><p class="q-text">"가항 길이(floodable length)"의 정의로 옳은 것은?</p><div class="opts">
+        <button class="opt">배가 손상 후 항해할 수 있는 거리</button><button class="opt">수밀 격벽 사이의 평균 간격</button><button class="opt" data-correct>어느 위치를 중심으로 그 길이만큼의 구획이 침수돼도 마진 라인이 잠기지 않는 최대 길이</button><button class="opt">이중 선저의 길이</button>
+      </div><div class="quiz-exp">가항 길이 곡선은 결정론적 구획 설계의 기준이었다. 지금의 SOLAS는 손상 위치·크기의 확률을 고려한 구획 지수 A ≥ R 방식을 쓴다. <a href="damage.html">5장 →</a></div></div>
+
+      <div class="quiz-q" data-ch="resistance"><p class="q-ch"></p><p class="q-text">축척 1/25 모형을 프루드 상사에 맞춰 시험할 때, 실선 20 kn에 해당하는 모형 속도는?</p><div class="opts">
+        <button class="opt">0.8 kn</button><button class="opt" data-correct>4 kn</button><button class="opt">20 kn</button><button class="opt">100 kn</button>
+      </div><div class="quiz-exp">Fn = V/√(gL)이 같으려면 V ∝ √L이다. √25 = 5이므로 모형 속도는 20/5 = 4 kn. 이때 레이놀즈수는 맞지 않으므로 마찰 저항은 따로 보정한다. <a href="resistance.html">6장 선체 저항 →</a></div></div>
+
+      <div class="quiz-q" data-ch="resistance"><p class="q-ch"></p><p class="q-text">선수 벌브(bulbous bow)의 주된 목적은?</p><div class="opts">
+        <button class="opt">충돌 시 선체를 보호한다</button><button class="opt">마찰 저항을 줄인다</button><button class="opt">선수의 부력을 늘려 트림을 바로잡는다</button><button class="opt" data-correct>선수파와 위상이 반대인 파를 만들어 조파 저항을 줄인다</button>
+      </div><div class="quiz-exp">벌브가 만든 파의 마루가 선수파의 골과 겹치도록 설계하면 파가 서로 상쇄된다. 설계 속도·흘수 근처에서만 효과가 크므로 감속 운항하는 배는 벌브를 교체하기도 한다. <a href="resistance.html">6장 →</a></div></div>
+
+      <div class="quiz-q" data-ch="propeller"><p class="q-ch"></p><p class="q-text">회전수가 일정한 프로펠러에서 전진 속도가 커져 전진 계수 J가 증가하면 추력 계수 K<sub>T</sub>는?</p><div class="opts">
+        <button class="opt" data-correct>줄어든다</button><button class="opt">커진다</button><button class="opt">변하지 않는다</button><button class="opt">J와 무관하게 피치에만 의존한다</button>
+      </div><div class="quiz-exp">J = V<sub>A</sub>/(nD)가 커지면 날개 단면의 받음각이 작아져 K<sub>T</sub>, K<sub>Q</sub>가 함께 줄어든다. 단독 효율 η<sub>0</sub> = J·K<sub>T</sub>/(2π K<sub>Q</sub>)는 중간의 J에서 최대가 된다. <a href="propeller.html">7장 프로펠러 →</a></div></div>
+
+      <div class="quiz-q" data-ch="propeller"><p class="q-ch"></p><p class="q-text">프로펠러 캐비테이션이 생기는 직접적인 원인은?</p><div class="opts">
+        <button class="opt">바닷물의 온도가 끓는점까지 오른다</button><button class="opt" data-correct>날개 표면의 국부 압력이 물의 증기압 아래로 떨어진다</button><button class="opt">공기가 수면에서 빨려 들어온다</button><button class="opt">프로펠러 축의 진동이 공진한다</button>
+      </div><div class="quiz-exp">날개 흡입면의 저압부에서 물이 상온에서도 "끓어" 기포가 생기고, 고압부에서 기포가 붕괴하며 침식·소음·진동을 일으킨다. 캐비테이션 수 σ가 작을수록 잘 생긴다. <a href="propeller.html">7장 →</a></div></div>
+
+      <div class="quiz-q" data-ch="propulsion"><p class="q-ch"></p><p class="q-text">선체 효율 η<sub>H</sub> = (1 − t)/(1 − w)가 1보다 클 수 있는 이유는?</p><div class="opts">
+        <button class="opt">측정 오차 때문이다</button><button class="opt">프로펠러가 물을 가속하지 않기 때문이다</button><button class="opt" data-correct>프로펠러가 선체 뒤의 느린 반류 속에서 일하며 선체가 남긴 운동량 일부를 되찾기 때문이다</button><button class="opt">추력 감소가 음수이기 때문이다</button>
+      </div><div class="quiz-exp">반류 비율 w가 추력 감소 비율 t보다 크면 η<sub>H</sub> &gt; 1이 된다. 단일 스크루 비대선은 대표적으로 1.1~1.3이다. 이것은 에너지가 생기는 것이 아니라 선체가 끌고 가던 물의 에너지를 회수하는 것이다. <a href="propulsion.html">8장 추진 효율과 동력 →</a></div></div>
+
+      <div class="quiz-q" data-ch="propulsion"><p class="q-ch"></p><p class="q-text">프로펠러 법칙(동력 ∝ 회전수³)을 따를 때 속도를 10 % 줄이면 필요한 동력은 대략?</p><div class="opts">
+        <button class="opt">10 % 줄어든다</button><button class="opt">19 % 줄어든다</button><button class="opt">50 % 줄어든다</button><button class="opt" data-correct>27 % 줄어든다</button>
+      </div><div class="quiz-exp">속도가 회전수에 비례한다고 보면 동력 비율은 0.9³ ≈ 0.729, 즉 약 27 % 감소한다. 실제 선박은 지수가 3보다 조금 크거나 작을 수 있다. <a href="propulsion.html">8장 →</a></div></div>
+
+      <div class="quiz-q" data-ch="engine"><p class="q-ch"></p><p class="q-text">대형 상선의 저속 2행정 크로스헤드 디젤 엔진에 대한 설명으로 옳은 것은?</p><div class="opts">
+        <button class="opt" data-correct>약 60~120 rpm으로 돌며 감속 기어 없이 프로펠러에 직결된다</button><button class="opt">약 1,500 rpm으로 돌며 반드시 감속 기어가 필요하다</button><button class="opt">점화 플러그로 연료에 불을 붙인다</button><button class="opt">흡기·배기 밸브가 모두 실린더 헤드에 있어 소기가 필요 없다</button>
+      </div><div class="quiz-exp">저속 엔진은 큰 프로펠러를 효율 좋은 낮은 회전수로 직접 돌린다. 크로스헤드가 측압을 받아 피스톤과 라이너의 마모가 적고, 소기 포트와 배기 밸브를 이용한 유니플로 소기를 쓴다. <a href="engine.html">9장 선박 주기관 →</a></div></div>
+
+      <div class="quiz-q" data-ch="engine"><p class="q-ch"></p><p class="q-text">LNG 이중 연료 엔진에서 "메탄 슬립"이 문제가 되는 이유는?</p><div class="opts">
+        <button class="opt">메탄이 연료 탱크에서 새어 나가 화재를 일으킨다</button><button class="opt" data-correct>연소되지 않은 메탄이 배기로 빠져나가는데, 메탄의 온실 효과가 CO₂보다 훨씬 크다</button><button class="opt">메탄이 윤활유를 희석해 엔진을 손상시킨다</button><button class="opt">메탄이 황산화물을 많이 만든다</button>
+      </div><div class="quiz-exp">메탄의 지구 온난화 지수는 100년 기준 CO₂의 약 28배, 20년 기준 약 80배다. 그래서 LNG 연료의 탄소 이점은 메탄 슬립을 얼마나 줄이느냐에 크게 달려 있다. <a href="engine.html">9장 →</a></div></div>
+
+      <div class="quiz-q" data-ch="waves"><p class="q-ch"></p><p class="q-text">심해에서 주기 10초인 파의 파장은 대략 얼마인가?</p><div class="opts">
+        <button class="opt">16 m</button><button class="opt">100 m</button><button class="opt" data-correct>156 m</button><button class="opt">980 m</button>
+      </div><div class="quiz-exp">심해 분산 관계 ω² = gk에서 λ = gT²/(2π) ≈ 1.56 T² = 156 m, 위상 속도는 c = λ/T ≈ 15.6 m/s다. 이런 파는 길이 150 m급 배를 크게 피칭시킨다. <a href="waves.html">10장 바다의 파도 →</a></div></div>
+
+      <div class="quiz-q" data-ch="waves"><p class="q-ch"></p><p class="q-text">심해파의 군속도(에너지가 전달되는 속도)는 위상 속도의 몇 배인가?</p><div class="opts">
+        <button class="opt">2배</button><button class="opt">1배(같다)</button><button class="opt">√2배</button><button class="opt" data-correct>1/2배</button>
+      </div><div class="quiz-exp">심해에서 c<sub>g</sub> = c/2이다. 그래서 파군의 뒤에서 생긴 파가 앞으로 나아가다 파군 앞에서 사라지는 모습이 보인다. 천해에서는 c<sub>g</sub>가 c에 가까워진다. <a href="waves.html">10장 →</a></div></div>
+
+      <div class="quiz-q" data-ch="seakeeping"><p class="q-ch"></p><p class="q-text">선수 쪽에서 오는 파(head seas)를 받으며 속도를 높이면 조우 주파수는?</p><div class="opts">
+        <button class="opt" data-correct>높아진다</button><button class="opt">낮아진다</button><button class="opt">변하지 않는다</button><button class="opt">0이 된다</button>
+      </div><div class="quiz-exp">ω<sub>e</sub> = ω − kU cos μ이고 선수파(μ = 180°)에서는 cos μ = −1이므로 ω<sub>e</sub> = ω + kU. 파를 마주 보며 달리면 파를 더 자주 만난다. 추종파에서는 반대로 낮아진다. <a href="seakeeping.html">11장 내항성 →</a></div></div>
+
+      <div class="quiz-q" data-ch="seakeeping"><p class="q-ch"></p><p class="q-text">컨테이너선의 파라메트릭 롤이 가장 일어나기 쉬운 조건은?</p><div class="opts">
+        <button class="opt">파가 정확히 옆에서 오고, 파 주기가 롤 주기와 같을 때</button><button class="opt" data-correct>선수·선미 방향 파에서 조우 주기가 롤 고유 주기의 약 절반일 때</button><button class="opt">잔잔한 바다에서 급선회할 때</button><button class="opt">GM이 매우 클 때만</button>
+      </div><div class="quiz-exp">파정과 파저가 선체를 지나가며 수선면 폭이 바뀌어 GM이 주기적으로 변한다. 이 변화가 롤 주기의 두 배 빈도로 일어나면 횡파가 없어도 롤이 증폭된다. 선수와 선미가 크게 벌어진 컨테이너선에서 특히 위험하다. <a href="seakeeping.html">11장 →</a></div></div>
+
+      <div class="quiz-q" data-ch="maneuvering"><p class="q-ch"></p><p class="q-text">천수(얕은 물) 항로에서 속도를 높일 때 생기는 스쿼트에 대한 설명으로 옳은 것은?</p><div class="opts">
+        <button class="opt">배가 물 위로 떠올라 흘수가 줄어든다</button><button class="opt">속도와 무관하다</button><button class="opt" data-correct>선체 아래 유속이 빨라져 압력이 떨어지면서 배가 가라앉고, 대략 속도의 제곱에 비례해 커진다</button><button class="opt">수심이 깊을수록 커진다</button>
+      </div><div class="quiz-exp">베르누이 효과로 선저 압력이 낮아져 침하와 트림이 생긴다. 블록 계수가 큰 배일수록 크고, 좁은 수로에서는 더 커진다. 그래서 항만 진입 시 감속하고 UKC를 확보한다. <a href="maneuvering.html">12장 조종성과 계류 →</a></div></div>
+
+      <div class="quiz-q" data-ch="maneuvering"><p class="q-ch"></p><p class="q-text">1차 노모토 모델 \(T\dot r + r = K\delta\)에서 시정수 T가 크다는 것은?</p><div class="opts">
+        <button class="opt">선회 성능이 강하다</button><button class="opt" data-correct>타를 써도 선회 각속도가 천천히 붙는다(응답이 굼뜨다)</button><button class="opt">배가 직진 안정성이 없다</button><button class="opt">타가 크다</button>
+      </div><div class="quiz-exp">K는 정상 선회 각속도의 이득(선회성), T는 그 값에 도달하는 데 걸리는 시간(추종성)을 나타낸다. 대형 비대선은 T가 커서 미리 타를 써야 한다. <a href="maneuvering.html">12장 →</a></div></div>
+
+      <div class="quiz-q" data-ch="structure"><p class="q-ch"></p><p class="q-text">선체 중앙이 파정에, 선수와 선미가 파저에 걸린 호깅 상태에서 갑판과 선저의 응력은?</p><div class="opts">
+        <button class="opt">갑판 압축, 선저 인장</button><button class="opt">둘 다 압축</button><button class="opt">둘 다 인장</button><button class="opt" data-correct>갑판 인장, 선저 압축</button>
+      </div><div class="quiz-exp">호깅에서는 가운데가 들려 선체가 위로 볼록하게 휘므로 위쪽 섬유(갑판)가 늘어나고 아래쪽(선저)이 줄어든다. 새깅은 그 반대다. 선저가 압축을 받을 때 좌굴을 검토해야 한다. <a href="structure.html">13장 선체 구조와 강도 →</a></div></div>
+
+      <div class="quiz-q" data-ch="structure"><p class="q-ch"></p><p class="q-text">같은 굽힘 모멘트에서 갑판의 굽힘 응력을 낮추려면 무엇을 키워야 하는가?</p><div class="opts">
+        <button class="opt" data-correct>단면 계수 Z = I / y</button><button class="opt">중립축에서 갑판까지의 거리 y</button><button class="opt">선체 길이</button><button class="opt">블록 계수</button>
+      </div><div class="quiz-exp">σ = M/Z이다. 갑판·선저처럼 중립축에서 먼 곳에 판을 두껍게 하거나 고장력강을 쓰면 단면 2차 모멘트 I가 효율적으로 커진다. <a href="structure.html">13장 →</a></div></div>
+
+      <div class="quiz-q" data-ch="design"><p class="q-ch"></p><p class="q-text">"설계 나선(design spiral)"이 표현하는 것은?</p><div class="opts">
+        <button class="opt">프로펠러 날개의 나선형 비틀림</button><button class="opt">선체 외판을 감아 나가는 용접 순서</button><button class="opt" data-correct>주요 치수·선형·배치·중량·복원성·동력 등을 차례로 검토하며 반복해 해에 수렴해 가는 설계 과정</button><button class="opt">선박의 수명 주기</button>
+      </div><div class="quiz-exp">한 항목을 바꾸면 다른 항목이 영향을 받으므로 설계는 한 번에 끝나지 않는다. 반복할수록 정보가 늘어 개념 설계 → 기본 설계 → 상세 설계로 좁혀 간다. <a href="design.html">14장 선박 설계 →</a></div></div>
+
+      <div class="quiz-q" data-ch="design"><p class="q-ch"></p><p class="q-text">선급(classification society)의 역할로 가장 알맞은 것은?</p><div class="opts">
+        <button class="opt">선박의 운임을 정한다</button><button class="opt" data-correct>선체·기관의 기술 규칙을 만들고 설계 승인과 건조·운항 중 검사로 그 적합성을 인증한다</button><button class="opt">해상 충돌 사고를 재판한다</button><button class="opt">항만 입항 순서를 정한다</button>
+      </div><div class="quiz-exp">선급 증서는 보험과 기국 등록의 전제가 된다. 주요 선급은 IACS에 모여 공통 구조 규칙(CSR) 같은 통일 규칙을 만든다. <a href="design.html">14장 →</a></div></div>
+
+      <div class="quiz-q" data-ch="building"><p class="q-ch"></p><p class="q-text">블록 공법의 가장 큰 장점은?</p><div class="opts">
+        <button class="opt">용접이 필요 없다</button><button class="opt">강재 사용량이 절반으로 준다</button><button class="opt">진수가 필요 없다</button><button class="opt" data-correct>여러 블록을 실내 공장에서 동시에 만들고 의장까지 미리 해 도크 점유 기간을 크게 줄인다</button>
+      </div><div class="quiz-exp">하향 용접, 실내 작업, 병렬 생산으로 품질과 생산성이 오른다. 도크에서는 큰 블록을 크레인으로 탑재해 잇기만 하므로 한 도크에서 1년에 여러 척을 건조할 수 있다. <a href="building.html">15장 조선소와 건조 →</a></div></div>
+
+      <div class="quiz-q" data-ch="building"><p class="q-ch"></p><p class="q-text">선행 의장(advanced outfitting)이란?</p><div class="opts">
+        <button class="opt" data-correct>배관·전선·기기 등을 블록 단계에서 미리 설치하는 것</button><button class="opt">진수 전에 선체를 도장하는 것</button><button class="opt">설계 전에 장비를 발주하는 것</button><button class="opt">시운전 전에 선원을 태우는 것</button>
+      </div><div class="quiz-exp">완성된 선체 안의 좁고 높은 곳에서 작업하면 시간이 몇 배로 든다. 블록을 뒤집어 놓고 하향으로 의장하면 훨씬 빠르고 안전하다. <a href="building.html">15장 →</a></div></div>
+
+      <div class="quiz-q" data-ch="cargo"><p class="q-ch"></p><p class="q-text">"TEU"는 무엇의 단위인가?</p><div class="opts">
+        <button class="opt">재화중량 1만 톤</button><button class="opt">컨테이너 1개의 최대 중량</button><button class="opt" data-correct>20피트 길이 컨테이너 1개에 해당하는 적재 용량</button><button class="opt">총톤수 1,000</button>
+      </div><div class="quiz-exp">Twenty-foot Equivalent Unit. 40 ft 컨테이너(FEU)는 2 TEU로 센다. 24,000 TEU급 선박은 20 ft 상자로 환산해 약 2만 4천 개를 싣는다는 뜻이다. <a href="cargo.html">16장 상선과 화물 →</a></div></div>
+
+      <div class="quiz-q" data-ch="cargo"><p class="q-ch"></p><p class="q-text">LNG 운반선의 BOG(boil-off gas)가 생기는 이유는?</p><div class="opts">
+        <button class="opt">LNG가 해수와 반응하기 때문</button><button class="opt">펌프가 LNG를 데우기 때문</button><button class="opt">탱크 압력이 너무 높아서</button><button class="opt" data-correct>약 −162 °C의 LNG에 단열재를 통해 열이 조금씩 들어와 일부가 증발하기 때문</button>
+      </div><div class="quiz-exp">하루 증발률은 대표적으로 화물의 0.1 % 안팎이다. 이 가스는 엔진 연료로 쓰거나 재액화하고, 남으면 GCU에서 태운다. <a href="cargo.html">16장 →</a></div></div>
+
+      <div class="quiz-q" data-ch="special"><p class="q-ch"></p><p class="q-text">활주선(planing hull)이 고속에서 활주할 때 무게를 주로 지지하는 힘은?</p><div class="opts">
+        <button class="opt">정적 부력만으로 지지한다</button><button class="opt" data-correct>선저가 물을 아래로 밀어내며 생기는 동적 양력</button><button class="opt">공기 쿠션</button><button class="opt">수중 날개의 양력</button>
+      </div><div class="quiz-exp">체적 프루드수가 대략 3을 넘으면 동적 양력이 무게의 대부분을 받쳐 선체가 떠오르고 흘수가 줄어든다. 공기 쿠션은 SES·호버크라프트, 수중 날개는 수중익선의 원리다. <a href="special.html">17장 특수선과 고속선 →</a></div></div>
+
+      <div class="quiz-q" data-ch="special"><p class="q-ch"></p><p class="q-text">잠수함이 수면으로 부상할 때 주 밸러스트 탱크에서 일어나는 일은?</p><div class="opts">
+        <button class="opt">탱크에 해수를 채운다</button><button class="opt">탱크의 공기를 배출한다</button><button class="opt" data-correct>압축 공기를 불어넣어 탱크의 해수를 밀어낸다</button><button class="opt">탱크를 가열한다</button>
+      </div><div class="quiz-exp">해수를 밀어내면 무게가 줄어 양의 부력이 생긴다. 잠항할 때는 통기 밸브를 열어 공기를 빼고 해수를 채운다. 수중에서의 미세한 부력 조절은 트림 탱크와 수평타로 한다. <a href="special.html">17장 →</a></div></div>
+
+      <div class="quiz-q" data-ch="electric"><p class="q-ch"></p><p class="q-text">발전기 병렬 운전에서 "드룹(droop)" 특성을 두는 이유는?</p><div class="opts">
+        <button class="opt" data-correct>부하가 늘면 주파수가 조금 떨어지게 해서 여러 발전기가 안정적으로 부하를 나누게 한다</button><button class="opt">전압을 일정하게 유지하려고</button><button class="opt">발전기를 빨리 기동하려고</button><button class="opt">주파수를 계속 올리려고</button>
+      </div><div class="quiz-exp">모든 조속기가 완벽히 일정 속도를 고집하면 부하 분담이 불안정해진다. 같은 드룹(예: 4 %)을 주면 부하가 정격 비율대로 나뉜다. 요즘은 PMS가 주파수를 다시 맞춰 준다. <a href="electric.html">18장 선박 전력과 전기 추진 →</a></div></div>
+
+      <div class="quiz-q" data-ch="electric"><p class="q-ch"></p><p class="q-text">크루즈선·DP 선박이 디젤–전기 추진을 많이 쓰는 이유로 가장 알맞은 것은?</p><div class="opts">
+        <button class="opt">전기 모터가 디젤 엔진보다 항상 효율이 높아서</button><button class="opt">연료가 필요 없어서</button><button class="opt">변환 손실이 전혀 없어서</button><button class="opt" data-correct>부하에 맞춰 발전기 대수를 바꿔 효율 좋은 영역에서 운전하고, 기관 배치가 자유롭고 이중화가 쉬워서</button>
+      </div><div class="quiz-exp">발전기–변환기–모터를 거치며 약 8~10 %의 변환 손실이 생기지만, 저부하 운전이 잦은 배에서는 발전기를 끄고 켜는 이점이 더 크다. 추진·호텔 부하를 같은 발전기가 맡는 "발전소" 개념이다. <a href="electric.html">18장 →</a></div></div>
+
+      <div class="quiz-q" data-ch="green"><p class="q-ch"></p><p class="q-text">IMO의 CII(탄소 집약도 지표)는 무엇을 평가하는가?</p><div class="opts">
+        <button class="opt">신조선의 설계상 에너지 효율</button><button class="opt" data-correct>운항 중인 배가 1년 동안 실제로 배출한 CO₂를 수송 실적(용량 × 거리)으로 나눈 값의 등급(A~E)</button><button class="opt">연료의 황 함유량</button><button class="opt">엔진의 NOx 배출량</button>
+      </div><div class="quiz-exp">설계 단계의 지표는 EEDI(신조선)와 EEXI(현존선)이고, CII는 운항 실적 지표다. D 등급 3년 연속이거나 E 등급이면 개선 계획을 SEEMP에 반영해야 한다. <a href="green.html">19장 친환경 선박 →</a></div></div>
+
+      <div class="quiz-q" data-ch="green"><p class="q-ch"></p><p class="q-text">동력이 속도의 세제곱에 비례한다면, 정해진 거리를 갈 때 속도를 20 % 줄이면 연료 소비는 대략?</p><div class="opts">
+        <button class="opt">20 % 감소</button><button class="opt">49 % 감소</button><button class="opt" data-correct>36 % 감소</button><button class="opt">변하지 않음</button>
+      </div><div class="quiz-exp">연료 ∝ 동력 × 시간 ∝ V³ × (1/V) = V². 0.8² = 0.64이므로 약 36 % 감소. 대신 항해 시간이 25 % 늘어 같은 물동량을 나르려면 배가 더 필요하다. <a href="green.html">19장 →</a></div></div>
+
+      <div class="quiz-q" data-ch="navigation"><p class="q-ch"></p><p class="q-text">1해리(nautical mile)의 원래 정의에 가장 가까운 것은?</p><div class="opts">
+        <button class="opt">적도 둘레의 1/10,000</button><button class="opt" data-correct>자오선을 따라 위도 1분(1/60도)에 해당하는 거리</button><button class="opt">경도 1도에 해당하는 거리</button><button class="opt">빛이 1마이크로초에 가는 거리</button>
+      </div><div class="quiz-exp">지구 둘레 약 40,000 km를 21,600분(360 × 60)으로 나누면 약 1,852 m이고, 이것이 국제 해리로 정해졌다. 그래서 해도의 위도 눈금을 자로 쓸 수 있다. 경도 1분의 길이는 위도가 높아질수록 줄어든다. <a href="navigation.html">20장 항해술 →</a></div></div>
+
+      <div class="quiz-q" data-ch="navigation"><p class="q-ch"></p><p class="q-text">메르카토르 해도 위에 두 지점을 직선으로 이으면 그 선은?</p><div class="opts">
+        <button class="opt">두 지점 사이의 최단 경로(대권)</button><button class="opt">등심선</button><button class="opt">자오선</button><button class="opt" data-correct>모든 자오선과 같은 각도로 만나는 항정선(일정 침로 경로)</button>
+      </div><div class="quiz-exp">메르카토르 도법은 각도를 보존하도록(등각) 고위도를 늘린 것이라 항정선이 직선이 된다. 대권은 이 해도에서 극 쪽으로 휜 곡선이며, 장거리 대양 항해는 대권을 여러 항정선 구간으로 나눠 따라간다. <a href="navigation.html">20장 →</a></div></div>
+
+      <div class="quiz-q" data-ch="bridge"><p class="q-ch"></p><p class="q-text">ARPA에 "CPA 0.2 nm, TCPA 12 min"이라고 표시되었다. 뜻은?</p><div class="opts">
+        <button class="opt" data-correct>지금 침로·속력이 유지되면 12분 뒤 두 배가 0.2 nm까지 가장 가까워진다</button><button class="opt">12분 전에 0.2 nm까지 접근했었다</button><button class="opt">상대선이 0.2 kn로 12분째 접근 중이다</button><button class="opt">12분 안에 0.2 nm 변침해야 한다</button>
+      </div><div class="quiz-exp">CPA는 최근접점 거리, TCPA는 거기까지 남은 시간이다. 상대 운동이 직선이라는 가정이므로 어느 쪽이든 침로나 속력을 바꾸면 다시 계산된다. 0.2 nm는 대부분의 상황에서 너무 가깝다. <a href="bridge.html">21장 선교 장비와 충돌 회피 →</a></div></div>
+
+      <div class="quiz-q" data-ch="bridge"><p class="q-ch"></p><p class="q-text">COLREG에서 두 동력선이 서로 횡단하는 상태일 때 피항선은?</p><div class="opts">
+        <button class="opt">상대선을 자기 좌현 쪽에 두는 배</button><button class="opt">속도가 더 빠른 배</button><button class="opt" data-correct>상대선을 자기 우현 쪽에 두는 배</button><button class="opt">크기가 더 작은 배</button>
+      </div><div class="quiz-exp">제15조: 상대선을 우현에 두는 배가 피항선이며, 가능하면 상대선의 선수 쪽을 횡단하지 않도록 일찍, 크게 동작한다(보통 우현 변침). 상대선은 유지선으로 침로와 속력을 유지한다. <a href="bridge.html">21장 →</a></div></div>
+
+      <div class="quiz-q" data-ch="autonomous"><p class="q-ch"></p><p class="q-text">동적 위치 유지(DP) 시스템이 하는 일은?</p><div class="opts">
+        <button class="opt">앵커를 자동으로 내린다</button><button class="opt">항로를 자동으로 계획한다</button><button class="opt">파도를 예측해 피한다</button><button class="opt" data-correct>위치·방위 센서와 제어기로 스러스터를 움직여 바람·조류·파랑 표류력에 맞서 위치와 선수 방위를 유지한다</button>
+      </div><div class="quiz-exp">DP는 surge·sway·yaw 세 자유도를 피드백(과 풍력 피드포워드)으로 제어한다. 해양 시추선이나 FPSO 지원선처럼 앵커를 쓸 수 없는 곳에서 필수다. DP2·DP3는 한 고장(또는 화재·침수)에도 위치를 잃지 않는 이중화 등급이다. <a href="autonomous.html">22장 자율운항선박과 DP →</a></div></div>
+
+      <div class="quiz-q" data-ch="autonomous"><p class="q-ch"></p><p class="q-text">자율운항선의 센서 융합에 쓰는 칼만 필터의 핵심 아이디어는?</p><div class="opts">
+        <button class="opt">가장 최근 측정값만 믿는다</button><button class="opt" data-correct>운동 모델의 예측과 센서 측정을 각각의 불확실성(분산)에 따라 가중 평균해 최적 추정을 갱신한다</button><button class="opt">여러 센서 값의 단순 평균을 낸다</button><button class="opt">측정 잡음을 0으로 가정한다</button>
+      </div><div class="quiz-exp">예측 단계에서 상태와 공분산을 앞으로 보내고, 갱신 단계에서 칼만 이득만큼 측정 쪽으로 당긴다. 측정이 정확할수록 이득이 커진다. GNSS·자이로·레이더·AIS 추적에 두루 쓰인다. <a href="autonomous.html">22장 →</a></div></div>
+    </div>
+    <div class="gl-empty" id="fq-none" hidden>조건에 맞는 문제가 없다. 장 필터나 "틀린 문제만 보기"를 바꿔 보자.</div>
+    <div class="fq-result" id="fq-result" hidden aria-live="polite">
+      <div class="fq-rank">YOUR RANK</div>
+      <div class="fq-title" id="fq-title"></div>
+      <div class="fq-big" id="fq-big"></div>
+      <p id="fq-msg" style="color:var(--text-dim);margin:6px 0 0"></p>
+      <p class="fq-review" id="fq-review"></p>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ===================================================================== 데이터 */
+var GL_CATS = { S: "정역학", R: "저항·추진", E: "기관", W: "파도·운동", M: "조종", D: "구조·설계·건조", C: "선종·화물", G: "전력·친환경", N: "항해·자율운항", H: "해운 일반" };
+/* [한국어, 영어, 약어/기호, 분류, 장 slug, 정의] */
+var GL_TERMS = [
+  /* ---------------- 정역학 */
+  ["배수량", "Displacement", "Δ", "S", "buoyancy", "떠 있는 배가 밀어낸 물의 질량(톤). 부력과 무게가 평형이므로 화물·연료를 포함한 배 전체의 질량과 같다."],
+  ["배수 용적", "Volume of displacement", "∇", "S", "buoyancy", "수면 아래 잠긴 선체의 부피(m³). 여기에 물의 밀도를 곱하면 배수량이 된다."],
+  ["경하중량", "Lightweight (lightship)", "LWT", "S", "buoyancy", "선체·기관·의장품 등 배 자체의 질량. 화물·연료·청수·선원·식량을 싣지 않은 빈 배의 배수량이다."],
+  ["흘수", "Draft (draught)", "T", "S", "overview", "흘수선에서 용골 아랫면까지의 수직 거리. 선수·선미·중앙의 흘수 표시(draft mark)로 읽어 트림과 배수량을 구한다."],
+  ["흘수선", "Waterline", "WL", "S", "overview", "선체 표면과 수면이 만나는 선. 설계 기준이 되는 만재 상태의 흘수선을 설계 흘수선(DWL)이라 한다."],
+  ["건현", "Freeboard", "f", "S", "overview", "선체 중앙 선측에서 흘수선부터 건현 갑판 윗면까지의 수직 거리. 예비 부력과 갑판 침수 여유를 나타낸다."],
+  ["형심", "Moulded depth", "D", "S", "overview", "선체 중앙에서 기선(용골 상면)부터 건현 갑판 보 윗면까지 선측에서 잰 높이. 외판 두께를 뺀 형(moulded) 치수다."],
+  ["형폭", "Moulded breadth", "B", "S", "overview", "외판 안쪽 형 표면 사이에서 잰 선체의 최대 폭. 파나마 운하처럼 통과 폭 제한이 있는 곳에서 결정적인 치수다."],
+  ["전장", "Length overall", "LOA", "S", "overview", "선수 끝에서 선미 끝까지의 최대 길이. 부두 길이, 도크 크기, 운하·갑문 통과 조건에 쓰인다."],
+  ["수선간장", "Length between perpendiculars", "Lpp", "S", "overview", "선미 수선(AP)과 선수 수선(FP) 사이의 거리. 선형 계수, 저항, 구조 규칙 계산의 기준 길이다."],
+  ["선미 수선", "Aft perpendicular", "AP", "S", "overview", "보통 타두재 중심을 지나는 수직선. 수선간장의 뒤쪽 끝이다."],
+  ["선수 수선", "Forward perpendicular", "FP", "S", "overview", "설계 흘수선이 선수재 앞면과 만나는 점을 지나는 수직선. 수선간장의 앞쪽 끝이다."],
+  ["기선", "Baseline", "K", "S", "overview", "용골 상면을 지나는 수평 기준선. KB·KG·KM 등 모든 높이를 여기서 잰다."],
+  ["중심선", "Centreline", "CL", "S", "overview", "선체를 좌우 대칭으로 나누는 세로 기준면. 횡방향 무게중심(TCG)을 이 선에서 잰다."],
+  ["블록 계수", "Block coefficient", "Cb", "S", "buoyancy", "배수 용적을 L·B·T 직육면체 부피로 나눈 값. 날씬한 컨테이너선 약 0.6~0.7, 비대한 VLCC 약 0.8~0.85다."],
+  ["주형 계수", "Prismatic coefficient", "Cp", "S", "buoyancy", "배수 용적을 중앙 단면적 × 길이로 나눈 값(Cp = Cb/Cm). 길이 방향 부피 분포를 나타내며 조파 저항과 관계가 깊다."],
+  ["중앙단면 계수", "Midship section coefficient", "Cm", "S", "buoyancy", "중앙 단면의 잠긴 면적을 B·T로 나눈 값. 빌지가 작은 대형 상선은 0.98~0.99에 이른다."],
+  ["수선면 계수", "Waterplane area coefficient", "Cwp", "S", "buoyancy", "수선면 면적을 L·B로 나눈 값. 클수록 TPC와 횡 메타센터 반지름 BM이 커진다."],
+  ["매 센티미터 배수톤", "Tonnes per centimetre immersion", "TPC", "S", "buoyancy", "평균 흘수를 1 cm 바꾸는 데 필요한 질량. TPC = Aw·ρ/100(Aw: 수선면 면적 m²)이며 적하 계산에 쓴다."],
+  ["매 센티미터 트림 모멘트", "Moment to change trim one centimetre", "MCT", "S", "trim", "트림을 1 cm 바꾸는 데 필요한 모멘트(t·m/cm). 대략 Δ·GM_L/(100·Lpp)이다."],
+  ["부면심", "Longitudinal centre of flotation", "LCF", "S", "trim", "수선면 면적의 길이 방향 도심. 작은 트림에서 배는 이 점을 지나는 가로축을 중심으로 기운다."],
+  ["부심", "Centre of buoyancy", "B", "S", "stability", "잠긴 부피의 도심으로, 부력이 작용하는 점이다. 배가 기울면 잠긴 모양이 바뀌어 낮은 쪽으로 이동한다."],
+  ["종방향 부심 위치", "Longitudinal centre of buoyancy", "LCB", "S", "buoyancy", "부심의 길이 방향 위치. 선형의 앞뒤 부피 배분을 나타내며 비대선일수록 앞쪽에 둔다."],
+  ["무게중심", "Centre of gravity", "G", "S", "stability", "배 전체 질량의 중심. 적재 상태에 따라 변하며, 높이 KG가 복원성을 좌우한다."],
+  ["종방향 무게중심", "Longitudinal centre of gravity", "LCG", "S", "trim", "무게중심의 길이 방향 위치. LCB와 수직선이 어긋나면 일치할 때까지 배가 트림한다."],
+  ["KB", "Height of centre of buoyancy above keel", "KB", "S", "stability", "용골에서 부심까지의 높이. 상자형 단면에서는 흘수의 절반, 일반 선형은 약 0.52~0.55 T다."],
+  ["BM", "Transverse metacentric radius", "BM", "S", "stability", "부심에서 메타센터까지의 거리. BM = I_T/∇이며 폭의 세제곱에 비례하므로 폭이 넓은 배일수록 크다."],
+  ["KM", "Height of metacentre above keel", "KM", "S", "stability", "용골에서 메타센터까지의 높이(KB + BM). 흘수만으로 정해지는 선형의 성질로, 유체정역학 곡선에서 읽는다."],
+  ["KG", "Height of centre of gravity above keel", "KG", "S", "stability", "용골에서 무게중심까지의 높이. 화물을 높이 쌓을수록 커지며, 경사 시험으로 경하 상태의 값을 확정한다."],
+  ["메타센터 높이", "Metacentric height", "GM", "S", "stability", "무게중심에서 메타센터까지의 높이(GM = KM − KG). 초기 복원성의 척도이며 양수여야 작은 경사에서 다시 일어선다."],
+  ["복원정", "Righting lever", "GZ", "S", "stability", "경사 상태에서 중력과 부력의 작용선 사이 수평 거리. 복원 모멘트는 Δ·g·GZ이고 작은 각에서 GZ ≈ GM·sinφ다."],
+  ["메타센터", "Metacentre", "M", "S", "stability", "작은 경사에서 부력 작용선이 중심선과 만나는 점. M이 G보다 위에 있으면 배는 안정하다."],
+  ["복원성 곡선", "Righting lever curve (GZ curve)", "", "S", "stability", "경사각에 따른 GZ를 그린 곡선. 최대 GZ, 그 각도, 곡선 아래 면적, 소실각이 IMO 복원성 기준의 판정 항목이다."],
+  ["복원력 소실각", "Angle of vanishing stability", "AVS", "S", "stability", "GZ가 다시 0이 되는 경사각. 이 각을 넘으면 배는 스스로 일어서지 못하고 전복한다."],
+  ["자유수면 효과", "Free surface effect", "FSE", "S", "trim", "부분 적재 탱크의 액체가 경사 쪽으로 쏠려 무게중심이 올라간 것과 같은 효과. GM 감소량은 ρ_l·i/Δ로 탱크 폭의 세제곱에 비례한다."],
+  ["롤 주기", "Roll period", "Tφ", "S", "stability", "횡동요 한 번의 고유 주기. 근사적으로 Tφ ≈ 2π·k/√(g·GM)(k: 횡 회전 반경 ≈ 0.35~0.4 B)이라 주기로 GM을 추정할 수 있다."],
+  ["경사 시험", "Inclining experiment", "", "S", "stability", "무게를 아는 추를 옆으로 옮겨 경사각을 재고 GM = w·d/(Δ·tanφ)로 GM과 KG를 구하는 시험. 건조 직후 반드시 한다."],
+  ["트림", "Trim", "t", "S", "trim", "선미 흘수와 선수 흘수의 차. 선미가 더 깊으면 선미 트림(by the stern), 선수가 더 깊으면 선수 트림이다."],
+  ["횡경사", "List / heel", "", "S", "trim", "list는 화물·탱크의 좌우 불균형으로 생기는 정적인 경사, heel은 바람·선회·파도 같은 외력에 의한 일시적 경사를 가리킨다."],
+  ["밸러스트", "Ballast", "", "S", "trim", "흘수·트림·복원성을 맞추려고 싣는 무게. 대부분 해수를 밸러스트 탱크에 채우며, 외래종 이동을 막기 위해 처리 장치(BWMS)가 의무다."],
+  ["유체정역학 곡선", "Hydrostatic curves", "", "S", "buoyancy", "흘수에 따른 배수량, TPC, MCT, LCB, LCF, KB, KM 등을 한 장에 그린 곡선. 적하 계산의 기본 자료다."],
+  ["만재흘수선", "Load line (Plimsoll mark)", "", "S", "buoyancy", "계절·해역·물의 종류별 최대 허용 흘수를 선측에 표시한 선. 하기(S), 동기(W), 열대(T), 담수(F) 등의 눈금이 있다."],
+  ["투과율", "Permeability", "μ", "S", "damage", "침수된 구획의 부피 중 물이 실제로 찰 수 있는 비율. 거주구 0.95, 기관실 0.85 정도가 대표값이다."],
+  ["가항 길이", "Floodable length", "", "S", "damage", "어느 위치를 중심으로 그 길이만큼의 구획이 침수돼도 마진 라인이 잠기지 않는 최대 길이. 결정론적 구획 설계의 기준이었다."],
+  ["마진 라인", "Margin line", "", "S", "damage", "격벽 갑판 윗면에서 선측으로 76 mm 아래에 그은 가상의 선. 침수 후 수면이 이 선을 넘지 않아야 한다."],
+  ["격벽 갑판", "Bulkhead deck", "", "S", "damage", "수밀 횡격벽이 올라와 닿는 가장 위의 갑판. 침수 계산에서 물이 넘어 다른 구획으로 번지지 않는 경계다."],
+  ["수밀 격벽", "Watertight bulkhead", "", "S", "damage", "선체를 길이 방향으로 나누는 물이 새지 않는 벽. 한 구획이 침수돼도 나머지가 부력을 지키게 한다."],
+  ["이중 선저", "Double bottom", "DB", "S", "damage", "선저 외판 위에 내저판을 한 겹 더 둔 구조. 좌초 시 침수를 막고 그 사이 공간을 연료·밸러스트 탱크로 쓴다."],
+  ["이중 선체", "Double hull", "", "S", "damage", "선측과 선저를 모두 두 겹으로 만든 구조. 1990년대 이후 MARPOL에 따라 유조선에 의무화되었다."],
+  ["구획 지수", "Subdivision index (A, R)", "A / R", "S", "damage", "확률론적 손상 복원성에서 손상 위치·크기별 생존 확률을 가중 합산한 달성 지수 A. 선박 길이와 인원으로 정한 요구 지수 R 이상이어야 한다."],
+  ["손상 복원성", "Damage stability", "", "S", "damage", "선체가 파손되어 일부 구획이 침수된 뒤에도 배가 떠서 바로 서 있을 수 있는 능력."],
+  ["교차 침수", "Cross-flooding", "", "S", "damage", "한쪽 현의 침수로 생긴 경사를 줄이려고 반대 현의 구획에 일부러 물을 넣는 것. 비대칭 침수 대책이다."],
+
+  /* ---------------- 저항·추진 */
+  ["레이놀즈수", "Reynolds number", "Re", "R", "resistance", "관성력과 점성력의 비 VL/ν. 실선은 약 10⁹, 모형은 10⁶~10⁷ 정도로 마찰 저항 계수를 정한다."],
+  ["프루드수", "Froude number", "Fn", "R", "resistance", "속도와 길이로 만든 무차원수 V/√(gL). 조파 저항과 파형을 정하며, 모형 시험은 프루드수를 맞춰 한다."],
+  ["마찰 저항", "Frictional resistance", "RF", "R", "resistance", "물의 점성 때문에 선체 표면에 생기는 접선 방향 저항. 저속 대형선 전체 저항의 70~90 %를 차지한다. ITTC-1957 식 CF = 0.075/(log Re − 2)²로 추정한다."],
+  ["조파 저항", "Wave-making resistance", "RW", "R", "resistance", "선체가 파도를 만들며 잃는 에너지로 생기는 저항. 프루드수에 따라 급격히 커지고 선수·선미 파의 간섭으로 혹과 골이 생긴다."],
+  ["형상 계수", "Form factor", "1+k", "R", "resistance", "3차원 선체의 점성 저항이 같은 길이 평판의 마찰 저항보다 몇 배인지 나타내는 계수. 비대선일수록 크다."],
+  ["잉여 저항", "Residuary resistance", "RR", "R", "resistance", "전체 저항에서 평판 마찰 저항을 뺀 나머지. 주로 조파 저항이며 프루드 상사로 실선에 옮긴다."],
+  ["켈빈 파형", "Kelvin wave pattern", "", "R", "resistance", "움직이는 압력점 뒤에 생기는 발산파·횡파의 무늬. 심해에서는 속도와 상관없이 항적 중심선과 약 19.5°의 쐐기 안에 갇힌다."],
+  ["선수 벌브", "Bulbous bow", "", "R", "resistance", "선수 아래에 튀어나온 둥근 부분. 선수파와 위상이 반대인 파를 만들어 설계 속도 근처에서 조파 저항을 줄인다."],
+  ["모형 시험", "Model test (towing tank)", "", "R", "resistance", "축척 모형을 예인 수조에서 끌어 저항·자항·내항 성능을 재는 시험. 프루드 상사로 실선 성능을 추정한다."],
+  ["유효 동력", "Effective power", "PE", "R", "resistance", "선체를 그 속도로 끄는 데 필요한 동력 PE = R·V. 프로펠러가 실제로 내야 하는 동력보다 작다."],
+  ["전달 동력", "Delivered power", "PD", "R", "propulsion", "축계를 거쳐 프로펠러에 실제로 전달되는 동력. PE/PD가 준추진 효율이다."],
+  ["제동 동력", "Brake power", "PB", "R", "propulsion", "엔진 출력축에서 나오는 동력. 축계·감속기 손실만큼 전달 동력보다 크다."],
+  ["반류", "Wake", "w", "R", "propulsion", "선체 뒤에 끌려가는 느린 물의 흐름. 프로펠러 유입 속도 VA = V(1 − w)로 나타내며 비대선일수록 크다."],
+  ["추력 감소", "Thrust deduction", "t", "R", "propulsion", "프로펠러가 선체 뒤 물을 빨아들여 선미 압력을 낮추면서 저항이 늘어나는 효과. R = T(1 − t)."],
+  ["선체 효율", "Hull efficiency", "ηH", "R", "propulsion", "ηH = (1 − t)/(1 − w). 반류 덕분에 1보다 클 수 있으며 단일 스크루 비대선은 약 1.1~1.3이다."],
+  ["단독 효율", "Open-water efficiency", "η0", "R", "propeller", "균일한 흐름 속에서 프로펠러만의 효율 η0 = J·KT/(2π·KQ). 대형 상선 프로펠러는 대표적으로 0.5~0.7이다."],
+  ["상대 회전 효율", "Relative rotative efficiency", "ηR", "R", "propulsion", "같은 추력에서 단독 시험과 선체 뒤 사이의 토크 차를 보정하는 효율. 보통 0.98~1.05로 1에 가깝다."],
+  ["준추진 효율", "Quasi-propulsive efficiency", "ηD", "R", "propulsion", "ηD = ηH·η0·ηR = PE/PD. 선체와 프로펠러의 상호작용을 포함한 추진 효율이다."],
+  ["전진 계수", "Advance ratio", "J", "R", "propeller", "J = VA/(n·D). 프로펠러가 한 바퀴 돌 때 직경의 몇 배만큼 나아가는지 나타내며 날개 받음각을 정한다."],
+  ["추력 계수", "Thrust coefficient", "KT", "R", "propeller", "KT = T/(ρ·n²·D⁴). J가 커질수록 줄어든다."],
+  ["토크 계수", "Torque coefficient", "KQ", "R", "propeller", "KQ = Q/(ρ·n²·D⁵). KT와 함께 프로펠러 단독 특성 곡선을 이룬다."],
+  ["피치", "Pitch", "P", "R", "propeller", "프로펠러가 단단한 너트 속에서 한 바퀴 돌 때 나아갈 거리. 직경으로 나눈 피치비 P/D는 대표적으로 0.6~1.2다."],
+  ["슬립", "Slip", "", "R", "propeller", "피치로 계산한 이론 전진 거리와 실제 전진 거리의 차를 비율로 나타낸 것. 슬립이 있어야 날개가 받음각을 갖고 추력을 낸다."],
+  ["캐비테이션", "Cavitation", "", "R", "propeller", "날개 표면 압력이 증기압 아래로 떨어져 기포가 생기고 터지는 현상. 침식·소음·진동·추력 저하를 일으킨다."],
+  ["캐비테이션 수", "Cavitation number", "σ", "R", "propeller", "σ = (p0 − pv)/(½ρV²). 작을수록 캐비테이션이 잘 생긴다. 프로펠러가 얕게 잠기거나 회전이 빠를수록 작아진다."],
+  ["스큐", "Skew", "", "R", "propeller", "날개를 회전 반대 방향으로 휘게 한 정도. 날개 각 부분이 반류 골에 들어가는 시점을 엇갈리게 해 진동과 압력 변동을 줄인다."],
+  ["날개 면적비", "Expanded blade area ratio", "AE/A0", "R", "propeller", "펼친 날개 면적의 합을 프로펠러 원판 면적으로 나눈 값. 크면 캐비테이션에 강하지만 마찰 손실이 늘어난다."],
+  ["가변 피치 프로펠러", "Controllable pitch propeller", "CPP", "R", "propeller", "허브 안의 유압 기구로 날개 피치를 바꾸는 프로펠러. 엔진 회전수를 일정하게 두고 추력·후진을 조절할 수 있다."],
+  ["고정 피치 프로펠러", "Fixed pitch propeller", "FPP", "R", "propeller", "날개가 허브와 일체인 일반 프로펠러. 단순하고 효율이 좋으며 후진은 엔진 역회전으로 한다."],
+  ["덕트 프로펠러", "Ducted propeller (Kort nozzle)", "", "R", "propeller", "프로펠러 둘레에 날개 단면 모양의 링을 씌운 것. 저속·고부하에서 덕트 자체가 추력을 내 예인선·트롤선에 쓴다."],
+  ["포드 추진", "Podded propulsion", "", "R", "electric", "전동기를 선체 밖 유선형 포드에 넣고 포드째 360° 돌려 추력 방향을 바꾸는 장치. 타가 필요 없고 조종성이 뛰어나다."],
+  ["워터제트", "Waterjet", "", "R", "special", "선저에서 물을 빨아들여 펌프로 가속해 선미로 뿜는 추진 장치. 고속선에서 효율이 좋고 노즐 방향으로 조종한다."],
+  ["운동량 이론", "Momentum (actuator disk) theory", "", "R", "propeller", "프로펠러를 물을 가속하는 얇은 원판으로 본 이론. 추력 부하가 클수록 이상 효율의 상한이 낮아진다."],
+  ["최대 연속 출력", "Maximum continuous rating", "MCR", "R", "propulsion", "엔진이 연속해서 낼 수 있는 최대 출력과 회전수. 엔진 선정과 프로펠러 설계의 기준점이다."],
+  ["상용 출력", "Normal continuous rating", "NCR", "R", "propulsion", "평소 항해에서 쓰는 출력. 대표적으로 MCR의 85~90 %로 잡는다."],
+  ["해상 여유", "Sea margin", "", "R", "propulsion", "바람·파도·선체 오손으로 늘어나는 동력을 위해 잔잔한 바다 기준 동력에 더해 두는 여유. 보통 15~25 %다."],
+  ["엔진 여유", "Engine margin", "", "R", "propulsion", "엔진을 MCR보다 낮게 운전하도록 남겨 두는 여유(보통 10~15 %). 정비 주기를 늘리고 마모를 줄인다."],
+  ["라이트 러닝 마진", "Light running margin", "LRM", "R", "propulsion", "신조 시 프로펠러를 조금 가볍게(회전이 높게) 설계해 두는 여유. 선체 오손·악천후로 무거워져도 엔진이 과부하되지 않게 한다."],
+  ["프로펠러 법칙", "Propeller law", "", "R", "propulsion", "고정 피치 프로펠러에서 동력이 회전수의 세제곱에 대략 비례한다는 관계. 엔진 운전점이 그리는 곡선이다."],
+  ["선체 오손", "Hull fouling", "", "R", "resistance", "선체에 따개비·해조류가 붙어 표면이 거칠어지는 것. 마찰 저항을 수십 %까지 늘리며 방오 도료와 선체 청소로 막는다."],
+
+  /* ---------------- 기관 */
+  ["저속 2행정 디젤", "Low-speed two-stroke diesel", "", "E", "engine", "약 60~120 rpm으로 돌며 프로펠러에 직결되는 대형 상선의 주기관. 열효율이 50 %를 넘는 가장 효율 좋은 열기관 중 하나다."],
+  ["중속 4행정 디젤", "Medium-speed four-stroke diesel", "", "E", "engine", "약 400~1,000 rpm의 4행정 엔진. 발전기 구동이나 감속기를 통한 추진에 쓰이며 페리·크루즈·특수선에 많다."],
+  ["크로스헤드", "Crosshead", "", "E", "engine", "피스톤 로드와 커넥팅 로드 사이에서 가이드를 따라 미끄러지는 연결부. 측압을 대신 받아 피스톤·라이너 마모를 줄인다."],
+  ["소기", "Scavenging", "", "E", "engine", "연소가 끝난 배기가스를 신선한 공기로 밀어내고 실린더를 채우는 과정. 2행정 엔진의 핵심이다."],
+  ["유니플로 소기", "Uniflow scavenging", "", "E", "engine", "라이너 아래쪽 소기 포트로 들어온 공기가 위쪽 배기 밸브로 한 방향으로 빠져나가는 방식. 현대 대형 2행정 엔진의 표준이다."],
+  ["과급기", "Turbocharger", "T/C", "E", "engine", "배기가스로 터빈을 돌려 같은 축의 압축기로 흡기를 압축하는 장치. 같은 크기 엔진의 출력을 몇 배로 높인다."],
+  ["소기 공기 냉각기", "Scavenge air cooler", "", "E", "engine", "과급기로 압축되며 뜨거워진 공기를 식히는 열교환기. 공기 밀도를 높이고 NOx와 열부하를 줄인다."],
+  ["연료 소비율", "Specific fuel oil consumption", "SFOC", "E", "engine", "출력 1 kWh당 쓰는 연료량(g/kWh). 대형 2행정 엔진은 대표적으로 약 160~175 g/kWh다."],
+  ["중유", "Heavy fuel oil", "HFO", "E", "engine", "원유 정제 후 남은 점도 높은 잔사유. 값이 싸지만 가열·청정이 필요하고 황 함량이 높다."],
+  ["초저유황유", "Very low sulphur fuel oil", "VLSFO", "E", "engine", "황 함량 0.50 % 이하의 혼합 연료유. 2020년 IMO 황 상한 강화 이후 주력 연료가 되었다."],
+  ["선박용 경유", "Marine gas oil", "MGO", "E", "engine", "증류유 계열의 가벼운 연료. 황 함량이 낮아 배출규제해역과 발전기, 비상용으로 쓴다."],
+  ["스크러버", "Exhaust gas scrubber", "EGCS", "E", "engine", "배기가스를 해수나 알칼리 용액으로 씻어 SOx를 제거하는 장치. 고유황 HFO를 계속 쓸 수 있게 해 준다."],
+  ["이중 연료 엔진", "Dual-fuel engine", "DF", "E", "engine", "가스 연료(LNG 등)와 액체 연료를 모두 쓰는 엔진. 가스 모드에서는 소량의 파일럿 연료로 점화한다."],
+  ["메탄 슬립", "Methane slip", "", "E", "engine", "LNG 엔진에서 타지 않은 메탄이 배기로 빠져나가는 것. 메탄의 온실 효과가 커 LNG의 탄소 이점을 깎아 먹는다."],
+  ["파일럿 연료", "Pilot fuel", "", "E", "engine", "가스 모드 이중 연료 엔진에서 점화원으로 분사하는 소량의 액체 연료. 보통 전체 열량의 1~5 %다."],
+  ["선택적 촉매 환원", "Selective catalytic reduction", "SCR", "E", "engine", "요소수에서 나온 암모니아로 배기 속 NOx를 질소와 물로 바꾸는 촉매 장치. IMO NOx Tier III 대응 수단이다."],
+  ["배기가스 재순환", "Exhaust gas recirculation", "EGR", "E", "engine", "배기가스 일부를 흡기로 되돌려 연소 온도를 낮추는 방식. NOx 생성을 줄인다."],
+  ["커먼레일", "Common rail", "", "E", "engine", "고압 연료를 공용 배관에 저장해 두고 전자 제어로 분사 시기와 양을 자유롭게 정하는 방식. 저부하 연소와 매연 저감에 유리하다."],
+  ["연료 청정기", "Fuel oil purifier", "", "E", "engine", "원심 분리로 연료유 속 물과 고형 불순물(촉매 미분 등)을 걸러 내는 장치."],
+  ["폐열 회수", "Waste heat recovery", "WHR", "E", "engine", "배기가스 열로 증기를 만들어 터빈 발전이나 가열에 쓰는 장치. 엔진 출력의 수 %를 되찾는다."],
+  ["추력 베어링", "Thrust bearing", "", "E", "engine", "프로펠러 추력을 축에서 받아 선체로 전달하는 베어링. 이 베어링을 거쳐야 프로펠러가 배를 민다."],
+  ["축계", "Shafting", "", "E", "engine", "엔진에서 프로펠러까지 동력을 전달하는 축과 베어링, 선미관 밀봉 장치의 총칭."],
+
+  /* ---------------- 파도·운동 */
+  ["분산 관계", "Dispersion relation", "", "W", "waves", "파의 각주파수와 파수의 관계 ω² = gk·tanh(kh). 심해에서는 ω² = gk가 되어 긴 파일수록 빠르다."],
+  ["위상 속도", "Phase velocity", "c", "W", "waves", "파의 마루가 이동하는 속도 c = ω/k. 심해에서 c = gT/(2π) ≈ 1.56·T m/s다."],
+  ["군속도", "Group velocity", "cg", "W", "waves", "파군과 에너지가 이동하는 속도. 심해에서 위상 속도의 절반, 천해에서는 위상 속도와 같아진다."],
+  ["파장", "Wavelength", "λ", "W", "waves", "마루에서 다음 마루까지의 거리. 심해에서 λ = gT²/(2π) ≈ 1.56·T² m다."],
+  ["유의파고", "Significant wave height", "Hs", "W", "waves", "관측한 파고 중 높은 쪽 1/3의 평균. 눈으로 본 파고와 비슷하며 스펙트럼으로는 4√m0다."],
+  ["파 스펙트럼", "Wave spectrum", "S(ω)", "W", "waves", "불규칙한 바다를 주파수별 파 에너지로 나타낸 함수. 면적 m0가 수면 변위의 분산이다."],
+  ["JONSWAP 스펙트럼", "JONSWAP spectrum", "", "W", "waves", "북해 관측에서 나온 발달 중인 풍랑 스펙트럼. PM 스펙트럼에 첨두 증폭 계수 γ(보통 3.3)를 곱해 봉우리가 뾰족하다."],
+  ["피어슨–모스코위츠 스펙트럼", "Pierson–Moskowitz spectrum", "PM", "W", "waves", "바람이 충분히 오래, 멀리 불어 완전히 발달한 바다의 스펙트럼."],
+  ["레일리 분포", "Rayleigh distribution", "", "W", "waves", "좁은 대역 불규칙 파의 파고(진폭)가 따르는 확률 분포. 1,000개 파 중 최대 파고는 약 1.86 Hs다."],
+  ["너울", "Swell", "", "W", "waves", "바람이 불던 해역을 벗어나 멀리 전파된 주기가 긴 파. 둥글고 규칙적이며 수천 km를 간다."],
+  ["풍랑", "Wind sea", "", "W", "waves", "지금 부는 바람으로 만들어지는 파. 주기가 짧고 불규칙하며 바람 세기·지속 시간·취송 거리로 크기가 정해진다."],
+  ["취송 거리", "Fetch", "", "W", "waves", "바람이 일정한 방향으로 해면 위를 불어 온 거리. 길수록 파가 크게 발달한다."],
+  ["천수 변형", "Wave shoaling", "", "W", "waves", "파가 얕은 곳으로 들어오며 속도가 줄고 파고가 커지는 현상. 주기는 변하지 않는다."],
+  ["굴절", "Wave refraction", "", "W", "waves", "수심 변화로 파의 부분마다 속도가 달라 파봉선이 등심선과 나란해지도록 휘는 현상."],
+  ["쇄파", "Wave breaking", "", "W", "waves", "파가 너무 가팔라져 마루가 무너지는 현상. 심해에서는 파경사 H/λ가 약 1/7, 천해에서는 H가 수심의 약 0.78배를 넘으면 부서진다."],
+  ["해상 상태", "Sea state", "SS", "W", "waves", "바다의 거칠기를 유의파고로 0~9 단계로 나눈 등급(WMO). 보퍼트 풍력 계급과 함께 쓴다."],
+  ["6자유도 운동", "Six degrees of freedom", "6-DOF", "W", "seakeeping", "강체인 배의 운동을 세 방향 병진(서지·스웨이·히브)과 세 축 회전(롤·피치·요)으로 나눈 것."],
+  ["서지", "Surge", "", "W", "seakeeping", "길이 방향(앞뒤) 병진 운동."],
+  ["스웨이", "Sway", "", "W", "seakeeping", "폭 방향(좌우) 병진 운동."],
+  ["히브", "Heave", "", "W", "seakeeping", "수직 방향(상하) 병진 운동. 수선면 면적이 복원력이 된다."],
+  ["롤 운동", "Roll (횡동요)", "", "W", "seakeeping", "길이 방향 축을 중심으로 한 회전 운동. 감쇠가 작아 공진 시 매우 커질 수 있다."],
+  ["피치 운동", "Pitch (종동요)", "", "W", "seakeeping", "폭 방향 축을 중심으로 선수와 선미가 오르내리는 회전 운동. 선수 쪽 가속도와 슬래밍을 일으킨다."],
+  ["요 운동", "Yaw (선수동요)", "", "W", "seakeeping", "수직축을 중심으로 선수 방향이 좌우로 흔들리는 회전 운동. 복원력이 없어 타로 잡는다."],
+  ["응답 진폭 연산자", "Response amplitude operator", "RAO", "W", "seakeeping", "규칙파 진폭 1당 배 운동의 진폭을 주파수별로 나타낸 전달 함수. 파 스펙트럼에 RAO²을 곱하면 응답 스펙트럼이 된다."],
+  ["조우 주파수", "Encounter frequency", "ωe", "W", "seakeeping", "움직이는 배가 실제로 파를 만나는 주파수 ωe = ω − kU·cosμ. 선수파에서는 높아지고 추종파에서는 낮아진다."],
+  ["부가 질량", "Added mass", "", "W", "seakeeping", "물체가 가속할 때 주변 물도 함께 가속해야 해서 질량이 늘어난 것처럼 보이는 효과. 히브에서는 선체 질량과 비슷한 크기가 되기도 한다."],
+  ["방사 감쇠", "Radiation damping", "", "W", "seakeeping", "움직이는 선체가 파를 만들어 내보내며 에너지를 잃는 감쇠. 히브·피치에서는 크고 롤에서는 작다."],
+  ["고유 주기", "Natural period", "", "W", "seakeeping", "외력 없이 스스로 진동할 때의 주기. 파의 조우 주기와 가까우면 공진으로 운동이 커진다."],
+  ["슬래밍", "Slamming", "", "W", "seakeeping", "선저가 수면 밖으로 나왔다가 다시 들어가며 물을 세게 때리는 충격. 국부 손상과 선체 휘핑을 일으킨다."],
+  ["그린 워터", "Green water", "", "W", "seakeeping", "물보라가 아니라 덩어리째 갑판 위로 올라오는 바닷물. 해치 커버·의장품 손상의 원인이다."],
+  ["파라메트릭 롤", "Parametric rolling", "", "W", "seakeeping", "파정·파저가 선체를 지나며 GM이 주기적으로 변할 때 조우 주기가 롤 주기의 절반이면 롤이 증폭되는 현상. 선수·선미 방향 파에서 생긴다."],
+  ["빌지 킬", "Bilge keel", "", "W", "seakeeping", "빌지 바깥에 길이 방향으로 붙인 좁은 판. 물을 휘저어 와류를 만들어 롤 감쇠를 늘리는 가장 간단한 장치다."],
+  ["핀 안정기", "Fin stabilizer", "", "W", "seakeeping", "선측 밖으로 내민 날개의 받음각을 롤에 맞춰 바꿔 반대 모멘트를 만드는 장치. 속도가 있어야 효과가 있다."],
+  ["안티롤 탱크", "Anti-roll tank", "ART", "W", "seakeeping", "좌우 탱크를 잇는 U자 관 속 물이 롤보다 위상이 늦게 오가며 반대 모멘트를 만드는 장치. 정지 상태에서도 작동한다."],
+  ["프로펠러 레이싱", "Propeller racing", "", "W", "seakeeping", "큰 피칭으로 프로펠러가 수면 가까이 나오면 부하가 갑자기 줄어 회전수가 치솟는 현상. 엔진 조속기가 막아야 한다."],
+
+  /* ---------------- 조종 */
+  ["타", "Rudder", "", "M", "maneuvering", "프로펠러 뒤에 단 날개. 타각을 주면 양력이 생겨 선미를 옆으로 밀고, 그 모멘트로 배가 방향을 바꾼다."],
+  ["타각", "Rudder angle", "δ", "M", "maneuvering", "타가 중심선과 이루는 각. 상선은 보통 최대 ±35°까지 쓴다."],
+  ["노모토 모델", "Nomoto model", "K, T", "M", "maneuvering", "타각에 대한 선회 각속도 응답을 1차 지연 Tṙ + r = Kδ로 근사한 모델. K는 선회성, T는 추종성(응답 지연)을 나타낸다."],
+  ["선회권", "Turning circle", "", "M", "maneuvering", "일정한 타각으로 계속 돌 때 배가 그리는 궤적. 대형 상선은 전타 시 정상 선회 직경이 대략 선장의 3~4배다."],
+  ["전진거리", "Advance", "", "M", "maneuvering", "타를 쓴 지점부터 선수 방향이 90° 바뀔 때까지 원래 침로 방향으로 나아간 거리. IMO 기준은 4.5 L 이하다."],
+  ["횡거", "Transfer", "", "M", "maneuvering", "선수 방향이 90° 바뀔 때까지 원래 침로에서 옆으로 벗어난 거리."],
+  ["전술 직경", "Tactical diameter", "", "M", "maneuvering", "선수 방향이 180° 바뀔 때까지 원래 침로에서 옆으로 벗어난 거리. IMO 기준은 5 L 이하다."],
+  ["지그재그 시험", "Zig-zag test", "", "M", "maneuvering", "선수 방향이 정해진 각도만큼 바뀔 때마다 타를 반대로 쓰는 시험. 오버슈트각으로 추종성과 침로 안정성을 평가한다(예: 10°/10°)."],
+  ["오버슈트각", "Overshoot angle", "", "M", "maneuvering", "지그재그 시험에서 타를 반대로 쓴 뒤에도 선수가 계속 돌아간 각도. 클수록 배가 굼뜨게 반응한다."],
+  ["크래시 스톱", "Crash stop", "", "M", "maneuvering", "전속 전진 중 전속 후진을 걸어 멈추는 시험. 정지 거리는 대형선에서 대략 선장의 10~15배에 이른다(IMO 기준 15 L)."],
+  ["스쿼트", "Squat", "", "M", "maneuvering", "천수에서 항행할 때 선체 주변 유속 증가로 압력이 떨어져 배가 가라앉고 트림이 바뀌는 현상. 대략 속도의 제곱에 비례한다."],
+  ["뱅크 효과", "Bank effect", "", "M", "maneuvering", "수로 벽에 가까이 붙어 항행할 때 선미가 벽 쪽으로 빨려 들고 선수가 밀려나는 현상."],
+  ["천수 효과", "Shallow water effect", "", "M", "maneuvering", "수심이 흘수의 몇 배 이내로 얕아지면 저항이 늘고 선회 직경이 커지며 스쿼트가 생기는 현상의 총칭."],
+  ["선수 스러스터", "Bow thruster", "", "M", "maneuvering", "선수 쪽 가로 터널 안에 둔 프로펠러. 저속에서 선수를 옆으로 밀어 접안·이안을 돕는다. 속도가 몇 노트만 넘어도 효과가 급감한다."],
+  ["피벗 포인트", "Pivot point", "", "M", "maneuvering", "선회 중인 배에서 옆 방향 속도가 0인 점. 전진 선회 시 선수에서 약 1/4~1/3 L 지점에 있어 선미가 크게 바깥으로 쓸려 나간다."],
+  ["프로펠러 횡압력", "Paddle-wheel effect (transverse thrust)", "", "M", "maneuvering", "단일 프로펠러 회전 때문에 선미가 한쪽으로 밀리는 효과. 우회전 프로펠러 배는 후진 시 선미가 좌현 쪽으로 간다."],
+  ["앵커", "Anchor", "", "M", "maneuvering", "해저에 박혀 배를 붙잡는 기구. 실제 파지력의 대부분은 해저에 누운 앵커 체인의 무게와 마찰에서 나온다."],
+  ["카테너리", "Catenary", "", "M", "maneuvering", "자기 무게로 늘어진 체인이 이루는 곡선. 늘어진 부분이 완충 역할을 해 앵커에 수평 하중만 걸리게 한다."],
+  ["섀클", "Shackle", "", "M", "maneuvering", "앵커 체인의 길이 단위로, 1섀클은 15패덤(약 27.4 m)이다. 체인 연결용 U자 고리를 가리키기도 한다."],
+  ["계류", "Mooring", "", "M", "maneuvering", "배를 부두나 부표에 줄로 묶어 두는 것. 선수줄·선미줄·브레스트 라인·스프링 라인으로 각 방향 움직임을 잡는다."],
+  ["예인선", "Tug", "", "M", "maneuvering", "큰 배를 밀고 끌어 항만 안 조종을 돕는 작고 강력한 배. 능력을 볼라드 풀(정지 견인력, t)로 나타낸다."],
+
+  /* ---------------- 구조·설계·건조 */
+  ["호깅", "Hogging", "", "D", "structure", "선체 중앙이 들리고 양끝이 처지는 굽힘. 중앙이 파정에 놓일 때 생기며 갑판에 인장, 선저에 압축 응력이 걸린다."],
+  ["새깅", "Sagging", "", "D", "structure", "선체 중앙이 처지고 양끝이 들리는 굽힘. 중앙이 파저에 놓일 때 생기며 갑판에 압축 응력이 걸려 좌굴을 검토해야 한다."],
+  ["종강도", "Longitudinal strength", "", "D", "structure", "선체 전체를 하나의 보로 보고 길이 방향 굽힘·전단에 견디는 강도."],
+  ["횡강도", "Transverse strength", "", "D", "structure", "수압·화물 하중으로 단면이 찌그러지는 것에 견디는 강도. 늑골·특설 늑골·격벽이 맡는다."],
+  ["정수 중 굽힘 모멘트", "Still water bending moment", "SWBM", "D", "structure", "잔잔한 물에서 무게와 부력의 길이 방향 분포 차이로 생기는 굽힘 모멘트. 적재 계획으로 조절할 수 있다."],
+  ["파랑 굽힘 모멘트", "Wave bending moment", "VWBM", "D", "structure", "파 속에서 부력 분포가 변해 추가로 생기는 굽힘 모멘트. 선급 규칙이 선박 크기별 설계값을 준다."],
+  ["전단력 선도", "Shear force diagram", "", "D", "structure", "길이 방향 각 위치에서 한쪽 끝부터 누적한 (부력 − 무게)를 그린 선도. 적분하면 굽힘 모멘트 선도가 된다."],
+  ["단면 계수", "Section modulus", "Z", "D", "structure", "Z = I/y. 굽힘 응력 σ = M/Z이므로 클수록 같은 모멘트에서 응력이 작다. 갑판과 선저 위치에서 각각 계산한다."],
+  ["중립축", "Neutral axis", "", "D", "structure", "굽힘에서 응력이 0인 단면 높이. 단면 도심을 지나며 보통 형심의 40~45 % 높이에 있다."],
+  ["단면 2차 모멘트", "Second moment of area", "I", "D", "structure", "중립축에서 먼 재료일수록 제곱으로 크게 기여하는 굽힘 강성의 척도. 갑판·선저 판이 대부분을 차지한다."],
+  ["종늑골식", "Longitudinal framing", "", "D", "structure", "보강재를 길이 방향으로 촘촘히 두고 큰 횡 특설재로 받치는 방식. 종강도에 효율적이어서 대형 탱커·벌크선에 쓴다."],
+  ["횡늑골식", "Transverse framing", "", "D", "structure", "늑골을 가로 방향으로 촘촘히 두는 방식. 작은 배와 국부 하중이 큰 곳에 쓴다."],
+  ["좌굴", "Buckling", "", "D", "structure", "압축을 받는 얇은 판이나 보강재가 항복 전에 옆으로 휘어 버리는 불안정. 갑판·선저 판의 두께와 보강 간격을 정한다."],
+  ["S–N 곡선", "S–N curve", "", "D", "structure", "반복 응력 범위 S와 파손까지의 반복 횟수 N의 관계. 용접 이음의 상세 등급별로 다르다."],
+  ["마이너 법칙", "Miner's rule", "", "D", "structure", "여러 크기의 반복 응력이 섞일 때 각 응력의 (반복 수/허용 반복 수)를 더해 1이 되면 피로 파손으로 보는 누적 손상 법칙."],
+  ["피로", "Fatigue", "", "D", "structure", "항복보다 낮은 응력이 수백만 번 반복되며 균열이 자라는 파손. 파도 때문에 선체는 25년간 약 10⁸번 휘어진다."],
+  ["휘핑", "Whipping", "", "D", "structure", "슬래밍 충격으로 선체 전체가 2절점 고유 진동수로 떨리는 과도 진동. 굽힘 모멘트를 순간적으로 키운다."],
+  ["스프링잉", "Springing", "", "D", "structure", "파의 주파수 성분이 선체의 고유 진동수와 맞아 지속적으로 생기는 공진 진동. 대형 유연 선체에서 피로를 키운다."],
+  ["설계 나선", "Design spiral", "", "D", "design", "주요 치수, 선형, 배치, 중량, 복원성, 동력, 구조, 비용을 차례로 검토하며 반복해 해에 수렴해 가는 설계 과정을 그린 그림."],
+  ["주요 치수", "Principal dimensions", "", "D", "design", "L, B, D, T, Cb, 속도 등 배의 크기와 형상을 정하는 기본 값. 화물량·항로·항만 제약에서 출발해 정한다."],
+  ["선도", "Lines plan", "", "D", "design", "선체 형상을 정면도(body plan), 측면도(sheer plan), 반폭도(half-breadth plan)의 세 방향 단면선으로 나타낸 도면."],
+  ["일반 배치", "General arrangement", "GA", "D", "design", "화물창, 기관실, 거주구, 탱크, 갑판 장비의 위치를 한눈에 보여 주는 도면."],
+  ["중량 추정", "Weight estimation", "", "D", "design", "설계 초기에 강재·의장·기관 중량과 무게중심을 경험식과 유사선 자료로 추정하는 일. DWT와 복원성을 확인하는 출발점이다."],
+  ["선급", "Classification society", "", "D", "design", "선체·기관의 기술 규칙을 만들고 설계 승인과 검사로 적합성을 인증하는 기관. 선급 증서는 보험과 등록의 전제다."],
+  ["국제선급연합회", "International Association of Classification Societies", "IACS", "D", "design", "주요 선급들의 협의체. 통일 규칙(UR)과 공통 구조 규칙(CSR)을 만든다."],
+  ["공통 구조 규칙", "Common Structural Rules", "CSR", "D", "design", "IACS 회원 선급이 벌크선과 유조선에 공통으로 적용하는 구조 규칙."],
+  ["블록 공법", "Block construction", "", "D", "building", "선체를 수백 톤짜리 블록으로 나눠 공장에서 따로 만들고 도크에서 이어 붙이는 건조 방식."],
+  ["탑재", "Erection", "", "D", "building", "완성된 블록을 크레인으로 도크에 올려 정위치에 맞추고 용접해 잇는 공정."],
+  ["진수", "Launching", "", "D", "building", "건조한 선체를 처음 물에 띄우는 일. 경사 선대에서 미끄러뜨리거나 도크에 물을 채우거나 플로팅 도크를 가라앉혀 띄운다."],
+  ["의장", "Outfitting", "", "D", "building", "선체에 기관·배관·전선·거주 설비·갑판 장비 등을 설치하는 모든 작업."],
+  ["선행 의장", "Advanced outfitting", "", "D", "building", "배관·전선·기기 등을 블록 단계에서 미리 설치하는 것. 도크·안벽 작업보다 쉽고 빠르다."],
+  ["건조막 두께", "Dry film thickness", "DFT", "D", "building", "도료가 마른 뒤의 도막 두께(µm). 방식 성능의 기준이며 밸러스트 탱크는 PSPC 규정으로 관리한다."],
+  ["네스팅", "Nesting", "", "D", "building", "강판 한 장 위에 절단할 부재들을 퍼즐처럼 배치해 버리는 부분을 최소화하는 일."],
+  ["도크", "Dock (dry dock)", "", "D", "building", "배를 짓거나 수리하려고 물을 빼고 넣을 수 있게 만든 거대한 구덩이. 조선소 생산 능력의 병목이다."],
+  ["시운전", "Sea trial", "", "D", "building", "인도 전에 바다에서 속도·출력, 조종성, 정지, 진동, 장비 성능을 확인하는 시험."],
+
+  /* ---------------- 선종·화물 */
+  ["TEU", "Twenty-foot equivalent unit", "TEU", "C", "cargo", "20 ft 컨테이너 1개를 기준으로 한 적재 용량 단위. 40 ft 컨테이너(FEU)는 2 TEU로 센다."],
+  ["래싱", "Lashing", "", "C", "cargo", "갑판 위 컨테이너를 래싱 바·턴버클·트위스트 록으로 고정하는 일. 롤 가속도가 큰 짧은 주기 횡동요에서 하중이 크다."],
+  ["베이 플랜", "Bay plan", "", "C", "cargo", "컨테이너선의 각 베이(길이 방향 위치)·열·단에 어떤 컨테이너를 실었는지 보여 주는 적재도."],
+  ["셀 가이드", "Cell guide", "", "C", "cargo", "화물창 안에서 컨테이너를 수직으로 안내하는 철제 레일. 창 안의 컨테이너는 래싱 없이 고정된다."],
+  ["해치 커버", "Hatch cover", "", "C", "cargo", "화물창 개구부를 덮는 수밀 덮개. 컨테이너선에서는 그 위에도 컨테이너를 쌓는다."],
+  ["교호 적재", "Alternate hold loading", "", "C", "cargo", "벌크선에서 무거운 화물(철광석 등)을 한 창 걸러 하나씩 싣는 방식. 무게중심을 올려 GM을 줄이지만 구조에 큰 국부 하중을 준다."],
+  ["액상화", "Cargo liquefaction", "", "C", "cargo", "수분이 많은 정광·니켈 광석 등이 진동으로 진흙처럼 흐르게 되는 현상. 화물이 한쪽으로 쏠려 전복을 일으킬 수 있다."],
+  ["불활성 가스", "Inert gas", "IG", "C", "cargo", "산소 농도를 8 % 이하로 낮춘 배기가스나 질소. 유조선 화물창에 채워 폭발 분위기가 생기지 않게 한다."],
+  ["원유 세정", "Crude oil washing", "COW", "C", "cargo", "하역 중 화물인 원유 자체를 고압으로 분사해 탱크 벽의 잔류물을 씻어 내는 방법."],
+  ["멤브레인형 탱크", "Membrane tank", "", "C", "cargo", "선체 안쪽에 단열재와 얇은 금속 막(스테인리스·인바)을 붙인 LNG 화물창. 선체 공간을 효율적으로 쓴다."],
+  ["모스형 탱크", "Moss-type (spherical) tank", "", "C", "cargo", "자립형 알루미늄 구형 탱크를 갑판 위로 반쯤 드러나게 실은 LNG 화물창. 슬로싱에 강하다."],
+  ["증발 가스", "Boil-off gas", "BOG", "C", "cargo", "약 −162 °C의 LNG에 열이 들어와 증발한 가스. 엔진 연료로 쓰거나 재액화하고 남으면 GCU에서 태운다."],
+  ["슬로싱", "Sloshing", "", "C", "cargo", "부분 적재 탱크 안 액체가 출렁이며 벽을 때리는 현상. LNG 멤브레인 탱크의 충전률 제한 이유다."],
+  ["자동차 운반선", "Pure car and truck carrier", "PCTC", "C", "cargo", "여러 층의 갑판에 자동차를 몰고 들어가 싣는 배. 갑판이 높고 바람 받는 면적이 커 복원성과 조종에 주의한다."],
+  ["로로선", "Ro-Ro ship", "", "C", "cargo", "차량이 램프로 직접 굴러 타고 내리는 배. 넓은 차량 갑판의 침수가 순식간에 복원성을 잃게 할 수 있다."],
+  ["파나막스", "Panamax", "", "C", "cargo", "옛 파나마 운하 갑문을 통과할 수 있는 최대 크기(폭 약 32.3 m). 2016년 확장 이후 기준은 네오파나막스(폭 약 51 m)다."],
+  ["케이프사이즈", "Capesize", "", "C", "cargo", "수에즈·파나마 운하를 지나지 못해 희망봉·케이프혼을 돌아가는 대형 벌크선. 대표적으로 15만~20만 DWT다."],
+  ["초대형 원유 운반선", "Very large crude carrier", "VLCC", "C", "cargo", "대략 20만~32만 DWT의 원유 운반선. 약 200만 배럴을 싣는다."],
+  ["활주선", "Planing hull", "", "C", "special", "고속에서 선저의 동적 양력이 무게 대부분을 받쳐 선체가 떠올라 미끄러지듯 달리는 배."],
+  ["수중익선", "Hydrofoil craft", "", "C", "special", "선체 아래 수중 날개의 양력으로 선체를 물 위로 들어 올려 저항을 줄이는 고속선."],
+  ["쌍동선", "Catamaran", "", "C", "special", "가늘고 긴 두 선체를 갑판으로 이은 배. 넓은 갑판과 큰 횡복원성을 갖고 고속에서 조파 저항이 작다."],
+  ["표면 효과선", "Surface effect ship", "SES", "C", "special", "쌍동선 두 선체 사이를 앞뒤 스커트로 막고 공기 쿠션을 불어넣어 무게 일부를 받치는 고속선."],
+  ["쇄빙선", "Icebreaker", "", "C", "special", "경사진 선수로 얼음 위에 올라타 무게로 깨며 나아가는 배. 두꺼운 외판과 큰 출력, 횡동요 탱크를 갖춘다."],
+  ["주 밸러스트 탱크", "Main ballast tank (submarine)", "MBT", "C", "special", "잠수함 외곽의 큰 탱크. 해수를 채우면 잠항하고 압축 공기로 해수를 밀어내면 부상한다."],
+  ["FPSO", "Floating production, storage and offloading unit", "FPSO", "C", "special", "해저 유전의 원유를 받아 처리·저장했다가 셔틀 탱커로 넘기는 부유식 해양 설비. 터릿으로 계류해 바람에 따라 돈다."],
+  ["반잠수식", "Semi-submersible", "", "C", "special", "물속 깊은 폰툰과 가는 기둥으로 갑판을 받친 해양 구조물. 수선면이 작아 파랑 운동이 작다."],
+  ["잭업", "Jack-up rig", "", "C", "special", "다리를 해저까지 내려 선체를 물 위로 들어 올리는 해양 설비. 얕은 바다의 시추·해상 풍력 설치에 쓴다."],
+
+  /* ---------------- 전력·친환경 */
+  ["주 배전반", "Main switchboard", "MSB", "G", "electric", "발전기 전력을 모아 각 부하로 나누는 배전반. 보통 두 구역으로 나눠 버스 타이로 연결한다."],
+  ["동기 투입", "Synchronizing", "", "G", "electric", "운전 중인 모선에 발전기를 병렬 연결하기 전에 전압·주파수·위상을 맞추는 과정."],
+  ["드룹", "Droop", "", "G", "electric", "부하가 늘면 속도(주파수)나 전압이 조금 떨어지도록 한 조속기·AVR 특성. 병렬 발전기의 부하 분담을 안정시킨다."],
+  ["전력 관리 시스템", "Power management system", "PMS", "G", "electric", "부하에 따라 발전기를 자동으로 기동·정지하고 부하를 분담시키며, 과부하 시 덜 중요한 부하를 차단하는 시스템."],
+  ["블랙아웃", "Blackout", "", "G", "electric", "주 전원이 모두 끊긴 상태. 추진·조타를 잃어 매우 위험하므로 비상 발전기가 45초 안에 자동 기동해야 한다."],
+  ["비상 발전기", "Emergency generator", "EG", "G", "electric", "주 전원 상실 시 조명·조타·통신·소화 펌프 등 필수 부하에 전력을 주는 발전기. 격벽 갑판 위 별도 공간에 둔다."],
+  ["디젤–전기 추진", "Diesel–electric propulsion", "", "G", "electric", "디젤 발전기로 전기를 만들어 전동기로 프로펠러를 돌리는 방식. 크루즈·쇄빙선·DP 선박에 많다."],
+  ["축발전기", "Shaft generator", "", "G", "electric", "주기관 축에서 동력을 빼내 전기를 만드는 발전기. 효율 좋은 주기관 연료로 선내 전력을 만든다."],
+  ["PTO/PTI", "Power take-off / power take-in", "PTO/PTI", "G", "electric", "축에 붙은 전기 기계를 발전기(PTO)로도, 추진 보조 모터(PTI)로도 쓰는 하이브리드 방식."],
+  ["배터리 하이브리드", "Battery hybrid", "", "G", "electric", "발전기에 배터리를 더한 전력 계통. 순간 부하를 배터리가 받아 발전기를 효율 좋은 부하에서만 돌린다."],
+  ["피크 쉐이빙", "Peak shaving", "", "G", "electric", "크레인·스러스터 등의 순간 최대 부하를 배터리가 대신 공급해 발전기 대수와 부하 변동을 줄이는 운전."],
+  ["육상 전원 공급", "Alternative maritime power (shore power)", "AMP", "G", "electric", "정박 중 발전기를 끄고 부두의 전력을 받아 쓰는 것. 항만의 배출가스와 소음을 줄인다."],
+  ["에너지 효율 설계 지수", "Energy Efficiency Design Index", "EEDI", "G", "green", "신조선의 설계상 CO₂ 배출(g)을 수송 능력(용량 × 속도)으로 나눈 값. 기준선 대비 단계적으로 강화된다."],
+  ["현존선 에너지 효율 지수", "Energy Efficiency Existing Ship Index", "EEXI", "G", "green", "이미 운항 중인 배에 EEDI와 같은 방식으로 계산해 적용하는 설계 지표. 주로 엔진 출력 제한으로 맞춘다."],
+  ["탄소 집약도 지표", "Carbon Intensity Indicator", "CII", "G", "green", "운항선이 1년간 배출한 CO₂를 수송 실적(용량 × 거리)으로 나눈 값. A~E 등급으로 평가한다."],
+  ["선박 에너지 효율 관리 계획", "Ship Energy Efficiency Management Plan", "SEEMP", "G", "green", "배마다 비치하는 에너지 효율 개선 계획서. CII 개선 조치를 여기에 담는다."],
+  ["감속 운항", "Slow steaming", "", "G", "green", "설계 속도보다 느리게 달려 연료를 아끼는 운항. 거리당 연료는 대략 속도의 제곱에 비례해 줄어든다."],
+  ["로터 세일", "Rotor sail (Flettner rotor)", "", "G", "green", "갑판 위 원통을 회전시켜 바람 속에서 마그누스 효과로 추력을 얻는 풍력 보조 장치."],
+  ["공기 윤활", "Air lubrication", "", "G", "green", "선저에 공기 거품이나 막을 깔아 물과 닿는 면적을 줄여 마찰 저항을 줄이는 기술. 대표적으로 수 % 절감한다."],
+  ["Well-to-Wake", "Well-to-wake", "WtW", "G", "green", "연료의 생산·운송 단계(well-to-tank)부터 선박에서 태우는 단계(tank-to-wake)까지 전 과정의 온실가스 배출."],
+  ["Tank-to-Wake", "Tank-to-wake", "TtW", "G", "green", "선박에서 연료를 태울 때 직접 나오는 배출만 센 것. 수소·암모니아는 0에 가깝지만 생산 방식에 따라 WtW는 클 수 있다."],
+  ["배출규제해역", "Emission Control Area", "ECA", "G", "green", "SOx는 0.10 %, NOx는 Tier III 등 더 엄격한 배출 기준이 적용되는 해역. 북해·발트해·북미 연안 등이 있다."],
+  ["IMO 2020 황 상한", "IMO 2020 global sulphur cap", "", "G", "green", "2020년부터 전 세계 선박 연료의 황 함량을 0.50 % 이하로 제한한 MARPOL 부속서 VI 규정."],
+  ["암모니아 연료", "Ammonia fuel", "NH₃", "G", "green", "탄소가 없어 연소 시 CO₂를 내지 않는 연료. 독성이 강하고 연소가 느리며 N₂O·NOx 관리가 과제다."],
+  ["메탄올 연료", "Methanol fuel", "", "G", "green", "상온에서 액체라 저장이 쉬운 대체 연료. 바이오·e-메탄올이면 전 과정 배출을 크게 줄일 수 있다."],
+
+  /* ---------------- 항해·자율운항 */
+  ["위도", "Latitude", "φ", "N", "navigation", "적도에서 남북으로 잰 각도(0~90°). 위도 1분의 자오선 길이가 1해리다."],
+  ["경도", "Longitude", "λ", "N", "navigation", "본초 자오선에서 동서로 잰 각도(0~180°). 경도 1분의 길이는 cos(위도) 배로 줄어든다."],
+  ["항정선", "Rhumb line (loxodrome)", "", "N", "navigation", "모든 자오선과 같은 각도로 만나는 경로. 침로를 일정하게 유지하면 따라가게 되며 메르카토르 해도에서 직선이다."],
+  ["대권", "Great circle", "", "N", "navigation", "지구 중심을 지나는 평면이 지구 표면과 만나는 원. 두 지점 사이의 최단 경로이며 침로가 계속 바뀐다."],
+  ["메르카토르 도법", "Mercator projection", "", "N", "navigation", "고위도로 갈수록 남북 방향을 늘려 각도를 보존하는 원통 도법. 항정선이 직선이 되어 해도의 표준이 되었다."],
+  ["추측 항법", "Dead reckoning", "DR", "N", "navigation", "알고 있는 출발 위치에 침로와 속력, 경과 시간을 더해 현재 위치를 추정하는 방법. 시간이 지날수록 오차가 쌓인다."],
+  ["침로", "Course", "Co", "N", "navigation", "배가 나아가려는 방향을 북쪽에서 시계 방향으로 잰 각(000°~359°)."],
+  ["방위", "Bearing", "Brg", "N", "navigation", "자선에서 본 물표의 방향. 진북 기준 진방위와 선수 기준 상대 방위가 있다."],
+  ["대수 속력과 대지 속력", "Speed through water / over ground", "STW / SOG", "N", "navigation", "물에 대한 속력(로그)과 땅에 대한 속력(GNSS). 차이는 조류 때문이다."],
+  ["편차", "Variation", "Var", "N", "navigation", "진북과 자북 사이의 각. 장소와 연도에 따라 다르며 해도의 나침도에 적혀 있다."],
+  ["자차", "Deviation", "Dev", "N", "navigation", "선내 철재·전기 장비 때문에 자기 컴퍼스가 자북에서 벗어나는 각. 선수 방향마다 달라 자차표로 관리한다."],
+  ["조류 보정", "Course to steer", "CTS", "N", "navigation", "조류의 방향(set)과 속도(drift)를 고려해 원하는 대지 항적을 따라가도록 정한 침로."],
+  ["위치선", "Line of position", "LOP", "N", "navigation", "한 번의 관측(방위, 거리, 천체 고도 등)으로 배가 그 위 어딘가에 있다고 알 수 있는 선. 둘 이상이 교차하면 위치가 된다."],
+  ["천측", "Celestial navigation", "", "N", "navigation", "육분의로 천체의 고도를 재고 정확한 시각과 천측력을 써서 위치선을 구하는 항법."],
+  ["조석", "Tide", "", "N", "navigation", "달과 태양의 인력으로 해수면이 주기적으로 오르내리는 현상. 대부분 해역에서 하루 두 번(약 12시간 25분 주기) 만조와 간조가 온다."],
+  ["12분의 1 법칙", "Rule of twelfths", "", "N", "navigation", "간조에서 만조까지 6시간 동안 조위가 시간마다 조차의 1, 2, 3, 3, 2, 1/12씩 오른다고 보는 근사법."],
+  ["해도 기준면", "Chart datum", "CD", "N", "navigation", "해도 수심의 기준이 되는 낮은 조위면(보통 최저 천문조 LAT). 실제 수심 = 해도 수심 + 조고."],
+  ["선저 여유 수심", "Under keel clearance", "UKC", "N", "navigation", "용골 아래와 해저 사이의 여유 깊이. 스쿼트·파랑 운동·조석 오차를 고려해 확보해야 한다."],
+  ["GNSS", "Global navigation satellite system", "GNSS", "N", "navigation", "GPS, GLONASS, Galileo, BeiDou 등 위성 측위 시스템의 총칭. 위성까지의 거리로 위치와 시각을 구한다."],
+  ["정밀도 저하율", "Dilution of precision", "DOP", "N", "navigation", "위성 배치가 위치 정확도를 얼마나 나쁘게 만드는지 나타내는 계수. 위성이 한쪽에 몰려 있으면 커진다."],
+  ["레이더", "Radar", "", "N", "bridge", "전파를 쏘아 반사파가 돌아오는 시간으로 거리를, 안테나 방향으로 방위를 재는 장비. 선박용은 X밴드(3 cm)와 S밴드(10 cm)를 쓴다."],
+  ["자동 레이더 플로팅 장치", "Automatic radar plotting aid", "ARPA", "N", "bridge", "레이더 물표를 자동 추적해 침로·속력과 CPA·TCPA를 계산해 주는 기능."],
+  ["최근접점", "Closest point of approach", "CPA", "N", "bridge", "현재 침로·속력이 유지될 때 상대선과 가장 가까워지는 거리."],
+  ["최근접점 도달 시간", "Time to CPA", "TCPA", "N", "bridge", "최근접점에 이르기까지 남은 시간. 음수면 이미 지나간 것이다."],
+  ["선박 자동 식별 장치", "Automatic identification system", "AIS", "N", "bridge", "선명·위치·침로·속력 등을 VHF로 주기적으로 방송하고 받는 장치. 레이더가 못 보는 곳 너머의 배도 알 수 있다."],
+  ["전자 해도 표시 정보 시스템", "Electronic chart display and information system", "ECDIS", "N", "bridge", "공식 전자 해도(ENC)에 자선 위치·항로·레이더·AIS를 겹쳐 보여 주고 위험을 경고하는 항해 장비."],
+  ["국제 해상 충돌 예방 규칙", "COLREG", "COLREG", "N", "bridge", "1972년 협약의 해상 교통 규칙. 경계, 안전 속력, 마주침·횡단·추월 시의 행동, 등화와 형상물을 정한다."],
+  ["피항선", "Give-way vessel", "", "N", "bridge", "규칙상 다른 배의 진로를 피해야 하는 배. 일찍, 크게, 분명하게 동작해야 한다."],
+  ["유지선", "Stand-on vessel", "", "N", "bridge", "침로와 속력을 유지해야 하는 배. 피항선이 동작하지 않아 충돌 위험이 임박하면 스스로 피해야 한다."],
+  ["현등", "Sidelights", "", "N", "bridge", "우현 초록, 좌현 빨강 등. 정선수에서 각 현 정횡 뒤 22.5°까지(112.5°) 비춘다."],
+  ["마스트등", "Masthead light", "", "N", "bridge", "선수미선 위에 단 흰색 등. 정선수 좌우 112.5°씩, 모두 225°를 비춘다. 길이 50 m 이상 배는 앞뒤 두 개를 단다."],
+  ["선미등", "Sternlight", "", "N", "bridge", "선미에 단 흰색 등으로 뒤쪽 135°를 비춘다. 이것만 보이면 그 배를 추월하는 중이다."],
+  ["안전 속력", "Safe speed", "", "N", "bridge", "시정·교통량·조종 성능·해상 상태를 고려해 충돌을 피할 적절한 동작을 하고 정해진 거리 안에 멈출 수 있는 속력."],
+  ["자율운항선박", "Maritime autonomous surface ship", "MASS", "N", "autonomous", "사람의 개입 없이 일부 또는 전부 스스로 운항하는 선박. IMO는 자동화·원격·완전 자율 정도로 4단계를 정의했다."],
+  ["동적 위치 유지", "Dynamic positioning", "DP", "N", "autonomous", "위치·방위 센서와 제어기, 스러스터로 바람·조류·파랑 표류력에 맞서 위치와 선수 방위를 자동 유지하는 시스템."],
+  ["LOS 유도", "Line-of-sight guidance", "LOS", "N", "autonomous", "경로 위 앞쪽 일정 거리(lookahead)의 점을 겨냥하도록 목표 침로를 정하는 경로 추종 법칙. 단순하고 견실하다."],
+  ["속도 장애물", "Velocity obstacle", "VO", "N", "autonomous", "상대선과 충돌하게 되는 자선 속도들의 집합. 그 밖의 속도를 고르면 직선 운동 가정에서 충돌하지 않는다."],
+  ["칼만 필터", "Kalman filter", "KF", "N", "autonomous", "운동 모델의 예측과 잡음 섞인 측정을 각각의 불확실성에 따라 가중 결합해 상태를 추정하는 재귀 필터."],
+  ["센서 융합", "Sensor fusion", "", "N", "autonomous", "레이더·AIS·카메라·라이다 등 여러 센서의 정보를 합쳐 하나의 일관된 주변 상황도를 만드는 일."],
+  ["A* 경로 계획", "A* path planning", "A*", "N", "autonomous", "격자 위에서 지나온 비용과 남은 거리 추정치를 더한 값이 작은 순서로 탐색해 최단 경로를 찾는 알고리즘."],
+  ["원격 운항 센터", "Remote operation centre", "ROC", "N", "autonomous", "육상에서 자율·원격 선박을 감시하고 필요하면 직접 조종하는 관제 시설."],
+  ["선박 교통 관제", "Vessel traffic service", "VTS", "N", "bridge", "항만·좁은 수로에서 레이더와 AIS로 교통을 감시하고 정보·권고·지시를 주는 육상 서비스."],
+
+  /* ---------------- 해운 일반 */
+  ["재화중량", "Deadweight", "DWT", "H", "buoyancy", "만재흘수에서의 배수량에서 경하중량을 뺀 값. 화물·연료·청수·선원·식량 등 배가 실을 수 있는 총질량(t)이다."],
+  ["총톤수", "Gross tonnage", "GT", "H", "buoyancy", "선체 내부 폐위 용적 V로 GT = (0.2 + 0.02·log₁₀V)·V로 계산하는 무차원 크기. 등록·수수료·규칙 적용 기준이다."],
+  ["순톤수", "Net tonnage", "NT", "H", "buoyancy", "화물·여객 공간의 용적으로 계산하는 무차원 크기. 항만 이용료와 운하 통항료의 기준이 되며 GT의 30 % 아래로는 내려가지 않는다."],
+  ["노트", "Knot", "kn", "H", "navigation", "1시간에 1해리를 가는 속도. 1 kn = 1.852 km/h ≈ 0.5144 m/s."],
+  ["해리", "Nautical mile", "nm", "H", "navigation", "위도 1분의 평균 길이에서 나온 거리 단위. 1 nm = 1,852 m."],
+  ["국제해사기구", "International Maritime Organization", "IMO", "H", "green", "해상 안전과 해양 오염 방지를 다루는 UN 전문 기구. SOLAS·MARPOL·COLREG 등 협약을 관리한다."],
+  ["해상 인명 안전 협약", "International Convention for the Safety of Life at Sea", "SOLAS", "H", "damage", "타이타닉 침몰을 계기로 시작된 선박 안전의 기본 협약. 구획·복원성, 소방, 구명 설비, 항해 안전을 정한다."],
+  ["해양 오염 방지 협약", "MARPOL", "MARPOL", "H", "green", "선박에 의한 기름·유해 액체·오수·쓰레기·대기 오염을 규제하는 협약. 부속서 VI가 대기 오염과 에너지 효율을 다룬다."],
+  ["만재흘수선 협약", "International Convention on Load Lines", "ICLL", "H", "buoyancy", "선박의 최소 건현과 만재흘수선 표시를 정한 1966년 협약."],
+  ["톤수 측정 협약", "International Convention on Tonnage Measurement of Ships", "ITC 1969", "H", "buoyancy", "GT·NT를 폐위 용적 기반으로 계산하는 국제 공통 방법을 정한 협약."],
+  ["기국", "Flag state", "", "H", "design", "배가 등록되어 국기를 다는 나라. 그 배에 대한 협약 이행과 검사의 1차 책임을 진다."],
+  ["항만국 통제", "Port state control", "PSC", "H", "design", "입항한 외국 선박이 국제 협약에 맞는지 항만국이 점검하고 결함이 크면 출항을 정지시키는 제도."],
+  ["정기선과 부정기선", "Liner / tramp shipping", "", "H", "cargo", "정해진 항로·일정으로 다니는 정기선(주로 컨테이너선)과 화물이 있는 곳으로 가는 부정기선(벌크선·탱커)."],
+  ["용선", "Chartering", "", "H", "cargo", "배를 빌리는 계약. 한 항차(항해 용선), 기간(정기 용선), 선원 없이 배만(나용선) 빌리는 형태가 있다."],
+  ["보퍼트 풍력 계급", "Beaufort scale", "", "H", "waves", "풍속을 해면 모습에 따라 0(고요)~12(싹쓸바람)로 나눈 등급."]
+];
+
+/* 약어 표: [약어, 원어, 한국어, slug] */
+var GL_ABBR = [
+  ["AIS", "Automatic Identification System", "선박 자동 식별 장치", "bridge"],
+  ["AMP", "Alternative Maritime Power", "육상 전원 공급", "electric"],
+  ["AP", "Aft Perpendicular", "선미 수선", "overview"],
+  ["ARPA", "Automatic Radar Plotting Aid", "자동 레이더 플로팅 장치", "bridge"],
+  ["AVS", "Angle of Vanishing Stability", "복원력 소실각", "stability"],
+  ["BOG", "Boil-Off Gas", "증발 가스", "cargo"],
+  ["CD", "Chart Datum", "해도 기준면", "navigation"],
+  ["CII", "Carbon Intensity Indicator", "탄소 집약도 지표", "green"],
+  ["COLREG", "Convention on the International Regulations for Preventing Collisions at Sea", "국제 해상 충돌 예방 규칙", "bridge"],
+  ["COW", "Crude Oil Washing", "원유 세정", "cargo"],
+  ["CPA", "Closest Point of Approach", "최근접점", "bridge"],
+  ["CPP", "Controllable Pitch Propeller", "가변 피치 프로펠러", "propeller"],
+  ["CSR", "Common Structural Rules", "공통 구조 규칙", "design"],
+  ["CTS", "Course To Steer", "조류 보정 침로", "navigation"],
+  ["DB", "Double Bottom", "이중 선저", "damage"],
+  ["DF", "Dual Fuel", "이중 연료", "engine"],
+  ["DFT", "Dry Film Thickness", "건조막 두께", "building"],
+  ["DOP", "Dilution Of Precision", "정밀도 저하율", "navigation"],
+  ["DP", "Dynamic Positioning", "동적 위치 유지", "autonomous"],
+  ["DR", "Dead Reckoning", "추측 항법", "navigation"],
+  ["DWT", "Deadweight Tonnage", "재화중량", "buoyancy"],
+  ["ECA", "Emission Control Area", "배출규제해역", "green"],
+  ["ECDIS", "Electronic Chart Display and Information System", "전자 해도 표시 정보 시스템", "bridge"],
+  ["EEDI", "Energy Efficiency Design Index", "에너지 효율 설계 지수", "green"],
+  ["EEXI", "Energy Efficiency Existing Ship Index", "현존선 에너지 효율 지수", "green"],
+  ["EGR", "Exhaust Gas Recirculation", "배기가스 재순환", "engine"],
+  ["FEU", "Forty-foot Equivalent Unit", "40피트 컨테이너 단위", "cargo"],
+  ["FP", "Forward Perpendicular", "선수 수선", "overview"],
+  ["FPP", "Fixed Pitch Propeller", "고정 피치 프로펠러", "propeller"],
+  ["FPSO", "Floating Production, Storage and Offloading", "부유식 원유 생산·저장·하역 설비", "special"],
+  ["FSE", "Free Surface Effect", "자유수면 효과", "trim"],
+  ["GA", "General Arrangement", "일반 배치(도)", "design"],
+  ["GM", "Metacentric Height", "메타센터 높이", "stability"],
+  ["GNSS", "Global Navigation Satellite System", "위성 항법 시스템", "navigation"],
+  ["GT", "Gross Tonnage", "총톤수", "buoyancy"],
+  ["GZ", "Righting Lever", "복원정", "stability"],
+  ["HFO", "Heavy Fuel Oil", "중유", "engine"],
+  ["IACS", "International Association of Classification Societies", "국제선급연합회", "design"],
+  ["IG", "Inert Gas", "불활성 가스", "cargo"],
+  ["IMO", "International Maritime Organization", "국제해사기구", "green"],
+  ["LCB", "Longitudinal Centre of Buoyancy", "종방향 부심 위치", "buoyancy"],
+  ["LCF", "Longitudinal Centre of Flotation", "부면심", "trim"],
+  ["LCG", "Longitudinal Centre of Gravity", "종방향 무게중심", "trim"],
+  ["LNG", "Liquefied Natural Gas", "액화 천연가스", "cargo"],
+  ["LOA", "Length Overall", "전장", "overview"],
+  ["LOP", "Line Of Position", "위치선", "navigation"],
+  ["LOS", "Line Of Sight (guidance)", "시선(LOS) 유도", "autonomous"],
+  ["Lpp", "Length between Perpendiculars", "수선간장", "overview"],
+  ["LWT", "Lightweight", "경하중량", "buoyancy"],
+  ["MARPOL", "International Convention for the Prevention of Pollution from Ships", "해양 오염 방지 협약", "green"],
+  ["MASS", "Maritime Autonomous Surface Ship", "자율운항선박", "autonomous"],
+  ["MCR", "Maximum Continuous Rating", "최대 연속 출력", "propulsion"],
+  ["MCT", "Moment to Change Trim 1 cm", "매 센티미터 트림 모멘트", "trim"],
+  ["MGO", "Marine Gas Oil", "선박용 경유", "engine"],
+  ["MSB", "Main Switchboard", "주 배전반", "electric"],
+  ["NCR", "Normal Continuous Rating", "상용 출력", "propulsion"],
+  ["NT", "Net Tonnage", "순톤수", "buoyancy"],
+  ["PCTC", "Pure Car and Truck Carrier", "자동차 운반선", "cargo"],
+  ["PMS", "Power Management System", "전력 관리 시스템", "electric"],
+  ["PSC", "Port State Control", "항만국 통제", "design"],
+  ["PTO/PTI", "Power Take-Off / Power Take-In", "축 발전 / 축 모터 보조", "electric"],
+  ["RAO", "Response Amplitude Operator", "응답 진폭 연산자", "seakeeping"],
+  ["ROC", "Remote Operation Centre", "원격 운항 센터", "autonomous"],
+  ["SCR", "Selective Catalytic Reduction", "선택적 촉매 환원", "engine"],
+  ["SEEMP", "Ship Energy Efficiency Management Plan", "선박 에너지 효율 관리 계획", "green"],
+  ["SES", "Surface Effect Ship", "표면 효과선", "special"],
+  ["SFOC", "Specific Fuel Oil Consumption", "연료 소비율", "engine"],
+  ["SOG", "Speed Over Ground", "대지 속력", "navigation"],
+  ["SOLAS", "International Convention for the Safety of Life at Sea", "해상 인명 안전 협약", "damage"],
+  ["STW", "Speed Through Water", "대수 속력", "navigation"],
+  ["SWBM", "Still Water Bending Moment", "정수 중 굽힘 모멘트", "structure"],
+  ["TCPA", "Time to Closest Point of Approach", "최근접점 도달 시간", "bridge"],
+  ["TEU", "Twenty-foot Equivalent Unit", "20피트 컨테이너 단위", "cargo"],
+  ["TPC", "Tonnes Per Centimetre immersion", "매 센티미터 배수톤", "buoyancy"],
+  ["UKC", "Under Keel Clearance", "선저 여유 수심", "navigation"],
+  ["VLCC", "Very Large Crude Carrier", "초대형 원유 운반선", "cargo"],
+  ["VLSFO", "Very Low Sulphur Fuel Oil", "초저유황유", "engine"],
+  ["VO", "Velocity Obstacle", "속도 장애물", "autonomous"],
+  ["VTS", "Vessel Traffic Service", "선박 교통 관제", "bridge"],
+  ["WHR", "Waste Heat Recovery", "폐열 회수", "engine"]
+];
+</script>
+
+<script>
+/* ===================================================================== 공통 헬퍼 (이 페이지 전용) */
+var GL = (function () {
+  "use strict";
+  var CH = {}, ORDER = {};
+  SB.CHAPTERS.forEach(function (c, i) { CH[c.slug] = c; ORDER[c.slug] = i; });
+  function chLabel(slug) { return CH[slug] ? CH[slug].num + " " + CH[slug].title : slug; }
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+  function norm(s) { return String(s).toLowerCase().replace(/[\s\-–—·_/()*,.']/g, ""); }
+  /* 검색어(띄어쓰기·하이픈 무시)와 일치하는 부분을 <mark>로 감싼다 */
+  function hl(text, raw) {
+    var q = norm(raw || "");
+    if (!q) return esc(text);
+    var src = String(text), map = [], flat = "";
+    for (var i = 0; i < src.length; i++) { var ch = norm(src[i]); if (ch) { flat += ch; map.push(i); } }
+    var marks = new Array(src.length).fill(false), from = 0, k;
+    while ((k = flat.indexOf(q, from)) >= 0) { for (var j = k; j < k + q.length; j++) marks[map[j]] = true; from = k + q.length; }
+    for (var a = 1; a < src.length - 1; a++) if (!marks[a] && marks[a - 1] && !norm(src[a])) {
+      var b = a; while (b < src.length && !norm(src[b])) b++;
+      if (b < src.length && marks[b]) for (var c = a; c < b; c++) marks[c] = true;
+    }
+    var out = "", open = false;
+    for (var p = 0; p < src.length; p++) {
+      if (marks[p] && !open) { out += "<mark>"; open = true; }
+      else if (!marks[p] && open) { out += "</mark>"; open = false; }
+      out += esc(src[p]);
+    }
+    if (open) out += "</mark>";
+    return out;
+  }
+  function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  var items = GL_TERMS.map(function (t, i) {
+    return { id: i, ko: t[0], en: t[1], abbr: t[2], cat: t[3], ch: t[4], def: t[5], key: norm(t[0] + t[1] + t[2] + t[5]), head: norm(t[0] + t[1] + t[2]) };
+  });
+  function find(name) {
+    for (var i = 0; i < items.length; i++) if (items[i].ko === name) return items[i];
+    for (i = 0; i < items.length; i++) if (items[i].abbr === name) return items[i];
+    return null;
+  }
+  return { CH: CH, ORDER: ORDER, chLabel: chLabel, esc: esc, norm: norm, hl: hl, shuffle: shuffle, items: items, find: find, missed: {} };
+})();
+
+/* ===================================================================== 용어집 + 약어 표 */
+(function () {
+  "use strict";
+  var CHO = ["ㄱ", "ㄲ", "ㄴ", "ㄷ", "ㄸ", "ㄹ", "ㅁ", "ㅂ", "ㅃ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅉ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
+  var MERGE = { "ㄲ": "ㄱ", "ㄸ": "ㄷ", "ㅃ": "ㅂ", "ㅆ": "ㅅ", "ㅉ": "ㅈ" };
+  function initialKo(s) {
+    var c = s.charCodeAt(0);
+    if (c >= 0xac00 && c <= 0xd7a3) { var g = CHO[Math.floor((c - 0xac00) / 588)]; return MERGE[g] || g; }
+    return /[a-z]/i.test(s.charAt(0)) ? "A–Z" : "0–9";
+  }
+  function gOrd(g) { var i = CHO.indexOf(g); return i >= 0 ? i : g === "A–Z" ? 100 : 101; }
+  function initialEn(s) { var c = s.charAt(0).toUpperCase(); return /[A-Z]/.test(c) ? c : "#"; }
+
+  var qEl = document.getElementById("gl-q"), listEl = document.getElementById("gl-list"), countEl = document.getElementById("gl-count");
+  var catSel = SB.seg("gl-cat", render), sortSel = SB.seg("gl-sort", render);
+  GL.catSel = catSel;
+
+  function render() {
+    var raw = qEl.value.trim(), q = GL.norm(raw), cat = catSel(), sort = sortSel();
+    var rows = GL.items.filter(function (t) { return (cat === "all" || t.cat === cat) && (!q || t.key.indexOf(q) >= 0); });
+    rows.sort(function (a, b) {
+      if (q) { var ha = a.head.indexOf(q) >= 0 ? 0 : 1, hb = b.head.indexOf(q) >= 0 ? 0 : 1; if (ha !== hb) return ha - hb; }
+      if (sort === "ch" && GL.ORDER[a.ch] !== GL.ORDER[b.ch]) return GL.ORDER[a.ch] - GL.ORDER[b.ch];
+      if (sort === "abc") return a.en.localeCompare(b.en, "en", { sensitivity: "base" });
+      var ga = gOrd(initialKo(a.ko)), gb = gOrd(initialKo(b.ko));
+      if (ga !== gb) return ga - gb;
+      return a.ko.localeCompare(b.ko, "ko");
+    });
+    var total = cat === "all" ? GL.items.length : GL.items.filter(function (t) { return t.cat === cat; }).length;
+    countEl.textContent = rows.length + " / " + total + "개" + (cat !== "all" ? " (전체 " + GL.items.length + ")" : "");
+    if (!rows.length) {
+      listEl.innerHTML = '<div class="gl-empty">일치하는 용어가 없다. 다른 표기(한국어/영어/약어)로 검색하거나 분류를 "전체"로 바꿔 보자.</div>';
+    } else {
+      var html = "", last = null;
+      rows.forEach(function (t) {
+        var g = q ? null : sort === "ch" ? GL.chLabel(t.ch) : sort === "abc" ? initialEn(t.en) : initialKo(t.ko);
+        if (g && g !== last) { html += '<div class="gl-group">' + GL.esc(g) + "</div>"; last = g; }
+        html += '<div class="gl-item"><h4>' + GL.hl(t.ko, raw) + ' <span class="en">' + GL.hl(t.en, raw) + "</span>" +
+          (t.abbr && t.abbr !== t.ko ? '<span class="abbr">' + GL.hl(t.abbr, raw) + "</span>" : "") + "</h4><p>" + GL.hl(t.def, raw) + "</p>" +
+          '<span class="cat">' + GL.esc(GL_CATS[t.cat]) + '</span><a class="ch" href="' + t.ch + '.html">' + GL.esc(GL.chLabel(t.ch)) + " →</a></div>";
+      });
+      listEl.innerHTML = html;
+    }
+    listEl.scrollTop = 0;
+    renderAbbr(raw);
+    if (GL.onCat) GL.onCat();
+  }
+
+  var abBody = document.getElementById("ab-body"), abCount = document.getElementById("ab-count");
+  function renderAbbr(raw) {
+    var q = GL.norm(raw || "");
+    var rows = GL_ABBR.filter(function (a) { return !q || GL.norm(a[0] + a[1] + a[2]).indexOf(q) >= 0; });
+    abBody.innerHTML = rows.length ? rows.map(function (a) {
+      return "<tr><td>" + GL.hl(a[0], raw) + "</td><td>" + GL.hl(a[1], raw) + "</td><td>" + GL.hl(a[2], raw) + '</td><td><a href="' + a[3] + '.html" title="' + GL.esc(GL.chLabel(a[3])) + '">' + GL.CH[a[3]].num + "</a></td></tr>";
+    }).join("") : '<tr><td colspan="4" style="text-align:center;color:var(--text-dim)">검색어와 일치하는 약어가 없다.</td></tr>';
+    abCount.textContent = "약어 " + rows.length + " / " + GL_ABBR.length + "개" + (q ? " (검색어 적용 중)" : "");
+  }
+  qEl.addEventListener("input", render);
+  render();
+})();
+
+/* ===================================================================== 플래시카드 */
+(function () {
+  "use strict";
+  var card = document.getElementById("fc-card");
+  var st = { cur: null, flipped: false, n: 0, ok: 0, weight: {} };
+  var face = SB.seg("fc-face", function () { st.flipped = false; show(); });
+  function pool() { var c = GL.catSel(); return GL.items.filter(function (t) { return c === "all" || t.cat === c; }); }
+  function pick() {
+    var p = pool(), sum = 0, i;
+    if (!p.length) return null;
+    for (i = 0; i < p.length; i++) sum += st.weight[p[i].id] || 1;
+    var r = Math.random() * sum;
+    for (i = 0; i < p.length; i++) { r -= st.weight[p[i].id] || 1; if (r <= 0 && (p.length < 2 || p[i] !== st.cur)) return p[i]; }
+    return p[Math.floor(Math.random() * p.length)];
+  }
+  function name(t) { return t.ko; }
+  function sub(t) { return t.en + (t.abbr && t.abbr !== t.ko ? " · " + t.abbr : ""); }
+  function show() {
+    var t = st.cur;
+    if (!t) { card.innerHTML = '<div class="sub">이 분류에는 용어가 없다.</div>'; return; }
+    var f = face(), h = "";
+    var front = f === "ko" ? '<div class="big">' + GL.esc(name(t)) + "</div>" :
+      f === "en" ? '<div class="big">' + GL.esc(t.abbr && t.abbr !== t.ko ? t.abbr : t.en) + '</div><div class="sub">' + GL.esc(t.abbr && t.abbr !== t.ko ? t.en : "") + "</div>" :
+      '<div class="def">' + GL.esc(t.def) + "</div>";
+    if (!st.flipped) h = front + '<div class="fc-hint">' + GL.esc(GL_CATS[t.cat]) + " · 눌러서 뒤집기</div>";
+    else h = '<div class="big" style="font-size:22px">' + GL.esc(t.ko) + '</div><div class="sub">' + GL.esc(sub(t)) + '</div><div class="def">' + GL.esc(t.def) + '</div><div class="fc-hint"><a href="' + t.ch + '.html">' + GL.esc(GL.chLabel(t.ch)) + " →</a></div>";
+    card.innerHTML = h;
+    var again = Object.keys(st.weight).filter(function (k) { return st.weight[k] > 1; }).length;
+    SB.stat("o-fc-n", st.n); SB.stat("o-fc-ok", st.ok);
+    SB.stat("o-fc-rate", st.n ? Math.round((st.ok / st.n) * 100) + " %" : "—");
+    SB.stat("o-fc-again", again);
+  }
+  function next(known) {
+    if (st.cur && known != null) {
+      st.n++;
+      if (known) { st.ok++; st.weight[st.cur.id] = Math.max(0.4, (st.weight[st.cur.id] || 1) * 0.5); }
+      else st.weight[st.cur.id] = Math.min(8, (st.weight[st.cur.id] || 1) * 3);
+    }
+    st.cur = pick(); st.flipped = false; show();
+  }
+  function flip() { st.flipped = !st.flipped; show(); }
+  card.addEventListener("click", function (e) { if (e.target.closest("a")) return; flip(); });
+  card.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flip(); } });
+  document.getElementById("fc-flip").addEventListener("click", flip);
+  document.getElementById("fc-ok").addEventListener("click", function () { next(true); });
+  document.getElementById("fc-again").addEventListener("click", function () { next(false); });
+  GL.onCat = function () { if (!st.cur || (GL.catSel() !== "all" && st.cur.cat !== GL.catSel())) { st.cur = pick(); st.flipped = false; show(); } };
+  next(null);
+})();
+
+/* ===================================================================== 그림 용어 지도 */
+(function () {
+  "use strict";
+  function bind(svgId, boxId) {
+    var svg = document.getElementById(svgId), box = document.getElementById(boxId);
+    var gs = [].slice.call(svg.querySelectorAll(".tmap"));
+    gs.forEach(function (g) {
+      g.setAttribute("tabindex", "0");
+      g.setAttribute("role", "button");
+      function act() {
+        gs.forEach(function (o) { o.classList.toggle("on", o === g); });
+        var t = GL.find(g.getAttribute("data-term"));
+        if (!t) { box.textContent = g.getAttribute("data-term"); return; }
+        box.innerHTML = "<b>" + GL.esc(t.ko) + "</b> <span style=\"color:var(--text-dim)\">" + GL.esc(t.en) + (t.abbr && t.abbr !== t.ko ? " · " + GL.esc(t.abbr) : "") + "</span><br>" + GL.esc(t.def) +
+          ' <a href="' + t.ch + '.html">' + GL.esc(GL.chLabel(t.ch)) + " →</a>";
+      }
+      g.addEventListener("click", act);
+      g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); act(); } });
+    });
+  }
+  bind("fig-side", "tm-side");
+  bind("fig-sec", "tm-sec");
+})();
+
+/* ===================================================================== 단위 변환기 */
+(function () {
+  "use strict";
+  function U(id, label, k) { return { id: id, label: label, k: k }; }
+  var KN = 1852 / 3600;
+  var KINDS = {
+    speed: { base: "m/s", def: 20, defUnit: "kn", units: [U("kn", "노트 (kn)", KN), U("kmh", "km/h", 1 / 3.6), U("ms", "m/s", 1), U("mph", "mph", 0.44704)],
+      hint: function (b) { var kn = b / KN; return "하루 " + SB.fmt(kn * 24, 4) + " nm(" + SB.fmt(kn * 24 * 1.852, 4) + " km) · 길이 200 m 배의 Fn = " + SB.fmt(b / Math.sqrt(9.81 * 200), 3); } },
+    dist: { base: "m", def: 100, defUnit: "nm", units: [U("nm", "해리 (nm)", 1852), U("km", "km", 1000), U("m", "m", 1), U("mi", "마일 (statute)", 1609.344), U("cable", "케이블", 185.2), U("deg", "위도 (°)", 1852 * 60)],
+      hint: function (b) { var nm = b / 1852; return "14 kn로 " + SB.fmt(nm / 14, 3) + " 시간(" + SB.fmt(nm / 14 / 24, 3) + " 일) · 위도 " + SB.fmt(nm / 60, 3) + "°"; } },
+    mass: { base: "kg", def: 10000, defUnit: "lt", units: [U("t", "메트릭 톤 (t)", 1000), U("lt", "롱 톤 (LT)", 1016.0469), U("st", "쇼트 톤 (ST)", 907.18474), U("kg", "kg", 1), U("lb", "파운드 (lb)", 0.45359237)],
+      hint: function (b) { var t = b / 1000; return "해수 " + SB.fmt(t / 1.025, 4) + " m³를 밀어내는 무게 · TPC 60인 배면 흘수 " + SB.fmt(t / 60, 3) + " cm 증가"; } },
+    power: { base: "kW", def: 60000, defUnit: "kw", units: [U("kw", "kW", 1), U("mw", "MW", 1000), U("ps", "PS (미터 마력)", 0.73549875), U("hp", "hp (영국 마력)", 0.745699872)],
+      hint: function (b) { return "SFOC 170 g/kWh면 하루 연료 약 " + SB.fmt(b * 170 * 24 / 1e6, 3) + " t, CO₂ 약 " + SB.fmt(b * 170 * 24 / 1e6 * 3.114, 3) + " t"; } },
+    vol: { base: "m³", def: 2000000, defUnit: "bbl", units: [U("m3", "m³", 1), U("bbl", "배럴 (bbl)", 0.158987295), U("l", "리터 (L)", 0.001), U("teu", "TEU 내부 용적 (≈33.2 m³)", 33.2)],
+      hint: function (b) { return "원유(0.86 t/m³)라면 약 " + SB.fmt(b * 0.86, 4) + " t · 해수라면 " + SB.fmt(b * 1.025, 4) + " t"; } },
+    press: { base: "kPa", def: 20, defUnit: "msw", units: [U("kpa", "kPa", 1), U("bar", "bar", 100), U("msw", "해수 수심 (m)", 1.025 * 9.80665), U("atm", "atm", 101.325), U("psi", "psi", 6.894757)],
+      hint: function (b) { return "해수 수심 " + SB.fmt(b / (1.025 * 9.80665), 3) + " m의 계기압 · 절대압은 " + SB.fmt(b + 101.325, 4) + " kPa"; } }
+  };
+  function fv(x) { return !isFinite(x) ? "—" : Math.abs(x) >= 1e5 ? Math.round(x).toLocaleString("en-US") : Math.abs(x) < 1e-3 ? x.toExponential(3) : SB.fmt(x, 5); }
+  var val = document.getElementById("cv-val"), unit = document.getElementById("cv-unit"), out = document.getElementById("cv-out");
+  var baseVal = 20;
+  var fine = SB.range("cv-fine", function (v) { return (v > 0 ? "+" : "") + v + " %"; }, function (v) {
+    val.value = Number((baseVal * (1 + v / 100)).toPrecision(5)); draw();
+  });
+  var kind = SB.seg("cv-kind", function (k) { setKind(k); });
+  function setKind(k) {
+    var K = KINDS[k];
+    unit.innerHTML = K.units.map(function (u) { return '<option value="' + u.id + '"' + (u.id === K.defUnit ? " selected" : "") + ">" + GL.esc(u.label) + "</option>"; }).join("");
+    val.value = K.def; baseVal = K.def;
+    fine.set(0);
+  }
+  function draw() {
+    var K = KINDS[kind()], v = parseFloat(val.value);
+    var src = K.units.filter(function (u) { return u.id === unit.value; })[0] || K.units[0];
+    var ok = isFinite(v) && v > 0, b = ok ? v * src.k : NaN;
+    var vals = K.units.map(function (u) { return ok ? b / u.k : NaN; });
+    var lmax = Math.max.apply(null, vals.map(function (x) { return Math.log10(x); })), lmin = Math.min.apply(null, vals.map(function (x) { return Math.log10(x); }));
+    out.innerHTML = K.units.map(function (u, i) {
+      var w = ok ? (lmax - lmin < 1e-9 ? 100 : 15 + 85 * (Math.log10(vals[i]) - lmin) / (lmax - lmin)) : 0;
+      return '<div class="cv-row' + (u === src ? " src" : "") + '"><span class="u">' + GL.esc(u.label) + '</span><span class="val">' + (ok ? fv(vals[i]) : "—") + '</span><div class="bar"><i style="width:' + w.toFixed(1) + '%"></i></div></div>';
+    }).join("") + '<div style="font-size:12px;color:var(--text-faint)">막대 길이는 같은 양을 각 단위로 쓴 숫자의 크기(로그 눈금)다.</div>';
+    SB.stat("o-cv-in", ok ? fv(v) + " <small>" + GL.esc(src.label.split(" (")[0]) + "</small>" : "양수를 입력");
+    SB.stat("o-cv-si", ok ? fv(b) + " <small>" + GL.esc(K.base) + "</small>" : "—");
+    SB.stat("o-cv-hint", ok ? GL.esc(K.hint(b)) : "—");
+  }
+  val.addEventListener("input", function () { baseVal = parseFloat(val.value) || 0; fine.el.value = 0; fine.el.style.setProperty("--fill", (90 / 290 * 100) + "%"); document.getElementById("cv-fine-out").textContent = "0 %"; draw(); });
+  unit.addEventListener("change", function () { baseVal = parseFloat(val.value) || 0; draw(); });
+  setKind("speed");
+})();
+
+/* ===================================================================== 톤수 계산기 */
+(function () {
+  "use strict";
+  var PRESET = {
+    container: { L: 350, B: 51, T: 15, D: 30, Cb: 0.65, ls: 0.27, sup: 1.08, cargo: "container" },
+    bulk: { L: 285, B: 45, T: 18, D: 24.8, Cb: 0.85, ls: 0.16, sup: 1.03, cargo: "bulk" },
+    tanker: { L: 320, B: 60, T: 21, D: 30, Cb: 0.82, ls: 0.14, sup: 1.03, cargo: "tanker" }
+  };
+  var r = {}, busy = false;
+  function upd() { if (!busy) cv.redraw(); }
+  r.L = SB.range("tn-L", function (v) { return v + " m"; }, upd);
+  r.B = SB.range("tn-B", function (v) { return v.toFixed(1) + " m"; }, upd);
+  r.T = SB.range("tn-T", function (v) { return v.toFixed(1) + " m"; }, function () { if (r.T() > r.D() - 1) r.D.set(Math.min(36, +(r.T() + 1).toFixed(1))); upd(); });
+  r.D = SB.range("tn-D", function (v) { return v.toFixed(1) + " m"; }, function () { if (r.D() < r.T() + 1) r.T.set(Math.max(4, +(r.D() - 1).toFixed(1))); upd(); });
+  r.Cb = SB.range("tn-Cb", function (v) { return v.toFixed(2); }, upd);
+  r.rho = SB.range("tn-rho", function (v) { return v.toFixed(3) + " t/m³" + (v < 1.005 ? " (담수)" : v < 1.02 ? " (기수)" : " (해수)"); }, upd);
+  var type = SB.seg("tn-type", function (k) {
+    var p = PRESET[k]; busy = true;
+    r.L.set(p.L); r.B.set(p.B); r.D.set(p.D); r.T.set(p.T); r.Cb.set(p.Cb); r.rho.set(1.025);
+    busy = false; cv.redraw();
+  });
+  function calc() {
+    var p = PRESET[type()], L = r.L(), B = r.B(), T = r.T(), D = r.D(), Cb = r.Cb(), rho = r.rho();
+    var disp = rho * Cb * L * B * T;
+    var dispDesign = 1.025 * Cb * L * B * T;            /* 경하중량은 해수 기준 크기에서 추정 */
+    var lwt = p.ls * dispDesign;
+    var CbD = Math.min(0.97, Cb + (1 - Cb) * (D - T) / (3 * T));
+    var V = L * B * D * CbD * p.sup;
+    var gt = (0.2 + 0.02 * Math.log10(V)) * V;
+    var cwp = Math.min(0.98, 0.18 + 0.86 * Cb);          /* 수선면 계수의 경험적 근사 */
+    var tpc = cwp * L * B * rho / 100;
+    return { L: L, B: B, T: T, D: D, disp: disp, lwt: lwt, dwt: disp - lwt, gt: gt, V: V, tpc: tpc, cargo: p.cargo, full: rho * Cb * L * B * D };
+  }
+  function fmtT(x) { return Math.round(x).toLocaleString("en-US"); }
+  var cv = SB.canvas(document.getElementById("cv-ton"), function (ctx, w, h) {
+    var P = SB.palette(), c = calc();
+    var pad = 14, top = 10, shipH = Math.min(h * 0.5, 210);
+    /* 측면도: 길이 400 m를 폭에 맞춘 고정 축척(배 크기 차이가 보이게) */
+    var s = Math.min((w - 2 * pad) / 430, (shipH - 18) / 60);
+    var wy = top + shipH * 0.62;
+    SB.shipSide(ctx, w / 2, wy, s, { L: c.L, D: c.D, T: c.T, cargo: c.cargo });
+    SB.water(ctx, w, top + shipH, wy, {});
+    ctx.fillStyle = P.dim; ctx.font = "12px " + getComputedStyle(document.body).fontFamily;
+    ctx.textAlign = "left";
+    ctx.fillText("L " + c.L + " m · B " + c.B.toFixed(1) + " m · T " + c.T.toFixed(1) + " m · D " + c.D.toFixed(1) + " m", pad, top + 12);
+    ctx.textAlign = "right"; ctx.fillText("축척 고정: 막대 = 100 m", w - pad, top + 12);
+    ctx.fillStyle = P.axis; ctx.fillRect(w - pad - 100 * s, top + 18, 100 * s, 3);
+    /* 막대 */
+    var y0 = top + shipH + 18, bh = Math.max(18, Math.min(46, (h - y0 - 34) / 3.8)), x0 = pad + 70, bw = w - x0 - pad;
+    var maxv = Math.max(c.full, c.V) * 1.02;
+    function bar(y, segs, label) {
+      ctx.fillStyle = P.dim; ctx.textAlign = "right"; ctx.font = "12px " + getComputedStyle(document.body).fontFamily;
+      ctx.fillText(label, x0 - 8, y + bh * 0.68);
+      ctx.fillStyle = P.grid; ctx.fillRect(x0, y, bw, bh);
+      var x = x0;
+      segs.forEach(function (sg) {
+        var ww = Math.max(0, sg.v / maxv * bw);
+        ctx.fillStyle = sg.c; ctx.fillRect(x, y, ww, bh);
+        ctx.font = "600 11.5px " + getComputedStyle(document.body).fontFamily; ctx.textAlign = "left"; ctx.fillStyle = "#fff";
+        var txt = ctx.measureText(sg.t).width + 12 < ww ? sg.t : (ctx.measureText(sg.t.split(" ")[0]).width + 10 < ww ? sg.t.split(" ")[0] : "");
+        if (txt) ctx.fillText(txt, x + 6, y + bh * 0.66);
+        x += ww;
+      });
+    }
+    bar(y0, [{ v: c.lwt, c: P.dim, t: "LWT " + fmtT(c.lwt) + " t" }, { v: c.dwt, c: P.accent, t: "DWT " + fmtT(c.dwt) + " t" }], "배수량 Δ");
+    bar(y0 + bh * 1.35, [{ v: c.V, c: P.ok, t: "V " + fmtT(c.V) + " m³" }], "폐위 용적");
+    bar(y0 + bh * 2.7, [{ v: c.gt, c: P.accent2, t: "GT " + fmtT(c.gt) }], "총톤수");
+    ctx.fillStyle = P.faint; ctx.textAlign = "left"; ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillText("단위가 다르다(t · m³ · 무차원). GT ≈ " + (c.gt / c.V).toFixed(3) + " × V", pad, Math.min(h - 6, y0 + bh * 3.7 + 12));
+    SB.stat("o-tn-disp", fmtT(c.disp) + " <small>t</small>");
+    SB.stat("o-tn-lwt", fmtT(c.lwt) + " <small>t</small>");
+    SB.stat("o-tn-dwt", fmtT(c.dwt) + " <small>t</small>");
+    SB.stat("o-tn-gt", fmtT(c.gt));
+    SB.stat("o-tn-tpc", c.tpc.toFixed(1) + " <small>t/cm</small>");
+    SB.stat("o-tn-ratio", (c.L / c.B).toFixed(2) + " · " + (c.B / c.T).toFixed(2));
+  }, { aspect: 0.8, minHeight: 360, maxHeight: 500 });
+})();
+</script>
+
+<script>
+/* ===================================================================== 학습 체크리스트 */
+(function () {
+  "use strict";
+  var KEY = "shipbook-read-v1";
+  var chs = SB.CHAPTERS.filter(function (c) { return c.slug !== "glossary"; });
+  var read = {};
+  try { read = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { read = {}; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(read)); } catch (e) { /* 저장 불가 환경: 이 페이지 안에서만 유지 */ } }
+  var grid = document.getElementById("ck-grid");
+  grid.innerHTML = chs.map(function (c) {
+    return '<label class="ck-item" data-slug="' + c.slug + '"><input type="checkbox" value="' + c.slug + '"><span><span class="n">Chapter ' + c.num + " · " + GL.esc(c.tags[0]) + '</span><a href="' + c.slug + '.html">' + GL.esc(c.title) + '</a><span class="tw" hidden></span></span></label>';
+  }).join("");
+  var boxes = [].slice.call(grid.querySelectorAll("input"));
+  boxes.forEach(function (b) {
+    b.checked = !!read[b.value];
+    b.addEventListener("change", function () { if (b.checked) read[b.value] = 1; else delete read[b.value]; save(); refresh(); });
+  });
+  /* 분야 9개를 구별하는 범주형 색(테마에 따라 명도만 조정) */
+  var HUES = [210, 4, 145, 32, 190, 280, 50, 330, 100];
+  function gcol(i) { var d = SB.isDark(); return "hsl(" + HUES[i % HUES.length] + "," + (d ? 62 : 58) + "%," + (d ? 60 : 44) + "%)"; }
+  var GROUPS = [];
+  chs.forEach(function (c) { var g = c.tags[0]; if (GROUPS.indexOf(g) < 0) GROUPS.push(g); });
+  var cv = SB.canvas(document.getElementById("cv-check"), function (ctx, w, h) {
+    var P = SB.palette(), n = chs.length, done = chs.filter(function (c) { return read[c.slug]; }).length;
+    var R = Math.min(h * 0.42, w * 0.28), cx = w < 420 ? w / 2 : w * 0.34, cy = h / 2, r0 = R * 0.58;
+    var a0 = -Math.PI / 2, da = (Math.PI * 2) / n, gap = 0.025;
+    chs.forEach(function (c, i) {
+      var col = gcol(GROUPS.indexOf(c.tags[0]));
+      var miss = GL.missed[c.slug];
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, a0 + i * da + gap, a0 + (i + 1) * da - gap);
+      ctx.arc(cx, cy, r0, a0 + (i + 1) * da - gap, a0 + i * da + gap, true);
+      ctx.closePath();
+      ctx.globalAlpha = read[c.slug] ? 0.95 : 0.16;
+      ctx.fillStyle = col; ctx.fill();
+      ctx.globalAlpha = 1;
+      if (miss) { ctx.strokeStyle = P.bad; ctx.lineWidth = 2.5; ctx.stroke(); }
+      var am = a0 + (i + 0.5) * da, rr = (R + r0) / 2;
+      ctx.fillStyle = read[c.slug] ? "#fff" : P.dim; ctx.font = "600 " + Math.max(9, Math.round(R * 0.11)) + "px " + getComputedStyle(document.body).fontFamily;
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(c.num, cx + rr * Math.cos(am), cy + rr * Math.sin(am));
+    });
+    ctx.fillStyle = P.text; ctx.font = "700 " + Math.round(R * 0.3) + "px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillText(Math.round((done / n) * 100) + "%", cx, cy - R * 0.06);
+    ctx.fillStyle = P.dim; ctx.font = Math.max(10, Math.round(R * 0.12)) + "px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillText(done + " / " + n + " 장", cx, cy + R * 0.22);
+    ctx.textBaseline = "alphabetic";
+    if (w >= 420) {
+      var lx = w * 0.64, ly = cy - (GROUPS.length * 22) / 2 + 8;
+      ctx.textAlign = "left"; ctx.font = "12.5px " + getComputedStyle(document.body).fontFamily;
+      GROUPS.forEach(function (g, i) {
+        var list = chs.filter(function (c) { return c.tags[0] === g; });
+        var d = list.filter(function (c) { return read[c.slug]; }).length;
+        ctx.fillStyle = gcol(i); ctx.fillRect(lx, ly + i * 22 - 9, 12, 12);
+        ctx.fillStyle = P.text; ctx.fillText(g + "  " + d + "/" + list.length, lx + 18, ly + i * 22 + 1);
+      });
+      if (Object.keys(GL.missed).length) { ctx.fillStyle = P.bad; ctx.fillText("빨간 테두리 = 퀴즈에서 틀린 장", lx, ly + GROUPS.length * 22 + 6); }
+    }
+  }, { aspect: 0.5, minHeight: 240, maxHeight: 340 });
+  function refresh() {
+    var done = chs.filter(function (c) { return read[c.slug]; });
+    boxes.forEach(function (b) {
+      var item = b.closest(".ck-item"), m = GL.missed[b.value];
+      b.checked = !!read[b.value];
+      item.classList.toggle("on", b.checked);
+      var tw = item.querySelector(".tw"); tw.hidden = !m; if (m) tw.textContent = "퀴즈 오답 " + m + "문제 · 복습 추천";
+    });
+    SB.stat("o-ck-n", done.length + " / " + chs.length);
+    SB.stat("o-ck-pct", Math.round((done.length / chs.length) * 100) + " %");
+    var nx = chs.filter(function (c) { return GL.missed[c.slug]; })[0] || chs.filter(function (c) { return !read[c.slug]; })[0];
+    SB.stat("o-ck-next", nx ? '<a href="' + nx.slug + '.html">' + nx.num + " " + GL.esc(nx.title) + "</a>" : "모두 읽었다!");
+    cv.redraw();
+  }
+  document.getElementById("ck-all").addEventListener("click", function () { chs.forEach(function (c) { read[c.slug] = 1; }); save(); refresh(); });
+  document.getElementById("ck-none").addEventListener("click", function () { read = {}; save(); refresh(); });
+  document.getElementById("ck-wrong").addEventListener("click", function () { Object.keys(GL.missed).forEach(function (s) { delete read[s]; }); save(); refresh(); });
+  GL.refreshChecklist = refresh;
+  refresh();
+})();
+
+/* ===================================================================== 종합 퀴즈 */
+(function () {
+  "use strict";
+  var list = document.getElementById("fq-list");
+  var qs = [].slice.call(list.querySelectorAll(".quiz-q"));
+  var chSel = document.getElementById("fq-ch"), wrongBtn = document.getElementById("fq-wrong");
+  var none = document.getElementById("fq-none"), result = document.getElementById("fq-result");
+  var state = new Map();          /* quiz-q → true(정답)/false(오답) */
+  var wrongOnly = false;
+  /* 장 필터 옵션: 문제가 있는 장만 */
+  var have = {};
+  qs.forEach(function (q) { have[q.getAttribute("data-ch")] = (have[q.getAttribute("data-ch")] || 0) + 1; });
+  SB.CHAPTERS.forEach(function (c) {
+    if (!have[c.slug]) return;
+    var o = document.createElement("option"); o.value = c.slug; o.textContent = c.num + " " + c.title + " (" + have[c.slug] + ")";
+    chSel.appendChild(o);
+  });
+  /* 원래 보기 순서 기억(다시 풀기 때 복원) */
+  qs.forEach(function (q, i) {
+    q._idx = i;
+    q._opts = [].slice.call(q.querySelectorAll("button.opt"));
+    q._opts.forEach(function (b) { b.type = "button"; });
+  });
+  function label() {
+    var n = 0;
+    [].slice.call(list.children).forEach(function (q) {
+      if (!q.classList.contains("quiz-q")) return;
+      n++;
+      q.querySelector(".q-ch").innerHTML = '<span class="qn">Q' + n + "</span>" + GL.esc(GL.chLabel(q.getAttribute("data-ch")));
+    });
+  }
+  function inScope(q) { var c = chSel.value; return c === "all" || q.getAttribute("data-ch") === c; }
+  function update() {
+    var scope = qs.filter(inScope), done = 0, right = 0;
+    scope.forEach(function (q) { if (state.has(q)) { done++; if (state.get(q)) right++; } });
+    var n = scope.length, wrong = done - right;
+    document.getElementById("fq-count").innerHTML = "푼 문제 <b>" + done + "</b> / " + n + (chSel.value === "all" ? "" : " (전체 " + qs.length + "문항 중 " + state.size + " 풂)");
+    document.getElementById("fq-score").innerHTML = "정답 <b>" + right + "</b> · 오답 <b>" + wrong + "</b> · 정답률 " + (done ? Math.round((right / done) * 100) + " %" : "—");
+    document.getElementById("fq-fill-ok").style.width = (n ? (right / n) * 100 : 0) + "%";
+    document.getElementById("fq-fill-bad").style.width = (n ? (wrong / n) * 100 : 0) + "%";
+    var shown = 0;
+    qs.forEach(function (q) {
+      var show = inScope(q) && (!wrongOnly || state.get(q) === false);
+      q.hidden = !show; if (show) shown++;
+    });
+    none.hidden = shown > 0;
+    wrongBtn.setAttribute("aria-pressed", wrongOnly ? "true" : "false");
+    wrongBtn.textContent = wrongOnly ? "모든 문제 보기" : "틀린 문제만 보기";
+    /* 장별 오답 → 체크리스트 */
+    var miss = {};
+    state.forEach(function (ok, q) { if (!ok) { var s = q.getAttribute("data-ch"); miss[s] = (miss[s] || 0) + 1; } });
+    GL.missed = miss;
+    if (GL.refreshChecklist) GL.refreshChecklist();
+    if (n && done === n) showResult(n, right, scope); else result.hidden = true;
+  }
+  var RANKS = [
+    [0.95, "선장 (Master)", "거의 완벽하다. 이제 각 장의 시뮬레이터에서 수치를 바꿔 가며 설계·운항 감각을 키워 보자."],
+    [0.8, "1등 항해사 · 1등 기관사", "전반을 잘 이해하고 있다. 틀린 문제의 장만 다시 보면 된다."],
+    [0.6, "실습 사관", "뼈대는 잡혔다. 아래 장들의 시뮬레이터를 다시 만져 보자."],
+    [0, "갑판 견습생", "괜찮다. 체크리스트에서 빨간 표시가 붙은 장부터 차례로 다시 읽어 보자."]
+  ];
+  function showResult(n, right, scope) {
+    var ratio = right / n, rank = RANKS.filter(function (r) { return ratio >= r[0]; })[0];
+    document.getElementById("fq-title").textContent = rank[1];
+    document.getElementById("fq-big").innerHTML = right + " <small>/ " + n + "</small>";
+    document.getElementById("fq-msg").textContent = rank[2];
+    var miss = {};
+    scope.forEach(function (q) { if (state.get(q) === false) { var s = q.getAttribute("data-ch"); miss[s] = (miss[s] || 0) + 1; } });
+    var slugs = Object.keys(miss).sort(function (a, b) { return GL.ORDER[a] - GL.ORDER[b]; });
+    document.getElementById("fq-review").innerHTML = slugs.length
+      ? "<b>다시 볼 장:</b> " + slugs.map(function (s) { return '<a href="' + s + '.html">' + GL.esc(GL.chLabel(s)) + "</a> (" + miss[s] + ")"; }).join(" · ")
+      : "틀린 문제가 없다. 섞기를 누르고 보기 순서가 바뀐 상태로 다시 도전해 보자.";
+    result.hidden = false;
+  }
+  list.addEventListener("answered", function (e) {
+    var q = e.target.closest ? e.target.closest(".quiz-q") : null;
+    if (!q || state.has(q)) return;
+    var ok = !!(e.detail && e.detail.correct);
+    state.set(q, ok);
+    q.classList.toggle("missed", !ok);
+    update();
+  });
+  function reset(q) {
+    q._opts.forEach(function (b) { b.disabled = false; b.classList.remove("right", "wrong"); });
+    q.classList.remove("done", "missed");
+    state.delete(q);
+  }
+  function resetAll() { qs.forEach(reset); wrongOnly = false; result.hidden = true; }
+  function shuffleAll() {
+    GL.shuffle(qs.slice()).forEach(function (q) {
+      var box = q.querySelector(".opts");
+      GL.shuffle(q._opts.slice()).forEach(function (b) { box.appendChild(b); });
+      list.appendChild(q);
+    });
+    label();
+  }
+  chSel.addEventListener("change", update);
+  wrongBtn.addEventListener("click", function () { wrongOnly = !wrongOnly; update(); });
+  document.getElementById("fq-shuffle").addEventListener("click", function () {
+    resetAll(); shuffleAll(); update();
+    document.getElementById("quiz").scrollIntoView({ block: "start" });
+  });
+  document.getElementById("fq-retry").addEventListener("click", function () {
+    resetAll();
+    /* 원래 순서로 되돌린다 */
+    qs.slice().sort(function (a, b) { return a._idx - b._idx; }).forEach(function (q) {
+      var box = q.querySelector(".opts");
+      q._opts.forEach(function (b) { box.appendChild(b); });
+      list.appendChild(q);
+    });
+    label(); update();
+    document.getElementById("quiz").scrollIntoView({ block: "start" });
+  });
+  label(); update();
+})();
+</script>
+</body>
+</html>

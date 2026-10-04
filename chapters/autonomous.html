@@ -1,0 +1,1171 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<title>자율운항선박과 DP · ShipBook</title>
+<meta name="description" content="IMO MASS 자율 등급, 센서 융합과 칼만 필터, A* 경로 계획, LOS 경로 추종, 속도 장애물 충돌 회피와 COLREG, 동적 위치 유지(DP)와 스러스터 할당, 원격 조종의 통신 지연을 시뮬레이터로 배운다.">
+<link rel="canonical" href="https://shipbook.euiyun.com/chapters/autonomous.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="ShipBook">
+<meta property="og:title" content="자율운항선박과 DP · ShipBook">
+<meta property="og:description" content="IMO MASS 자율 등급, 센서 융합과 칼만 필터, A* 경로 계획, LOS 경로 추종, 속도 장애물 충돌 회피와 COLREG, 동적 위치 유지(DP)와 스러스터 할당, 원격 조종의 통신 지연을 시뮬레이터로 배운다.">
+<meta property="og:url" content="https://shipbook.euiyun.com/chapters/autonomous.html">
+<meta property="og:image" content="https://shipbook.euiyun.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"자율운항선박과 DP","name":"자율운항선박과 DP · ShipBook","url":"https://shipbook.euiyun.com/chapters/autonomous.html","mainEntityOfPage":"https://shipbook.euiyun.com/chapters/autonomous.html","inLanguage":"ko","isAccessibleForFree":true,"learningResourceType":"interactive textbook chapter","position":22,"image":"https://shipbook.euiyun.com/og.png","dateModified":"2026-10-04","isPartOf":{"@type":"Book","@id":"https://shipbook.euiyun.com/#book","name":"ShipBook — 인터랙티브 선박 교과서","url":"https://shipbook.euiyun.com/"},"publisher":{"@type":"Organization","name":"ShipBook","url":"https://shipbook.euiyun.com/"},"description":"IMO MASS 자율 등급, 센서 융합과 칼만 필터, A* 경로 계획, LOS 경로 추종, 속도 장애물 충돌 회피와 COLREG, 동적 위치 유지(DP)와 스러스터 할당, 원격 조종의 통신 지연을 시뮬레이터로 배운다."},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ShipBook","item":"https://shipbook.euiyun.com/"},{"@type":"ListItem","position":2,"name":"22 자율운항선박과 DP","item":"https://shipbook.euiyun.com/chapters/autonomous.html"}]}]}</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../css/style.css">
+<script src="../js/common.js"></script>
+<style>
+  .au-lv { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); padding: 16px 18px; }
+  .au-lv button { text-align: left; font: inherit; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
+  .au-lv button b { display: block; font-size: 15px; }
+  .au-lv button small { color: var(--text-dim); font-size: 12.5px; line-height: 1.4; display: block; margin-top: 4px; }
+  .au-lv button.on { border-color: var(--accent); background: var(--accent-soft); }
+  .au-roles td.h { color: var(--accent); font-weight: 700; }
+  .au-roles td.m { color: var(--accent-2); font-weight: 700; }
+  .sim-view canvas.grab { cursor: grab; }
+  .v.ok { color: var(--ok); } .v.bad { color: var(--bad); } .v.warn { color: var(--warn); }
+  .au-thr { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .au-thr .btn.off { background: var(--bad); border-color: var(--bad); color: #fff; }
+</style>
+</head>
+<body data-chapter="autonomous">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <marker id="au-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--text-dim)"/></marker>
+  <marker id="au-ah-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--accent)"/></marker>
+  <marker id="au-ah-b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--accent-2)"/></marker>
+</defs></svg>
+<main class="chapter">
+  <header class="chapter-hero">
+    <div class="eyebrow">Chapter 22</div>
+    <h1>자율운항선박과 DP</h1>
+    <p class="lead">선교의 당직 항해사가 하는 일은 크게 셋이다. 주변을 보고(인지), 어떻게 갈지 정하고(판단), 타와 기관을 움직인다(제어). 자율운항선박은 이 세 일을 센서와 알고리즘이 나눠 맡는 배다. 이 장은 여러 센서의 측정을 칼만 필터로 묶는 법, 지도 위에서 길을 찾는 A*, 정해진 길을 따라가는 LOS 유도, 다른 배를 피하는 속도 장애물 기법을 차례로 만져 본다. 마지막으로 바람과 파도 속에서 한 점에 멈춰 서는 동적 위치 유지(DP)와, 육상에서 배를 원격 조종할 때 통신 지연이 왜 위험한지를 다룬다.</p>
+    <ul class="objectives">
+      <li>IMO MASS 자율 등급 1~4의 차이와 육상 원격 관제 센터의 역할을 설명한다.</li>
+      <li>칼만 필터가 레이더·AIS처럼 성질이 다른 측정을 어떻게 가중 평균하는지 이해한다.</li>
+      <li>격자 지도에서 A* 알고리즘으로 수심을 고려한 최소 비용 경로를 구한다.</li>
+      <li>LOS 유도와 노모토 모델 기반 PID 선수각 제어로 경로를 추종하고, 조류에 의한 정상 오차와 적분 동작의 역할을 안다.</li>
+      <li>속도 장애물(VO)로 충돌 회피 속도를 고르고 COLREG의 우현 변침 원칙을 반영한다.</li>
+      <li>DP의 3자유도 제어, 스러스터 할당, DP 등급과 이중화의 의미를 설명한다.</li>
+      <li>통신 지연이 원격 조종의 안정성을 어떻게 해치는지 설명한다.</li>
+    </ul>
+  </header>
+
+  <!-- =============================================================== 1 -->
+  <section id="mass">
+    <h2>MASS: 자율운항선박의 네 등급</h2>
+    <p>국제해사기구(IMO)는 자율운항선박을 <span class="term">MASS</span><span class="en">(Maritime Autonomous Surface Ships)</span>라 부르고, 2018~2021년의 규제 검토(RSE)에서 자율화 정도를 네 단계로 나눴다. 기준은 "배 위에 사람이 있는가"와 "결정을 누가 하는가" 두 가지다.</p>
+    <div class="sim" id="sim-mass">
+      <div class="sim-head"><span class="sim-tag">INTERACTIVE</span><h3>MASS 자율 등급 비교</h3></div>
+      <div class="au-lv" id="ms-lv">
+        <button data-v="1" class="on"><b>1등급</b><small>자동화 공정과 의사결정 지원. 선원이 탑승해 운항한다.</small></button>
+        <button data-v="2"><b>2등급</b><small>원격 조종, 선원 탑승. 육상에서 조종하고 선원이 대기한다.</small></button>
+        <button data-v="3"><b>3등급</b><small>원격 조종, 무인. 배에는 사람이 없다.</small></button>
+        <button data-v="4"><b>4등급</b><small>완전 자율. 운항 시스템이 스스로 판단하고 실행한다.</small></button>
+      </div>
+      <div class="sim-view"><canvas id="cv-mass"></canvas></div>
+      <div class="table-wrap" style="margin:0;border-radius:0;border-left:0;border-right:0">
+        <table class="au-roles"><thead><tr><th>기능</th><th>누가 맡는가</th></tr></thead><tbody id="ms-tb"></tbody></table>
+      </div>
+      <div class="sim-note">등급을 바꿔 보면 '감시–판단–실행–비상 대응'의 주체가 선원(파랑)에서 육상 운항자, 기계(주황)로 옮겨 가는 것을 볼 수 있다. 실제 배는 항해 구간에 따라 등급을 오갈 수 있다. 예를 들어 대양 항해는 3~4등급, 입출항은 2등급으로 운항하는 식이다.</div>
+    </div>
+    <p>등급이 올라갈수록 기술보다 <b>제도</b>가 어려워진다. 해상인명안전협약(SOLAS)은 선장과 승무원이 배에 있다는 전제로 쓰여 있고, 국제해상충돌예방규칙(COLREG) 제5조는 "시각과 청각으로 항상 적절한 경계"를 하라고 요구한다. 카메라와 마이크로 하는 경계가 이를 만족하는가, 무인선의 '선장'은 누구인가 같은 질문에 답해야 한다. 이 장의 마지막 절에서 다시 다룬다.</p>
+  </section>
+
+  <!-- =============================================================== 2 -->
+  <section id="arch">
+    <h2>자율운항 시스템의 구조</h2>
+    <p>자율운항 시스템은 사람의 당직 업무를 그대로 따라 세 층으로 나뉜다.</p>
+    <ul>
+      <li><b>상황 인지</b><span class="en">(Situational Awareness)</span>: 레이더·AIS·카메라·라이다로 주변 배와 장애물을 찾고, GNSS·IMU·자이로로 자기 위치와 자세를 안다. 여러 센서를 하나의 '세계 모델'로 묶는 것이 <b>센서 융합</b>이다.</li>
+      <li><b>판단</b><span class="en">(Decision Making)</span>: 전자해도(ENC) 위에서 경로를 계획하고, 다른 배와의 충돌 위험(CPA·TCPA, <a href="bridge.html">21장</a>)을 평가해 COLREG에 맞는 회피 행동을 고른다.</li>
+      <li><b>제어</b><span class="en">(Control)</span>: 오토파일럿이 정해진 침로·속력을 타와 기관 명령으로 바꾼다. 저속·정지 상태에서는 DP 시스템이 스러스터로 위치를 잡는다.</li>
+    </ul>
+    <figure class="diagram">
+      <svg viewBox="0 0 780 360" role="img" aria-label="자율운항 시스템 블록 다이어그램">
+        <rect x="10" y="20" width="170" height="250" rx="12" class="f-surface"/>
+        <text x="95" y="44" class="t-acc" text-anchor="middle">센서</text>
+        <g class="t" font-size="13">
+          <text x="30" y="76">레이더 (ARPA)</text><text x="30" y="104">AIS 수신기</text><text x="30" y="132">EO/IR 카메라</text><text x="30" y="160">라이다 (근거리)</text><text x="30" y="188">GNSS · DGNSS</text><text x="30" y="216">IMU · 자이로</text><text x="30" y="244">풍향풍속 · 측심</text>
+        </g>
+        <rect x="220" y="20" width="150" height="110" rx="12" class="f-acc-soft"/>
+        <text x="295" y="50" class="t-acc" text-anchor="middle">상황 인지</text>
+        <text x="295" y="76" class="t-dim" text-anchor="middle">표적 검출·추적</text>
+        <text x="295" y="96" class="t-dim" text-anchor="middle">센서 융합(칼만 필터)</text>
+        <text x="295" y="116" class="t-dim" text-anchor="middle">자선 항법(위치·자세)</text>
+        <rect x="220" y="160" width="150" height="110" rx="12" class="f-elev"/>
+        <text x="295" y="190" class="t" text-anchor="middle" font-weight="700">세계 모델</text>
+        <text x="295" y="214" class="t-dim" text-anchor="middle">전자해도(ENC)</text>
+        <text x="295" y="234" class="t-dim" text-anchor="middle">주변 선박 상태·불확실성</text>
+        <text x="295" y="254" class="t-dim" text-anchor="middle">기상·해상</text>
+        <rect x="410" y="20" width="160" height="250" rx="12" class="f-acc2-soft"/>
+        <text x="490" y="50" class="t" text-anchor="middle" font-weight="700" fill="var(--accent-2)">판단</text>
+        <text x="490" y="84" class="t-dim" text-anchor="middle">전역 경로 계획 (A*)</text>
+        <text x="490" y="112" class="t-dim" text-anchor="middle">충돌 위험 평가</text>
+        <text x="490" y="132" class="t-dim" text-anchor="middle">(CPA · TCPA)</text>
+        <text x="490" y="160" class="t-dim" text-anchor="middle">COLREG 규칙 해석</text>
+        <text x="490" y="188" class="t-dim" text-anchor="middle">국지 회피 (VO 등)</text>
+        <text x="490" y="216" class="t-dim" text-anchor="middle">비상 시 최소 위험</text>
+        <text x="490" y="236" class="t-dim" text-anchor="middle">상태(MRC) 전환</text>
+        <rect x="610" y="20" width="160" height="250" rx="12" class="f-surface"/>
+        <text x="690" y="50" class="t-acc" text-anchor="middle">제어</text>
+        <text x="690" y="84" class="t-dim" text-anchor="middle">LOS 유도</text>
+        <text x="690" y="112" class="t-dim" text-anchor="middle">선수각·속력 제어(PID)</text>
+        <text x="690" y="140" class="t-dim" text-anchor="middle">DP · 스러스터 할당</text>
+        <text x="690" y="176" class="t" text-anchor="middle">↓</text>
+        <text x="690" y="204" class="t-dim" text-anchor="middle">타 · 주기관</text>
+        <text x="690" y="226" class="t-dim" text-anchor="middle">스러스터</text>
+        <line x1="180" y1="145" x2="218" y2="80" class="s-line" marker-end="url(#au-ah)"/>
+        <line x1="295" y1="130" x2="295" y2="158" class="s-line" marker-end="url(#au-ah)"/>
+        <line x1="370" y1="215" x2="408" y2="160" class="s-line" marker-end="url(#au-ah)"/>
+        <line x1="570" y1="145" x2="608" y2="145" class="s-line" marker-end="url(#au-ah)"/>
+        <path d="M690 270 L690 300 L95 300 L95 272" class="s-line" stroke-dasharray="5 4" marker-end="url(#au-ah)"/>
+        <text x="400" y="294" class="t-dim" text-anchor="middle">배의 움직임 → 다시 센서로 (되먹임)</text>
+        <rect x="240" y="312" width="320" height="42" rx="10" class="f-elev" stroke="var(--accent)" stroke-width="1.5"/>
+        <text x="400" y="338" class="t" text-anchor="middle" font-weight="700">육상 원격 관제 센터(ROC) — 감시·개입</text>
+        <line x1="240" y1="333" x2="200" y2="333" stroke="var(--accent)" stroke-dasharray="3 3"/>
+        <line x1="560" y1="333" x2="610" y2="270" stroke="var(--accent)" stroke-dasharray="3 3" marker-end="url(#au-ah-a)"/>
+        <text x="130" y="338" class="t-dim">위성 · LTE 링크</text>
+      </svg>
+      <figcaption><b>그림 22-1.</b> 자율운항 시스템의 블록 다이어그램. 센서 → 상황 인지 → 판단 → 제어로 이어지는 흐름 위에, 육상 원격 관제 센터(ROC, Remote Operation Centre)가 통신 링크로 감시하고 필요할 때 개입한다. 통신이 끊기거나 시스템이 감당할 수 없는 상황이면 배는 멈추거나 표류하는 등 미리 정한 최소 위험 상태(MRC, Minimum Risk Condition)로 들어간다.</figcaption>
+    </figure>
+  </section>
+
+  <!-- =============================================================== 3 -->
+  <section id="fusion">
+    <h2>센서 융합: 칼만 필터로 상대선 추적하기</h2>
+    <p>주변 배의 위치를 알려 주는 센서는 저마다 약점이 있다. <b>레이더</b>는 2~3초마다 스스로 측정하지만, 거리 오차는 수십 m, 방위 오차는 0.5~1°라서 3 km 떨어진 배의 옆 방향 오차가 50 m 가까이 된다. <b>AIS</b>는 상대선이 GNSS로 잰 정확한 위치를 보내 주지만, 보고 간격이 2~10초 이상이고 전송·처리 지연이 있으며, 가끔 빠지거나 아예 꺼져 있다. 둘의 장점을 합치는 표준 도구가 <span class="term">칼만 필터</span><span class="en">(Kalman Filter)</span>다.</p>
+    <p>상대선이 거의 등속으로 움직인다고 보고(등속 모델), 상태를 \(\mathbf{x} = [x, y, v_x, v_y]^\mathsf{T}\)로 둔다. 칼만 필터는 두 단계를 되풀이한다.</p>
+    <div class="formula">$$\text{predict:}\ \ \hat{\mathbf{x}}^- = F\hat{\mathbf{x}},\quad P^- = FPF^\mathsf{T} + Q$$
+    $$\text{update:}\ \ K = P^-H^\mathsf{T}(HP^-H^\mathsf{T} + R)^{-1},\quad \hat{\mathbf{x}} = \hat{\mathbf{x}}^- + K(\mathbf{z} - H\hat{\mathbf{x}}^-),\quad P = (I - KH)P^-$$
+      <div class="where">\(F\)는 등속 운동의 상태 천이 행렬, \(Q\)는 '상대선이 얼마나 갑자기 기동할 수 있는가'를 나타내는 과정 잡음, \(R\)은 측정 잡음 공분산, \(P\)는 추정 오차 공분산이다. 칼만 이득 \(K\)는 예측을 얼마나 믿을지와 측정을 얼마나 믿을지의 비율이다. 레이더의 \(R\)은 거리·방위 잡음을 직교 좌표로 돌린 타원이고, AIS 측정은 지연 \(\tau\)만큼 과거의 위치이므로 \(H\)를 \(\mathbf{z} = (x - \tau v_x,\ y - \tau v_y)\)로 잡아 지연을 보정한다.</div>
+    </div>
+    <div class="sim" id="sim-kf">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>레이더 + AIS 융합 표적 추적</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-kf"></canvas></div>
+        <div class="sim-controls">
+          <label class="check"><input type="checkbox" id="kf-ur" checked> 레이더 사용</label>
+          <label class="check"><input type="checkbox" id="kf-ua" checked> AIS 사용</label>
+          <label class="ctrl"><span>레이더 방위 잡음 σθ <output id="kf-sb-out"></output></span><input type="range" id="kf-sb" min="0.1" max="2" value="0.8" step="0.1"></label>
+          <label class="ctrl"><span>레이더 거리 잡음 σr <output id="kf-sr-out"></output></span><input type="range" id="kf-sr" min="5" max="100" value="30" step="5"></label>
+          <label class="ctrl"><span>레이더 갱신 주기 <output id="kf-tr-out"></output></span><input type="range" id="kf-tr" min="1" max="12" value="3" step="1"></label>
+          <label class="ctrl"><span>AIS 보고 간격 <output id="kf-ta-out"></output></span><input type="range" id="kf-ta" min="2" max="40" value="10" step="1"></label>
+          <label class="ctrl"><span>AIS 지연 / 누락률 <output id="kf-ad-out"></output></span><input type="range" id="kf-ad" min="0" max="20" value="6" step="1"></label>
+          <label class="ctrl"><span>과정 잡음 q (기동 허용) <output id="kf-q-out"></output></span><input type="range" id="kf-q" min="-4" max="-0.5" value="-2.5" step="0.25"></label>
+          <button class="btn" id="kf-reset">처음부터</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">위치 오차(현재)</span><span class="v" id="o-kf-e">—</span></div>
+        <div class="stat"><span class="k">위치 오차 RMS</span><span class="v" id="o-kf-rms">—</span></div>
+        <div class="stat"><span class="k">2σ 타원 반축</span><span class="v" id="o-kf-ell">—</span></div>
+        <div class="stat"><span class="k">추정 속력 / 실제</span><span class="v" id="o-kf-v">—</span></div>
+        <div class="stat"><span class="k">추정 침로 / 실제</span><span class="v" id="o-kf-c">—</span></div>
+      </div>
+      <div class="sim-note">자선은 왼쪽 아래 원점에 있다. 회색 선이 상대선의 실제 항적, 주황 점이 레이더 측정, 초록 네모가 AIS 보고(지연된 위치), 파랑 선과 타원이 추정 위치와 2σ 오차 타원이다. AIS 누락률은 지연(초)×3%로 함께 바뀐다. 상대선은 중간에 한 번 크게 변침한다. 해볼 것: ① AIS를 끄면 타원이 방위 방향으로 길쭉해진다(방위 오차 × 거리). ② 레이더를 끄면 AIS 사이에서 예측만으로 버티며 타원이 부풀었다 줄어든다. ③ q를 줄이면 추정이 매끄럽지만 변침 때 한참 늦게 따라간다. q를 키우면 반대다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 4 -->
+  <section id="planning">
+    <h2>경로 계획: A* 탐색</h2>
+    <p>출발항에서 도착항까지의 큰 경로는 전자해도 위에서 미리 계획한다. 해도를 격자로 나누고, 각 칸을 지날 때의 <b>비용</b>을 정한다. 육지와 통항 분리 방식(TSS)의 분리대는 지날 수 없고(비용 무한대), 흘수에 비해 얕은 곳은 지날 수는 있지만 위험하므로 비용을 크게 준다. 그러면 경로 계획은 그래프의 최소 비용 경로 문제가 된다.</p>
+    <p><span class="term">A*</span><span class="en">(A-star)</span> 알고리즘은 다익스트라 알고리즘에 '목표까지 남은 거리의 추정치'를 더해 탐색을 목표 쪽으로 이끈다. 각 칸 \(n\)에 대해</p>
+    <div class="formula">$$f(n) = g(n) + h(n), \qquad h(n) = \lVert \mathbf{p}_n - \mathbf{p}_{goal} \rVert$$
+      <div class="where">\(g(n)\)은 출발점에서 \(n\)까지 실제로 든 비용, \(h(n)\)은 \(n\)에서 목표까지의 직선거리다. \(f\)가 가장 작은 칸부터 펼친다. \(h\)가 실제 남은 비용을 넘지 않으면(허용 가능 휴리스틱) A*는 반드시 최적 경로를 찾는다. 모든 칸의 비용이 1 이상이므로 직선거리는 허용 가능하다.</div>
+    </div>
+    <div class="sim" id="sim-astar">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>A* 경로 계획: 해도를 칠하고 길 찾기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-astar" class="grab" style="touch-action:none"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>붓</span><div class="seg" id="as-brush"><button data-value="1" class="on">육지</button><button data-value="2">얕은 수심</button><button data-value="3">TSS 분리대</button><button data-value="0">지우개</button></div></div>
+          <label class="ctrl"><span>얕은 수심 비용 가중치 <output id="as-w-out"></output></span><input type="range" id="as-w" min="0" max="20" value="6" step="0.5"></label>
+          <label class="check"><input type="checkbox" id="as-sm" checked> 경로 스무딩(가시선 단축)</label>
+          <label class="check"><input type="checkbox" id="as-ex" checked> 탐색한 칸 표시</label>
+          <div class="ctrl-row"><button class="btn" id="as-clear">모두 지우기</button><button class="btn" id="as-def">기본 해도</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">경로 길이</span><span class="v" id="o-as-len">—</span></div>
+        <div class="stat"><span class="k">얕은 구간 통과</span><span class="v" id="o-as-sh">—</span></div>
+        <div class="stat"><span class="k">탐색한 칸</span><span class="v" id="o-as-n">—</span></div>
+        <div class="stat"><span class="k">변침점 수</span><span class="v" id="o-as-wp">—</span></div>
+      </div>
+      <div class="sim-note">한 칸은 0.5 해리. 초록 S(출발)와 빨강 G(도착)를 끌어 옮기고, 빈 곳을 끌어 칠한다. 해볼 것: ① 가중치를 0으로 하면 얕은 곳을 가로지르는 지름길을 택하고, 키우면 돌아간다. ② 스무딩을 끄면 격자 때문에 45° 단위로 꺾인 지그재그 경로가 보인다. 실제 배는 이를 몇 개의 변침점(waypoint)으로 단순화해 따라간다. ③ 탐색한 칸(옅은 색)이 목표 쪽으로 쏠려 있는 것이 휴리스틱의 효과다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 5 -->
+  <section id="following">
+    <h2>경로 추종: LOS 유도와 선수각 제어</h2>
+    <p>변침점을 잇는 경로가 정해지면, 배는 이 선을 따라가야 한다. 가장 널리 쓰이는 방법이 <span class="term">LOS 유도</span><span class="en">(Line-of-Sight Guidance)</span>다. 배에서 경로에 수선을 내린 점보다 \(\Delta\)(lookahead 거리)만큼 앞의 경로 위 점을 겨냥한다.</p>
+    <div class="formula">$$\psi_d = \chi_p - \arctan\frac{e}{\Delta}, \qquad \delta = K_p(\psi_d - \psi) - K_d\, r$$
+      <div class="where">\(\chi_p\)는 경로 방향, \(e\)는 경로에서 벗어난 거리(횡방향 오차, 오른쪽 +), \(\psi\)는 선수각, \(r\)은 선회율이다. \(\Delta\)가 작으면 날카롭게 경로로 돌아오지만 진동하기 쉽고, 크면 부드럽지만 느리다. 보통 배 길이의 2~5배를 쓴다. 타각 \(\delta\)는 선수각 오차에 비례(P)하고 선회율로 감쇠(D)하는 PD 제어로 정하며, 배의 응답은 12장의 노모토 모델 \(T\dot r + r = K\delta\)를 따른다(<a href="maneuvering.html">12장</a>).</div>
+    </div>
+    <p>여기에 조류가 경로를 가로질러 흐르면 문제가 생긴다. 배가 경로를 따라가려면 선수를 조류 쪽으로 \(\beta_c = \arcsin(V_c/U)\)만큼 틀어야(crab) 하는데, 위 LOS 식은 \(e=0\)일 때 선수를 정확히 경로 방향으로 두라고 명령한다. 그래서 배는 \(\arctan(e/\Delta) = \beta_c\)가 되는 곳, 즉 \(e \approx \Delta\,V_c/U\)만큼 밀려난 채로 평형을 이룬다. 이 정상 오차를 없애려면 오차를 시간에 대해 쌓는 <b>적분 동작</b>이 필요하다. 적분 LOS(ILOS)는 \(e\) 대신 \(e + \sigma\!\int\! e\,dt\)를 쓴다.</p>
+    <div class="sim" id="sim-los">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>LOS 경로 추종과 조류</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-los"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>조류(경로를 가로질러) <output id="lo-c-out"></output></span><input type="range" id="lo-c" min="0" max="2" value="1" step="0.1"></label>
+          <label class="ctrl"><span>lookahead Δ <output id="lo-d-out"></output></span><input type="range" id="lo-d" min="100" max="1200" value="400" step="50"></label>
+          <label class="ctrl"><span>K<sub>p</sub> <output id="lo-kp-out"></output></span><input type="range" id="lo-kp" min="0.2" max="4" value="1.5" step="0.1"></label>
+          <label class="ctrl"><span>K<sub>d</sub> <output id="lo-kd-out"></output></span><input type="range" id="lo-kd" min="0" max="80" value="30" step="2"></label>
+          <label class="ctrl"><span>적분 이득 σ (ILOS) <output id="lo-ki-out"></output></span><input type="range" id="lo-ki" min="0" max="0.04" value="0" step="0.002"></label>
+          <button class="btn primary" id="lo-run">다시 실행</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">현재 횡방향 오차</span><span class="v" id="o-lo-e">—</span></div>
+        <div class="stat"><span class="k">이론 정상 오차 ΔV<sub>c</sub>/U</span><span class="v" id="o-lo-th">—</span></div>
+        <div class="stat"><span class="k">타각</span><span class="v" id="o-lo-r">—</span></div>
+        <div class="stat"><span class="k">편류 보정각</span><span class="v" id="o-lo-b">—</span></div>
+      </div>
+      <div class="sim-note">길이 100 m, 10 kn(5.1 m/s)의 배가 세 개의 변침점을 지나는 경로를 따라간다. 조류는 화면 아래에서 위로 흐른다. 아래 그래프는 횡방향 오차의 시간 이력이다. 해볼 것: ① σ = 0이면 첫 구간에서 오차가 0으로 돌아가지 않고 ΔV<sub>c</sub>/U 근처에 머문다. ② σ를 조금 올리면 오차가 0으로 수렴한다. 너무 크면 출렁인다. ③ K<sub>d</sub>를 0으로 하면 선수각이 진동한다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 6 -->
+  <section id="collision">
+    <h2>충돌 회피: 속도 장애물과 COLREG</h2>
+    <p>계획된 경로를 따라가다 다른 배를 만나면 국지적인 회피 기동이 필요하다. 사람이 하는 판단(<a href="bridge.html">21장</a>)은 "지금 침로·속력을 유지하면 최근접 거리(CPA)가 안전 거리보다 작아지는가"이다. 이를 거꾸로 묻는 것이 <span class="term">속도 장애물</span><span class="en">(Velocity Obstacle, VO)</span>이다. "자선이 어떤 속도 벡터를 고르면 정해진 시간 안에 상대선의 안전 원 안으로 들어가는가?"</p>
+    <div class="formula">$$VO_B = \{\, \mathbf{v} \;|\; \exists\, t\in[0,\tau]:\ \lVert \mathbf{p}_B - \mathbf{p}_A - (\mathbf{v} - \mathbf{v}_B)\,t \rVert < R \,\}$$
+      <div class="where">\(\mathbf{p}_A, \mathbf{p}_B\)는 자선과 상대선의 위치, \(\mathbf{v}_B\)는 상대선 속도, \(R\)은 안전 거리, \(\tau\)는 고려하는 시간 범위다. 상대 속도 공간에서 이 집합은 상대선 쪽을 향한 원뿔이고, 꼭짓점을 \(\mathbf{v}_B\)만큼 옮기면 자선 속도 공간의 원뿔이 된다. 원뿔의 반각은 \(\arcsin(R/\lVert\mathbf{p}_B-\mathbf{p}_A\rVert)\)다.</div>
+    </div>
+    <figure class="diagram">
+      <svg viewBox="0 0 760 260" role="img" aria-label="속도 장애물 원뿔">
+        <circle cx="120" cy="200" r="7" class="f-acc"/><text x="100" y="226" class="t">자선 A</text>
+        <circle cx="330" cy="70" r="40" fill="var(--accent-2-soft)" stroke="var(--accent-2)" stroke-dasharray="4 3"/>
+        <circle cx="330" cy="70" r="6" fill="var(--accent-2)"/><text x="345" y="40" class="t" fill="var(--accent-2)">상대선 B (안전 원 R)</text>
+        <path d="M120 200 L 353 34 A 40 40 0 0 1 380 100 Z" fill="var(--accent-2-soft)"/>
+        <line x1="120" y1="200" x2="390" y2="12" stroke="var(--accent-2)" stroke-width="1.5"/>
+        <line x1="120" y1="200" x2="420" y2="110" stroke="var(--accent-2)" stroke-width="1.5"/>
+        <text x="230" y="150" class="t-dim">상대 속도가 이 원뿔 안이면 충돌</text>
+        <line x1="120" y1="200" x2="230" y2="120" stroke="var(--text)" stroke-width="2.5" marker-end="url(#au-ah)"/>
+        <text x="150" y="128" class="t">v_A − v_B</text>
+        <line x1="120" y1="200" x2="250" y2="200" stroke="var(--ok)" stroke-width="2.5" marker-end="url(#au-ah)"/>
+        <text x="190" y="218" class="t" fill="var(--ok)">우현 변침 후보</text>
+        <rect x="470" y="20" width="270" height="220" rx="12" class="f-surface"/>
+        <text x="605" y="46" class="t-acc" text-anchor="middle">COLREG 요약(관련 조항)</text>
+        <text x="486" y="76" class="t-dim">제14조 정면 마주침: 둘 다 우현으로</text>
+        <text x="486" y="102" class="t-dim">제15조 횡단: 상대를 우현에 둔 배가</text>
+        <text x="486" y="122" class="t-dim">　피항선 → 상대 선미 쪽으로 피한다</text>
+        <text x="486" y="148" class="t-dim">제16조 피항선: 일찍, 크게 동작</text>
+        <text x="486" y="174" class="t-dim">제17조 유지선: 침로·속력 유지</text>
+        <text x="486" y="200" class="t-dim">제13조 추월선이 피한다</text>
+        <text x="486" y="226" class="t-dim">제8조 변침은 상대가 알아챌 만큼 크게</text>
+      </svg>
+      <figcaption><b>그림 22-2.</b> 속도 장애물. 자선 속도가 원뿔(상대 속도 기준) 바깥에 있으면 시간 범위 안에 안전 원으로 들어가지 않는다. 피할 수 있는 속도가 여럿이면 COLREG에 맞는 쪽, 즉 대개 우현 쪽 변침을 고른다.</figcaption>
+    </figure>
+    <p>VO 기반 회피는 후보 속도(침로 × 속력의 격자)를 만들고, 어떤 상대선의 VO에도 들지 않는 후보 중에서 비용이 가장 작은 것을 고른다. 비용에는 원래 원하던 속도와의 차이와 함께 <b>COLREG 비용</b>을 넣는다. 정면 마주침이나 상대선을 우현에 둔 횡단 상황(자선이 피항선)에서 좌현으로 피하는 후보에는 큰 벌점을 준다. 또 상대가 알아챌 수 있도록 작은 변침보다 분명한 변침을 선호한다.</p>
+    <div class="sim" id="sim-vo">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>속도 장애물 충돌 회피</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-vo" class="grab" style="touch-action:none"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>시나리오</span><div class="seg" id="vo-sc"><button data-value="head" class="on">정면</button><button data-value="cross">횡단</button><button data-value="multi">다수 선박</button></div></div>
+          <label class="ctrl"><span>안전 거리 R <output id="vo-r-out"></output></span><input type="range" id="vo-r" min="0.3" max="1.5" value="0.8" step="0.05"></label>
+          <label class="ctrl"><span>시간 범위 τ <output id="vo-t-out"></output></span><input type="range" id="vo-t" min="5" max="40" value="20" step="1"></label>
+          <label class="check"><input type="checkbox" id="vo-col" checked> COLREG 비용(우현 변침 선호)</label>
+          <div class="ctrl-row"><button class="btn primary" id="vo-run">실행</button><button class="btn" id="vo-reset">처음으로</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">선택한 침로 변화</span><span class="v" id="o-vo-dc">—</span></div>
+        <div class="stat"><span class="k">선택한 속력</span><span class="v" id="o-vo-sp">—</span></div>
+        <div class="stat"><span class="k">현재 최소 CPA</span><span class="v" id="o-vo-cpa">—</span></div>
+        <div class="stat"><span class="k">상황</span><span class="v" id="o-vo-sit">—</span></div>
+      </div>
+      <div class="sim-note">왼쪽(또는 위)은 해역(격자 1 해리), 오른쪽(또는 아래)은 자선의 속도 공간(원 간격 5 kn)이다. 빨간 영역이 VO, 회색 점선 화살표가 원래 원하던 속도(북쪽 12 kn), 초록 화살표가 선택된 속도다. 상대선 몸체를 끌면 위치가, 앞쪽 동그라미를 끌면 속도가 바뀐다. 해볼 것: ① COLREG 비용을 끄면 좌현으로 피하는 해가 나올 수 있다. 상대도 규칙대로 우현으로 피하면 오히려 마주 돈다. ② 다수 선박에서 VO가 겹쳐 허용 영역이 좁아지는 것을 보자.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 7 -->
+  <section id="dp">
+    <h2>동적 위치 유지(DP)</h2>
+    <p>해양 시추선, 해저 케이블 부설선, 해양 지원선(OSV)은 닻 없이 바다 한가운데 한 점에 몇 m 안으로 멈춰 서야 한다. 이를 스러스터로 해내는 것이 <span class="term">동적 위치 유지</span><span class="en">(Dynamic Positioning, DP)</span>다. DP 시스템은 수평면 3자유도, 즉 전후(surge) \(x\), 좌우(sway) \(y\), 선수각(yaw) \(\psi\)를 동시에 제어한다.</p>
+    <div class="formula">$$M\dot{\boldsymbol\nu} + D\boldsymbol\nu = \boldsymbol\tau_{env} + \boldsymbol\tau_{thr}, \qquad \boldsymbol\tau_{thr} = -K_p\mathbf{e} - K_d\dot{\mathbf{e}} - K_i\!\int\!\mathbf{e}\,dt$$
+      <div class="where">\(\boldsymbol\nu\)는 속도, \(\boldsymbol\tau = (X, Y, N)\)은 힘과 모멘트, \(\mathbf{e}\)는 목표 위치·선수각과의 오차다. 바람·조류·파랑 표류력의 평균값은 적분항이 맡고(그래서 DP에서 적분항은 필수다), 바람은 풍속계로 재서 미리 보상하는 피드포워드를 더하기도 한다. 1차 파랑 운동(주기 5~15초의 출렁임)은 스러스터로 따라잡을 수 없고 기계만 상하므로 필터로 걸러 낸다.</div>
+    </div>
+    <p>제어기가 요구한 \((X, Y, N)\)을 여러 스러스터의 추력과 방향으로 나누는 것이 <span class="term">스러스터 할당</span><span class="en">(Thrust Allocation)</span>이다. 스러스터 \(i\)의 힘 \(\mathbf{f}_i\)와 위치 \((l_{x,i}, l_{y,i})\)로 \(\boldsymbol\tau = B\mathbf{f}\)를 세우고, 가중 최소 제곱 해 \(\mathbf{f} = W^{-1}B^\mathsf{T}(BW^{-1}B^\mathsf{T})^{-1}\boldsymbol\tau\)로 연료(추력 제곱 합)를 최소로 하는 배분을 구한다. 아래 배는 선수 터널 스러스터 2기(옆 방향만)와 선미 아지무스 스러스터 2기(모든 방향)를 가졌다.</p>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 300" role="img" aria-label="DP 선박의 외력과 스러스터 배치">
+        <path d="M120 150 Q120 110 160 110 L520 110 Q600 110 660 150 Q600 190 520 190 L160 190 Q120 190 120 150 Z" class="f-surface" stroke-width="1.5"/>
+        <text x="380" y="155" class="t" text-anchor="middle">해양 지원선 (위에서 본 모습, 선수 →)</text>
+        <rect x="560" y="140" width="14" height="20" rx="2" class="f-acc-soft"/><rect x="590" y="140" width="14" height="20" rx="2" class="f-acc-soft"/>
+        <line x1="567" y1="140" x2="567" y2="86" class="s-acc" marker-end="url(#au-ah-a)"/><line x1="597" y1="140" x2="597" y2="96" class="s-acc" marker-end="url(#au-ah-a)"/>
+        <text x="585" y="70" class="t-acc" text-anchor="middle">터널 스러스터 T1·T2</text>
+        <circle cx="150" cy="128" r="9" class="f-acc-soft"/><circle cx="150" cy="172" r="9" class="f-acc-soft"/>
+        <line x1="150" y1="128" x2="196" y2="98" class="s-acc" marker-end="url(#au-ah-a)"/><line x1="150" y1="172" x2="200" y2="196" class="s-acc" marker-end="url(#au-ah-a)"/>
+        <text x="40" y="236" class="t-acc">아지무스 A1·A2 (360° 회전)</text>
+        <g stroke="var(--accent-2)" stroke-width="2.5">
+          <line x1="300" y1="20" x2="300" y2="96" marker-end="url(#au-ah-b)"/>
+          <line x1="420" y1="20" x2="420" y2="96" marker-end="url(#au-ah-b)"/>
+        </g>
+        <text x="360" y="18" class="t" text-anchor="middle" fill="var(--accent-2)">바람 · 파랑 표류력 · 조류</text>
+        <circle cx="380" cy="235" r="34" fill="none" stroke="var(--warn)" stroke-dasharray="5 4"/>
+        <circle cx="380" cy="235" r="3" fill="var(--warn)"/>
+        <text x="425" y="240" class="t-dim">목표점과 허용 원(수 m)</text>
+        <path d="M650 230 A 40 40 0 0 1 700 270" fill="none" stroke="var(--text-dim)" stroke-width="1.5" marker-end="url(#au-ah)"/>
+        <text x="610" y="292" class="t-dim">yaw N = Σ (lₓF_y − l_yFₓ)</text>
+        <text x="40" y="276" class="t-dim">surge X = ΣFₓ, sway Y = ΣF_y</text>
+      </svg>
+      <figcaption><b>그림 22-3.</b> DP 선박의 스러스터 배치와 외력. 선수 터널 스러스터는 옆 방향 힘만 내지만 무게중심에서 멀어 선수각 제어에 효과적이고, 선미 아지무스 스러스터는 어느 방향으로든 힘을 낸다. 제어기는 세 성분 (X, Y, N)을 요구하고, 할당 알고리즘이 이를 스러스터마다 나눈다.</figcaption>
+    </figure>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>DP 등급 (IMO MSC/Circ.1580)</th><th>요구 사항</th><th>쓰임</th></tr></thead>
+      <tbody>
+        <tr><td>DP1 (Class 1)</td><td>이중화 없음. 고장 하나로 위치를 잃을 수 있다.</td><td>위험이 작은 작업</td></tr>
+        <tr><td>DP2 (Class 2)</td><td>능동 부품(스러스터, 발전기, 배전반 등) 하나가 고장 나도 위치 유지</td><td>시추 지원, 잠수 작업, 셔틀 탱커</td></tr>
+        <tr><td>DP3 (Class 3)</td><td>DP2 + 화재·침수로 한 구획 전체를 잃어도 위치 유지(물리적 격리)</td><td>시추선, 다이빙 지원선</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="sim" id="sim-dp">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>DP 위치 유지와 스러스터 고장</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-dp"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>풍속 <output id="dp-w-out"></output></span><input type="range" id="dp-w" min="0" max="30" value="14" step="1"></label>
+          <label class="ctrl"><span>조류 <output id="dp-c-out"></output></span><input type="range" id="dp-c" min="0" max="3" value="1" step="0.1"></label>
+          <label class="ctrl"><span>유의파고 H<sub>s</sub> <output id="dp-hs-out"></output></span><input type="range" id="dp-hs" min="0" max="6" value="2.5" step="0.5"></label>
+          <label class="ctrl"><span>외력 방향 (0° 선수에서) <output id="dp-dir-out"></output></span><input type="range" id="dp-dir" min="0" max="355" value="60" step="5"></label>
+          <label class="ctrl"><span>제어 대역폭 ω<sub>n</sub> <output id="dp-wn-out"></output></span><input type="range" id="dp-wn" min="0.02" max="0.15" value="0.06" step="0.01"></label>
+          <label class="check"><input type="checkbox" id="dp-int" checked> 적분항 사용</label>
+          <div class="ctrl"><span>스러스터 고장 (누르면 토글)</span>
+            <div class="au-thr">
+              <button class="btn" data-t="0">선수 T1</button><button class="btn" data-t="1">선수 T2</button>
+              <button class="btn" data-t="2">선미 A1(좌)</button><button class="btn" data-t="3">선미 A2(우)</button>
+            </div>
+          </div>
+          <div class="ctrl-row"><button class="btn" id="dp-bus">배전반 A 고장(T1+A1)</button><button class="btn" id="dp-rst">복구</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">위치 오차</span><span class="v" id="o-dp-e">—</span></div>
+        <div class="stat"><span class="k">선수각 오차</span><span class="v" id="o-dp-h">—</span></div>
+        <div class="stat"><span class="k">최대 스러스터 부하</span><span class="v" id="o-dp-l">—</span></div>
+        <div class="stat"><span class="k">상태</span><span class="v" id="o-dp-s">—</span></div>
+      </div>
+      <div class="sim-note">길이 80 m 해양 지원선(배수량 약 5,000톤). 왼쪽: 배와 스러스터 추력 화살표, 오른쪽 위: 목표점 주위 위치 궤적(점선 원 반경 5 m), 오른쪽 아래: 스러스터별 부하 막대. 화면 시간은 실제의 5배다. 해볼 것: ① 적분항을 끄면 배가 외력 방향으로 밀린 채 머문다. ② 스러스터 하나를 고장 내도 버티면 그 조건에서 DP2 수준이다. ③ 배전반 A 고장은 T1과 A1을 함께 잃는다. 이중화 설계가 '고장 하나'를 어떻게 정의하느냐가 중요한 이유다. ④ 외력을 정횡(90°)으로 두면 옆 방향 능력이 약한 배는 금방 한계에 닿는다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 8 -->
+  <section id="remote">
+    <h2>원격 조종과 통신 지연</h2>
+    <p>2·3등급 MASS는 육상 원격 관제 센터에서 배를 조종한다. 문제는 신호가 오가는 시간이다. 정지 궤도 위성 링크는 왕복만 0.5~0.7초이고, 영상 압축·처리·화면 표시를 더하면 운항자가 보는 화면은 실제보다 1~3초 늦다. 운항자의 명령도 같은 길을 거쳐 배에 닿는다. 되먹임 제어에서 지연은 위상 지연 \(e^{-s\tau}\)로 작용해, 주파수 \(\omega\)에서 \(\omega\tau\) 만큼 위상 여유를 깎는다. 위상 여유가 다 깎이면 운항자의 성실한 수정 동작이 오히려 진동을 키운다.</p>
+    <div class="sim" id="sim-delay">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>통신 지연과 원격 변침</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-delay"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>왕복 지연 τ <output id="dl-t-out"></output></span><input type="range" id="dl-t" min="0" max="16" value="4" step="0.5"></label>
+          <label class="ctrl"><span>운항자 이득 (공격성) <output id="dl-k-out"></output></span><input type="range" id="dl-k" min="0.5" max="4" value="2" step="0.1"></label>
+          <label class="ctrl"><span>운항자 감쇠(선회율 보기) <output id="dl-d-out"></output></span><input type="range" id="dl-d" min="0" max="40" value="12" step="1"></label>
+          <label class="check"><input type="checkbox" id="dl-pred"> 지연 보상 예측 화면(스미스 예측기)</label>
+          <button class="btn primary" id="dl-run">변침 명령 재생</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">오버슈트</span><span class="v" id="o-dl-os">—</span></div>
+        <div class="stat"><span class="k">정착 시간(±2°)</span><span class="v" id="o-dl-ts">—</span></div>
+        <div class="stat"><span class="k">판정</span><span class="v" id="o-dl-j">—</span></div>
+      </div>
+      <div class="sim-note">원격 운항자가 선수각을 30° 바꾸려 한다. 운항자는 τ/2 늦은 화면을 보고 PD 방식으로 타를 쓰고, 명령은 다시 τ/2 늦게 배에 닿는다. 점선은 지연이 없을 때의 응답이다(노모토 K = 0.08 /s, T = 15 s의 소형선). 해볼 것: ① 지연을 늘리면 오버슈트가 커지고, 어느 값을 넘으면 진동이 줄지 않는다. ② 이득을 줄이면(조심스러운 운항자) 더 큰 지연을 견디지만 느리다. ③ 배의 모델로 현재 상태를 예측해 보여 주는 화면을 켜면 지연이 있어도 안정해진다. 원격 조종 시스템이 '예측 표시'를 쓰는 이유다.</div>
+    </div>
+    <p>그래서 원격 조종은 짧은 지연이 보장되는 연안·항만 구간에 주로 쓰이고, 대양에서는 배 위의 자율 시스템이 실시간 제어를 맡고 육상은 감시와 상위 명령(경로 승인, 비상 정지)만 하는 구조가 현실적이다. 통신이 끊기면 배가 스스로 MRC로 들어가야 하므로, 3등급 이상의 배에도 어느 정도의 자율 기능은 필수다.</p>
+  </section>
+
+  <!-- =============================================================== 9 -->
+  <section id="regulation">
+    <h2>사이버 보안, 책임과 규제</h2>
+    <p>자율운항선박은 기술적으로 이미 시험 운항 단계다. 노르웨이의 소형 전기 컨테이너선이 연안에서 자율 운항 시험을 했고, 일본·한국에서도 대형 선박의 자율 운항 실증 항해가 이뤄졌다. 남은 큰 과제는 기술 밖에 있다.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>쟁점</th><th>내용</th></tr></thead>
+      <tbody>
+        <tr><td>사이버 보안</td><td>GNSS 재밍·스푸핑(가짜 위성 신호), AIS 위조 표적, 원격 링크 탈취가 실제 위협이다. IMO는 선박 안전 관리 체계(ISM)에 사이버 위험 관리를 포함하도록 했고(2021~), 선급(IACS UR E26·E27)은 신조선의 네트워크 분리·접근 통제를 요구한다. 자율 시스템은 센서 간 교차 검증으로 이상한 측정을 걸러야 한다(칼만 필터의 혁신(innovation) 검사가 그 출발점이다).</td></tr>
+        <tr><td>책임</td><td>선장의 권한과 책임을 누가 지는가: 원격 운항자, 선사, 시스템 제조사. 사고 시 소프트웨어 결함과 운항 판단을 어떻게 가릴지가 쟁점이다.</td></tr>
+        <tr><td>규제</td><td>IMO는 비강제 MASS Code를 먼저 채택하고(2026년 목표) 몇 년간의 경험을 거쳐 강제화하는 일정을 논의 중이다. 원격 운항자의 자격, 원격 관제 센터의 요건, COLREG의 '적절한 경계'를 기계가 만족하는 방법 등이 핵심이다.</td></tr>
+        <tr><td>신뢰성 입증</td><td>사람 당직자보다 안전하다는 것을 어떻게 증명하는가. 수많은 조우 시나리오를 시뮬레이션으로 시험하고(시나리오 기반 검증), 운항 데이터로 계속 감시하는 방식이 연구되고 있다.</td></tr>
+      </tbody>
+    </table></div>
+    <div class="callout"><strong>DP는 이미 '부분 자율'이다</strong><p>DP 시스템은 수십 년 동안 바다 한가운데서 사람 대신 스러스터를 조종해 왔다. 운항자는 목표점과 작업 범위를 정하고 시스템을 감시하며, 이상 시 개입한다. 자율운항선박의 감시–개입 구조는 사실상 DP 운용 경험을 항해 전체로 넓힌 것이다. DP 사고 통계가 보여 주듯, 사고의 큰 몫은 장비 고장보다 운항자가 시스템 상태를 잘못 이해한 데서 온다. 사람과 기계가 서로의 상태를 분명히 알게 하는 인터페이스 설계가 자율화의 핵심 과제로 꼽히는 이유다.</p></div>
+  </section>
+
+  <!-- =============================================================== summary -->
+  <section class="keypoints" id="summary">
+    <h2>핵심 정리</h2>
+    <ol>
+      <li>IMO MASS 등급은 1(선원 탑승·의사결정 지원), 2(원격 조종·선원 탑승), 3(원격 조종·무인), 4(완전 자율)다. 등급이 오를수록 제도·책임 문제가 커진다.</li>
+      <li>자율운항 시스템은 인지–판단–제어의 세 층과 육상 원격 관제 센터로 이뤄지며, 통신이 끊기면 최소 위험 상태(MRC)로 간다.</li>
+      <li>칼만 필터는 예측과 측정을 공분산에 따라 가중 평균한다. 레이더는 방위 방향 오차가, AIS는 지연과 누락이 약점이며, 융합하면 서로를 보완한다.</li>
+      <li>A*는 \(f = g + h\)로 탐색하며, 수심 비용을 넣으면 얕은 곳을 피하는 경로를 얻는다. 격자 경로는 가시선 단축으로 변침점 몇 개로 줄인다.</li>
+      <li>LOS 유도는 \(\Delta\) 앞의 점을 겨냥한다. 가로 조류가 있으면 \(e \approx \Delta V_c/U\)의 정상 오차가 남고, 적분 LOS가 이를 없앤다.</li>
+      <li>속도 장애물은 '피해야 할 속도 집합'이며, VO 밖의 후보 중 원하는 속도에 가깝고 COLREG(우현 변침)에 맞는 것을 고른다.</li>
+      <li>DP는 3자유도 PID와 스러스터 할당으로 위치를 유지하고, 평균 외력은 적분항이 맡는다. DP2/3은 고장 하나(DP3는 한 구획 상실)에도 위치를 유지해야 한다.</li>
+      <li>통신 지연은 위상 여유를 깎아 원격 조종을 불안정하게 만든다. 이득을 낮추거나 예측 표시를 써야 한다.</li>
+    </ol>
+  </section>
+
+  <!-- =============================================================== quiz -->
+  <section class="quiz-sec" id="quiz">
+    <h2>확인 퀴즈</h2>
+    <div class="quiz">
+      <div class="quiz-q"><p>Q1. 육상에서 원격 조종하고 배에는 선원이 없는 MASS는 몇 등급인가?</p><div class="opts">
+        <button class="opt">1등급</button><button class="opt">2등급</button><button class="opt" data-correct>3등급</button><button class="opt">4등급</button>
+      </div><div class="quiz-exp">2등급은 원격 조종이지만 선원이 탑승해 있고, 3등급은 원격 조종·무인, 4등급은 시스템이 스스로 판단하는 완전 자율이다.</div></div>
+
+      <div class="quiz-q"><p>Q2. 레이더만으로 3 km 떨어진 배를 추적할 때 오차 타원이 길쭉한 방향은?</p><div class="opts">
+        <button class="opt">자선–상대선을 잇는 방향(거리 방향)</button><button class="opt" data-correct>그에 수직한 방향(방위 방향)</button><button class="opt">상대선의 진행 방향</button><button class="opt">타원은 항상 원이다</button>
+      </div><div class="quiz-exp">방위 오차 0.8°는 3 km에서 약 42 m의 옆 방향 오차가 된다. 거리 오차(수십 m)보다 크므로 타원은 방위 방향으로 길다. 정확한 위치를 주는 AIS를 융합하면 줄어든다.</div></div>
+
+      <div class="quiz-q"><p>Q3. 칼만 필터의 과정 잡음 Q를 크게 하면?</p><div class="opts">
+        <button class="opt">측정을 덜 믿고 예측을 더 믿는다</button><button class="opt" data-correct>측정을 더 믿어 기동에 빨리 반응하지만 추정이 거칠어진다</button><button class="opt">측정 잡음이 줄어든다</button><button class="opt">아무 변화가 없다</button>
+      </div><div class="quiz-exp">Q가 크면 예측의 불확실성 \(P^-\)가 커져 칼만 이득이 커진다. 측정 쪽으로 빨리 끌려가므로 변침을 잘 따라가지만 잡음도 그대로 들어온다.</div></div>
+
+      <div class="quiz-q"><p>Q4. A* 탐색에서 휴리스틱 h(n)이 허용 가능(admissible)하다는 것은?</p><div class="opts">
+        <button class="opt">h가 항상 0이다</button><button class="opt" data-correct>h가 실제 남은 최소 비용을 넘지 않는다</button><button class="opt">h가 실제 비용보다 항상 크다</button><button class="opt">h가 장애물을 무시한다</button>
+      </div><div class="quiz-exp">h가 실제 비용을 과대 추정하지 않으면 A*는 최적 경로를 보장한다. 모든 칸 비용이 1 이상일 때 직선거리는 이 조건을 만족한다. h = 0이면 다익스트라와 같아 탐색이 넓어진다.</div></div>
+
+      <div class="quiz-q"><p>Q5. lookahead Δ = 500 m, 선속 5 m/s, 가로 조류 1 m/s일 때 적분 동작 없는 LOS의 정상 횡방향 오차는 대략?</p><div class="opts">
+        <button class="opt">0 m</button><button class="opt">10 m</button><button class="opt" data-correct>100 m</button><button class="opt">500 m</button>
+      </div><div class="quiz-exp">\(e \approx \Delta V_c/U = 500 \times 1/5 = 100\) m. 정확히는 \(\Delta\tan(\arcsin(V_c/U)) \approx 102\) m다. 적분 LOS를 쓰면 0으로 줄일 수 있다.</div></div>
+
+      <div class="quiz-q"><p>Q6. 정면으로 마주 오는 배와의 VO를 피할 수 있는 후보가 좌현 변침과 우현 변침 둘 다 있다. COLREG에 맞는 선택은?</p><div class="opts">
+        <button class="opt">비용이 같으면 아무쪽이나</button><button class="opt" data-correct>우현 변침</button><button class="opt">좌현 변침</button><button class="opt">정지</button>
+      </div><div class="quiz-exp">제14조에 따라 정면 마주침에서는 두 배 모두 우현으로 변침한다. 한쪽이 좌현으로 돌면 상대의 우현 변침과 겹쳐 오히려 충돌로 갈 수 있다.</div></div>
+
+      <div class="quiz-q"><p>Q7. DP2 등급의 핵심 요구 사항은?</p><div class="opts">
+        <button class="opt">스러스터가 2기 이상</button><button class="opt">위치 오차 2 m 이내</button><button class="opt" data-correct>능동 부품 하나가 고장 나도 위치를 유지한다</button><button class="opt">화재로 한 구획을 잃어도 위치를 유지한다</button>
+      </div><div class="quiz-exp">DP2는 단일 고장(스러스터, 발전기, 배전반 등) 허용이다. 화재·침수로 한 구획 전체를 잃어도 버텨야 하는 것은 DP3다.</div></div>
+
+      <div class="quiz-q"><p>Q8. 원격 조종에서 왕복 지연이 커질 때 진동을 줄이는 방법으로 알맞지 않은 것은?</p><div class="opts">
+        <button class="opt">운항자 이득을 낮춘다</button><button class="opt">배의 모델로 현재 상태를 예측해 보여 준다</button><button class="opt" data-correct>더 공격적으로 큰 타를 쓴다</button><button class="opt">실시간 제어는 배 위의 자동 시스템에 맡긴다</button>
+      </div><div class="quiz-exp">지연은 위상 여유를 깎는다. 이득을 키우면 교차 주파수가 올라가 지연의 위상 손실 \(\omega\tau\)가 더 커져 불안정해진다.</div></div>
+    </div>
+  </section>
+</main>
+<script>
+/* ---------- 공통 지역 헬퍼 (22장) ---------- */
+window.AU = (function () {
+  const font = () => getComputedStyle(document.body).getPropertyValue("--font");
+  const mono = () => getComputedStyle(document.body).getPropertyValue("--mono");
+  function text(ctx, s, x, y, o = {}) {
+    ctx.save();
+    ctx.font = (o.bold ? "700 " : "") + (o.size || 12) + "px " + (o.mono ? mono() : font());
+    ctx.textAlign = o.align || "left"; ctx.textBaseline = o.base || "alphabetic";
+    if (o.bg) { const m = ctx.measureText(s), pw = m.width + 8, ph = (o.size || 12) + 6; let bx = x - 4; if (o.align === "center") bx = x - pw / 2; else if (o.align === "right") bx = x - pw + 4; ctx.fillStyle = o.bg; ctx.fillRect(bx, y - (o.size || 12) - 1, pw, ph); }
+    ctx.fillStyle = o.color || SB.palette().text; ctx.fillText(s, x, y); ctx.restore();
+  }
+  function seg(ctx, x1, y1, x2, y2, color, w = 1, dash) { ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = w; if (dash) ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.restore(); }
+  function setCls(id, cls) { const el = document.getElementById(id); if (!el) return; el.classList.remove("ok", "bad", "warn"); if (cls) el.classList.add(cls); }
+  function panel(ctx, x, y, w, h, fill) { ctx.save(); ctx.fillStyle = fill; ctx.fillRect(x, y, w, h); ctx.strokeStyle = SB.palette().border; ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1); ctx.restore(); }
+  // 2x2 공분산 → 타원 (반축 a ≥ b, 각도)
+  function ellipse(Pxx, Pxy, Pyy) {
+    const tr = Pxx + Pyy, det = Pxx * Pyy - Pxy * Pxy, d = Math.sqrt(Math.max(0, tr * tr / 4 - det));
+    const l1 = tr / 2 + d, l2 = Math.max(0, tr / 2 - d), ang = 0.5 * Math.atan2(2 * Pxy, Pxx - Pyy);
+    return { a: Math.sqrt(l1), b: Math.sqrt(l2), ang };
+  }
+  return { text, seg, setCls, panel, ellipse, font, mono };
+})();
+</script>
+<script>
+/* ---------- 1. MASS 등급 ---------- */
+(function () {
+  const ROLES = ["감시(경계)", "판단(침로·회피)", "실행(타·기관)", "비상 대응"];
+  const DATA = {
+    1: [["선원 (레이더·ECDIS 지원)", "h"], ["선원 (시스템이 제안)", "h"], ["선원 (자동화 공정)", "h"], ["선원", "h"]],
+    2: [["육상 운항자 + 탑승 선원", "h"], ["육상 운항자", "h"], ["육상에서 원격 조종", "h"], ["탑승 선원이 넘겨받음", "h"]],
+    3: [["센서 → 육상 운항자", "m"], ["육상 운항자", "h"], ["육상에서 원격 조종", "h"], ["시스템이 MRC로 전환", "m"]],
+    4: [["시스템 (센서 융합)", "m"], ["시스템 (COLREG 알고리즘)", "m"], ["시스템 (자동 제어)", "m"], ["시스템 MRC, 육상은 감독", "m"]],
+  };
+  let lv = 1;
+  const btns = [...document.querySelectorAll("#ms-lv button")];
+  btns.forEach((b) => b.addEventListener("click", () => { lv = +b.dataset.v; btns.forEach((x) => x.classList.toggle("on", x === b)); upd(); }));
+  function upd() {
+    document.getElementById("ms-tb").innerHTML = ROLES.map((r, i) => `<tr><td>${r}</td><td class="${DATA[lv][i][1]}">${DATA[lv][i][0]}</td></tr>`).join("");
+    cv.redraw();
+  }
+  function person(ctx, x, y, col) { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y - 9, 4, 0, 7); ctx.fill(); ctx.beginPath(); ctx.moveTo(x - 5, y + 4); ctx.quadraticCurveTo(x, y - 8, x + 5, y + 4); ctx.closePath(); ctx.fill(); }
+  const cv = SB.canvas("#cv-mass", (ctx, w, h) => {
+    const P = SB.palette(), sea = h * 0.62;
+    ctx.fillStyle = SB.color("water-soft"); ctx.fillRect(0, sea, w * 0.62, h - sea);
+    AU.seg(ctx, 0, sea, w * 0.62, sea, SB.color("water"), 1.5);
+    const sx = w * 0.3, s = Math.min((w * 0.5) / 210, 1.4);
+    SB.shipSide(ctx, sx, sea, s, { L: 200, D: 18, T: 10, cargo: "container" });
+    // 선원
+    const crew = lv === 1 ? 14 : lv === 2 ? 6 : 0;
+    for (let i = 0; i < crew; i++) person(ctx, sx - 200 * s * 0.4 + (i % 7) * 9, sea - 31 * s - 4 - Math.floor(i / 7) * 16, P.accent);
+    if (!crew) AU.text(ctx, "무인", sx - 200 * s * 0.3, sea - 18 * s - 40 * s, { align: "center", bold: true, color: P.dim, size: 13 });
+    if (lv >= 3) { ctx.fillStyle = P.accent2; ctx.fillRect(sx - 200 * s * 0.36, sea - 18 * s - 34 * s, 22, 14); AU.text(ctx, "AI", sx - 200 * s * 0.36 + 11, sea - 18 * s - 23 * s - 0, { align: "center", size: 10, bold: true, color: "#fff" }); }
+    // 육상 관제 센터
+    const bx = w * 0.72, by = h * 0.3, bw = w * 0.24, bh = h * 0.5;
+    ctx.fillStyle = SB.isDark() ? "#3a3426" : "#e6dcc3"; ctx.fillRect(w * 0.62, sea, w * 0.38, h - sea);
+    ctx.fillStyle = P.surface; ctx.strokeStyle = P.border; ctx.fillRect(bx, by, bw, bh); ctx.strokeRect(bx, by, bw, bh);
+    AU.text(ctx, "육상 관제 센터", bx + bw / 2, by - 8, { align: "center", bold: true, size: 12 });
+    const ops = lv === 1 ? 0 : lv === 4 ? 1 : 3;
+    for (let i = 0; i < 3; i++) { ctx.fillStyle = i < ops ? P.accent : P.faint; ctx.fillRect(bx + 10 + i * (bw - 20) / 3, by + 14, (bw - 30) / 3, 16); if (i < ops) person(ctx, bx + 10 + i * (bw - 20) / 3 + (bw - 30) / 6, by + 48, P.accent); }
+    AU.text(ctx, lv === 1 ? "선단 감시만" : lv === 4 ? "감독(개입 대기)" : "원격 조종", bx + bw / 2, by + bh - 10, { align: "center", size: 11, color: P.dim });
+    // 링크
+    if (lv >= 2) {
+      ctx.save(); ctx.strokeStyle = lv === 4 ? P.faint : P.accent; ctx.lineWidth = 2; ctx.setLineDash(lv === 4 ? [3, 5] : [8, 4]);
+      ctx.beginPath(); ctx.moveTo(sx - 30 * s, sea - 18 * s - 60 * s); ctx.quadraticCurveTo(w * 0.55, 6, bx, by + 20); ctx.stroke(); ctx.restore();
+      AU.text(ctx, lv === 4 ? "저대역 감시 링크" : "위성·LTE 실시간 링크", w * 0.5, 22, { align: "center", size: 11, color: P.dim });
+    }
+    AU.text(ctx, lv + "등급", 10, 20, { bold: true, size: 15, color: P.accent });
+  }, { aspect: 0.36, minHeight: 200, maxHeight: 300 });
+  upd();
+})();
+</script>
+<script>
+/* ---------- 2. 칼만 필터 센서 융합 ---------- */
+(function () {
+  const ur = () => document.getElementById("kf-ur").checked, ua = () => document.getElementById("kf-ua").checked;
+  const sb = SB.range("kf-sb", (v) => v.toFixed(1) + "°"), sr = SB.range("kf-sr", (v) => v + " m");
+  const tr = SB.range("kf-tr", (v) => v + " s"), ta = SB.range("kf-ta", (v) => v + " s");
+  const ad = SB.range("kf-ad", (v) => v + " s / " + Math.round(v * 3) + "%"), qs = SB.range("kf-q", (v) => "10^" + v.toFixed(2));
+  const TEND = 700, TS = 12, W = 6500, H = 4300;
+  const mm = (A, B) => A.map((r) => B[0].map((_, j) => r.reduce((s, a, k) => s + a * B[k][j], 0)));
+  const tp = (A) => A[0].map((_, j) => A.map((r) => r[j]));
+  const add = (A, B) => A.map((r, i) => r.map((a, j) => a + B[i][j]));
+  const inv2 = (S) => { const d = S[0][0] * S[1][1] - S[0][1] * S[1][0]; return [[S[1][1] / d, -S[0][1] / d], [-S[1][0] / d, S[0][0] / d]]; };
+  let S;
+  function truthAt(t) { // 상대선 실제 상태: 0~280 s 등속, 280~330 s 좌현 60° 선회, 이후 등속
+    let x = 5600, y = 3500, c = SB.rad(205), U = 6.5;
+    const seg = (dt) => { x += U * Math.cos(c) * dt; y += U * Math.sin(c) * dt; };
+    const t1 = Math.min(t, 280); seg(t1);
+    if (t > 280) { const t2 = Math.min(t, 330) - 280, rate = SB.rad(60) / 50; // 원호 적분
+      // 원호: 반지름 U/rate
+      const R = U / rate, c0 = c; const c1 = c0 + rate * t2;
+      x += R * (Math.sin(c1) - Math.sin(c0)); y += -R * (Math.cos(c1) - Math.cos(c0)); c = c1;
+      if (t > 330) seg(t - 330);
+    }
+    return { x, y, vx: U * Math.cos(c), vy: U * Math.sin(c) };
+  }
+  function reset() { S = { t: 0, xh: null, P: null, nr: 0, na: 0, rad: [], ais: [], est: [], err: [], se: 0, ne: 0 }; }
+  function update(z, Hm, R) {
+    const Ht = tp(Hm), Sx = add(mm(mm(Hm, S.P), Ht), R), K = mm(mm(S.P, Ht), inv2(Sx));
+    const hx = mm(Hm, S.xh.map((v) => [v])).map((r) => r[0]), yv = [z[0] - hx[0], z[1] - hx[1]];
+    S.xh = S.xh.map((v, i) => v + K[i][0] * yv[0] + K[i][1] * yv[1]);
+    const I = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
+    S.P = mm(add(I, mm(K, Hm).map((r) => r.map((a) => -a))), S.P);
+  }
+  function init(z, s2) { S.xh = [z[0], z[1], 0, 0]; S.P = [[s2, 0, 0, 0], [0, s2, 0, 0], [0, 0, 40, 0], [0, 0, 0, 40]]; }
+  function step(dt) {
+    S.t += dt;
+    const q = Math.pow(10, qs());
+    if (S.xh) {
+      const F = [[1, 0, dt, 0], [0, 1, 0, dt], [0, 0, 1, 0], [0, 0, 0, 1]];
+      S.xh = mm(F, S.xh.map((v) => [v])).map((r) => r[0]);
+      const a = (q * dt ** 3) / 3, b = (q * dt * dt) / 2, c = q * dt;
+      S.P = add(mm(mm(F, S.P), tp(F)), [[a, 0, b, 0], [0, a, 0, b], [b, 0, c, 0], [0, b, 0, c]]);
+    }
+    const tru = truthAt(S.t);
+    if (ur() && S.t >= (S.nr + 1) * tr()) {
+      S.nr = Math.floor(S.t / tr());
+      const r = Math.hypot(tru.x, tru.y) + SB.randn() * sr(), th = Math.atan2(tru.y, tru.x) + SB.rad(sb()) * SB.randn();
+      const z = [r * Math.cos(th), r * Math.sin(th)];
+      const c = Math.cos(th), s = Math.sin(th), s1 = sr() ** 2, s2 = (r * SB.rad(sb())) ** 2;
+      const R = [[c * c * s1 + s * s * s2, c * s * (s1 - s2)], [c * s * (s1 - s2), s * s * s1 + c * c * s2]];
+      S.rad.push(z); if (S.rad.length > 400) S.rad.shift();
+      if (!S.xh) init(z, Math.max(s1, s2)); else update(z, [[1, 0, 0, 0], [0, 1, 0, 0]], R);
+    }
+    if (ua() && S.t >= (S.na + 1) * ta()) {
+      S.na = Math.floor(S.t / ta());
+      const d = ad();
+      if (Math.random() > d * 0.03) {
+        const past = truthAt(Math.max(0, S.t - d)), z = [past.x + 8 * SB.randn(), past.y + 8 * SB.randn()];
+        S.ais.push(z); if (S.ais.length > 200) S.ais.shift();
+        if (!S.xh) init(z, 400); else update(z, [[1, 0, -d, 0], [0, 1, 0, -d]], [[64, 0], [0, 64]]);
+      }
+    }
+    if (S.xh) {
+      S.est.push([S.xh[0], S.xh[1]]); if (S.est.length > 2000) S.est.shift();
+      const e = Math.hypot(S.xh[0] - tru.x, S.xh[1] - tru.y);
+      if (S.t > 60) { S.se += e * e; S.ne++; }
+      if (Math.round(S.t * 2) % 4 === 0) S.err.push([S.t, e]);
+    }
+  }
+  reset();
+  document.getElementById("kf-reset").onclick = reset;
+  const cv = SB.canvas("#cv-kf", (ctx, w, h) => {
+    const P = SB.palette(), narrow = w < 520;
+    const mainW = narrow ? w : w * 0.6, mainH = narrow ? h * 0.42 : h * 0.68;
+    const zx = narrow ? 0 : mainW, zy = narrow ? mainH : 0, zw = narrow ? w : w - mainW, zh = narrow ? h * 0.33 : mainH;
+    const tru = truthAt(S.t);
+    // --- 해역
+    AU.panel(ctx, 0, 0, mainW, mainH, SB.color("water-soft"));
+    const sc = Math.min((mainW - 20) / W, (mainH - 20) / H), ox = 14, oy = mainH - 12;
+    const X = (x) => ox + x * sc, Y = (y) => oy - y * sc;
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, mainW, mainH); ctx.clip();
+    ctx.strokeStyle = P.grid; for (let r = 1000; r < 9000; r += 1000) { ctx.beginPath(); ctx.arc(X(0), Y(0), r * sc, -Math.PI / 2, 0); ctx.stroke(); }
+    ctx.strokeStyle = P.faint; ctx.lineWidth = 1.5; ctx.beginPath(); for (let t = 0; t <= S.t; t += 5) { const p = truthAt(t); t ? ctx.lineTo(X(p.x), Y(p.y)) : ctx.moveTo(X(p.x), Y(p.y)); } ctx.stroke();
+    ctx.fillStyle = P.warn; S.rad.forEach((z) => ctx.fillRect(X(z[0]) - 1, Y(z[1]) - 1, 2.5, 2.5));
+    ctx.fillStyle = P.ok; S.ais.forEach((z) => ctx.fillRect(X(z[0]) - 2, Y(z[1]) - 2, 4, 4));
+    ctx.strokeStyle = P.accent; ctx.lineWidth = 2; ctx.beginPath(); S.est.forEach((p, i) => (i ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1])))); ctx.stroke();
+    SB.shipTop(ctx, X(0) + 6, Y(0) - 6, -Math.PI / 4, { len: 22, color: SB.color("hull") });
+    SB.shipTop(ctx, X(tru.x), Y(tru.y), -Math.atan2(tru.vy, tru.vx), { len: 18, color: P.dim });
+    ctx.restore();
+    AU.text(ctx, "자선", X(0) + 18, Y(0) - 4, { size: 11, bold: true });
+    AU.text(ctx, "원 간격 1 km", mainW - 8, 16, { align: "right", size: 11, color: P.dim });
+    // --- 확대 창
+    AU.panel(ctx, zx, zy, zw, zh, SB.color("canvas-bg"));
+    const half = 220, zs = Math.min(zw, zh) / (2 * half), zcx = zx + zw / 2, zcy = zy + zh / 2;
+    const ZX = (x) => zcx + (x - tru.x) * zs, ZY = (y) => zcy - (y - tru.y) * zs;
+    ctx.save(); ctx.beginPath(); ctx.rect(zx, zy, zw, zh); ctx.clip();
+    ctx.strokeStyle = P.grid; for (let g = -200; g <= 200; g += 50) { ctx.beginPath(); ctx.moveTo(ZX(tru.x + g), zy); ctx.lineTo(ZX(tru.x + g), zy + zh); ctx.moveTo(zx, ZY(tru.y + g)); ctx.lineTo(zx + zw, ZY(tru.y + g)); ctx.stroke(); }
+    ctx.strokeStyle = P.faint; ctx.lineWidth = 1.5; ctx.beginPath(); for (let t = Math.max(0, S.t - 120); t <= S.t; t += 2) { const p = truthAt(t); ctx.lineTo(ZX(p.x), ZY(p.y)); } ctx.stroke();
+    ctx.fillStyle = P.warn; S.rad.slice(-12).forEach((z) => { ctx.beginPath(); ctx.arc(ZX(z[0]), ZY(z[1]), 3, 0, 7); ctx.fill(); });
+    ctx.fillStyle = P.ok; S.ais.slice(-6).forEach((z) => ctx.fillRect(ZX(z[0]) - 3.5, ZY(z[1]) - 3.5, 7, 7));
+    ctx.strokeStyle = P.accent; ctx.lineWidth = 2; ctx.beginPath(); S.est.slice(-240).forEach((p, i) => (i ? ctx.lineTo(ZX(p[0]), ZY(p[1])) : ctx.moveTo(ZX(p[0]), ZY(p[1])))); ctx.stroke();
+    SB.shipTop(ctx, zcx, zcy, -Math.atan2(tru.vy, tru.vx), { len: 100 * zs, color: P.dim, alpha: 0.6 });
+    if (S.xh) {
+      const E = AU.ellipse(S.P[0][0], S.P[0][1], S.P[1][1]);
+      ctx.save(); ctx.translate(ZX(S.xh[0]), ZY(S.xh[1])); ctx.rotate(-E.ang);
+      ctx.fillStyle = SB.color("accent-soft"); ctx.strokeStyle = P.accent; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(0, 0, Math.max(1, 2 * E.a * zs), Math.max(1, 2 * E.b * zs), 0, 0, 7); ctx.fill(); ctx.stroke(); ctx.restore();
+      ctx.fillStyle = P.accent; ctx.beginPath(); ctx.arc(ZX(S.xh[0]), ZY(S.xh[1]), 3.5, 0, 7); ctx.fill();
+      SB.arrow(ctx, ZX(S.xh[0]), ZY(S.xh[1]), ZX(S.xh[0] + S.xh[2] * 20), ZY(S.xh[1] + S.xh[3] * 20), P.accent, 1.6);
+    }
+    ctx.restore();
+    AU.text(ctx, "확대 (격자 50 m)", zx + 8, zy + 16, { size: 11, bold: true, color: P.dim });
+    AU.text(ctx, "● 레이더", zx + 8, zy + zh - 26, { size: 11, color: P.warn, bold: true });
+    AU.text(ctx, "■ AIS", zx + 72, zy + zh - 26, { size: 11, color: P.ok, bold: true });
+    AU.text(ctx, "─ 추정·2σ", zx + 8, zy + zh - 10, { size: 11, color: P.accent, bold: true });
+    // --- 오차 그래프
+    const by = narrow ? mainH + zh : mainH, box = { x: 48, y: by + 10, w: w - 64, h: h - by - 54 };
+    const ymax = Math.max(40, ...S.err.map((p) => p[1]).slice(-300)) * 1.1;
+    SB.chart(ctx, box, { x: [0, TEND], y: [0, Math.min(ymax, 400)], xLabel: "시간 (s)", yLabel: "오차 m", series: [{ data: S.err, color: P.accent2, width: 1.5 }], vlines: [{ x: 280, color: P.faint, label: "변침" }] });
+    // readouts
+    if (S.xh) {
+      const e = Math.hypot(S.xh[0] - tru.x, S.xh[1] - tru.y), E = AU.ellipse(S.P[0][0], S.P[0][1], S.P[1][1]);
+      SB.stat("o-kf-e", e.toFixed(0) + "<small>m</small>");
+      SB.stat("o-kf-rms", S.ne ? Math.sqrt(S.se / S.ne).toFixed(0) + "<small>m</small>" : "—");
+      SB.stat("o-kf-ell", (2 * E.a).toFixed(0) + " × " + (2 * E.b).toFixed(0) + "<small>m</small>");
+      SB.stat("o-kf-v", SB.kn(Math.hypot(S.xh[2], S.xh[3])).toFixed(1) + " / " + SB.kn(Math.hypot(tru.vx, tru.vy)).toFixed(1) + "<small>kn</small>");
+      const crs = (v) => ((90 - SB.deg(Math.atan2(v[1], v[0]))) % 360 + 360) % 360;
+      SB.stat("o-kf-c", crs([S.xh[2], S.xh[3]]).toFixed(0) + "° / " + crs([tru.vx, tru.vy]).toFixed(0) + "°");
+    }
+  }, { aspect: 0.72, minHeight: 500, maxHeight: 620 });
+  SB.loop(document.getElementById("sim-kf"), (dt) => {
+    const T = dt * TS, n = Math.ceil(T / 0.5);
+    for (let i = 0; i < n; i++) step(T / n);
+    if (S.t > TEND) reset();
+    cv.redraw();
+  });
+})();
+</script>
+<script>
+/* ---------- 3. A* 경로 계획 ---------- */
+(function () {
+  const C = 40, R = 24, NM = 0.5;
+  const brush = SB.seg("as-brush");
+  const wS = SB.range("as-w", (v) => v.toFixed(1), () => solve());
+  const smOn = () => document.getElementById("as-sm").checked, exOn = () => document.getElementById("as-ex").checked;
+  let grid, S = [2, 20], G = [37, 3], res = null;
+  function defMap() {
+    grid = new Array(C * R).fill(0);
+    const blob = (cx, cy, rx, ry) => { for (let j = 0; j < R; j++) for (let i = 0; i < C; i++) { const d = ((i - cx) / rx) ** 2 + ((j - cy) / ry) ** 2; if (d < 1) grid[j * C + i] = 1; else if (d < 1.9 && grid[j * C + i] === 0) grid[j * C + i] = 2; } };
+    blob(12, 9, 4, 5); blob(25, 17, 5, 3.2); blob(30, 5, 2.5, 2); blob(0, 0, 6, 4); blob(39, 23, 7, 4);
+    for (let j = 0; j < R; j++) { const i = Math.round(19 + (j - 12) * 0.25); if (j > 1 && j < 13) grid[j * C + i] = 3; }
+    for (let i = 4; i < 11; i++) for (let j = 17; j < 19; j++) if (!grid[j * C + i]) grid[j * C + i] = 2;
+    grid[S[1] * C + S[0]] = 0; grid[G[1] * C + G[0]] = 0;
+  }
+  const blocked = (i, j) => i < 0 || j < 0 || i >= C || j >= R || grid[j * C + i] === 1 || grid[j * C + i] === 3;
+  function solve() {
+    const w = wS(), N = C * R, g = new Float64Array(N).fill(Infinity), f = new Float64Array(N).fill(Infinity), from = new Int32Array(N).fill(-1), closed = new Uint8Array(N);
+    const h = (k) => Math.hypot((k % C) - G[0], Math.floor(k / C) - G[1]);
+    const s = S[1] * C + S[0], goal = G[1] * C + G[0]; g[s] = 0; f[s] = h(s);
+    const open = [s]; let nexp = 0;
+    while (open.length) {
+      let bi = 0; for (let k = 1; k < open.length; k++) if (f[open[k]] < f[open[bi]]) bi = k;
+      const cur = open[bi]; open.splice(bi, 1);
+      if (closed[cur]) continue; closed[cur] = 1; nexp++;
+      if (cur === goal) break;
+      const ci = cur % C, cj = Math.floor(cur / C);
+      for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+        if (!di && !dj) continue; const ni = ci + di, nj = cj + dj;
+        if (blocked(ni, nj)) continue;
+        if (di && dj && (blocked(ci + di, cj) || blocked(ci, cj + dj))) continue;
+        const nk = nj * C + ni, cost = Math.hypot(di, dj) * (1 + (grid[nk] === 2 ? w : 0));
+        if (g[cur] + cost < g[nk]) { g[nk] = g[cur] + cost; f[nk] = g[nk] + h(nk); from[nk] = cur; open.push(nk); }
+      }
+    }
+    let path = null;
+    if (isFinite(g[goal])) { path = []; for (let k = goal; k !== -1; k = from[k]) path.unshift([k % C, Math.floor(k / C)]); }
+    res = { path, closed, nexp };
+    cv.redraw();
+  }
+  function lineCells(a, b) { const out = [], n = Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) * 4) || 1; for (let k = 0; k <= n; k++) out.push([Math.round(a[0] + ((b[0] - a[0]) * k) / n), Math.round(a[1] + ((b[1] - a[1]) * k) / n)]); return out; }
+  function smooth(path) {
+    const shallowIn = (cells) => cells.filter(([i, j]) => grid[j * C + i] === 2).length;
+    const out = [path[0]]; let i = 0;
+    while (i < path.length - 1) {
+      let best = i + 1;
+      for (let j = path.length - 1; j > i + 1; j--) {
+        const cells = lineCells(path[i], path[j]);
+        if (cells.some(([a, b]) => blocked(a, b))) continue;
+        if (shallowIn(cells) > shallowIn(path.slice(i, j + 1))) continue;
+        best = j; break;
+      }
+      out.push(path[best]); i = best;
+    }
+    return out;
+  }
+  const cv = SB.canvas("#cv-astar", (ctx, w, h) => {
+    if (!res) return;
+    const P = SB.palette(), cs = Math.min(w / C, h / R), ox = (w - cs * C) / 2, oy = (h - cs * R) / 2;
+    const land = SB.isDark() ? "#5a4e36" : "#d9c9a0", shallow = SB.isDark() ? "#1f4e6e" : "#9fd0ee", deep = SB.isDark() ? "#0f2a40" : "#dcefff", tss = SB.isDark() ? "#6a3f8f" : "#c7a6e8";
+    for (let j = 0; j < R; j++) for (let i = 0; i < C; i++) {
+      const v = grid[j * C + i]; ctx.fillStyle = v === 1 ? land : v === 2 ? shallow : v === 3 ? tss : deep;
+      ctx.fillRect(ox + i * cs, oy + j * cs, cs + 0.5, cs + 0.5);
+      if (exOn() && res.closed[j * C + i] && !v) { ctx.fillStyle = SB.color("accent-soft"); ctx.fillRect(ox + i * cs, oy + j * cs, cs, cs); }
+    }
+    ctx.strokeStyle = P.grid; ctx.lineWidth = 1; ctx.beginPath(); for (let i = 0; i <= C; i++) { ctx.moveTo(ox + i * cs, oy); ctx.lineTo(ox + i * cs, oy + R * cs); } for (let j = 0; j <= R; j++) { ctx.moveTo(ox, oy + j * cs); ctx.lineTo(ox + C * cs, oy + j * cs); } ctx.stroke();
+    const PX = (p) => [ox + (p[0] + 0.5) * cs, oy + (p[1] + 0.5) * cs];
+    let len = NaN, nwp = 0, nsh = 0;
+    if (res.path) {
+      ctx.strokeStyle = P.faint; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]); ctx.beginPath(); res.path.forEach((p, i) => { const [x, y] = PX(p); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke(); ctx.setLineDash([]);
+      const pts = smOn() ? smooth(res.path) : res.path;
+      ctx.strokeStyle = P.accent2; ctx.lineWidth = 3; ctx.beginPath(); pts.forEach((p, i) => { const [x, y] = PX(p); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke();
+      if (smOn()) pts.forEach((p) => { const [x, y] = PX(p); ctx.fillStyle = P.accent2; ctx.beginPath(); ctx.arc(x, y, 3.5, 0, 7); ctx.fill(); });
+      len = 0; for (let k = 1; k < pts.length; k++) len += Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]) * NM;
+      nwp = pts.length - 2;
+      for (let k = 1; k < pts.length; k++) lineCells(pts[k - 1], pts[k]).forEach(([i, j]) => { if (grid[j * C + i] === 2) nsh++; });
+    } else AU.text(ctx, "경로 없음!", w / 2, h / 2, { align: "center", bold: true, size: 18, color: P.bad, bg: SB.color("bg-elev") });
+    [[S, P.ok, "S"], [G, P.bad, "G"]].forEach(([p, col, l]) => { const [x, y] = PX(p); ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, Math.max(7, cs * 0.6), 0, 7); ctx.fill(); AU.text(ctx, l, x, y + 4, { align: "center", bold: true, color: "#fff", size: 11 }); });
+    SB.stat("o-as-len", isFinite(len) ? len.toFixed(1) + "<small>nm</small>" : "—");
+    SB.stat("o-as-sh", res.path ? nsh + "<small>칸</small>" : "—"); AU.setCls("o-as-sh", nsh ? "warn" : "ok");
+    SB.stat("o-as-n", res.nexp + "<small>/ " + C * R + "</small>");
+    SB.stat("o-as-wp", res.path ? String(Math.max(0, nwp)) : "—");
+    cv._g = { cs, ox, oy };
+  }, { aspect: 0.6, minHeight: 220, maxHeight: 460 });
+  const el = document.getElementById("cv-astar");
+  let drag = null;
+  const cell = (p) => { const g = cv._g; return [Math.floor((p.x - g.ox) / g.cs), Math.floor((p.y - g.oy) / g.cs)]; };
+  const paint = (c) => { if (c[0] < 0 || c[1] < 0 || c[0] >= C || c[1] >= R) return; if ((c[0] === S[0] && c[1] === S[1]) || (c[0] === G[0] && c[1] === G[1])) return; const v = +brush(); if (grid[c[1] * C + c[0]] !== v) { grid[c[1] * C + c[0]] = v; solve(); } };
+  SB.drag(el, {
+    down(p) { const c = cell(p); if (c[0] === S[0] && c[1] === S[1]) drag = "S"; else if (c[0] === G[0] && c[1] === G[1]) drag = "G"; else { drag = "paint"; paint(c); } },
+    move(p) { const c = cell(p); if (drag === "paint") paint(c); else if (drag) { if (c[0] < 0 || c[1] < 0 || c[0] >= C || c[1] >= R || blocked(c[0], c[1])) return; const T = drag === "S" ? S : G; if (T[0] !== c[0] || T[1] !== c[1]) { T[0] = c[0]; T[1] = c[1]; solve(); } } },
+    up() { drag = null; },
+  });
+  document.getElementById("as-sm").onchange = () => cv.redraw();
+  document.getElementById("as-ex").onchange = () => cv.redraw();
+  document.getElementById("as-clear").onclick = () => { grid.fill(0); solve(); };
+  document.getElementById("as-def").onclick = () => { defMap(); solve(); };
+  defMap(); solve();
+})();
+</script>
+<script>
+/* ---------- 4. LOS 경로 추종 ---------- */
+(function () {
+  const cS = SB.range("lo-c", (v) => v.toFixed(1) + " m/s", () => run(true));
+  const dS = SB.range("lo-d", (v) => v + " m", () => run(true));
+  const kpS = SB.range("lo-kp", (v) => v.toFixed(1), () => run(true));
+  const kdS = SB.range("lo-kd", (v) => v + " s", () => run(true));
+  const kiS = SB.range("lo-ki", (v) => v.toFixed(3), () => run(true));
+  const WP = [[0, 0], [2600, 0], [4000, 1300], [6400, 1300]], L = 100, U = SB.ms(10);
+  const K = (1.5 * U) / L, T = (2 * L) / U, TEND = 1500;
+  let res = null, show = 0, anim = false;
+  function run(instant) {
+    const Vc = cS(), D = dS(), Kp = kpS(), Kd = kdS(), sig = kiS();
+    let x = 0, y = -250, psi = 0, r = 0, d = 0, leg = 0, eint = 0, t = 0; const dt = 0.5, out = [];
+    while (t < TEND) {
+      const a = WP[leg], b = WP[leg + 1], chi = Math.atan2(b[1] - a[1], b[0] - a[0]);
+      const ex = x - a[0], ey = y - a[1], along = ex * Math.cos(chi) + ey * Math.sin(chi), e = ex * Math.sin(chi) - ey * Math.cos(chi); // 오른쪽 +
+      const ee = e + sig * eint;
+      eint += ((D * e) / (D * D + ee * ee)) * dt;
+      const psid = chi + Math.atan(ee / D);
+      let err = psid - psi; err = Math.atan2(Math.sin(err), Math.cos(err));
+      const dc = SB.clamp(Kp * err - Kd * r, -SB.rad(35), SB.rad(35));
+      d += SB.clamp(dc - d, -SB.rad(5) * dt, SB.rad(5) * dt);
+      r += ((K * d - r) / T) * dt; psi += r * dt;
+      x += (U * Math.cos(psi)) * dt; y += (U * Math.sin(psi) + Vc) * dt; t += dt;
+      const segLen = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      if (along > segLen - 2 * L && leg < WP.length - 2) { leg++; }
+      out.push([t, x, y, psi, e, d, leg]);
+      if (leg === WP.length - 2 && along > segLen) break;
+    }
+    res = { out, Vc, D };
+    show = instant ? out.length : 0; anim = !instant;
+    cv.redraw();
+  }
+  document.getElementById("lo-run").onclick = () => run(false);
+  const cv = SB.canvas("#cv-los", (ctx, w, h) => {
+    if (!res) return;
+    const P = SB.palette(), ht = h * 0.58, n = Math.min(Math.floor(show), res.out.length), cur = res.out[Math.max(0, n - 1)];
+    AU.panel(ctx, 0, 0, w, ht, SB.color("water-soft"));
+    const xmin = -400, xmax = 6700, ymin = -900, ymax = 1900, sc = Math.min((w - 20) / (xmax - xmin), (ht - 20) / (ymax - ymin));
+    const ox = (w - (xmax - xmin) * sc) / 2 - xmin * sc, oy = ht - (ht - (ymax - ymin) * sc) / 2 + ymin * sc;
+    const X = (x) => ox + x * sc, Y = (y) => oy - y * sc;
+    // 조류 화살표
+    if (res.Vc > 0) for (let i = 0; i < 6; i++) { const xx = X(500 + i * 1100); SB.arrow(ctx, xx, Y(-700), xx, Y(-700 + 250 + res.Vc * 200), SB.color("water"), 1.5); }
+    ctx.strokeStyle = P.dim; ctx.lineWidth = 2; ctx.setLineDash([8, 5]); ctx.beginPath(); WP.forEach((p, i) => (i ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1])))); ctx.stroke(); ctx.setLineDash([]);
+    WP.forEach((p, i) => { ctx.fillStyle = P.text; ctx.beginPath(); ctx.arc(X(p[0]), Y(p[1]), 4, 0, 7); ctx.fill(); AU.text(ctx, "WP" + i, X(p[0]) + 4, Y(p[1]) - 8, { size: 11, color: P.dim }); });
+    ctx.strokeStyle = P.accent; ctx.lineWidth = 2.2; ctx.beginPath(); for (let i = 0; i < n; i += 2) { const p = res.out[i]; i ? ctx.lineTo(X(p[1]), Y(p[2])) : ctx.moveTo(X(p[1]), Y(p[2])); } ctx.stroke();
+    if (cur) {
+      SB.shipTop(ctx, X(cur[1]), Y(cur[2]), -cur[3], { len: Math.max(16, L * sc * 1.6), color: SB.color("hull"), rudder: -cur[5] });
+      // LOS 겨냥점
+      const a = WP[cur[6]], b = WP[cur[6] + 1], chi = Math.atan2(b[1] - a[1], b[0] - a[0]);
+      const along = (cur[1] - a[0]) * Math.cos(chi) + (cur[2] - a[1]) * Math.sin(chi);
+      const lx = a[0] + (along + res.D) * Math.cos(chi), ly = a[1] + (along + res.D) * Math.sin(chi);
+      AU.seg(ctx, X(cur[1]), Y(cur[2]), X(lx), Y(ly), P.accent2, 1.2, [3, 3]); ctx.fillStyle = P.accent2; ctx.beginPath(); ctx.arc(X(lx), Y(ly), 3.5, 0, 7); ctx.fill();
+    }
+    AU.text(ctx, "조류 ↑", 8, ht - 8, { size: 11, color: SB.color("water"), bold: true });
+    AU.text(ctx, "주황 점: LOS 겨냥점", w - 8, 16, { align: "right", size: 11, color: P.accent2 });
+    // 오차 그래프
+    const box = { x: 52, y: ht + 12, w: w - 70, h: h - ht - 50 }, tmax = res.out[res.out.length - 1][0];
+    const th = res.D * Math.tan(Math.asin(Math.min(0.99, res.Vc / U)));
+    SB.chart(ctx, box, { x: [0, tmax], y: [-200, 300], xLabel: "시간 (s)", yLabel: "횡방향 오차 (m)", hlines: [{ y: 0, color: P.axis }, { y: -th, color: P.warn, label: "−ΔV_c/U", dash: [5, 4] }],
+      series: [{ data: res.out.slice(0, n).filter((_, i) => i % 2 === 0).map((p) => [p[0], p[4]]), color: P.accent, width: 2 }] });
+    if (cur) {
+      SB.stat("o-lo-e", cur[4].toFixed(0) + "<small>m</small>");
+      SB.stat("o-lo-th", th.toFixed(0) + "<small>m</small>");
+      SB.stat("o-lo-r", SB.deg(cur[5]).toFixed(1) + "°");
+      const cog = Math.atan2(U * Math.sin(cur[3]) + res.Vc, U * Math.cos(cur[3]));
+      SB.stat("o-lo-b", SB.deg(cur[3] - cog).toFixed(1) + "°");
+    }
+  }, { aspect: 0.78, minHeight: 360, maxHeight: 560 });
+  run(true);
+  SB.loop(document.getElementById("sim-los"), () => { if (!anim) return; show += res.out.length / 400; if (show >= res.out.length) { show = res.out.length; anim = false; } cv.redraw(); });
+})();
+</script>
+<script>
+/* ---------- 5. 속도 장애물 ---------- */
+(function () {
+  const SC = {
+    head: [{ p: [0.25, 5], v: [0, -12] }],
+    cross: [{ p: [4.6, 0.6], v: [-12, 0] }],
+    multi: [{ p: [0.3, 6], v: [0, -11] }, { p: [4.8, 1.2], v: [-11, 1] }, { p: [-4.2, 2.2], v: [9, 0] }],
+  };
+  const sc = SB.seg("vo-sc", () => reset());
+  const rS = SB.range("vo-r", (v) => v.toFixed(2) + " nm", () => { plan(); cv.redraw(); });
+  const tS = SB.range("vo-t", (v) => v + " 분", () => { plan(); cv.redraw(); });
+  const colOn = () => document.getElementById("vo-col").checked;
+  document.getElementById("vo-col").onchange = () => { plan(); cv.redraw(); };
+  const VPREF = 12, GOAL = [0, 12];
+  let st, running = false;
+  function reset() {
+    st = { own: { p: [0, -4], v: [0, VPREF] }, tg: SC[sc()].map((t) => ({ p: [...t.p], v: [...t.v], trail: [] })), trail: [], t: 0, cmd: [0, VPREF], minCPA: Infinity, sit: "" };
+    running = false; plan(); cv.redraw();
+  }
+  const hdg = (v) => Math.atan2(v[0], v[1]); // 북 기준 시계 방향
+  const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+  function inVO(v, tg, R, tau) {
+    const p = [tg.p[0] - st.own.p[0], tg.p[1] - st.own.p[1]], w = [(v[0] - tg.v[0]) / 60, (v[1] - tg.v[1]) / 60];
+    const ww = w[0] * w[0] + w[1] * w[1]; const ts = ww < 1e-12 ? 0 : SB.clamp((p[0] * w[0] + p[1] * w[1]) / ww, 0, tau);
+    return Math.hypot(p[0] - w[0] * ts, p[1] - w[1] * ts) < R;
+  }
+  function situation(tg) {
+    const p = [tg.p[0] - st.own.p[0], tg.p[1] - st.own.p[1]], ho = hdg(st.own.v), brg = SB.deg(wrap(Math.atan2(p[0], p[1]) - ho));
+    const dc = Math.abs(SB.deg(wrap(hdg(tg.v) - ho)));
+    const vr = [tg.v[0] - st.own.v[0], tg.v[1] - st.own.v[1]], closing = p[0] * vr[0] + p[1] * vr[1] < 0;
+    if (!closing) return "none";
+    if (Math.abs(brg) < 12 && dc > 160) return "head";
+    if (brg > 0 && brg < 112.5 && dc > 30) return "giveway";
+    if (brg < 0 && brg > -112.5 && dc > 30) return "standon";
+    return "other";
+  }
+  function plan() {
+    const R = rS(), tau = tS(), toGoal = Math.atan2(GOAL[0] - st.own.p[0], GOAL[1] - st.own.p[1]);
+    const vpref = [VPREF * Math.sin(toGoal), VPREF * Math.cos(toGoal)];
+    const sits = st.tg.map(situation), mustStbd = colOn() && st.tg.some((tg, i) => (sits[i] === "head" || sits[i] === "giveway") && inVO(vpref, tg, R, tau));
+    let best = null, bc = Infinity;
+    for (let dh = -90; dh <= 90; dh += 5) for (const sp of [12, 9, 6, 3]) {
+      const a = toGoal + SB.rad(dh), v = [sp * Math.sin(a), sp * Math.cos(a)];
+      if (st.tg.some((tg) => inVO(v, tg, R, tau))) continue;
+      let c = ((v[0] - vpref[0]) ** 2 + (v[1] - vpref[1]) ** 2) / 144;
+      if (mustStbd && dh < 0) c += 5;
+      if (mustStbd && dh > 0 && dh < 15) c += 0.6;
+      if (c < bc) { bc = c; best = v; }
+    }
+    st.cmd = best || [0, 0];
+    st.vpref = vpref; st.sits = sits;
+    const names = { head: "정면(피항)", giveway: "횡단·피항선", standon: "횡단·유지선", other: "기타", none: "위험 없음" };
+    st.sit = sits.map((s) => names[s]).join(", ");
+  }
+  function cpaNow() {
+    let m = Infinity; st.tg.forEach((tg) => { m = Math.min(m, Math.hypot(tg.p[0] - st.own.p[0], tg.p[1] - st.own.p[1])); }); return m;
+  }
+  function step(dtm) {
+    const o = st.own, h0 = hdg(o.v), s0 = Math.hypot(o.v[0], o.v[1]), h1 = hdg(st.cmd), s1 = Math.hypot(st.cmd[0], st.cmd[1]);
+    const dh = SB.clamp(wrap(h1 - h0), -SB.rad(40) * dtm, SB.rad(40) * dtm), sp = s0 + SB.clamp(s1 - s0, -4 * dtm, 4 * dtm), h = h0 + (s1 > 0.1 ? dh : 0);
+    o.v = [sp * Math.sin(h), sp * Math.cos(h)];
+    o.p = [o.p[0] + (o.v[0] * dtm) / 60, o.p[1] + (o.v[1] * dtm) / 60];
+    st.tg.forEach((tg) => { tg.p = [tg.p[0] + (tg.v[0] * dtm) / 60, tg.p[1] + (tg.v[1] * dtm) / 60]; });
+    st.t += dtm; st.minCPA = Math.min(st.minCPA, cpaNow());
+  }
+  document.getElementById("vo-run").onclick = () => { if (st.t > 50) reset(); running = !running; document.getElementById("vo-run").textContent = running ? "일시정지" : "실행"; };
+  document.getElementById("vo-reset").onclick = () => { reset(); document.getElementById("vo-run").textContent = "실행"; };
+  let geo = null, vel = null;
+  const cv = SB.canvas("#cv-vo", (ctx, w, h) => {
+    if (!st) return;
+    const P = SB.palette(), wide = w >= 600;
+    geo = wide ? { x: 0, y: 0, w: w * 0.55, h } : { x: 0, y: 0, w, h: h * 0.58 };
+    vel = wide ? { x: w * 0.55, y: 0, w: w * 0.45, h } : { x: 0, y: h * 0.58, w, h: h * 0.42 };
+    // --- 해역
+    AU.panel(ctx, geo.x, geo.y, geo.w, geo.h, SB.color("water-soft"));
+    const gs = Math.min(geo.w / 12.5, geo.h / 15), gcx = geo.x + geo.w / 2, gcy = geo.y + geo.h * 0.62;
+    geo.s = gs; geo.cx = gcx; geo.cy = gcy;
+    const X = (x) => gcx + x * gs, Y = (y) => gcy - y * gs;
+    ctx.save(); ctx.beginPath(); ctx.rect(geo.x, geo.y, geo.w, geo.h); ctx.clip();
+    ctx.strokeStyle = P.grid; ctx.beginPath(); for (let i = -8; i <= 8; i++) { ctx.moveTo(X(i), geo.y); ctx.lineTo(X(i), geo.y + geo.h); } for (let j = -8; j <= 14; j++) { ctx.moveTo(geo.x, Y(j)); ctx.lineTo(geo.x + geo.w, Y(j)); } ctx.stroke();
+    ctx.fillStyle = P.ok; ctx.beginPath(); ctx.arc(X(GOAL[0]), Y(GOAL[1]), 5, 0, 7); ctx.fill();
+    st.trail.forEach((p) => { ctx.fillStyle = P.accent; ctx.fillRect(X(p[0]) - 1, Y(p[1]) - 1, 2, 2); });
+    const R = rS();
+    st.tg.forEach((tg, i) => {
+      tg.trail.forEach((p) => { ctx.fillStyle = P.dim; ctx.fillRect(X(p[0]) - 1, Y(p[1]) - 1, 2, 2); });
+      ctx.fillStyle = SB.color("accent-2-soft"); ctx.strokeStyle = P.accent2; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.arc(X(tg.p[0]), Y(tg.p[1]), R * gs, 0, 7); ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
+      SB.shipTop(ctx, X(tg.p[0]), Y(tg.p[1]), hdg(tg.v) - Math.PI / 2, { len: 20, color: P.accent2 });
+      const tx = X(tg.p[0] + tg.v[0] / 10), ty = Y(tg.p[1] + tg.v[1] / 10);
+      SB.arrow(ctx, X(tg.p[0]), Y(tg.p[1]), tx, ty, P.accent2, 1.5);
+      ctx.strokeStyle = P.accent2; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(tx, ty, 6, 0, 7); ctx.stroke();
+      tg._h = [tx, ty]; tg._b = [X(tg.p[0]), Y(tg.p[1])];
+      AU.text(ctx, "B" + (i + 1), X(tg.p[0]) + 10, Y(tg.p[1]) - 10, { size: 11, bold: true, color: P.accent2 });
+    });
+    SB.shipTop(ctx, X(st.own.p[0]), Y(st.own.p[1]), hdg(st.own.v) - Math.PI / 2, { len: 22, color: SB.color("hull") });
+    SB.arrow(ctx, X(st.own.p[0]), Y(st.own.p[1]), X(st.own.p[0] + st.own.v[0] / 10), Y(st.own.p[1] + st.own.v[1] / 10), P.ok, 1.8);
+    ctx.restore();
+    AU.text(ctx, "자선 A · 목표(초록 점) · " + st.t.toFixed(0) + "분", geo.x + 8, geo.y + 16, { size: 11, bold: true, color: P.text });
+    // --- 속도 공간
+    AU.panel(ctx, vel.x, vel.y, vel.w, vel.h, SB.color("canvas-bg"));
+    const vs = Math.min(vel.w, vel.h) / 2 / 17, vcx = vel.x + vel.w / 2, vcy = vel.y + vel.h / 2;
+    const tau = tS(), step = 4;
+    ctx.fillStyle = "rgba(220,60,50,0.28)";
+    for (let py = vel.y; py < vel.y + vel.h; py += step) for (let px = vel.x; px < vel.x + vel.w; px += step) {
+      const v = [(px + step / 2 - vcx) / vs, -(py + step / 2 - vcy) / vs];
+      if (Math.hypot(v[0], v[1]) > 16) continue;
+      if (st.tg.some((tg) => inVO(v, tg, R, tau))) ctx.fillRect(px, py, step, step);
+    }
+    ctx.strokeStyle = P.grid; [5, 10, 15].forEach((r) => { ctx.beginPath(); ctx.arc(vcx, vcy, r * vs, 0, 7); ctx.stroke(); });
+    AU.seg(ctx, vcx - 16 * vs, vcy, vcx + 16 * vs, vcy, P.grid); AU.seg(ctx, vcx, vcy - 16 * vs, vcx, vcy + 16 * vs, P.grid);
+    st.tg.forEach((tg, i) => { ctx.fillStyle = P.accent2; ctx.beginPath(); ctx.arc(vcx + tg.v[0] * vs, vcy - tg.v[1] * vs, 3, 0, 7); ctx.fill(); AU.text(ctx, "v_B" + (i + 1), vcx + tg.v[0] * vs + 5, vcy - tg.v[1] * vs - 4, { size: 10, color: P.accent2 }); });
+    if (st.vpref) { ctx.save(); ctx.setLineDash([5, 4]); SB.arrow(ctx, vcx, vcy, vcx + st.vpref[0] * vs, vcy - st.vpref[1] * vs, P.dim, 1.6); ctx.restore(); }
+    SB.arrow(ctx, vcx, vcy, vcx + st.cmd[0] * vs, vcy - st.cmd[1] * vs, P.ok, 2.8);
+    AU.text(ctx, "속도 공간 (원 5 kn 간격)", vel.x + 8, vel.y + 16, { size: 11, bold: true, color: P.text });
+    AU.text(ctx, "빨강 = VO", vel.x + 8, vel.y + 32, { size: 11, color: P.bad });
+    // readouts
+    const toGoal = Math.atan2(GOAL[0] - st.own.p[0], GOAL[1] - st.own.p[1]);
+    const dc = SB.deg(wrap(hdg(st.cmd) - toGoal));
+    SB.stat("o-vo-dc", (dc > 0.5 ? "우현 " : dc < -0.5 ? "좌현 " : "") + Math.abs(dc).toFixed(0) + "°"); AU.setCls("o-vo-dc", dc < -0.5 ? "warn" : "");
+    SB.stat("o-vo-sp", Math.hypot(st.cmd[0], st.cmd[1]).toFixed(0) + "<small>kn</small>");
+    const m = isFinite(st.minCPA) ? st.minCPA : cpaNow();
+    SB.stat("o-vo-cpa", m.toFixed(2) + "<small>nm</small>"); AU.setCls("o-vo-cpa", m < R ? "bad" : "ok");
+    SB.stat("o-vo-sit", "<small>" + st.sit + "</small>");
+  }, { aspect: 0.62, minHeight: 560, maxHeight: 620 });
+  reset();
+  // 드래그
+  let dragT = null;
+  SB.drag(document.getElementById("cv-vo"), {
+    down(p) { if (running) return false; dragT = null; st.tg.forEach((tg, i) => { if (tg._h && Math.hypot(p.x - tg._h[0], p.y - tg._h[1]) < 12) dragT = { i, k: "v" }; else if (!dragT && tg._b && Math.hypot(p.x - tg._b[0], p.y - tg._b[1]) < 14) dragT = { i, k: "p" }; }); if (!dragT) return false; },
+    move(p) {
+      if (!dragT || !geo) return; const tg = st.tg[dragT.i], x = (p.x - geo.cx) / geo.s, y = -(p.y - geo.cy) / geo.s;
+      if (dragT.k === "p") tg.p = [x, y]; else { let v = [(x - tg.p[0]) * 10, (y - tg.p[1]) * 10]; const s = Math.hypot(v[0], v[1]); if (s > 20) v = [(v[0] * 20) / s, (v[1] * 20) / s]; tg.v = v; }
+      st.minCPA = Infinity; plan(); cv.redraw();
+    },
+    up() { dragT = null; },
+  });
+  let acc = 0, tacc = 0;
+  SB.loop(document.getElementById("sim-vo"), (dt) => {
+    if (!running) return;
+    const T = dt * 1.2; acc += T; tacc += T;
+    for (let k = 0; k < 6; k++) step(T / 6);
+    if (acc > 0.5) { acc = 0; plan(); }
+    if (tacc > 0.6) { tacc = 0; st.trail.push([...st.own.p]); st.tg.forEach((tg) => tg.trail.push([...tg.p])); }
+    if (st.t > 50 || st.own.p[1] > GOAL[1]) { running = false; document.getElementById("vo-run").textContent = "실행"; }
+    cv.redraw();
+  });
+})();
+</script>
+<script>
+/* ---------- 6. DP 위치 유지 ---------- */
+(function () {
+  const wS = SB.range("dp-w", (v) => v + " m/s"), cS = SB.range("dp-c", (v) => v.toFixed(1) + " kn"), hsS = SB.range("dp-hs", (v) => v.toFixed(1) + " m");
+  const dirS = SB.range("dp-dir", (v) => v + "°"), wnS = SB.range("dp-wn", (v) => v.toFixed(2) + " rad/s");
+  const intOn = () => document.getElementById("dp-int").checked;
+  const L = 80, B = 18, Mx = 5.5e6, My = 8e6, Iz = 2.8e9, Dx = 6e4, Dy = 2e5, Dz = 2e8;
+  const TH = [ // [lx, ly, 종류, 최대 추력 N]
+    [0.42 * L, 0, "tun", 1.5e5], [0.36 * L, 0, "tun", 1.5e5], [-0.44 * L, -B / 4, "azi", 4e5], [-0.44 * L, B / 4, "azi", 4e5]];
+  const fail = [false, false, false, false];
+  const btns = [...document.querySelectorAll("#sim-dp .au-thr button")];
+  const syncBtns = () => btns.forEach((b) => b.classList.toggle("off", fail[+b.dataset.t]));
+  btns.forEach((b) => (b.onclick = () => { fail[+b.dataset.t] = !fail[+b.dataset.t]; syncBtns(); }));
+  document.getElementById("dp-bus").onclick = () => { fail[0] = true; fail[2] = true; syncBtns(); };
+  document.getElementById("dp-rst").onclick = () => { fail.fill(false); syncBtns(); st.ei = [0, 0, 0]; };
+  let st = { x: 0, y: 0, psi: 0, u: 0, v: 0, r: 0, ei: [0, 0, 0], t: 0, gust: 0, trail: [], f: [0, 0, 0, 0, 0, 0], load: [0, 0, 0, 0], env: [0, 0, 0] };
+  // 배수 좌표: x 선수, y 우현, ψ 시계 방향(위에서 볼 때). 지구 좌표: x 북(화면 위), y 동(화면 오른쪽)
+  function envForce() {
+    const th = SB.rad(dirS()) - st.psi, Uw = wS() * (1 + 0.25 * st.gust), Uc = SB.ms(cS()), Hs = hsS();
+    const c = Math.cos(th), s = Math.sin(th);
+    const Fx = -(0.5 * SB.RHO_AIR * 0.8 * 250 * Uw * Uw + 0.5 * SB.RHO * 0.6 * 108 * Uc * Uc + 0.5 * SB.RHO * SB.G * (Hs * Hs / 16) * B * 0.5) * c;
+    const Fy = -(0.5 * SB.RHO_AIR * 0.9 * 700 * Uw * Uw + 0.5 * SB.RHO * 0.8 * 480 * Uc * Uc + 0.5 * SB.RHO * SB.G * (Hs * Hs / 16) * L * 0.5) * s;
+    const N = Fy * 0.1 * L * c;
+    return [Fx, Fy, N];
+  }
+  function allocate(tau) {
+    // 열: t1y, t2y, a1x, a1y, a2x, a2y
+    const cols = [[0, 1, TH[0][0]], [0, 1, TH[1][0]], [1, 0, -TH[2][1]], [0, 1, TH[2][0]], [1, 0, -TH[3][1]], [0, 1, TH[3][0]]];
+    const own = [0, 1, 2, 2, 3, 3], Winv = own.map((k) => (fail[k] ? 0 : TH[k][3] ** 2));
+    const A = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+    for (let j = 0; j < 6; j++) for (let a = 0; a < 3; a++) for (let b = 0; b < 3; b++) A[a][b] += cols[j][a] * Winv[j] * cols[j][b];
+    for (let a = 0; a < 3; a++) A[a][a] += 1e6 * (a === 2 ? L * L : 1);
+    const lam = solve3(A, tau), f = cols.map((c, j) => Winv[j] * (c[0] * lam[0] + c[1] * lam[1] + c[2] * lam[2]));
+    // 포화
+    const load = [0, 0, 0, 0];
+    [0, 1].forEach((k) => { f[k] = SB.clamp(f[k], -TH[k][3], TH[k][3]); load[k] = Math.abs(f[k]) / TH[k][3]; });
+    [[2, 2, 3], [3, 4, 5]].forEach(([k, i, j]) => { const m = Math.hypot(f[i], f[j]); if (m > TH[k][3]) { f[i] *= TH[k][3] / m; f[j] *= TH[k][3] / m; } load[k] = Math.min(1, m / TH[k][3]); });
+    const out = [0, 0, 0]; for (let j = 0; j < 6; j++) for (let a = 0; a < 3; a++) out[a] += cols[j][a] * f[j];
+    return { f, load, out };
+  }
+  function solve3(A, b) {
+    const M = A.map((r, i) => [...r, b[i]]);
+    for (let c = 0; c < 3; c++) { let p = c; for (let r = c + 1; r < 3; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r; [M[c], M[p]] = [M[p], M[c]]; for (let r = 0; r < 3; r++) if (r !== c) { const f = M[r][c] / M[c][c]; for (let k = c; k < 4; k++) M[r][k] -= f * M[c][k]; } }
+    return [M[0][3] / M[0][0], M[1][3] / M[1][1], M[2][3] / M[2][2]];
+  }
+  function step(dt) {
+    st.t += dt; st.gust += (-st.gust / 40 + 0.25 * SB.randn() * Math.sqrt(dt / 20)) * dt * 2;
+    const wn = wnS(), c = Math.cos(st.psi), s = Math.sin(st.psi);
+    const ex = c * st.x + s * st.y, ey = -s * st.x + c * st.y, ep = st.psi; // 몸체 좌표 오차
+    const Ms = [Mx, My, Iz], e = [ex, ey, ep], vel = [st.u, st.v, st.r];
+    if (intOn()) for (let i = 0; i < 3; i++) st.ei[i] = SB.clamp(st.ei[i] + e[i] * dt, -4000, 4000); else st.ei = [0, 0, 0];
+    const tau = Ms.map((M, i) => -(M * wn * wn * e[i] + 2 * 0.8 * M * wn * vel[i] + (M * wn * wn * wn / 8) * st.ei[i]));
+    const A = allocate(tau), F = envForce(); st.f = A.f; st.load = A.load; st.env = F;
+    st.u += ((F[0] + A.out[0] - Dx * st.u) / Mx) * dt;
+    st.v += ((F[1] + A.out[1] - Dy * st.v) / My) * dt;
+    st.r += ((F[2] + A.out[2] - Dz * st.r) / Iz) * dt;
+    st.x += (c * st.u - s * st.v) * dt; st.y += (s * st.u + c * st.v) * dt; st.psi += st.r * dt;
+  }
+  const cv = SB.canvas("#cv-dp", (ctx, w, h) => {
+    const P = SB.palette(), wide = w >= 520;
+    const sv = wide ? { x: 0, y: 0, w: w * 0.56, h } : { x: 0, y: 0, w, h: h * 0.5 };
+    const pp = wide ? { x: sv.w, y: 0, w: w - sv.w, h: h * 0.6 } : { x: 0, y: sv.h, w: w * 0.55, h: h - sv.h };
+    const bp = wide ? { x: sv.w, y: pp.h, w: w - sv.w, h: h - pp.h } : { x: pp.w, y: sv.h, w: w - pp.w, h: h - sv.h };
+    // --- 배
+    AU.panel(ctx, sv.x, sv.y, sv.w, sv.h, SB.color("water-soft"));
+    const s = Math.min(sv.w, sv.h) * 0.62 / L, cx = sv.x + sv.w / 2, cy = sv.y + sv.h / 2;
+    const wav = 0.15 * hsS() * Math.sin(st.t * 2 * Math.PI / 8);
+    ctx.save(); ctx.translate(cx + (st.y + wav * 0.6) * s * 3, cy - (st.x + wav * 0.4) * s * 3); ctx.rotate(st.psi);
+    SB.shipTop(ctx, 0, 0, -Math.PI / 2, { len: L * s, wid: B * s, color: SB.color("hull"), full: 0.75 });
+    const fs = (L * s * 0.3) / 4e5;
+    TH.forEach((t, k) => {
+      const px = t[1] * s, py = -t[0] * s;
+      if (fail[k]) { ctx.strokeStyle = P.bad; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(px - 6, py - 6); ctx.lineTo(px + 6, py + 6); ctx.moveTo(px + 6, py - 6); ctx.lineTo(px - 6, py + 6); ctx.stroke(); return; }
+      let fx, fy; if (t[2] === "tun") { fx = 0; fy = st.f[k]; } else { const i = k === 2 ? 2 : 4; fx = st.f[i]; fy = st.f[i + 1]; }
+      ctx.fillStyle = P.text; ctx.beginPath(); ctx.arc(px, py, 3, 0, 7); ctx.fill();
+      SB.arrow(ctx, px, py, px + fy * fs, py - fx * fs, P.accent, 2.4);
+    });
+    ctx.restore();
+    // 외력 방향
+    const th = SB.rad(dirS()), ax = sv.x + 34, ay = sv.y + 40, ux = Math.sin(th), uy = -Math.cos(th);
+    SB.arrow(ctx, ax + ux * 22, ay + uy * 22, ax - ux * 22, ay - uy * 22, P.accent2, 3);
+    AU.text(ctx, "외력", ax, ay + 40, { align: "center", size: 11, bold: true, color: P.accent2 });
+    AU.text(ctx, "변위 ×3 과장", sv.x + sv.w - 8, sv.y + sv.h - 8, { align: "right", size: 11, color: P.dim });
+    AU.text(ctx, "↑ 북 = 선수", sv.x + sv.w - 8, sv.y + 16, { align: "right", size: 11, color: P.dim });
+    // --- 위치 궤적
+    AU.panel(ctx, pp.x, pp.y, pp.w, pp.h, SB.color("canvas-bg"));
+    const ps = Math.min(pp.w, pp.h - 20) / 2 / 8, pcx = pp.x + pp.w / 2, pcy = pp.y + (pp.h + 14) / 2;
+    ctx.strokeStyle = P.grid; [2, 4, 6, 8].forEach((r) => { ctx.beginPath(); ctx.arc(pcx, pcy, r * ps, 0, 7); ctx.stroke(); });
+    ctx.strokeStyle = P.warn; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(pcx, pcy, 5 * ps, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+    ctx.save(); ctx.beginPath(); ctx.rect(pp.x, pp.y, pp.w, pp.h); ctx.clip();
+    ctx.strokeStyle = P.accent; ctx.lineWidth = 1.4; ctx.beginPath(); st.trail.forEach((p, i) => (i ? ctx.lineTo(pcx + p[1] * ps, pcy - p[0] * ps) : ctx.moveTo(pcx + p[1] * ps, pcy - p[0] * ps))); ctx.stroke();
+    ctx.fillStyle = P.accent2; ctx.beginPath(); ctx.arc(pcx + st.y * ps, pcy - st.x * ps, 4, 0, 7); ctx.fill();
+    ctx.restore();
+    AU.text(ctx, "위치 궤적 (원 2 m 간격)", pp.x + 8, pp.y + 16, { size: 11, bold: true });
+    // --- 부하 막대
+    AU.panel(ctx, bp.x, bp.y, bp.w, bp.h, SB.color("canvas-bg"));
+    const names = ["T1", "T2", "A1", "A2"], bw = (bp.w - 30) / 4, bh = bp.h - 52;
+    names.forEach((n, k) => {
+      const x = bp.x + 15 + k * bw + bw * 0.2, y0 = bp.y + 24, l = fail[k] ? 0 : st.load[k];
+      ctx.fillStyle = P.surface; ctx.fillRect(x, y0, bw * 0.6, bh);
+      ctx.fillStyle = fail[k] ? P.bad : l > 0.95 ? P.bad : l > 0.7 ? P.warn : P.ok; ctx.fillRect(x, y0 + bh * (1 - l), bw * 0.6, bh * l);
+      AU.text(ctx, fail[k] ? "고장" : Math.round(l * 100) + "%", x + bw * 0.3, y0 - 6, { align: "center", size: 10, mono: true, color: fail[k] ? P.bad : P.text });
+      AU.text(ctx, n, x + bw * 0.3, y0 + bh + 16, { align: "center", size: 11, bold: true });
+    });
+    // readouts
+    const e = Math.hypot(st.x, st.y), mx = Math.max(...st.load.map((l, k) => (fail[k] ? 0 : l)));
+    SB.stat("o-dp-e", e.toFixed(1) + "<small>m</small>"); AU.setCls("o-dp-e", e > 5 ? "bad" : e > 3 ? "warn" : "ok");
+    SB.stat("o-dp-h", SB.deg(st.psi).toFixed(1) + "°");
+    SB.stat("o-dp-l", Math.round(mx * 100) + "%"); AU.setCls("o-dp-l", mx > 0.95 ? "bad" : mx > 0.7 ? "warn" : "ok");
+    const stat = e > 5 ? "위치 상실(적색)" : e > 3 || mx > 0.95 ? "경고(황색)" : "위치 유지";
+    SB.stat("o-dp-s", stat); AU.setCls("o-dp-s", e > 5 ? "bad" : e > 3 || mx > 0.95 ? "warn" : "ok");
+  }, { aspect: 0.95, minHeight: 460, maxHeight: 620 });
+  let tacc = 0;
+  SB.loop(document.getElementById("sim-dp"), (dt) => {
+    const T = dt * 5, n = Math.ceil(T / 0.1);
+    for (let i = 0; i < n; i++) step(T / n);
+    if (Math.hypot(st.x, st.y) > 60) { st.x *= 60 / Math.hypot(st.x, st.y); st.y *= 60 / Math.hypot(st.x, st.y) || 1; st.u = st.v = 0; }
+    tacc += T; if (tacc > 1) { tacc = 0; st.trail.push([st.x, st.y]); if (st.trail.length > 400) st.trail.shift(); }
+    cv.redraw();
+  });
+})();
+</script>
+<script>
+/* ---------- 7. 통신 지연 ---------- */
+(function () {
+  const tS = SB.range("dl-t", (v) => v.toFixed(1) + " s", () => run(true));
+  const kS = SB.range("dl-k", (v) => v.toFixed(1), () => run(true));
+  const dS = SB.range("dl-d", (v) => v + " s", () => run(true));
+  const predOn = () => document.getElementById("dl-pred").checked;
+  document.getElementById("dl-pred").onchange = () => run(true);
+  const K = 0.08, T = 15, TEND = 300, PSID = 30, dt = 0.05;
+  let res = null, show = 0, anim = false;
+  function sim(tau, Kop, Kd) {
+    const n = Math.round(TEND / dt), lag = Math.round(tau / dt), hist = []; let psi = 0, r = 0, d = 0; const out = [];
+    for (let i = 0; i <= n; i++) {
+      const old = i - lag - 1 >= 0 ? hist[i - lag - 1] : [0, 0];
+      const dc = SB.clamp(Kop * (SB.rad(PSID) - old[0]) - Kd * old[1], -SB.rad(35), SB.rad(35));
+      d += SB.clamp(dc - d, -SB.rad(5) * dt, SB.rad(5) * dt);
+      r += ((K * d - r) / T) * dt; psi += r * dt;
+      hist.push([psi, r]); if (i % 10 === 0) out.push([i * dt, SB.deg(psi), SB.deg(d)]);
+    }
+    return out;
+  }
+  function run(instant) {
+    const tau = tS(), Kop = kS(), Kd = dS();
+    const base = sim(0, Kop, Kd);
+    let out = predOn() ? base.map((p) => { const t0 = p[0] - tau / 2; const j = Math.max(0, Math.round(t0 / 0.5)); return [p[0], t0 < 0 ? 0 : base[Math.min(j, base.length - 1)][1], t0 < 0 ? 0 : base[Math.min(j, base.length - 1)][2]]; }) : sim(tau, Kop, Kd);
+    const mx = Math.max(...out.map((p) => p[1])); let ts = NaN;
+    for (let i = out.length - 1; i >= 0; i--) if (Math.abs(out[i][1] - PSID) > 2) { ts = out[i][0]; break; }
+    const amp = (a, b) => { const s = out.filter((p) => p[0] >= a && p[0] < b).map((p) => Math.abs(p[1] - PSID)); return Math.max(0, ...s); };
+    const late = amp(220, 300), mid = amp(120, 200);
+    res = { out, base, os: mx - PSID, ts, unstable: late > 3 && late >= mid * 0.9 };
+    show = instant ? out.length : 0; anim = !instant;
+    SB.stat("o-dl-os", res.os.toFixed(1) + "°");
+    SB.stat("o-dl-ts", ts > 290 ? "정착 안 됨" : (ts || 0).toFixed(0) + "<small>s</small>");
+    SB.stat("o-dl-j", res.unstable ? "불안정(지속 진동)" : res.os > 15 ? "진동 큼" : "안정"); AU.setCls("o-dl-j", res.unstable ? "bad" : res.os > 15 ? "warn" : "ok");
+    cv.redraw();
+  }
+  document.getElementById("dl-run").onclick = () => run(false);
+  const cv = SB.canvas("#cv-delay", (ctx, w, h) => {
+    if (!res) return;
+    const P = SB.palette(), n = Math.min(Math.floor(show), res.out.length), sub = res.out.slice(0, n);
+    const ch = SB.chart(ctx, { x: 50, y: 14, w: w - 66, h: h - 56 }, { x: [0, TEND], y: [-40, 80], xLabel: "시간 (s)", yLabel: "각도 (°)",
+      hlines: [{ y: PSID, color: P.faint, label: "목표 30°" }, { y: 0, color: P.axis, dash: [2, 3] }],
+      series: [{ data: res.base.map((p) => [p[0], p[1]]), color: P.dim, width: 1.4, dash: [5, 4] }, { data: sub.map((p) => [p[0], p[2]]), color: P.accent2, width: 1.3 }, { data: sub.map((p) => [p[0], p[1]]), color: P.accent, width: 2.4 }] });
+    AU.text(ctx, "ψ 선수각", ch.box.x + 8, ch.box.y + 14, { color: P.accent, bold: true, size: 11 });
+    AU.text(ctx, "δ 타각", ch.box.x + 74, ch.box.y + 14, { color: P.accent2, bold: true, size: 11 });
+    AU.text(ctx, "지연 없음(점선)", ch.box.x + 128, ch.box.y + 14, { color: P.dim, size: 11 });
+    if (n) { const p = res.out[n - 1]; const bx = w - 50, by = 56; ctx.fillStyle = SB.color("water-soft"); ctx.beginPath(); ctx.arc(bx, by, 32, 0, 7); ctx.fill(); SB.shipTop(ctx, bx, by, SB.rad(p[1]) - Math.PI / 2, { len: 48, color: SB.color("hull"), rudder: SB.rad(p[2]) }); }
+  }, { aspect: 0.6, minHeight: 280, maxHeight: 440 });
+  run(true);
+  SB.loop(document.getElementById("sim-delay"), () => { if (!anim) return; show += res.out.length / 360; if (show >= res.out.length) { show = res.out.length; anim = false; } cv.redraw(); });
+})();
+</script>
+
+</body>
+</html>
