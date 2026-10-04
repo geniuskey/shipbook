@@ -37,6 +37,8 @@
   .quiz-ans .btn.wrong { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent); }
   .game-keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
   .game-keys .btn { padding: 8px 4px; font-size: 13px; }
+  .sim [hidden] { display: none !important; }
+  .sim .ctrl select { width: 100%; max-width: 100%; min-width: 0; }
 </style>
 </head>
 <body data-chapter="bridge">
@@ -979,7 +981,7 @@
         for (let j = 0; j < k; j++) {
           const c = j % 2, target = Math.floor((start + j * NI) / 2) % NS, SI = Math.max(2, Math.floor((NI / 2) * 0.2));
           const free = [];
-          for (let d = -SI / 2; d <= SI / 2; d++) { const q = (target + d + NS) % NS; if (ch[c][q] < 0) free.push(q); }
+          for (let d = -Math.floor(SI / 2); d <= Math.floor(SI / 2); d++) { const q = (target + d + NS) % NS; if (ch[c][q] < 0) free.push(q); }
           let q;
           if (free.length) q = free[Math.floor(Math.random() * free.length)];
           else { q = (target + Math.floor((Math.random() - 0.5) * SI) + NS) % NS; col[c][q] = 1; reuse++; }
@@ -1016,7 +1018,7 @@
         ctx.fillStyle = P.text; ctx.fillRect(cx - 1, cyy - 1, cs + 2, cs + 2);
       });
       txt(ctx, "한 칸 = 슬롯 26.7 ms · 한 줄 = 50슬롯 1.33초 · " + (t).toFixed(1) + " s / 60 s", w / 2, h - 8, P.dim, "center", 10);
-    }, { aspect: 0.62, maxHeight: 420, minHeight: 240 });
+    }, { aspect: 0.52, maxHeight: 400, minHeight: 220 });
     build();
     SB.loop($("cv-ais"), (dt) => { if (!playing) return; t += dt * 5; if (t >= 60) { t = 0; build(); } cv.redraw(); });
   });
@@ -1078,7 +1080,7 @@
         ctx.strokeStyle = R.legBad[k] ? P.bad : "#e0702a"; ctx.lineWidth = 2.5; seg(ctx, X(x1), Y(y1), X(x2), Y(y2));
       }
       R.bad.slice(0, 40).forEach(([x, y]) => { ctx.strokeStyle = P.bad; ctx.lineWidth = 2.2; const px = X(x), py = Y(y); seg(ctx, px - 5, py - 5, px + 5, py + 5); seg(ctx, px - 5, py + 5, px + 5, py - 5); });
-      wp.forEach(([x, y], i) => { ctx.fillStyle = dark ? "#121826" : "#fff"; ctx.strokeStyle = "#e0702a"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(X(x), Y(y), 7, 0, 7); ctx.fill(); ctx.stroke(); txt(ctx, "WP" + (i + 1), X(x) + 9, Y(y) - 10, P.text, "left", 10, 700); });
+      wp.forEach(([x, y], i) => { ctx.fillStyle = dark ? "#121826" : "#fff"; ctx.strokeStyle = "#e0702a"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(X(x), Y(y), 7, 0, 7); ctx.fill(); ctx.stroke(); txt(ctx, "WP" + (i + 1), X(x) + (x > W - 1 ? -40 : 9), Y(y) - 10, P.text, "left", 10, 700); });
       txt(ctx, "안전 등심선 " + L + " m (굵은 선) · 1눈금 = 1 NM", 8, h - 10, P.text, "left", 11, 700);
     }, { aspect: 0.75, maxHeight: 480, minHeight: 280 });
     SB.drag($("cv-ec"), {
@@ -1143,7 +1145,7 @@
     function upd() {
       const J = judge();
       SB.stat("o-cl-sit", '<span style="font-size:15px;color:var(' + (J.risk ? "--bad" : "--text") + ')">' + J.sit + "</span>");
-      SB.stat("o-cl-own", J.own); SB.stat("o-cl-tgt", J.tgt);
+      SB.stat("o-cl-own", '<span style="font-family:var(--font);font-weight:600">' + J.own + "</span>"); SB.stat("o-cl-tgt", '<span style="font-family:var(--font);font-weight:600">' + J.tgt + "</span>");
       SB.stat("o-cl-cpa", sm(J.cp.cpa.toFixed(2), "NM") + " / " + (J.cp.tcpa > 0 ? sm((J.cp.tcpa * 60).toFixed(0), "분") : sm("지남", "")));
       if (cv) cv.redraw();
     }

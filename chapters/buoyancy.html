@@ -887,7 +887,7 @@
       c.mid.forEach((b, k) => sp.push([sCx + b * ss, sTop + c.T * ss - (k / NZ) * c.T * ss]));
       for (let k = NZ; k >= 0; k--) sp.push([sCx - c.mid[k] * ss, sTop + c.T * ss - (k / NZ) * c.T * ss]);
       fillPath(sp, "rgba(47,143,208,0.30)", P.accent);
-      label(ctx, "중앙단면 C_m = " + c.Cm.toFixed(3), sx0, 14, P.text, "left", 12, 700);
+      label(ctx, (w < 520 ? "C_m = " : "중앙단면 C_m = ") + c.Cm.toFixed(3), sx0, 14, P.text, "left", 12, 700);
       // 단면적 곡선
       const ay = Math.max(y0 + wpH, sTop + c.T * ss) + 44, aH = h - ay - 26;
       dashRect(x0, ay, wpW + (w - wpW - 28), aH);
@@ -1058,8 +1058,8 @@
       ctx.fillStyle = P.dim; ctx.fillRect(0, wy - 18, w * 0.12, 18); label(ctx, "부두", 6, wy - 28, P.dim, "left", 11, 600);
       const s = (w * 0.3) / 215, x = SB.lerp(w * 0.8, w * 0.3, st.p);
       SB.shipSide(ctx, x, wy, s, { L: HL, D: HD, T: TS, heave: TS - T, cargo: "bulk", flip: true });
-      label(ctx, "바다 ρ 1.025", w - 8, h * 0.62, P.text, "right", 11, 600);
-      label(ctx, "항구 ρ " + (gR() / 1000).toFixed(3), 8, h * 0.62, P.text, "left", 11, 600);
+      label(ctx, "바다 ρ 1.025", w - 8, wy + 16, P.text, "right", 11, 600);
+      label(ctx, "항구 ρ " + (gR() / 1000).toFixed(3), 8, wy + 16, P.text, "left", 11, 600);
       // 표지 확대
       const iw = Math.min(260, w * 0.5), ih = h * 0.33, ix = w - iw - 8, iy = h - ih - 8, k = ih / 0.9, Y = (d) => iy + ih / 2 - (d - (TS + 0.12)) * k;
       ctx.save(); ctx.beginPath(); ctx.rect(ix, iy, iw, ih); ctx.clip();

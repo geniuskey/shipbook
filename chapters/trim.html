@@ -291,7 +291,7 @@
       <li><b>윙·톱사이드 탱크</b><span class="en">(Topside Wing)</span>: 높은 곳에 있어 GM을 줄이는 쪽이다. 벌크선이 무거운 광석을 실어 GM이 지나치게 클 때 횡동요를 부드럽게 하는 데 쓰기도 한다.</li>
       <li><b>밸러스트 화물창</b><span class="en">(Ballast Hold)</span>: 악천후 때만 화물창 하나에 해수를 채워 흘수를 크게 늘린다. 반쯤 채운 상태의 자유수면은 매우 위험하다.</li>
     </ul>
-    <p>대표적인 공선 조건의 목표는 프로펠러 날개 끝이 잠길 것(잠김 100 % 이상), 선수 흘수가 슬래밍을 피할 만큼 깊을 것(여기서는 4.0 m 이상), 약간의 선미 트림(선미 트림 길이의 1.5 % 이내), 횡경사 0°, 그리고 충분한 GM이다. 2017년 발효된 선박평형수 관리협약(BWM)에 따라 밸러스트수는 처리 설비를 거쳐 배출해야 한다는 점도 기억해 두자.</p>
+    <p>대표적인 공선 조건의 목표는 프로펠러 날개 끝이 잠길 것(잠김 100 % 이상), 선수 흘수가 슬래밍을 피할 만큼 깊을 것(여기서는 3.5 m 이상, 길이의 약 2.3 %), 약간의 선미 트림(선미 트림 길이의 1.5 % 이내), 횡경사 0°, 그리고 충분한 GM이다. 2017년 발효된 선박평형수 관리협약(BWM)에 따라 밸러스트수는 처리 설비를 거쳐 배출해야 한다는 점도 기억해 두자.</p>
 
     <div class="sim" id="sim-ballast">
       <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>밸러스트 조종반</h3></div>
@@ -312,9 +312,9 @@
         <div class="stat"><span class="k">횡경사</span><span class="v" id="o-bl-list">—</span></div>
         <div class="stat"><span class="k">GM 유체 (FSM 보정)</span><span class="v" id="o-bl-gm">—</span></div>
         <div class="stat"><span class="k">프로펠러 잠김</span><span class="v" id="o-bl-prop">—</span></div>
-        <div class="stat"><span class="k">선수 흘수 ≥ 4.0 m</span><span class="v" id="o-bl-fwd">—</span></div>
+        <div class="stat"><span class="k">선수 흘수 ≥ 3.5 m</span><span class="v" id="o-bl-fwd">—</span></div>
       </div>
-      <div class="sim-note">해볼 것: 길이 150 m 화물선의 공선 상태(경하 5,500 t + 연료·물품 1,200 t). ① 아무것도 채우지 않으면 선미 흘수가 얕아 프로펠러가 반쯤 드러난다. ② 선미 피크만 채우면 프로펠러는 잠기지만 선수가 너무 들린다. ③ 이중선저 한쪽(좌현)만 채우면 경사가 생긴다. ④ 밸러스트 화물창을 "반"으로 두면 GM이 급격히 줄어든다(폭 20 m의 자유수면). 모든 조건을 초록색으로 만들어 보자.</div>
+      <div class="sim-note">해볼 것: 길이 150 m 화물선의 공선 상태(경하 5,500 t + 연료·물품 1,200 t). ① 아무것도 채우지 않으면 선미 흘수가 얕아 프로펠러 윗부분이 물 밖으로 드러난다. ② 선미 피크만 채우면 프로펠러는 잠기지만 선수가 너무 들린다. ③ 이중선저 한쪽(좌현)만 채우면 경사가 생긴다. ④ 밸러스트 화물창을 "반"으로 두면 GM이 급격히 줄어든다(폭 20 m의 자유수면). 모든 조건을 초록색으로 만들어 보자.</div>
     </div>
   </section>
 
@@ -356,7 +356,7 @@
       <div class="sim-body side">
         <div class="sim-view"><canvas id="cv-crane"></canvas></div>
         <div class="sim-controls">
-          <label class="ctrl"><span>화물 무게 w <output id="cr-w-out"></output></span><input type="range" id="cr-w" min="50" max="600" step="10" value="300"></label>
+          <label class="ctrl"><span>화물 무게 w <output id="cr-w-out"></output></span><input type="range" id="cr-w" min="50" max="600" step="10" value="150"></label>
           <label class="ctrl"><span>아웃리치 y (중심선부터) <output id="cr-y-out"></output></span><input type="range" id="cr-y" min="10" max="26" step="0.5" value="20"></label>
           <label class="ctrl"><span>지브 끝 높이 h <output id="cr-h-out"></output></span><input type="range" id="cr-h" min="18" max="40" step="1" value="30"></label>
           <label class="ctrl"><span>반대편(좌현) 윙 탱크 밸러스트 <output id="cr-b-out"></output></span><input type="range" id="cr-b" min="0" max="400" step="10" value="0"></label>
@@ -369,7 +369,7 @@
         <div class="stat"><span class="k">TCG</span><span class="v" id="o-cr-tcg">—</span></div>
         <div class="stat"><span class="k">횡경사</span><span class="v" id="o-cr-list">—</span></div>
       </div>
-      <div class="sim-note">해볼 것: 배수량 8,000 t, 폭 22 m, KM 9.0 m, KG 7.6 m의 소형 중량물선(바지형 근사). ① 300 t을 아웃리치 20 m, 높이 30 m에서 들면 GM이 1.4 m에서 0.5 m대로 떨어지고 경사가 크게 생긴다. ② 지브를 중심선 쪽으로 돌리면(선회) 경사는 줄지만 화물을 내려놓기 전까지 GM은 회복되지 않는다. ③ 좌현 윙 탱크에 밸러스트를 미리 채워 경사를 상쇄해 보자. 단, 높은 윙 탱크라 GM은 조금 더 준다.</div>
+      <div class="sim-note">해볼 것: 배수량 15,000 t, 폭 22 m, KM 9.0 m, KG 7.6 m의 중량물선(바지형 근사, 흘수 변화에 따른 KM 변화는 무시). ① 150 t을 아웃리치 20 m, 높이 30 m에서 들면 GM이 1.40 m에서 1.18 m로 떨어지고 약 9.5°의 경사가 생긴다. 무게를 300 t으로 늘리면 GM은 1 m 아래로, 경사는 20°를 넘는다(이 정도면 작은 각 공식의 범위를 벗어난다). ② 지브를 중심선 쪽으로 돌리면(선회) 경사는 줄지만 화물을 내려놓기 전까지 GM은 회복되지 않는다. ③ 좌현 윙 탱크에 밸러스트를 미리 채워 경사를 상쇄해 보자. 단, 높은 윙 탱크라 GM은 조금 더 준다.</div>
     </div>
   </section>
 
@@ -853,7 +853,7 @@
     const L = 150, B = 24, CB = 0.75, MCT = 300, LCF = -2, LCB = 1;
     // strip 0: 상부(피크·톱사이드·화물창), strip 1: 이중선저. y: 좌현 −, 우현 +
     const TK = [
-      { id: "FPT", n: "선수 피크", st: 0, x0: 63, x1: 73, y0: -6, y1: 6, z0: 1, h: 10, cap: 900 },
+      { id: "FPT", n: "선수 피크", st: 0, x0: 63, x1: 73, y0: -6, y1: 6, z0: 1, h: 10, cap: 1100 },
       { id: "APT", n: "선미 피크", st: 0, x0: -74, x1: -66, y0: -6, y1: 6, z0: 3, h: 9, cap: 600 },
       { id: "TSP", n: "톱사이드(좌)", st: 0, x0: -40, x1: 55, y0: -12, y1: -9, z0: 11, h: 3, cap: 440 },
       { id: "TSS", n: "톱사이드(우)", st: 0, x0: -40, x1: 55, y0: 9, y1: 12, z0: 11, h: 3, cap: 440 },
@@ -878,7 +878,7 @@
       const KG = Mz / W, LCG = Mx / W, TCG = My / W, GMs = KM - KG, GM = GMs - FSM / W;
       const trim = (W * (LCB - LCG)) / (100 * MCT), Ta = T + (trim * (L / 2 + LCF)) / L, Tf = T - (trim * (L / 2 - LCF)) / L;
       const list = GM > 0 ? Math.atan(TCG / GM) / D2R : (TCG >= 0 ? 1 : -1) * 30;
-      const prop = ((Ta - 0.3) / 5) * 100;
+      const prop = ((Ta - 0.2) / 4.6) * 100; // 프로펠러 지름 4.6 m, 축 중심 용골 위 2.5 m
       return { W, T, KG, KM, GM, GMs, FSM, trim, Ta, Tf, list, prop, TCG };
     }
     function draw(ctx, w, hh) {
@@ -909,8 +909,8 @@
       const s = Math.min((w * 0.62) / 160, sideH / 26), x0 = w * 0.36, wy = sideTop + sideH * 0.45;
       ctx.save(); ctx.beginPath(); ctx.rect(0, sideTop, w, sideH); ctx.clip();
       const tf = drawSide(ctx, w * 0.7, hh, { s, x0, wy, Ta: r.Ta, Tf: r.Tf, ex: ex ? 3 : 1 });
-      const pr = tf(-L / 2 + 3.3, 2.8);
-      ctx.strokeStyle = r.prop >= 100 ? P.ok : r.prop >= 80 ? P.warn : P.bad; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(pr[0], pr[1], 2.5 * s, 0, Math.PI * 2); ctx.stroke();
+      const pr = tf(-L / 2 + 3.3, 2.5);
+      ctx.strokeStyle = r.prop >= 100 ? P.ok : r.prop >= 80 ? P.warn : P.bad; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(pr[0], pr[1], 2.3 * s, 0, Math.PI * 2); ctx.stroke();
       draftMarks(ctx, P, tf, r.Ta, r.Tf, wy);
       ctx.restore();
       // 단면(횡경사)
@@ -929,7 +929,7 @@
       setCls("o-bl-list", Math.abs(r.list) < 0.5 ? "ok" : Math.abs(r.list) < 3 ? "warn" : "bad");
       SB.stat("o-bl-gm", sm(r.GM.toFixed(2), "m") + " <small>(고체 " + r.GMs.toFixed(2) + ")</small>"); setCls("o-bl-gm", r.GM >= 1 ? "ok" : r.GM > 0.15 ? "warn" : "bad");
       SB.stat("o-bl-prop", sm(Math.min(r.prop, 130).toFixed(0), "%")); setCls("o-bl-prop", r.prop >= 100 ? "ok" : r.prop >= 80 ? "warn" : "bad");
-      SB.stat("o-bl-fwd", sm(r.Tf.toFixed(2), "m")); setCls("o-bl-fwd", r.Tf >= 4 ? "ok" : "bad");
+      SB.stat("o-bl-fwd", sm(r.Tf.toFixed(2), "m")); setCls("o-bl-fwd", r.Tf >= 3.5 ? "ok" : "bad");
     }
     cv = SB.canvas(el, draw, { aspect: 0.82, maxHeight: 560, minHeight: 400 });
     el.addEventListener("click", (e) => {
@@ -947,7 +947,7 @@
     const gY = SB.range("cr-y", (v) => v.toFixed(1) + " m", rd);
     const gH = SB.range("cr-h", (v) => v + " m", rd);
     const gB = SB.range("cr-b", (v) => v + " t", rd);
-    const D0 = 8000, KG0 = 7.6, KM = 9.0, B = 22, D = 12, T = 6, DECK = D + 1.5, PED = 8.5;
+    const D0 = 15000, KG0 = 7.6, KM = 9.0, B = 22, D = 12, T = 6, DECK = D + 1.5, PED = 8.5;
     const hull = makeHull(B, D, T, 1.2);
     let tt = -1, phiS = 0, running = false;
     $("cr-go").addEventListener("click", () => { tt = 0; running = true; });
@@ -1004,7 +1004,7 @@
       SB.stat("o-cr-ph", "<small>" + st.ph + "</small>");
       SB.stat("o-cr-gm", sm(r.KG.toFixed(2), "m") + " / " + sm(r.GM.toFixed(2), "m")); setCls("o-cr-gm", r.GM > 0.5 ? "ok" : r.GM > 0.15 ? "warn" : "bad");
       SB.stat("o-cr-tcg", sm(r.TCG.toFixed(3), "m"));
-      SB.stat("o-cr-list", r.list == null ? "GM ≤ 0 · 전복 위험" : sm(Math.abs(r.list).toFixed(1), "°") + " <small>" + (r.list > 0.05 ? "우현(부두 쪽)" : r.list < -0.05 ? "좌현" : "") + "</small>");
+      SB.stat("o-cr-list", r.list == null ? "GM ≤ 0 · 전복 위험" : sm(Math.abs(r.list).toFixed(1), "°") + " <small>" + (r.list > 0.05 ? "우현(부두 쪽)" : r.list < -0.05 ? "좌현" : "") + (Math.abs(r.list) > 10 ? " · 소각 공식 범위 밖" : "") + "</small>");
       setCls("o-cr-list", r.list == null || Math.abs(r.list) > 5 ? "bad" : Math.abs(r.list) > 2 ? "warn" : "ok");
     }
     cv = SB.canvas(el, draw, { aspect: 0.66, maxHeight: 440, minHeight: 300 });
