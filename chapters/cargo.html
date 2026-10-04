@@ -1535,8 +1535,9 @@
     const vl = []; if (isFinite(o.th) && o.th <= 40) vl.push({ x: o.th, color: P.series[2], label: o.th.toFixed(1) + "°" }); if (gust && isFinite(o.tg) && o.tg <= 40) vl.push({ x: o.tg, color: P.bad });
     SB.chart(ctx, box, { x: [0, 40], y: [0, ym], xLabel: "횡경사각 (°)", yLabel: narrow ? "지렛대 (m)" : "", series: ser, vlines: vl });
     ctx.font = "11px sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "top";
-    ctx.fillStyle = P.accent; ctx.fillText("— GZ", box.x + 8, box.y + 4); ctx.fillStyle = P.series[2]; ctx.fillText("— 경사 지렛대", box.x + 50, box.y + 4);
-    if (gust) { ctx.fillStyle = P.bad; ctx.fillText("- - 돌풍 ×1.5", box.x + 140, box.y + 4); }
+    const ly = box.y + box.h - 34, lx = box.x + box.w - 100;
+    ctx.fillStyle = P.accent; ctx.fillText("— GZ", lx, ly - 16); ctx.fillStyle = P.series[2]; ctx.fillText("— 경사 지렛대", lx, ly);
+    if (gust) { ctx.fillStyle = P.bad; ctx.fillText("- - 돌풍 ×1.5", lx, ly + 16); }
     if (!narrow) { ctx.fillStyle = P.dim; ctx.textAlign = "right"; ctx.fillText("지렛대 (m)", box.x + box.w, box.y + 20); }
     SB.stat("wd-o-p", o.Pw.toFixed(0) + "<small>Pa</small>");
     SB.stat("wd-o-lw", (o.lw + o.lc).toFixed(3) + "<small>m</small>");
@@ -1589,7 +1590,7 @@
       // 허용 흘수선
       ctx.setLineDash([3, 3]); ctx.strokeStyle = P.text; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cx - (l.W / 2) * sc, wy + c.Tl * sc); ctx.lineTo(cx + (l.W / 2) * sc, wy + c.Tl * sc); ctx.stroke(); ctx.setLineDash([]);
       ctx.fillStyle = P.text; ctx.font = "600 13px sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "top";
-      ctx.fillText(l.n + (c.ok ? " ✓" : " ✗"), x0 + 10, y0 + 9);
+      ctx.fillText(l.n, x0 + 10, y0 + 9); ctx.fillStyle = c.ok ? P.ok : P.bad; ctx.textAlign = "right"; ctx.fillText(c.ok ? "통과" : "불가", x0 + tw - 10, y0 + 9); ctx.textAlign = "left";
       ctx.font = "10.5px " + SB.color("mono"); ctx.fillStyle = P.dim; ctx.textBaseline = "bottom";
       const pc = (k) => { const q = c.r.find((z) => z[0] === k); return isFinite(q[1]) ? Math.round(q[1] * 100) + "%" : "—"; };
       ctx.fillText("L" + pc("L") + " B" + pc("B") + " T" + pc("T") + (isFinite(l.H) ? " H" + pc("H") : ""), x0 + 10, y0 + th - 8);
@@ -1676,7 +1677,7 @@
     SB.stat("pt-o-lc", Math.round(o.lc).toLocaleString() + "<small>무브</small>");
     SB.stat("pt-o-ci", o.ci.toFixed(2) + "<small>/ " + o.nc + "</small>");
     SB.stat("pt-o-bp", Math.round(gM() / o.t) + "<small>무브/h</small>");
-  }, { aspect: 0.55, maxHeight: 380, minHeight: 280 });
+  }, { aspect: 0.48, maxHeight: 340, minHeight: 270 });
   function upd() { cv && cv.redraw(); }
   document.getElementById("pt-play").addEventListener("click", () => { play = 0; tp = 0; });
   SB.loop(cv.canvas, (dt) => { if (play < 0) return; tp += (dt * o.hrs) / 6; if (tp >= o.hrs) { tp = o.hrs; play = -1; } cv.redraw(); });

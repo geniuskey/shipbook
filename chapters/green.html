@@ -1235,26 +1235,17 @@
     function draw(ctx, w, h) {
       const P = SB.palette(), on = M.filter((m) => m[2]);
       const bx = 50, bw = w - 70, top = 24, bot = h - 30, H = bot - top;
-      const Y = (v) => top + H * (1 - v / 100);
+      const Z = (v) => top + H * (1 - (v - 50) / 50); // 50~100% 확대
       label(ctx, "남은 연료 소비 (%)", bx, 10, P.dim, "left", 11);
       ctx.strokeStyle = P.grid; ctx.lineWidth = 1;
-      [100, 90, 80, 70, 60].forEach((v) => { line(ctx, bx, Y(v), bx + bw, Y(v)); label(ctx, String(v), bx - 6, Y(v), P.dim, "right", 10); });
+      [100, 90, 80, 70, 60, 50].forEach((v) => { line(ctx, bx, Z(v), bx + bw, Z(v)); label(ctx, String(v), bx - 6, Z(v), P.dim, "right", 10); });
       const n = on.length + 2, cw = bw / n;
-      // 0..100 대신 50..100 확대
-      const Z = (v) => top + H * (1 - (v - 50) / 50);
-      ctx.clearRect(bx - 40, top - 4, 1, 1);
-      let cur = 100;
       const bar = (i, a, b, c, txt) => { ctx.fillStyle = c; const y1 = Z(Math.max(a, b)), y2 = Z(Math.min(a, b)); ctx.fillRect(bx + i * cw + cw * 0.15, y1, cw * 0.7, Math.max(1.5, y2 - y1)); if (txt) label(ctx, txt, bx + i * cw + cw / 2, y1 - 8, P.text, "center", 10, 600); };
-      // 눈금을 50~100으로 다시 그림
-      ctx.fillStyle = P.bg; ctx.fillRect(0, top - 6, bx - 2, H + 12);
-      [100, 90, 80, 70, 60, 50].forEach((v) => label(ctx, String(v), bx - 6, Z(v), P.dim, "right", 10));
-      ctx.fillStyle = P.bg; ctx.fillRect(bx, top - 4, bw, H + 8);
-      ctx.strokeStyle = P.grid; [100, 90, 80, 70, 60, 50].forEach((v) => line(ctx, bx, Z(v), bx + bw, Z(v)));
+      let cur = 100;
       bar(0, 50, 100, P.faint, "기준");
       on.forEach((m, i) => { const nx = cur * (1 - m[1] / 100); bar(i + 1, nx, cur, P.ok, "−" + m[1]); cur = nx; });
       bar(n - 1, 50, cur, P.accent, cur.toFixed(1));
-      if (on.length && w > 420) on.forEach((m, i) => { ctx.save(); ctx.translate(bx + (i + 1) * cw + cw / 2, bot + 6); ctx.rotate(-0.0); label(ctx, String(i + 1), 0, 4, P.dim, "center", 10); ctx.restore(); });
-      void Y;
+      label(ctx, "적용 후", bx + (n - 1) * cw + cw / 2, bot + 12, P.dim, "center", 10);
     }
     cv = SB.canvas($("cv-combo"), draw, { aspect: 0.55, minHeight: 260, maxHeight: 360 });
     upd();
