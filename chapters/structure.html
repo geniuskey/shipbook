@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<title>선체 구조와 강도 · ShipBook</title>
+<meta name="description" content="선체를 물에 뜬 보로 보고 하중·전단력·굽힘 모멘트 선도를 그리며, 호깅과 새깅, 중앙 단면의 단면 계수, 종늑골식과 횡늑골식 구조, 판의 좌굴, 피로와 응력 집중, 비틀림과 휘핑을 시뮬레이터로 배운다.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../css/style.css">
+<script src="../js/common.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<style>
+  .sim-view.duo { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .sim-view.duo > div { min-width: 0; position: relative; }
+  @media (min-width: 700px) {
+    .sim-view.duo { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .sim-view.duo > div + div { border-left: 1px solid var(--border); }
+  }
+  .sim-view canvas.grab { cursor: grab; touch-action: none; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .fig-lg svg .t, .fig-lg svg .t-acc { font-size: 15px; }
+  .fig-lg svg .t-dim { font-size: 13px; }
+</style>
+</head>
+<body data-chapter="structure">
+<main class="chapter">
+  <header class="chapter-hero">
+    <div class="eyebrow">Chapter 13</div>
+    <h1>선체 구조와 강도</h1>
+    <p class="lead">길이 200 m의 배는 물 위에 놓인 거대한 강철 보다. 무게는 화물이 실린 곳에, 부력은 선체가 물에 잠긴 곳에 몰려 있고, 둘의 분포는 결코 같지 않다. 그 차이가 선체를 휘고 비틀며, 파도는 그 힘을 몇 초마다 뒤집는다. 이 장에서는 하중에서 전단력과 굽힘 모멘트를 적분해 내는 종강도 계산에서 출발해, 그 모멘트를 견디는 중앙 단면의 설계, 판과 보강재로 이루어진 구조 방식, 그리고 구조물이 실제로 부서지는 세 가지 방식인 항복·좌굴·피로를 차례로 만져 본다.</p>
+    <ul class="objectives">
+      <li>무게 분포와 부력 분포에서 하중 \(q\), 전단력 \(V\), 굽힘 모멘트 \(M\) 선도를 그리고 양 끝에서 0이 되는 이유를 설명한다.</li>
+      <li>정수 중 모멘트와 파랑 중 모멘트를 구분하고, 호깅과 새깅이 생기는 하중 조건을 안다.</li>
+      <li>중앙 단면의 중립축, 단면 2차 모멘트, 단면 계수를 계산하고 \(\sigma = M/Z\)로 갑판·선저 응력을 구한다.</li>
+      <li>종늑골식과 횡늑골식 구조의 차이와 각 부재의 이름·역할을 3D로 확인한다.</li>
+      <li>판의 좌굴 응력, S–N 곡선과 마이너 법칙, 응력 집중 계수를 계산한다.</li>
+      <li>오픈 데크 선박의 비틀림, 휘핑과 스프링잉, 고장력강의 장단점을 이해한다.</li>
+    </ul>
+  </header>
+
+  <!-- =============================================================== 1 -->
+  <section id="girder">
+    <h2>물에 뜬 보: 하중, 전단력, 굽힘 모멘트</h2>
+    <p>배를 길이 방향으로 1 m씩 잘라 보자. 각 조각에는 아래로 누르는 무게 \(w(x)\)와 위로 미는 부력 \(b(x)\)가 작용한다. 배 전체로는 무게와 부력이 같고(떠 있으므로), 무게중심과 부심이 같은 세로 위치에 있다(트림 평형). 그러나 조각마다 보면 같지 않다. 기관실 조각은 무겁고, 빈 화물창 조각은 가볍고, 가늘어지는 선수미 조각은 부력이 작다. 조각 사이의 이 불균형을 이웃 조각이 받아 넘겨 주어야 하는데, 그 내력이 바로 <span class="term">전단력</span><span class="en">(Shear Force)</span>과 <span class="term">굽힘 모멘트</span><span class="en">(Bending Moment)</span>다. 선체 전체를 하나의 보로 보는 이 관점을 <span class="term">선체 거더</span><span class="en">(Hull Girder)</span>라 하고, 그 강도를 <b>종강도</b><span class="en">(Longitudinal Strength)</span>라 한다.</p>
+    <div class="formula">$$q(x) = b(x) - w(x),\qquad V(x)=\int_{0}^{x} q\,dx,\qquad M(x)=\int_{0}^{x} V\,dx$$
+      <div class="where">\(x\): 선미 끝에서 잰 거리, \(q\): 단위 길이당 순하중(t/m 또는 kN/m). 배의 양 끝은 자유단이므로 \(V(0)=M(0)=0\)이고, 힘과 모멘트의 평형 때문에 반대쪽 끝에서도 \(V(L)=M(L)=0\)이 되어야 한다.</div>
+    </div>
+    <p>적분을 두 번 하는 것은 보 이론과 똑같다. 차이는 받침점이 없다는 것이다. 배를 받치는 것은 오직 분포된 부력이고, 부력 분포는 흘수와 트림에 따라 스스로 바뀐다. 그래서 종강도 계산은 먼저 무게에 맞는 흘수와 트림을 찾고(<a href="trim.html">4장</a>), 그 수면으로 각 단면의 잠긴 면적을 구해 부력 분포를 만든 뒤 적분한다. 중앙부에 부력이 남고 양 끝에 무게가 남으면 배는 가운데가 솟는 <span class="term">호깅</span><span class="en">(Hogging)</span>, 반대면 가운데가 처지는 <span class="term">새깅</span><span class="en">(Sagging)</span> 상태가 된다.</p>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 760 300" role="img" aria-label="무게 분포, 부력 분포, 전단력, 굽힘 모멘트 개념도">
+        <line x1="60" y1="70" x2="720" y2="70" class="s-axis"/>
+        <g fill="var(--accent-2)" fill-opacity="0.35" stroke="var(--accent-2)">
+          <rect x="60" y="70" width="70" height="44"/><rect x="130" y="70" width="40" height="18"/><rect x="170" y="70" width="110" height="34"/><rect x="280" y="70" width="10" height="12"/>
+          <rect x="290" y="70" width="110" height="34"/><rect x="400" y="70" width="10" height="12"/><rect x="410" y="70" width="110" height="34"/><rect x="520" y="70" width="10" height="12"/><rect x="530" y="70" width="110" height="34"/><rect x="640" y="70" width="80" height="12"/>
+        </g>
+        <path d="M60 70 C80 46 110 40 140 40 L620 40 C670 40 700 50 720 70 Z" fill="var(--water-soft)" stroke="var(--water)" stroke-width="2"/>
+        <text x="726" y="48" class="t" fill="var(--water)">b(x)</text>
+        <text x="726" y="104" class="t" fill="var(--accent-2)">w(x)</text>
+        <text x="24" y="74" class="t-mono">하중</text>
+        <line x1="60" y1="170" x2="720" y2="170" class="s-axis"/>
+        <path d="M60 170 C110 200 150 205 190 190 C260 160 300 165 390 170 C470 175 510 182 580 158 C640 138 690 150 720 170" fill="none" stroke="var(--accent)" stroke-width="2.4"/>
+        <text x="24" y="174" class="t-mono">V</text>
+        <line x1="60" y1="260" x2="720" y2="260" class="s-axis"/>
+        <path d="M60 260 C150 290 300 296 390 294 C500 292 620 286 720 260" fill="none" stroke="var(--accent-2)" stroke-width="2.4"/>
+        <text x="24" y="264" class="t-mono">M</text>
+        <text x="390" y="286" class="t-dim" text-anchor="middle">최대 굽힘 모멘트는 중앙 근처, 전단력이 0인 곳</text>
+        <text x="66" y="150" class="t-dim">양 끝에서 V = 0</text>
+        <text x="714" y="246" class="t-dim" text-anchor="end">양 끝에서 M = 0</text>
+      </svg>
+      <figcaption><b>그림 13-1.</b> 무게(빨강, 기관실이 있는 선미가 무겁다)와 부력(파랑)의 차이가 하중이다. 하중을 한 번 적분하면 전단력, 다시 적분하면 굽힘 모멘트가 된다. 굽힘 모멘트가 최대인 곳에서 전단력은 0이다.</figcaption>
+    </figure>
+
+    <div class="sim" id="sim-beam">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>적재 계산기: 화물 블록을 옮기면 선도가 바뀐다</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-beam" class="grab"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>적재 예시</span><div class="seg" id="bm-pre"><button data-value="homo" class="on">균일</button><button data-value="alt">격창</button><button data-value="mid">중앙</button><button data-value="ends">양 끝</button><button data-value="empty">빈 배</button></div></div>
+          <label class="ctrl"><span>변형 과장 <output id="bm-ex-out"></output></span><input type="range" id="bm-ex" min="0" max="3" step="0.1" value="1.5"></label>
+          <label class="check"><input type="checkbox" id="bm-q" checked> 무게·부력 분포 표시</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">배수량 / 흘수</span><span class="v" id="o-bm-d">—</span></div>
+        <div class="stat"><span class="k">트림</span><span class="v" id="o-bm-tr">—</span></div>
+        <div class="stat"><span class="k">최대 전단력</span><span class="v" id="o-bm-v">—</span></div>
+        <div class="stat"><span class="k">최대 굽힘 모멘트</span><span class="v" id="o-bm-m">—</span></div>
+        <div class="stat"><span class="k">끝단 잔차 V, M</span><span class="v" id="o-bm-res">—</span></div>
+      </div>
+      <div class="sim-note">길이 200 m, 폭 32 m, 깊이 18 m 벌크선(경하 중량 8,800 t, 기관실은 선미). 화물 블록의 가운데를 끌면 이동, 좌우 끝을 끌면 길이, 윗면을 끌면 단위 길이당 무게(t/m)가 바뀐다. 해볼 것: ① '격창'은 무거운 광석을 한 칸씩 건너 싣는 방식이다. 굽힘 모멘트는 작지만 화물창 경계마다 전단력이 크게 튄다. ② '빈 배'는 선미 기관실과 가벼운 중앙부 때문에 호깅이 된다. ③ 블록 하나를 중앙으로 몰아 새깅을 만들어 보자. 어떤 경우에도 오른쪽 끝의 V와 M은 0으로 돌아온다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 2 -->
+  <section id="waves">
+    <h2>정수 중 굽힘과 파랑 중 굽힘: 호깅과 새깅</h2>
+    <p>잔잔한 물에서의 모멘트를 <b>정수 중 굽힘 모멘트</b><span class="en">(Still Water Bending Moment)</span>라 한다. 이것은 적재 계획으로 조절할 수 있다. 그러나 바다에서는 파도가 부력 분포를 다시 그린다. 파장이 선장과 비슷한 파가 지나갈 때가 가장 나쁘다.</p>
+    <ul>
+      <li><b>파정이 중앙에</b> 오면 가운데에 부력이 몰리고 양 끝이 공중에 뜬다. 정수 중 모멘트에 <b>호깅</b> 모멘트가 더해진다. 갑판은 늘어나고(인장) 선저는 눌린다(압축).</li>
+      <li><b>파곡이 중앙에</b> 오면 양 끝이 파정에 얹히고 가운데가 빈다. <b>새깅</b> 모멘트가 생기고 갑판이 압축된다.</li>
+    </ul>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 760 230" role="img" aria-label="호깅과 새깅">
+        <text x="190" y="22" class="t-acc" text-anchor="middle">호깅 (파정이 중앙)</text>
+        <text x="570" y="22" class="t-acc" text-anchor="middle">새깅 (파곡이 중앙)</text>
+        <path d="M20 150 Q110 70 190 90 Q270 70 360 150 L360 220 L20 220 Z" class="f-water"/>
+        <path d="M20 150 Q110 70 190 90 Q270 70 360 150" class="s-water"/>
+        <path d="M40 112 Q190 70 340 112 L340 134 Q190 92 40 134 Z" class="f-surface" stroke-width="1.5"/>
+        <text x="190" y="66" class="t-dim" text-anchor="middle">갑판: 인장 ←  →</text>
+        <text x="190" y="170" class="t-dim" text-anchor="middle">선저: 압축 →  ←</text>
+        <path d="M400 90 Q480 190 570 160 Q660 190 740 90 L740 220 L400 220 Z" class="f-water"/>
+        <path d="M400 90 Q480 190 570 160 Q660 190 740 90" class="s-water"/>
+        <path d="M420 104 Q570 150 720 104 L720 126 Q570 172 420 126 Z" class="f-surface" stroke-width="1.5"/>
+        <text x="570" y="100" class="t-dim" text-anchor="middle">갑판: 압축 →  ←</text>
+        <text x="570" y="205" class="t-dim" text-anchor="middle">선저: 인장 ←  →</text>
+      </svg>
+      <figcaption><b>그림 13-2.</b> 호깅과 새깅(변형은 크게 과장). 실제 200 m급 선박의 중앙 처짐은 수 cm에서 수십 cm다.</figcaption>
+    </figure>
+    <p>선급 규칙은 북대서양에서 20~25년에 한 번 만날 만한 파를 기준으로 설계 파랑 굽힘 모멘트를 정한다. IACS 공통 규칙의 형태는 다음과 같다.</p>
+    <div class="formula">$$M_{w,hog} = 190\,C\,L^2B\,C_b\times10^{-3},\qquad M_{w,sag} = -110\,C\,L^2B\,(C_b+0.7)\times10^{-3}\ \ [\text{kN·m}]$$
+      <div class="where">\(C = 10.75-\left(\frac{300-L}{100}\right)^{1.5}\) (\(90\le L\le300\) m). 길이 200 m, 폭 32 m, \(C_b\) 0.75 선박이면 \(C\approx9.75\), 호깅 약 1,780 MN·m, 새깅 약 1,990 MN·m다. 선체는 정수 중 모멘트와 파랑 중 모멘트의 합을 견뎌야 한다.</div>
+    </div>
+
+    <div class="sim" id="sim-wave">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>파도 위의 선체 거더: 파정과 파곡을 지나가게 하자</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-wave"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>파고 H <output id="wv-h-out"></output></span><input type="range" id="wv-h" min="0" max="14" step="0.5" value="9"></label>
+          <label class="ctrl"><span>파장 / 선장 <output id="wv-l-out"></output></span><input type="range" id="wv-l" min="0.5" max="1.6" step="0.05" value="1"></label>
+          <label class="ctrl"><span>파정 위치 <output id="wv-x-out"></output></span><input type="range" id="wv-x" min="-100" max="100" step="1" value="0"></label>
+          <button class="btn primary" id="wv-play">파도 진행</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">중앙 굽힘 모멘트</span><span class="v" id="o-wv-m">—</span></div>
+        <div class="stat"><span class="k">정수 중 (같은 적재)</span><span class="v" id="o-wv-sw">—</span></div>
+        <div class="stat"><span class="k">한 주기 최대 호깅</span><span class="v" id="o-wv-hog">—</span></div>
+        <div class="stat"><span class="k">한 주기 최대 새깅</span><span class="v" id="o-wv-sag">—</span></div>
+      </div>
+      <div class="sim-note">균일 적재된 앞 절의 벌크선을 사인파 위에 '정지' 상태로 올려 놓고, 각 파정 위치에서 무게와 부력이 다시 평형을 이루도록 흘수·트림을 풀어 모멘트를 구한다(준정적 근사, 파 속 압력 감소인 스미스 효과와 동적 응답은 무시). 해볼 것: ① 파정을 0(중앙)에 두면 호깅, ±100(파곡이 중앙)이면 새깅이 최대다. ② 파장을 선장의 0.5나 1.5로 바꾸면 모멘트 변동 폭이 줄어든다. 선장과 비슷한 파가 가장 위험하다. ③ 파고 9 m 정도에서 규칙 값(약 1,800~2,000 MN·m)과 비교해 보자.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 3 -->
+  <section id="midship">
+    <h2>중앙 단면: 단면 계수와 굽힘 응력</h2>
+    <p>굽힘 모멘트를 견디는 것은 배의 길이 방향으로 끊기지 않고 이어지는 부재들, 즉 갑판, 선측 외판, 선저 외판, 내저판, 종통재, 거더다. 이들을 한 단면에 모은 그림이 <span class="term">중앙 단면도</span><span class="en">(Midship Section)</span>다. 보 이론에 따라 굽힘 응력은 중립축에서의 거리에 비례한다.</p>
+    <div class="formula">$$z_{NA} = \frac{\sum A_i z_i}{\sum A_i},\qquad I = \sum\left(i_i + A_i (z_i - z_{NA})^2\right),\qquad Z_{deck} = \frac{I}{D - z_{NA}},\quad Z_{bot} = \frac{I}{z_{NA}},\qquad \sigma = \frac{M}{Z}$$
+      <div class="where">\(A_i\), \(z_i\): 부재 단면적과 용골 위 높이, \(i_i\): 부재 자체의 2차 모멘트(수직 판에서만 중요), \(Z\): 단면 계수(Section Modulus).</div>
+    </div>
+    <p>중립축에서 먼 갑판과 선저가 응력을 가장 많이 받고, 동시에 2차 모멘트에 가장 크게 기여한다. 그래서 강도를 올리려면 갑판과 선저를 두껍게 하는 것이 효과적이다. 해치 개구는 갑판 가운데를 잘라 내므로 갑판의 유효 면적이 줄고 중립축이 내려가, 갑판 단면 계수가 선저보다 작아지는 것이 보통이다.</p>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 760 330" role="img" aria-label="벌크선 중앙 단면">
+        <path d="M120 40 L120 290 L640 290 L640 40" fill="none" stroke="var(--text)" stroke-width="4"/>
+        <line x1="120" y1="40" x2="300" y2="40" stroke="var(--text)" stroke-width="5"/><line x1="460" y1="40" x2="640" y2="40" stroke="var(--text)" stroke-width="5"/>
+        <path d="M300 40 v-22 M460 40 v-22" stroke="var(--text)" stroke-width="3"/>
+        <line x1="120" y1="262" x2="640" y2="262" stroke="var(--text)" stroke-width="3"/>
+        <g stroke="var(--text-dim)" stroke-width="2"><line x1="380" y1="262" x2="380" y2="290"/><line x1="250" y1="262" x2="250" y2="290"/><line x1="510" y1="262" x2="510" y2="290"/></g>
+        <path d="M120 70 L180 40 M640 70 L580 40" stroke="var(--text-dim)" stroke-width="2"/>
+        <path d="M120 230 L170 262 M640 230 L590 262" stroke="var(--text-dim)" stroke-width="2"/>
+        <g fill="var(--accent)"><circle cx="150" cy="46" r="3"/><circle cx="200" cy="46" r="3"/><circle cx="250" cy="46" r="3"/><circle cx="510" cy="46" r="3"/><circle cx="560" cy="46" r="3"/><circle cx="610" cy="46" r="3"/>
+          <circle cx="160" cy="284" r="3"/><circle cx="200" cy="284" r="3"/><circle cx="300" cy="284" r="3"/><circle cx="340" cy="284" r="3"/><circle cx="420" cy="284" r="3"/><circle cx="460" cy="284" r="3"/><circle cx="560" cy="284" r="3"/><circle cx="600" cy="284" r="3"/>
+          <circle cx="126" cy="120" r="3"/><circle cx="126" cy="160" r="3"/><circle cx="126" cy="200" r="3"/><circle cx="634" cy="120" r="3"/><circle cx="634" cy="160" r="3"/><circle cx="634" cy="200" r="3"/></g>
+        <line x1="90" y1="196" x2="680" y2="196" stroke="var(--accent-2)" stroke-dasharray="7 5" stroke-width="1.6"/>
+        <text x="684" y="200" class="t" fill="var(--accent-2)">중립축</text>
+        <text x="210" y="30" class="t" text-anchor="middle">갑판</text>
+        <text x="380" y="30" class="t-dim" text-anchor="middle">해치 개구</text>
+        <text x="380" y="250" class="t" text-anchor="middle">내저판</text>
+        <text x="380" y="316" class="t" text-anchor="middle">선저 외판 · 중심선 거더 · 사이드 거더</text>
+        <text x="96" y="150" class="t" text-anchor="end">선측</text><text x="96" y="168" class="t" text-anchor="end">외판</text>
+        <text x="210" y="80" class="t-dim">상부 경사 탱크</text>
+        <text x="200" y="230" class="t-dim">호퍼 탱크</text>
+        <text x="520" y="80" class="t-dim" fill="var(--accent)">● 종통재</text>
+      </svg>
+      <figcaption><b>그림 13-3.</b> 벌크선의 중앙 단면(개략). 굵은 선이 종강도에 기여하는 연속 부재다. 점은 판에 붙은 종통재(longitudinal)다. 해치 개구가 갑판을 잘라 내므로 중립축은 깊이의 절반보다 아래에 있다.</figcaption>
+    </figure>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>강재</th><th>항복 응력 \(\sigma_Y\)</th><th>재료 계수 \(k\)</th><th>종강도 허용 응력(대략)</th><th>쓰임</th></tr></thead>
+      <tbody>
+        <tr><td>일반강(Grade A~E)</td><td>235 MPa</td><td>1.0</td><td>175 MPa</td><td>대부분의 선체 판</td></tr>
+        <tr><td>고장력강 AH32</td><td>315 MPa</td><td>0.78</td><td>약 225 MPa</td><td>갑판, 선저, 해치 코밍</td></tr>
+        <tr><td>고장력강 AH36</td><td>355 MPa</td><td>0.72</td><td>약 245 MPa</td><td>대형선 갑판·선저</td></tr>
+        <tr><td>극후물 고장력강 EH40·EH47</td><td>390·460 MPa</td><td>0.68·0.62</td><td>—</td><td>초대형 컨테이너선 해치 코밍</td></tr>
+      </tbody>
+    </table></div>
+    <p>허용 응력은 대략 \(175/k\) MPa이고, 규칙이 요구하는 최소 단면 계수에도 \(k\)가 곱해진다. 고장력강을 쓰면 같은 모멘트를 더 얇은 판으로 견딜 수 있어 강재 중량이 줄고 화물을 더 실을 수 있다. 대가도 있다. 영률 \(E\)는 일반강과 같으므로(약 206 GPa) 얇아진 판은 더 잘 휘고 좌굴하며, 피로 강도는 항복 응력만큼 오르지 않는다. 그래서 고장력강 선박일수록 좌굴과 피로 검토가 중요해진다.</p>
+
+    <div class="sim" id="sim-section">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>중앙 단면 설계기: 판 두께와 종통재로 Z 만들기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-section"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>갑판 두께 <output id="sc-td-out"></output></span><input type="range" id="sc-td" min="10" max="45" step="1" value="30"></label>
+          <label class="ctrl"><span>선측 외판 두께 <output id="sc-ts-out"></output></span><input type="range" id="sc-ts" min="10" max="30" step="1" value="18"></label>
+          <label class="ctrl"><span>선저 외판 두께 <output id="sc-tb-out"></output></span><input type="range" id="sc-tb" min="10" max="35" step="1" value="22"></label>
+          <label class="ctrl"><span>종통재 개수(갑판·선저·내저 각각) <output id="sc-n-out"></output></span><input type="range" id="sc-n" min="0" max="50" step="1" value="32"></label>
+          <label class="ctrl"><span>해치 개구 폭 <output id="sc-hw-out"></output></span><input type="range" id="sc-hw" min="0" max="24" step="1" value="16"></label>
+          <label class="ctrl"><span>설계 굽힘 모멘트(호깅 +) <output id="sc-m-out"></output></span><input type="range" id="sc-m" min="-4000" max="4000" step="50" value="2800"></label>
+          <div class="ctrl"><span>강재</span><div class="seg" id="sc-mat"><button data-value="1" class="on">일반강</button><button data-value="0.72">AH36</button></div></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">중립축 높이</span><span class="v" id="o-sc-na">—</span></div>
+        <div class="stat"><span class="k">I</span><span class="v" id="o-sc-i">—</span></div>
+        <div class="stat"><span class="k">Z 갑판 / 선저</span><span class="v" id="o-sc-z">—</span></div>
+        <div class="stat"><span class="k">규칙 최소 Z</span><span class="v" id="o-sc-zr">—</span></div>
+        <div class="stat"><span class="k">σ 갑판 / 선저</span><span class="v" id="o-sc-s">—</span></div>
+        <div class="stat"><span class="k">단면적(강재 중량/m)</span><span class="v" id="o-sc-a">—</span></div>
+      </div>
+      <div class="sim-note">B 32 m, D 18 m, 이중 선저 1.8 m, 종통재 하나 45 cm², 사이드 거더 3개. 판 두께는 그림에서 과장했다. 규칙 최소 Z는 IACS 형태의 \(0.9\,C\,L^2B(C_b+0.7)\,k\)(L 200 m, \(C_b\) 0.75)다. 해볼 것: ① 해치 개구를 넓히면 중립축이 내려가고 갑판 Z가 급히 준다. ② 같은 단면적을 선측보다 갑판·선저에 쓰는 편이 Z를 훨씬 많이 올린다. ③ 강재를 AH36으로 바꾸면 허용 응력이 올라가 같은 모멘트에서 판을 얼마나 얇게 할 수 있는지 찾아보자. ④ 모멘트를 음수(새깅)로 바꾸면 응력 분포의 부호가 뒤집힌다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 4 -->
+  <section id="framing">
+    <h2>판과 보강재: 종늑골식과 횡늑골식</h2>
+    <p>선체는 얇은 강판(10~30 mm)에 보강재를 촘촘히 붙인 <b>보강판</b><span class="en">(Stiffened Panel)</span>의 조합이다. 판만으로는 수압이나 압축에 쉽게 휘므로, 판을 작은 칸으로 나눠 주는 보강재가 필요하다. 보강재를 어느 방향으로 붙이느냐에 따라 두 가지 구조 방식이 있다.</p>
+    <ul>
+      <li><b>횡늑골식</b><span class="en">(Transverse Framing)</span>: 늑골<span class="en">(Frame)</span>을 0.6~0.9 m 간격으로 배의 폭 방향 고리처럼 세운다. 갑판 밑에는 갑판 보<span class="en">(Beam)</span>, 이중 선저에는 늑판<span class="en">(Floor)</span>이 이어진다. 수압 같은 횡하중에 강하고 화물창 안이 깔끔하지만, 판이 길이 방향 압축에 약해 두꺼워야 한다. 작은 배와 옛 배에 쓰였다.</li>
+      <li><b>종늑골식</b><span class="en">(Longitudinal Framing)</span>: 종통재<span class="en">(Longitudinal)</span>를 길이 방향으로 0.7~0.9 m 간격으로 붙이고, 3~5 m마다 깊은 <span class="term">웹 프레임</span><span class="en">(Web Frame)</span>으로 받친다. 종통재 자체가 종강도에 기여하고, 판이 길이 방향으로 긴 칸(가로세로비 4~5)으로 나뉘어 압축 좌굴에 강하다. 1900년대 초 이셔우드<span class="en">(Isherwood)</span> 방식으로 유조선에 도입된 뒤, 오늘날 대형선의 갑판과 선저는 거의 모두 종늑골식이다.</li>
+    </ul>
+    <p>가로 방향의 <b>수밀 격벽</b>(<a href="damage.html">5장</a>)은 구획을 나누는 동시에 선체 단면이 찌그러지지 않게 잡아 주는 횡강도 부재다. 이중 선저 안의 <b>거더</b><span class="en">(Girder)</span>와 <b>늑판</b>은 선저를 격자로 받쳐 화물과 수압을 격벽과 선측으로 전달한다.</p>
+
+    <div class="sim" id="sim-3d">
+      <div class="sim-head"><span class="sim-tag three">3D</span><h3>선체 블록 단면 모형: 구조 방식 바꿔 보기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view three" id="v3d"><span class="hint">끌어서 회전 · 휠로 확대</span></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>구조 방식</span><div class="seg" id="f3-mode"><button data-value="long" class="on">종늑골식</button><button data-value="trans">횡늑골식</button></div></div>
+          <label class="check"><input type="checkbox" id="f3-plate" checked> 외판·갑판 표시</label>
+          <label class="check"><input type="checkbox" id="f3-ib" checked> 내저판 표시</label>
+          <label class="check"><input type="checkbox" id="f3-bh"> 횡격벽 표시</label>
+          <label class="check"><input type="checkbox" id="f3-lbl" checked> 부재 이름</label>
+          <label class="check"><input type="checkbox" id="f3-rot"> 자동 회전</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">보강재 방향</span><span class="v" id="o-f3-dir">—</span></div>
+        <div class="stat"><span class="k">보강재 간격</span><span class="v" id="o-f3-sp">—</span></div>
+        <div class="stat"><span class="k">판 칸 가로세로비</span><span class="v" id="o-f3-ar">—</span></div>
+        <div class="stat"><span class="k">부재 수(이 블록)</span><span class="v" id="o-f3-n">—</span></div>
+      </div>
+      <div class="sim-note">길이 12 m, 폭 32 m, 깊이 18 m의 벌크선 중앙부 블록(선측은 단일 선체, 바닥은 이중 선저). 해볼 것: ① 외판을 끄고 안쪽 뼈대를 보자. 종늑골식에서는 가는 종통재가 길이 방향으로 달리고, 3.2 m마다 깊은 웹 프레임 고리가 받친다. ② 횡늑골식으로 바꾸면 0.8 m마다 늑골이 고리처럼 선다. ③ 두 방식에서 판 한 칸(보강재로 둘러싸인 판)의 모양이 어떻게 다른지 보고, 다음 절의 좌굴과 연결해 보자.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 5 -->
+  <section id="buckling">
+    <h2>판의 좌굴</h2>
+    <p>새깅 상태의 갑판이나 호깅 상태의 선저는 길이 방향으로 압축된다. 얇은 판은 압축 응력이 항복 응력에 닿기 훨씬 전에 옆으로 불룩 휘어 버리는데, 이것이 <span class="term">좌굴</span><span class="en">(Buckling)</span>이다. 네 변이 보강재로 받쳐진 판(폭 \(b\)=보강재 간격, 길이 \(a\), 두께 \(t\))의 탄성 좌굴 응력은 다음과 같다.</p>
+    <div class="formula">$$\sigma_E = k\,\frac{\pi^2E}{12(1-\nu^2)}\left(\frac{t}{b}\right)^2,\qquad k=\min_{m}\left(\frac{m\,b}{a}+\frac{a}{m\,b}\right)^2$$
+      <div class="where">\(E\) = 206 GPa, \(\nu\) = 0.3, \(m\): 길이 방향 반파 수. 압축 방향이 긴 변(\(a\))을 따라가면(종늑골식의 판) \(k\approx4\), 짧은 변을 따라가면(횡늑골식의 판) \(k\)가 훨씬 작다.</div>
+    </div>
+    <p>\(\sigma_E\)가 항복 응력의 절반을 넘으면 판은 좌굴과 소성이 함께 일어나므로 존슨–오스텐펠트 보정 \(\sigma_{cr} = \sigma_Y\left(1-\frac{\sigma_Y}{4\sigma_E}\right)\)을 쓴다. 식에서 \((t/b)^2\)이 핵심이다. 판 두께를 10% 늘리면 좌굴 응력이 21% 오르고, 보강재 간격을 10% 줄여도 23% 오른다.</p>
+
+    <div class="sim" id="sim-buckle">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>보강판의 좌굴: 두께·간격·가로세로비</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view duo"><div><canvas id="cv-buckle"></canvas></div><div><canvas id="cv-bucklec"></canvas></div></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>판 두께 t <output id="bk-t-out"></output></span><input type="range" id="bk-t" min="8" max="30" step="0.5" value="16"></label>
+          <label class="ctrl"><span>보강재 간격 b <output id="bk-b-out"></output></span><input type="range" id="bk-b" min="500" max="1200" step="10" value="800"></label>
+          <label class="ctrl"><span>가로세로비 a/b <output id="bk-ar-out"></output></span><input type="range" id="bk-ar" min="0.3" max="5" step="0.05" value="4"></label>
+          <label class="ctrl"><span>압축 응력 σ <output id="bk-s-out"></output></span><input type="range" id="bk-s" min="0" max="350" step="5" value="150"></label>
+          <div class="ctrl"><span>강재</span><div class="seg" id="bk-mat"><button data-value="235" class="on">일반강</button><button data-value="355">AH36</button></div></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">좌굴 계수 k (반파 수 m)</span><span class="v" id="o-bk-k">—</span></div>
+        <div class="stat"><span class="k">탄성 좌굴 σE</span><span class="v" id="o-bk-e">—</span></div>
+        <div class="stat"><span class="k">임계 응력 σcr</span><span class="v" id="o-bk-cr">—</span></div>
+        <div class="stat"><span class="k">이용률 σ/σcr</span><span class="v" id="o-bk-u">—</span></div>
+      </div>
+      <div class="sim-note">왼쪽은 네 변 단순 지지 판(압축은 좌우 방향), 오른쪽은 a/b에 따른 좌굴 계수 k의 '꽃줄' 곡선이다. 해볼 것: ① a/b를 1에서 5까지 움직이면 반파 수 m이 1, 2, 3…으로 바뀌며 k가 4 근처에서 출렁인다. ② a/b를 0.3으로(압축 방향으로 짧고 넓은 판, 횡늑골식 갑판) 바꾸면 k가 커 보이지만, 이때 압축 방향 폭은 a이므로 \((t/b)^2\) 대신 실제로는 넓은 판이 된다. 같은 판 두께에서 종늑골식이 유리한 이유를 확인하자. ③ σ가 σcr을 넘으면 판이 불룩 솟는다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 6 -->
+  <section id="fatigue">
+    <h2>피로: S–N 곡선과 마이너 법칙</h2>
+    <p>배는 평생 파도를 1억 번쯤 만난다. 한 번 한 번의 응력은 항복 응력보다 한참 작아도, 용접 이음의 아주 작은 결함에서 균열이 조금씩 자란다. 이것이 <span class="term">피로</span><span class="en">(Fatigue)</span>다. 응력 범위 \(\Delta\sigma\)를 일정하게 반복했을 때 파단까지의 횟수 \(N\)을 그린 것이 <b>S–N 곡선</b>이다. 용접 이음의 S–N 곡선은 로그 좌표에서 직선이다.</p>
+    <div class="formula">$$\log N = \log \bar a - m\log\Delta\sigma,\qquad D = \sum_i \frac{n_i}{N_i}\le 1$$
+      <div class="where">\(m\) = 3(10⁷회 이하), 5(그 이상): 기울기, \(\bar a\): 이음 등급별 상수, \(n_i\): 응력 범위 \(\Delta\sigma_i\)를 실제로 겪는 횟수, \(N_i\): 그 응력 범위의 수명, \(D\): 누적 손상도(Palmgren–Miner 법칙). \(D=1\)이면 균열이 생긴다고 본다.</div>
+    </div>
+    <p>바다의 응력 범위는 일정하지 않다. 대부분은 작고, 아주 드물게 큰 응력이 온다. 이 장기 분포는 보통 와이블 분포로 나타내며, 20~25년 동안 가장 큰 응력 범위(10⁸회 중 1회)와 형상 계수 \(h\)(0.8~1.1)로 정한다. 응력이 피로 수명에 미치는 영향은 3제곱 이상이다. 응력을 20% 줄이면 수명은 거의 2배가 된다.</p>
+
+    <div class="sim" id="sim-fatigue">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>25년 운항의 피로 손상 누적</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view duo"><div><canvas id="cv-fat"></canvas></div><div><canvas id="cv-fatb"></canvas></div></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>최대 응력 범위(10⁸회 중 1회) <output id="ft-s-out"></output></span><input type="range" id="ft-s" min="100" max="400" step="5" value="220"></label>
+          <label class="ctrl"><span>와이블 형상 계수 h <output id="ft-h-out"></output></span><input type="range" id="ft-h" min="0.7" max="1.2" step="0.01" value="0.9"></label>
+          <label class="ctrl"><span>응력 집중 계수 K <output id="ft-k-out"></output></span><input type="range" id="ft-k" min="1" max="3" step="0.05" value="1"></label>
+          <label class="ctrl"><span>설계 수명 <output id="ft-y-out"></output></span><input type="range" id="ft-y" min="5" max="40" step="1" value="25"></label>
+          <button class="btn primary" id="ft-run">운항 재생</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">총 응력 반복 수</span><span class="v" id="o-ft-n">—</span></div>
+        <div class="stat"><span class="k">누적 손상도 D</span><span class="v" id="o-ft-d">—</span></div>
+        <div class="stat"><span class="k">피로 수명</span><span class="v" id="o-ft-l">—</span></div>
+        <div class="stat"><span class="k">손상의 대부분을 만드는 Δσ</span><span class="v" id="o-ft-c">—</span></div>
+      </div>
+      <div class="sim-note">S–N 곡선은 용접 이음 D 등급(대기 중, \(\log\bar a\) = 12.164, m = 3 / 10⁷회 이상 15.606, m = 5)을 썼다. 응력 주기는 평균 약 9초(L 200 m), 운항률 85%로 가정한다. 왼쪽 그림의 회색 곡선은 실제로 겪는 응력 범위의 장기 분포(초과 횟수), 오른쪽은 응력 범위별 손상 기여도와 시간에 따른 누적이다. 해볼 것: ① 응력 집중 계수 K를 1.5로 올리면 수명이 3분의 1 안팎으로 준다. ② h가 클수록(큰 응력이 자주 오는 바다, 북대서양) 손상이 커진다. ③ 손상의 대부분은 가장 큰 응력이 아니라 '중간 크기의 잦은 응력'에서 온다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 7 -->
+  <section id="concentration">
+    <h2>응력 집중과 해치 코너</h2>
+    <p>판에 구멍을 뚫으면 힘의 흐름이 구멍을 돌아가야 하므로 구멍 가장자리에 응력이 몰린다. 국부 최대 응력과 멀리 있는 공칭 응력의 비가 <span class="term">응력 집중 계수</span><span class="en">(Stress Concentration Factor, \(K_t\))</span>다. 타원 구멍에 대한 잉글리스<span class="en">(Inglis, 1913)</span>의 해는 이 현상을 한 줄로 요약한다.</p>
+    <div class="formula">$$K_t = 1 + 2\,\frac{a}{b} = 1 + 2\sqrt{\frac{a}{\rho}}$$
+      <div class="where">\(a\): 하중에 수직인 반축, \(b\): 하중 방향 반축, \(\rho=b^2/a\): 끝단 곡률 반경. 원형 구멍은 \(K_t=3\), 하중에 수직인 납작한 구멍(균열)은 \(K_t\to\infty\).</div>
+    </div>
+    <p>컨테이너선과 벌크선의 갑판에는 배 폭의 70~90%에 이르는 해치 개구가 있고, 그 네 모서리는 종강도 응력이 가장 크게 모이는 곳이다. 초기의 각진 해치 코너에서 피로 균열이 많이 났고, 오늘날에는 큰 반경이나 타원·포물선 모양의 코너, 두꺼운 보강판(인서트 플레이트), 매끄럽게 연마한 자유 가장자리로 응력 집중을 줄인다. 2차 세계대전의 리버티선에서 각진 해치 코너가 취성 파괴의 출발점이 되었던 일은 이 원리를 강재와 용접의 품질 문제와 함께 일깨운 고전적 사례다.</p>
+
+    <div class="sim" id="sim-hatch">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>구멍 주위의 응력 지도 (탄성 해)</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view duo"><div><canvas id="cv-hatch"></canvas></div><div><canvas id="cv-hatchc"></canvas></div></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>구멍 모양 a/b (하중 ⟂ / ∥) <output id="hc-r-out"></output></span><input type="range" id="hc-r" min="0.3" max="5" step="0.05" value="2"></label>
+          <div class="ctrl"><span>표시 응력</span><div class="seg" id="hc-c"><button data-value="sx" class="on">하중 방향 σ</button><button data-value="vm">폰 미제스</button></div></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">K<sub>t</sub> (가장자리 최대)</span><span class="v" id="o-hc-k">—</span></div>
+        <div class="stat"><span class="k">끝단 곡률 반경 ρ / b</span><span class="v" id="o-hc-r">—</span></div>
+        <div class="stat"><span class="k">구멍 측면 응력</span><span class="v" id="o-hc-t">—</span></div>
+      </div>
+      <div class="sim-note">무한 평판 속 타원 구멍에 좌우 방향 인장 응력 σ₀가 걸린 경우의 정확한 탄성 해(무스켈리슈빌리 복소 포텐셜)를 계산해 색으로 그렸다. 오른쪽은 구멍 끝에서 바깥으로 가며 응력이 σ₀로 돌아오는 모습이다. 해볼 것: ① a/b = 1(원)에서 K<sub>t</sub> = 3을 확인하자. ② a/b를 키워 하중에 수직으로 납작한 구멍(해치 개구의 각진 모서리, 균열)을 만들면 끝의 응력이 치솟는다. ③ 하중 방향으로 긴 구멍(a/b &lt; 1)은 응력 집중이 작다. 해치 코너를 길이 방향으로 길쭉한 타원으로 다듬는 이유다. 응력이 높은 영역이 끝에서 매우 좁다는 것도 보자. 피로 균열은 바로 그곳에서 시작한다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 8 -->
+  <section id="torsion">
+    <h2>비틀림, 휘핑과 스프링잉</h2>
+    <p>비스듬히 오는 파도는 선수와 선미를 서로 반대 방향으로 기울이려 한다. 이 비틀림 모멘트를 닫힌 상자형 단면은 쉽게 견디지만, 갑판 대부분이 해치로 뚫린 <b>오픈 데크</b> 컨테이너선의 단면은 위가 열린 U자 모양이다. 얇은 벽 단면의 비틀림 상수를 비교하면 차이가 극적이다.</p>
+    <div class="formula">$$J_{closed} = \frac{4A_m^2}{\oint ds/t},\qquad J_{open} \approx \sum \frac{1}{3}\,b_i t_i^3$$
+      <div class="where">\(A_m\): 벽 두께 중심선이 둘러싼 면적, \(b_i\), \(t_i\): 열린 단면 각 판의 폭과 두께. 열린 단면은 \(t^3\)에 비례하므로 닫힌 단면보다 수백~수천 배 약하다.</div>
+    </div>
+    <p>그래서 컨테이너선은 갑판 양쪽 가장자리에 두꺼운 판으로 닫힌 <b>토션 박스</b><span class="en">(Torsion Box)</span>를 두고, 해치 사이의 가로 갑판 띠와 격벽이 단면의 뒤틀림(워핑)을 붙잡게 한다. 비틀림이 남으면 해치 개구가 평행사변형으로 찌그러져 해치 커버가 어긋나고, 해치 코너에 피로 응력이 더해진다.</p>
+
+    <div class="sim" id="sim-torsion">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>오픈 데크의 비틀림: 해치 개구 폭과 토션 박스</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view duo"><div><canvas id="cv-tor"></canvas></div><div><canvas id="cv-tor2"></canvas></div></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>해치 개구 폭 / B <output id="to-w-out"></output></span><input type="range" id="to-w" min="0" max="0.9" step="0.01" value="0.82"></label>
+          <label class="ctrl"><span>토션 박스 판 두께 <output id="to-t-out"></output></span><input type="range" id="to-t" min="10" max="80" step="1" value="50"></label>
+          <label class="check"><input type="checkbox" id="to-anim" checked> 비스듬한 파도 하중 애니메이션</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">J (생브낭)</span><span class="v" id="o-to-j">—</span></div>
+        <div class="stat"><span class="k">닫힌 단면 대비</span><span class="v" id="o-to-r">—</span></div>
+        <div class="stat"><span class="k">100 m당 비틀림각(같은 토크)</span><span class="v" id="o-to-a">—</span></div>
+      </div>
+      <div class="sim-note">B 51 m, D 30 m 컨테이너선 단면(이중 선측 2.5 m, 이중 선저 2 m)에 같은 비틀림 모멘트 1,000 MN·m를 건 순수 비틀림(생브낭) 계산이다. 실제 선박에서는 격벽과 가로 갑판 띠가 워핑을 구속해 비틀림이 이보다 훨씬 작다. 오른쪽 그림은 위에서 본 해치 개구의 찌그러짐(크게 과장). 해볼 것: ① 해치 폭을 0으로 하면 닫힌 상자다. 0.01만 열어도 J가 급락한다. ② 토션 박스 두께를 늘려 열린 단면의 강성을 얼마나 되찾을 수 있는지 보자.</div>
+    </div>
+
+    <p>선체는 탄성체이므로 고유 진동수를 가진다. 수직 굽힘의 가장 낮은 모드(2절 진동)는 대형선에서 0.4~1 Hz 정도다. 선수가 파도에 내리꽂히는 <b>슬래밍</b>(<a href="seakeeping.html">11장</a>)의 충격은 이 진동을 울려, 파도 주기의 모멘트 위에 빠르게 감쇠하는 진동이 겹친다. 이것이 <span class="term">휘핑</span><span class="en">(Whipping)</span>이다. 파도와 선체의 조우 주파수(또는 그 정수배)가 고유 진동수와 맞아 계속 공진하는 것은 <span class="term">스프링잉</span><span class="en">(Springing)</span>이다. 길고 유연한 대형 컨테이너선과 광탄선일수록 고유 진동수가 낮아 두 현상이 커지고, 피로 손상과 최대 모멘트를 함께 키운다.</p>
+
+    <div class="sim" id="sim-whip">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>휘핑과 스프링잉: 모멘트 시계열</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-whip"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>조우 주기 <output id="wh-te-out"></output></span><input type="range" id="wh-te" min="5" max="14" step="0.1" value="9"></label>
+          <label class="ctrl"><span>슬래밍 세기 <output id="wh-s-out"></output></span><input type="range" id="wh-s" min="0" max="1" step="0.05" value="0.5"></label>
+          <label class="ctrl"><span>2절 고유 진동수 <output id="wh-f-out"></output></span><input type="range" id="wh-f" min="0.3" max="1.2" step="0.01" value="0.6"></label>
+          <label class="check"><input type="checkbox" id="wh-sp"> 고차 파 성분(스프링잉 가진) 포함</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">파랑 모멘트 진폭</span><span class="v" id="o-wh-w">—</span></div>
+        <div class="stat"><span class="k">합성 최대 새깅</span><span class="v" id="o-wh-max">—</span></div>
+        <div class="stat"><span class="k">증가율</span><span class="v" id="o-wh-r">—</span></div>
+        <div class="stat"><span class="k">공진 여부</span><span class="v" id="o-wh-res">—</span></div>
+      </div>
+      <div class="sim-note">감쇠비 2%의 1자유도 진동 모형에 파랑 모멘트(진폭 1,500 MN·m)와 매 파곡의 선수 슬래밍 충격을 넣은 개념 모형이다. 해볼 것: ① 슬래밍을 키우면 새깅 쪽(선수가 내리꽂힌 직후) 최댓값이 커진다. ② '고차 파 성분'을 켜고 조우 주기를 2절 주기의 2배(f = 0.6 Hz면 약 3.3 s의 2배인 6.7 s 부근)로 맞추면 진동이 꺼지지 않고 쌓이는 스프링잉이 나타난다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 9 -->
+  <section id="failure">
+    <h2>선체가 부러질 때</h2>
+    <p>종강도의 마지막 질문은 "얼마까지 견디는가"다. 굽힘 모멘트가 커지면 압축 쪽(호깅이면 선저, 새깅이면 갑판)의 보강판이 먼저 좌굴해 힘을 덜 받게 되고, 그 힘이 남은 부재로 넘어가며 차례로 무너진다. 단면이 견딜 수 있는 최대 모멘트를 <b>최종 종강도</b><span class="en">(Ultimate Hull Girder Strength)</span>라 하며, 오늘날 규칙은 단계별 붕괴 계산(스미스 방법)으로 이를 확인하도록 한다.</p>
+    <p>2000년대 이후 대형 컨테이너선이 거친 바다에서 중앙부가 꺾여 두 동강 나는 사고가 있었다. 조사 보고서들이 공통으로 지목한 요인은 다음과 같다. 선저 보강판의 좌굴 강도 여유가 작았고, 실제 컨테이너 무게가 신고된 값보다 무거워 정수 중 모멘트가 계산보다 컸으며, 휘핑이 파랑 모멘트를 키웠다. 이 사고들 뒤 IACS는 컨테이너선 종강도 통일 규칙(UR S11A)을 새로 만들고, SOLAS는 컨테이너 총중량 검증(VGM)을 의무화했다. 무게 분포, 파랑 하중, 좌굴, 동적 응답이 한 줄로 이어져 있다는 것이 이 장의 결론이다.</p>
+    <div class="callout tip">
+      <strong>숫자로 보는 선체 거더</strong>
+      <p>길이 200 m 벌크선의 설계 굽힘 모멘트는 정수 중과 파랑 중을 합해 3,000~4,000 MN·m, 중앙 단면 계수는 15~25 m³, 갑판 응력은 150~250 MPa 수준이다. 이 정도 응력에서 선체 중앙은 호깅 때 십수 cm 솟는다. 400 m급 초대형 컨테이너선은 모멘트가 이보다 열 배 가까이 크고, 해치 코밍에 두께 80~100 mm의 극후물 고장력강을 쓴다.</p>
+    </div>
+  </section>
+
+  <section class="keypoints" id="summary">
+    <h2>핵심 정리</h2>
+    <ol>
+      <li>선체 거더의 하중은 \(q=b-w\)다. 한 번 적분하면 전단력, 두 번 적분하면 굽힘 모멘트이며, 평형이면 양 끝에서 모두 0이 된다.</li>
+      <li>중앙부 부력 과잉(또는 양 끝 무게 과잉)이면 호깅, 반대면 새깅이다. 파정이 중앙이면 호깅, 파곡이 중앙이면 새깅이 더해지고, 선장과 비슷한 파장이 가장 위험하다.</li>
+      <li>중앙 단면에서 \(z_{NA}\), \(I\), \(Z=I/y\)를 구하고 \(\sigma=M/Z\)로 갑판·선저 응력을 계산한다. 중립축에서 먼 갑판과 선저가 가장 효과적이다.</li>
+      <li>고장력강(AH36, 355 MPa)은 허용 응력을 \(1/k\)배 높여 강재를 줄이지만, \(E\)가 같아 좌굴·피로 검토가 중요해진다.</li>
+      <li>대형선의 갑판·선저는 종늑골식이다. 종통재가 종강도에 기여하고 판 칸이 길어져 좌굴에 강하다. 횡늑골식은 늑골 고리가 횡하중을 받는다.</li>
+      <li>판의 좌굴 응력은 \(k\pi^2E/(12(1-\nu^2))\,(t/b)^2\)이고, 길게 나뉜 판에서 \(k\approx4\)다.</li>
+      <li>피로는 S–N 곡선과 마이너 법칙 \(D=\sum n_i/N_i\)로 평가하며, 응력에 3제곱 이상으로 민감하다. 해치 코너 같은 응력 집중부가 출발점이다.</li>
+      <li>오픈 데크 단면은 비틀림에 약해 토션 박스로 보강한다. 휘핑과 스프링잉은 선체의 탄성 진동이 파랑 하중 위에 겹치는 현상이다.</li>
+    </ol>
+  </section>
+
+  <section class="quiz-sec" id="quiz">
+    <h2>확인 퀴즈</h2>
+    <div class="quiz">
+      <div class="quiz-q"><p>Q1. 전단력 곡선 V(x)가 0을 지나는 위치에서 굽힘 모멘트는?</p><div class="opts">
+        <button class="opt">항상 0이다</button><button class="opt" data-correct>극값(최대 또는 최소)이다</button><button class="opt">변곡점이다</button><button class="opt">불연속이다</button>
+      </div><div class="quiz-exp">\(dM/dx = V\)이므로 \(V=0\)인 곳에서 M의 기울기가 0, 즉 극값이 된다. 최대 굽힘 모멘트는 보통 중앙 부근 전단력이 0인 곳에서 생긴다.</div></div>
+
+      <div class="quiz-q"><p>Q2. 기관실이 선미에 있는 벌크선이 빈 채(밸러스트 없이) 떠 있다. 가장 그럴듯한 상태는?</p><div class="opts">
+        <button class="opt">새깅</button><button class="opt" data-correct>호깅</button><button class="opt">굽힘 모멘트 0</button><button class="opt">비틀림</button>
+      </div><div class="quiz-exp">무게가 선미(기관실)와 선수미 구조에 몰리고 빈 화물창이 있는 중앙부는 가볍다. 중앙에 부력이 남으므로 가운데가 솟는 호깅이 된다.</div></div>
+
+      <div class="quiz-q"><p>Q3. 파장이 선장과 같은 파의 파곡이 배 중앙에 왔다. 갑판의 응력은?</p><div class="opts">
+        <button class="opt">인장이 커진다</button><button class="opt" data-correct>압축이 커진다(새깅)</button><button class="opt">0이 된다</button><button class="opt">전단만 생긴다</button>
+      </div><div class="quiz-exp">양 끝이 파정에 얹히고 중앙이 비어 배가 처지는 새깅이다. 처지는 보의 위쪽(갑판)은 압축, 아래쪽(선저)은 인장이다.</div></div>
+
+      <div class="quiz-q"><p>Q4. 굽힘 모멘트 3,000 MN·m에서 갑판 단면 계수가 15 m³이다. 갑판 응력은?</p><div class="opts">
+        <button class="opt">20 MPa</button><button class="opt">45 MPa</button><button class="opt" data-correct>200 MPa</button><button class="opt">2,000 MPa</button>
+      </div><div class="quiz-exp">\(\sigma = M/Z = 3\times10^9\ \text{N·m} / 15\ \text{m}^3 = 2\times10^8\ \text{Pa} = 200\) MPa. 일반강 허용 응력 175 MPa를 넘으므로 고장력강이 필요하다.</div></div>
+
+      <div class="quiz-q"><p>Q5. 해치 개구를 넓히면 중앙 단면에 어떤 변화가 생기는가?</p><div class="opts">
+        <button class="opt">중립축이 올라가 갑판 Z가 커진다</button><button class="opt" data-correct>중립축이 내려가 갑판 Z가 작아진다</button><button class="opt">I만 커진다</button><button class="opt">변화 없다</button>
+      </div><div class="quiz-exp">갑판의 유효 단면적이 줄어 면적 중심(중립축)이 아래로 내려가고, I도 줄며 갑판까지의 거리는 늘어나므로 \(Z_{deck}=I/(D-z_{NA})\)이 크게 줄어든다.</div></div>
+
+      <div class="quiz-q"><p>Q6. 판 두께를 그대로 두고 보강재 간격 b를 절반으로 줄이면 탄성 좌굴 응력은?</p><div class="opts">
+        <button class="opt">절반</button><button class="opt">2배</button><button class="opt" data-correct>약 4배</button><button class="opt">변하지 않음</button>
+      </div><div class="quiz-exp">\(\sigma_E\propto (t/b)^2\)이므로 b가 절반이면 4배가 된다(k가 비슷하게 유지될 때). 다만 4배가 된 \(\sigma_E\)가 \(\sigma_Y/2\)를 넘으면 존슨–오스텐펠트 보정으로 실제 임계 응력은 덜 오른다.</div></div>
+
+      <div class="quiz-q"><p>Q7. S–N 곡선의 기울기 m = 3인 용접 이음에서 응력 범위가 2배가 되면 피로 수명은?</p><div class="opts">
+        <button class="opt">1/2</button><button class="opt">1/4</button><button class="opt" data-correct>1/8</button><button class="opt">변하지 않음</button>
+      </div><div class="quiz-exp">\(N\propto\Delta\sigma^{-3}\)이므로 \(2^{-3}=1/8\)이다. 피로는 응력에 매우 민감해, 응력 집중 계수나 판 두께의 작은 변화가 수명을 크게 바꾼다.</div></div>
+
+      <div class="quiz-q"><p>Q8. 오픈 데크 컨테이너선이 토션 박스를 두는 이유는?</p><div class="opts">
+        <button class="opt">컨테이너를 고정하려고</button><button class="opt" data-correct>열린 단면의 매우 작은 비틀림 강성을 닫힌 상자 단면으로 보강하려고</button><button class="opt">부력을 늘리려고</button><button class="opt">해치 커버를 가볍게 하려고</button>
+      </div><div class="quiz-exp">열린 단면의 비틀림 상수는 \(\sum bt^3/3\)으로 아주 작다. 갑판 가장자리의 닫힌 상자(토션 박스)는 \(4A^2/\oint ds/t\)의 닫힌 단면 강성을 되찾아 준다.</div></div>
+    </div>
+  </section>
+</main>
+<script>
+/*SCRIPT*/
+</script>
+</body>
+</html>

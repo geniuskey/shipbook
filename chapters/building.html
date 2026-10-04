@@ -804,7 +804,7 @@
       ctx.fillStyle = p.bad ? P.bad : cols[p.id % 4];
       p.rects.forEach(([rx, ry, rw, rh]) => ctx.fillRect(ox + (p.x + rx) * s, oy + (p.y + ry) * s, rw * s, rh * s));
       ctx.globalAlpha = 1;
-      ctx.strokeStyle = p === sel ? P.text : "rgba(0,0,0,0.25)"; ctx.lineWidth = p === sel ? 2.2 : 1;
+      ctx.strokeStyle = p === sel ? P.text : SB.color("canvas-bg"); ctx.lineWidth = p === sel ? 2.2 : 1.5;
       p.rects.forEach(([rx, ry, rw, rh]) => ctx.strokeRect(ox + (p.x + rx) * s, oy + (p.y + ry) * s, rw * s, rh * s));
     });
     // 수치

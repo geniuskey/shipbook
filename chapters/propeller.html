@@ -517,7 +517,808 @@
   </section>
 </main>
 <script>
-/* PLACEHOLDER */
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const cssv = (n) => getComputedStyle(document.body).getPropertyValue(n).trim();
+  const font = (sz, mono, w) => (w ? w + " " : "") + sz + "px " + (mono ? cssv("--mono") : cssv("--font"));
+  function txt(ctx, s, x, y, c, a, sz, w, base) {
+    ctx.font = font(sz || 12, false, w); ctx.fillStyle = c; ctx.textAlign = a || "left"; ctx.textBaseline = base || "middle"; ctx.fillText(s, x, y);
+  }
+  function seg(ctx, x1, y1, x2, y2) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+  function rgbOf(c) {
+    c = (c || "").trim();
+    if (c[0] === "#") { let h = c.slice(1); if (h.length === 3) h = h.split("").map((x) => x + x).join(""); return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]; }
+    const m = c.match(/[\d.]+/g); return m ? m.slice(0, 3).map(Number) : [128, 128, 128];
+  }
+  const rgba = (c, a) => { const [r, g, b] = rgbOf(c); return "rgba(" + r + "," + g + "," + b + "," + a + ")"; };
+  const sm = (v, u) => v + "<small> " + u + "</small>";
+  function sim(name, fn) { try { fn(); } catch (e) { console.error("[sim " + name + "]", e); } }
+  const G = SB.G, RHO = SB.RHO, P_ATM = 101325, P_V = 1700;
+  const kN = (x) => (Math.abs(x) >= 1e5 ? (x / 1000).toFixed(0) : (x / 1000).toFixed(1));
+  const MW = (w) => (Math.abs(w) >= 1e6 ? sm((w / 1e6).toFixed(2), "MW") : sm((w / 1e3).toFixed(0), "kW"));
+
+  /* ------------------------------------------------ 단독 특성 근사(B 시리즈 경향을 흉내 낸 매끄러운 식) */
+  function ow(J, PD, AE, Z) {
+    Z = Z || 4;
+    const J0 = 1.08 * PD + 0.02, KT0 = 0.45 * Math.pow(PD, 1.2) * (1 + 0.25 * (AE - 0.7)) * (1 + 0.03 * (Z - 4));
+    const x = J / J0, KT = KT0 * (1 - x) * (1 + 0.2 * x);
+    const JQ = 1.14 * J0, xq = J / JQ, cd = 0.0028 * (AE / 0.7);
+    const KQ0 = 0.062 * Math.pow(PD, 2) * (1 + 0.3 * (AE - 0.7)) * (1 + 0.02 * (Z - 4)) - cd;
+    const KQ = Math.max(KQ0, 0.001) * (1 - xq) * (1 + 0.15 * xq) + cd * (1 + 0.5 * J * J);
+    return { KT, KQ, eta: KT > 0 && J > 0 ? (J * KT) / (2 * Math.PI * KQ) : 0 };
+  }
+  // 주어진 J에서 K_T 목표를 내는 피치비(0.5~1.5) 찾기. 없으면 null
+  function solvePD(J, KTreq, AE, Z) {
+    let lo = 0.5, hi = 1.5;
+    if (ow(J, hi, AE, Z).KT < KTreq || ow(J, lo, AE, Z).KT > KTreq) return null;
+    for (let i = 0; i < 40; i++) { const m = (lo + hi) / 2; if (ow(J, m, AE, Z).KT < KTreq) lo = m; else hi = m; }
+    return (lo + hi) / 2;
+  }
+
+  /* =================================================== Sim 1: 액추에이터 디스크 */
+  sim("disk", function () {
+    let cv = null;
+    const gD = SB.range("dk-d", (v) => v.toFixed(1) + " m", upd);
+    const gT = SB.range("dk-t", (v) => v + " kN", upd);
+    const gV = SB.range("dk-v", (v) => v.toFixed(1) + " m/s", upd);
+    function calc() {
+      const D = gD(), A = (Math.PI * D * D) / 4, T = gT() * 1000, Va = gV();
+      const CT = T / (0.5 * RHO * A * Va * Va), a = (-1 + Math.sqrt(1 + CT)) / 2, eta = 1 / (1 + a);
+      return { D, A, T, Va, CT, a, eta, P: (T * Va) / eta, Dw: D * Math.sqrt((1 + a) / (1 + 2 * a)) };
+    }
+    function upd() {
+      const c = calc();
+      SB.stat("o-dk-ct", c.CT >= 100 ? c.CT.toFixed(0) : c.CT.toFixed(2));
+      SB.stat("o-dk-wake", sm((c.Va * (1 + 2 * c.a)).toFixed(1), "m/s"));
+      SB.stat("o-dk-dw", sm(c.Dw.toFixed(2), "m"));
+      SB.stat("o-dk-eta", c.eta.toFixed(3));
+      SB.stat("o-dk-p", MW(c.P));
+      if (cv) cv.redraw();
+    }
+    const parts = []; for (let i = 0; i < 140; i++) parts.push({ x: Math.random(), f: Math.random() * 2 - 1 });
+    let geo = null;
+    function draw(ctx, w, h) {
+      const P = SB.palette(), c = calc();
+      const top = Math.round(h * 0.62), cy = top * 0.52, s = (top * 0.86) / 12, R = c.D / 2;
+      const x0 = w * 0.32, xm = (px) => (px - x0) / s;
+      const u = (x) => c.Va * (1 + c.a * (1 + x / Math.sqrt(x * x + R * R)));
+      const r = (x) => R * Math.sqrt((c.Va * (1 + c.a)) / u(x));
+      geo = { x0, s, cy, u, r, w };
+      // 흐름관
+      ctx.fillStyle = rgba(cssv("--water") || P.accent, 0.13);
+      ctx.beginPath();
+      for (let px = 0; px <= w; px += 4) { const y = cy - r(xm(px)) * s; px ? ctx.lineTo(px, y) : ctx.moveTo(px, y); }
+      for (let px = w; px >= 0; px -= 4) ctx.lineTo(px, cy + r(xm(px)) * s);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = P.accent; ctx.lineWidth = 1.8;
+      [-1, 1].forEach((sg) => { ctx.beginPath(); for (let px = 0; px <= w; px += 4) { const y = cy + sg * r(xm(px)) * s; px ? ctx.lineTo(px, y) : ctx.moveTo(px, y); } ctx.stroke(); });
+      ctx.strokeStyle = P.faint; ctx.setLineDash([4, 4]); ctx.lineWidth = 1; seg(ctx, 0, cy, w, cy); ctx.setLineDash([]);
+      // 입자
+      ctx.fillStyle = P.accent;
+      parts.forEach((p) => { const px = p.x * w, y = cy + p.f * r(xm(px)) * s * 0.96; ctx.fillRect(px - 1.3, y - 1.3, 2.6, 2.6); });
+      // 디스크
+      ctx.fillStyle = P.accent2; ctx.fillRect(x0 - 3, cy - R * s, 6, 2 * R * s);
+      txt(ctx, "D " + c.D.toFixed(1) + " m", x0, cy - R * s - 10, P.accent2, "center", 11, 700);
+      txt(ctx, "V_A " + c.Va.toFixed(1), 8, 12, P.dim, "left", 11);
+      txt(ctx, "후류 " + (c.Va * (1 + 2 * c.a)).toFixed(1) + " m/s", w - 8, 12, P.dim, "right", 11);
+      txt(ctx, "축척: 세로 높이 = 12 m", w - 8, top - 10, P.faint, "right", 10);
+      // η–C_T 그래프
+      const box = { x: 58, y: top + 10, w: w - 58 - 16, h: h - top - 10 - 40 };
+      const ser = []; for (let e = -1; e <= 3.001; e += 0.02) { const ct = Math.pow(10, e); ser.push([ct, 2 / (1 + Math.sqrt(1 + ct))]); }
+      SB.chart(ctx, box, { x: [0.1, 1000], y: [0, 1], logX: true, xLabel: "C_T", yLabel: "η_i", series: [{ data: ser, color: P.accent, width: 2 }],
+        points: [{ x: SB.clamp(c.CT, 0.1, 1000), y: c.eta, color: P.accent2, r: 5 }] });
+    }
+    cv = SB.canvas($("cv-disk"), draw, { aspect: 0.7, minHeight: 360, maxHeight: 480 });
+    upd();
+    SB.loop($("cv-disk"), (dt) => {
+      if (!geo) return;
+      parts.forEach((p) => {
+        const px = p.x * geo.w, x = (px - geo.x0) / geo.s;
+        p.x += (dt * geo.u(x) * geo.s * 0.35) / geo.w;
+        if (p.x > 1) { p.x = 0; p.f = Math.random() * 2 - 1; }
+      });
+      cv.redraw();
+    });
+  });
+
+  /* ------------------------------------------------ BEMT (D 7 m, Z 4, AE/A0 0.7) */
+  const BEM = { D: 7, Z: 4, AE: 0.7 };
+  const CHORD_TAB = [[0.2, 1.662], [0.3, 1.882], [0.4, 2.05], [0.5, 2.152], [0.6, 2.187], [0.7, 2.144], [0.8, 1.97], [0.9, 1.582], [0.95, 1.2], [1.0, 0.25]];
+  function chordFac(x) {
+    if (x <= CHORD_TAB[0][0]) return CHORD_TAB[0][1];
+    for (let i = 1; i < CHORD_TAB.length; i++) if (x <= CHORD_TAB[i][0]) { const a = CHORD_TAB[i - 1], b = CHORD_TAB[i], t = (x - a[0]) / (b[0] - a[0]); return a[1] + (b[1] - a[1]) * t; }
+    return CHORD_TAB[CHORD_TAB.length - 1][1];
+  }
+  function bemAt(xr, n, Va, PD) {
+    const R = BEM.D / 2, r = xr * R, om = 2 * Math.PI * n, c = (chordFac(xr) * BEM.D * BEM.AE) / BEM.Z, Z = BEM.Z;
+    const phi = Math.atan((PD * BEM.D) / (2 * Math.PI * r));
+    let a = 0.1, ap = 0.01, out = null;
+    for (let it = 0; it < 120; it++) {
+      const Vax = Va * (1 + a), Vt = om * r * (1 - ap), bi = Math.atan2(Vax, Vt), W2 = Vax * Vax + Vt * Vt;
+      const al = phi - bi, CL = SB.clamp(5.6 * al, -1.1, 1.1) * (Math.abs(al) > 0.2 ? 0.8 : 1), CD = 0.008 + 0.6 * al * al;
+      const q = 0.5 * RHO * W2 * c * Z;
+      const dT = q * (CL * Math.cos(bi) - CD * Math.sin(bi)), dQ = q * r * (CL * Math.sin(bi) + CD * Math.cos(bi));
+      const fArg = Math.exp((-Z * (1 - xr)) / (2 * xr * Math.max(Math.sin(bi), 0.05)));
+      const F = Math.max(0.05, (2 / Math.PI) * Math.acos(SB.clamp(fArg, 0, 1)));
+      const X = dT / (4 * Math.PI * r * RHO * Va * Va * F);
+      const an = (-1 + Math.sqrt(Math.max(0.0, 1 + 4 * Math.max(X, -0.24)))) / 2;
+      const apn = dQ / (4 * Math.PI * r * r * r * RHO * Va * (1 + a) * om * F);
+      a += 0.3 * (an - a); ap += 0.3 * (SB.clamp(apn, -0.3, 0.3) - ap);
+      out = { r, xr, om, c, phi, beta: Math.atan2(Va, om * r), bi, al, CL, CD, W2, dT, dQ, Vax, Vt, a, ap, Va };
+    }
+    return out;
+  }
+  function bemAll(n, Va, PD) {
+    const N = 28, R = BEM.D / 2; let T = 0, Q = 0; const dist = [];
+    for (let i = 0; i < N; i++) {
+      const xr = 0.2 + ((i + 0.5) / N) * 0.8, b = bemAt(xr, n, Va, PD), dr = (0.8 * R) / N;
+      T += b.dT * dr; Q += b.dQ * dr; dist.push([xr, b.dT / 1000]);
+    }
+    return { T, Q, dist };
+  }
+
+  /* =================================================== Sim 2: 날개 요소 */
+  sim("bem", function () {
+    let cv = null;
+    const gR = SB.range("be-r", (v) => v.toFixed(2), upd);
+    const gN = SB.range("be-n", (v) => v + " rpm", upd);
+    const gV = SB.range("be-v", (v) => v.toFixed(1) + " m/s", upd);
+    const gP = SB.range("be-p", (v) => v.toFixed(2), upd);
+    let cache = null;
+    function calc() {
+      const n = gN() / 60, b = bemAt(gR(), n, gV(), gP()), all = bemAll(n, gV(), gP());
+      cache = { n, b, all }; return cache;
+    }
+    function upd() {
+      const { b, all, n } = calc(), d = (x) => SB.deg(x).toFixed(1);
+      SB.stat("o-be-ang", d(b.beta) + "° / " + d(b.bi) + "° / " + d(b.phi) + "°");
+      SB.stat("o-be-a", sm(d(b.al), "°"));
+      SB.stat("o-be-cl", b.CL.toFixed(2));
+      SB.stat("o-be-t", sm(kN(all.T), "kN") + "<small> · Q " + (all.Q / 1000).toFixed(0) + " kN·m</small>");
+      const el = (b.Va * b.dT) / (b.om * b.dQ);
+      SB.stat("o-be-eta", b.dT > 0 && b.dQ > 0 ? el.toFixed(2) : "—");
+      void n;
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), { b, all } = cache || calc();
+      const top = Math.round(h * 0.64);
+      // 속도 삼각형
+      const ox = 30, oy = top - 34;
+      const sv = Math.min((w - 90) / b.Vt, (top - 80) / Math.max(b.Vax, 1));
+      const Ex = ox + b.Vt * sv, Ey = oy - b.Vax * sv;
+      ctx.strokeStyle = P.faint; ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
+      seg(ctx, ox + b.om * b.r * sv, oy, ox + b.om * b.r * sv, oy - b.Va * sv); ctx.setLineDash([]);
+      SB.arrow(ctx, ox, oy, ox + b.om * b.r * sv, oy, P.text, 2);
+      SB.arrow(ctx, ox, oy, ox, oy - b.Va * sv, P.text, 2);
+      SB.arrow(ctx, ox + b.om * b.r * sv, oy - b.Va * sv, Ex, Ey, P.ok, 2);
+      SB.arrow(ctx, ox, oy, Ex, Ey, P.accent, 2.6);
+      txt(ctx, "ωr " + (b.om * b.r).toFixed(1) + " m/s", ox + (b.om * b.r * sv) / 2, oy + 14, P.text, "center", 11);
+      txt(ctx, "V_A", ox - 4, oy - (b.Va * sv) / 2, P.text, "right", 11);
+      txt(ctx, "W", (ox + Ex) / 2 - 6, (oy + Ey) / 2 - 10, P.accent, "right", 12, 700);
+      txt(ctx, "유도 속도", Ex + 6, Ey + 6, P.ok, "left", 10);
+      // 피치선
+      const L = Math.min(w, (top - 40) / Math.max(Math.sin(b.phi), 0.2));
+      ctx.strokeStyle = P.accent2; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.4;
+      seg(ctx, ox, oy, ox + Math.cos(b.phi) * L, oy - Math.sin(b.phi) * L); ctx.setLineDash([]);
+      txt(ctx, "피치선 φ " + SB.deg(b.phi).toFixed(1) + "°", ox + Math.cos(b.phi) * 70 + 4, oy - Math.sin(b.phi) * 70 - 10, P.accent2, "left", 11, 600);
+      // 날개 단면(피치각으로 놓음) - 삼각형 중앙 근처
+      const cx = ox + (Ex - ox) * 0.62, cyy = oy + (Ey - oy) * 0.62 - 26;
+      const ch = Math.min(110, w * 0.2);
+      ctx.save(); ctx.translate(cx, cyy); ctx.rotate(-b.phi);
+      ctx.beginPath();
+      for (let i = 0; i <= 30; i++) { const x = i / 30, t = 0.12 * ch * (1.4845 * Math.sqrt(x) - 0.63 * x - 1.758 * x * x + 1.4215 * x * x * x - 0.5075 * Math.pow(x, 4)); const px = ch / 2 - x * ch; i ? ctx.lineTo(px, -t) : ctx.moveTo(px, -t); }
+      for (let i = 30; i >= 0; i--) { const x = i / 30, t = 0.02 * ch * Math.sin(Math.PI * x); ctx.lineTo(ch / 2 - x * ch, -t); }
+      ctx.closePath(); ctx.fillStyle = "#c9a227"; ctx.fill(); ctx.strokeStyle = P.dim; ctx.lineWidth = 1; ctx.stroke();
+      ctx.restore();
+      // 힘: 양력은 W에 수직, 항력은 W와 나란(날개가 받는 상대 흐름 방향 = -W)
+      const Fs = 70 / Math.max(Math.abs(b.CL), 0.4);
+      const wx = Math.cos(b.bi), wy = -Math.sin(b.bi); // 화면 방향(W 방향)
+      const Lx = -wy * b.CL * Fs * -1, Ly = wx * b.CL * Fs * -1; // W를 반시계 90° 회전(앞쪽/위)
+      const Dx = -wx * b.CD * Fs * 6, Dy = -wy * b.CD * Fs * 6; // 항력: 흐름 방향(상대 유입은 -W로 들어옴) → -W 쪽으로 과장 6배
+      SB.arrow(ctx, cx, cyy, cx + Lx, cyy + Ly, P.accent, 2.4);
+      SB.arrow(ctx, cx, cyy, cx + Dx, cyy + Dy, P.bad, 2);
+      const Fx = Lx + Dx, Fy = Ly + Dy;
+      ctx.setLineDash([3, 3]);
+      SB.arrow(ctx, cx, cyy, cx, cyy + Fy, P.ok, 2);
+      SB.arrow(ctx, cx, cyy, cx + Fx, cyy, P.warn, 2);
+      ctx.setLineDash([]);
+      txt(ctx, "양력", cx + Lx + 4, cyy + Ly - 6, P.accent, "left", 11, 700);
+      txt(ctx, "항력×6", cx + Dx - 4, cyy + Dy + 10, P.bad, "right", 10);
+      txt(ctx, Fy < 0 ? "추력" : "역추력", cx + 4, cyy + Fy + (Fy < 0 ? -8 : 10), P.ok, "left", 11, 700);
+      txt(ctx, "토크 저항", cx + Fx + (Fx < 0 ? -4 : 4), cyy + 14, P.warn, Fx < 0 ? "right" : "left", 10, 600);
+      txt(ctx, "r = " + (gR() * 3.5).toFixed(2) + " m 단면 · 선수 = 위", 8, 12, P.dim, "left", 11);
+      // 반경별 추력 분포
+      const box = { x: 58, y: top + 12, w: w - 58 - 16, h: h - top - 12 - 40 };
+      const ymax = Math.max(10, ...all.dist.map((p) => p[1])) * 1.15, ymin = Math.min(0, ...all.dist.map((p) => p[1])) * 1.15;
+      SB.chart(ctx, box, { x: [0.2, 1], y: [ymin, ymax], xLabel: "r/R", yLabel: "dT/dr (kN/m)",
+        series: [{ data: [[0.2, all.dist[0][1]], ...all.dist, [1, 0]], color: P.ok, width: 2, fill: rgba(P.ok, 0.15) }],
+        vlines: [{ x: gR(), color: P.accent2 }], hlines: [{ y: 0, color: P.axis, dash: [] }] });
+    }
+    calc();
+    cv = SB.canvas($("cv-bem"), draw, { aspect: 0.82, minHeight: 400, maxHeight: 520 });
+    upd();
+  });
+
+  /* =================================================== Sim 3: 피치와 슬립 */
+  sim("slip", function () {
+    let cv = null, t = 0, run = true;
+    const D = 7, R = 3.5, SLOW = 0.25;
+    const gP = SB.range("sl-p", (v) => v.toFixed(2), upd);
+    const gN = SB.range("sl-n", (v) => v + " rpm", upd);
+    const gV = SB.range("sl-v", (v) => v.toFixed(1) + " m/s", upd);
+    $("sl-run").addEventListener("click", () => { run = !run; $("sl-run").textContent = run ? "일시정지" : "재생"; });
+    $("sl-reset").addEventListener("click", () => { t = 0; cv.redraw(); });
+    function upd() {
+      const Pm = gP() * D, n = gN() / 60, J = gV() / (n * D);
+      SB.stat("o-sl-p", sm(Pm.toFixed(2), "m"));
+      SB.stat("o-sl-adv", sm((gV() / n).toFixed(2), "m"));
+      SB.stat("o-sl-j", J.toFixed(3));
+      SB.stat("o-sl-s", sm(((1 - J / gP()) * 100).toFixed(0), "%"));
+      t = 0;
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const Pl = SB.palette(), Pm = gP() * D, n = gN() / 60, Va = gV();
+      const span = 50, s = (w - 60) / span, cy = h * 0.5, x0 = 30, ys = Math.min(s, (h * 0.32) / R);
+      const X = (m) => x0 + m * s, Y = (y) => cy - y * ys;
+      // 물 배경 격자(정지한 물)
+      ctx.strokeStyle = Pl.grid; ctx.lineWidth = 1;
+      for (let m = 0; m <= span; m += 5) seg(ctx, X(m), cy - R * ys - 20, X(m), cy + R * ys + 20);
+      ctx.strokeStyle = Pl.dim; ctx.setLineDash([4, 4]); seg(ctx, X(0), cy, X(span), cy); ctx.setLineDash([]);
+      const tt = t;
+      // 너트였다면(점선) 과 실제(실선)
+      const path = (adv, col, dash, wdt) => {
+        ctx.strokeStyle = col; ctx.lineWidth = wdt; ctx.setLineDash(dash);
+        ctx.beginPath();
+        const N = 400;
+        for (let i = 0; i <= N; i++) { const ti = (tt * i) / N, x = adv * ti, y = R * Math.cos(2 * Math.PI * n * ti); i ? ctx.lineTo(X(x), Y(y)) : ctx.moveTo(X(x), Y(y)); }
+        ctx.stroke(); ctx.setLineDash([]);
+      };
+      path(n * Pm, Pl.faint, [5, 4], 1.5);
+      path(Va, Pl.accent, [], 2.2);
+      const blade = (x, col, alpha) => {
+        const th = 2 * Math.PI * n * tt;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = Pl.dim; ctx.fillRect(X(x) - 1000, cy - 2, 1000, 4);
+        ctx.fillStyle = col;
+        for (let k = 0; k < 4; k++) { const y = R * Math.cos(th + (k * Math.PI) / 2); ctx.beginPath(); ctx.ellipse(X(x), (Y(y) + cy) / 2, 3 + 3 * Math.abs(Math.sin(th + (k * Math.PI) / 2)), Math.abs(Y(y) - cy) / 2, 0, 0, Math.PI * 2); ctx.fill(); }
+        ctx.beginPath(); ctx.arc(X(x), cy, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+      };
+      const xg = n * Pm * tt, xa = Va * tt;
+      ctx.save(); ctx.beginPath(); ctx.rect(X(0) - 2, 0, w, h); ctx.clip();
+      blade(xg, Pl.faint, 0.45);
+      blade(xa, "#c9a227", 1);
+      ctx.restore();
+      if (xg - xa > 1) {
+        const yb = cy + R * ys + 24;
+        ctx.strokeStyle = Pl.accent2; ctx.lineWidth = 2; seg(ctx, X(xa), yb, X(xg), yb); seg(ctx, X(xa), yb - 5, X(xa), yb + 5); seg(ctx, X(xg), yb - 5, X(xg), yb + 5);
+        txt(ctx, "슬립 " + (xg - xa).toFixed(1) + " m", (X(xa) + X(xg)) / 2, yb + 14, Pl.accent2, "center", 11, 700);
+      }
+      txt(ctx, "회전 " + (n * tt).toFixed(2) + "바퀴 · 시간 ×" + SLOW + " 느리게", 8, 12, Pl.dim, "left", 11);
+      txt(ctx, "─ 실제 날개 끝 궤적   ┄ 단단한 너트라면", w - 8, 12, Pl.dim, "right", 11);
+      txt(ctx, "선수 방향 →", w - 8, h - 12, Pl.faint, "right", 10);
+    }
+    cv = SB.canvas($("cv-slip"), draw, { aspect: 0.5, minHeight: 260, maxHeight: 340 });
+    upd();
+    SB.loop($("cv-slip"), (dt) => {
+      if (!run) return;
+      t += dt * SLOW;
+      const n = gN() / 60;
+      if (Math.max(n * gP() * D, gV()) * t > 50) t = 0;
+      cv.redraw();
+    });
+  });
+
+  /* =================================================== Sim 4: 단독 특성 */
+  sim("ow", function () {
+    let cv = null, chartRef = null;
+    const gP = SB.range("ow-p", (v) => v.toFixed(2), upd);
+    const gA = SB.range("ow-a", (v) => v.toFixed(2), upd);
+    const gZ = SB.range("ow-z", (v) => v + "장", upd);
+    const gJ = SB.range("ow-j", (v) => v.toFixed(2), upd);
+    function upd() {
+      const r = ow(gJ(), gP(), gA(), gZ());
+      SB.stat("o-ow-kt", r.KT.toFixed(3));
+      SB.stat("o-ow-kq", (10 * r.KQ).toFixed(3));
+      SB.stat("o-ow-eta", r.eta.toFixed(3));
+      let best = 0, bj = 0; for (let J = 0.01; J < 1.6; J += 0.005) { const e = ow(J, gP(), gA(), gZ()).eta; if (e > best) { best = e; bj = J; } }
+      SB.stat("o-ow-max", best.toFixed(3) + "<small> @ J " + bj.toFixed(2) + "</small>");
+      const n = 100 / 60, D = 7, Va = gJ() * n * D, T = r.KT * RHO * n * n * Math.pow(D, 4), Q = r.KQ * RHO * n * n * Math.pow(D, 5);
+      SB.stat("o-ow-dim", "V<sub>A</sub> " + Va.toFixed(1) + " m/s · T " + kN(T) + " kN<small> · P<sub>D</sub> " + ((2 * Math.PI * n * Q) / 1e6).toFixed(1) + " MW</small>");
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), J0 = 1.08 * gP() + 0.02, xmax = 1.5;
+      const kt = [], kq = [], et = [];
+      for (let J = 0; J <= xmax + 1e-9; J += 0.01) { const r = ow(J, gP(), gA(), gZ()); kt.push([J, r.KT]); kq.push([J, 10 * r.KQ]); if (J <= J0 * 0.995) et.push([J, r.eta]); }
+      const r = ow(gJ(), gP(), gA(), gZ());
+      chartRef = SB.chart(ctx, null, { x: [0, xmax], y: [0, 1.3], xLabel: "전진비 J", yLabel: "K_T, 10K_Q, η_0",
+        series: [{ data: kt, color: P.accent, width: 2.2 }, { data: kq, color: P.accent2, width: 2.2 }, { data: et, color: P.ok, width: 2.6 }],
+        vlines: [{ x: gJ(), color: P.text }],
+        points: [{ x: gJ(), y: r.KT, color: P.accent, r: 5 }, { x: gJ(), y: 10 * r.KQ, color: P.accent2, r: 5 }, { x: gJ(), y: r.eta, color: P.ok, r: 5 }] });
+      const b = chartRef.box;
+      txt(ctx, "K_T", b.x + 8, b.y + 12, P.accent, "left", 12, 700);
+      txt(ctx, "10K_Q", b.x + 46, b.y + 12, P.accent2, "left", 12, 700);
+      txt(ctx, "η_0", b.x + 104, b.y + 12, P.ok, "left", 12, 700);
+      txt(ctx, "← 끌어서 J 이동 →", b.x + b.w - 6, b.y + 12, P.faint, "right", 11);
+    }
+    const el = $("cv-ow");
+    cv = SB.canvas(el, draw, { aspect: 0.62, minHeight: 300, maxHeight: 440 });
+    const setJ = (p) => { if (!chartRef) return; const b = chartRef.box; gJ.set(+SB.clamp(((p.x - b.x) / b.w) * 1.5, 0, 1.5).toFixed(2)); };
+    SB.drag(el, { down: setJ, move: setJ });
+    upd();
+  });
+
+  /* =================================================== Sim 5: 직경–회전수 지도 */
+  sim("opt", function () {
+    let cv = null, img = null, imgKey = "", sel = { D: 7, rpm: 100 }, boxRef = null;
+    const AE = 0.7, Z = 4, DR = [3, 11], NR = [50, 220];
+    const gT = SB.range("op-t", (v) => v + " kN", upd);
+    const gV = SB.range("op-v", (v) => v.toFixed(1) + " m/s", upd);
+    const gDm = SB.range("op-dm", (v) => v.toFixed(1) + " m", upd);
+    function evalPt(D, rpm) {
+      const n = rpm / 60, T = gT() * 1000, Va = gV(), J = Va / (n * D), KTr = T / (RHO * n * n * Math.pow(D, 4));
+      const PD = solvePD(J, KTr, AE, Z);
+      if (PD == null) return null;
+      const r = ow(J, PD, AE, Z);
+      return { J, PD, eta: r.eta, Q: r.KQ * RHO * n * n * Math.pow(D, 5), n };
+    }
+    function best() {
+      let b = null;
+      for (let D = DR[0]; D <= Math.min(DR[1], gDm()) + 1e-9; D += 0.05) for (let rpm = NR[0]; rpm <= NR[1]; rpm += 1) { const e = evalPt(D, rpm); if (e && (!b || e.eta > b.eta)) b = { D, rpm, eta: e.eta }; }
+      return b;
+    }
+    $("op-best").addEventListener("click", () => { const b = best(); if (b) { sel = { D: b.D, rpm: b.rpm }; upd(); } });
+    function upd() {
+      const e = evalPt(sel.D, sel.rpm);
+      SB.stat("o-op-dn", sel.D.toFixed(2) + " m / " + sel.rpm.toFixed(0) + " rpm");
+      SB.stat("o-op-pd", e ? e.PD.toFixed(2) : "불가");
+      SB.stat("o-op-j", e ? e.J.toFixed(3) : "—");
+      SB.stat("o-op-eta", e ? e.eta.toFixed(3) : "—");
+      SB.stat("o-op-p", e ? MW(2 * Math.PI * e.n * e.Q) : "—");
+      if (cv) cv.redraw();
+    }
+    function heat(bw, bh) {
+      const key = [bw, bh, gT(), gV(), SB.isDark()].join("|");
+      if (key === imgKey && img) return img;
+      const cw = Math.max(20, Math.floor(bw / 3)), ch = Math.max(20, Math.floor(bh / 3));
+      const can = document.createElement("canvas"); can.width = cw; can.height = ch;
+      const c2 = can.getContext("2d"), id = c2.createImageData(cw, ch);
+      const P = SB.palette(), bg = rgbOf(P.bg), lo = rgbOf(P.accent2), hi = rgbOf(P.accent), grey = rgbOf(P.faint);
+      for (let j = 0; j < ch; j++) for (let i = 0; i < cw; i++) {
+        const D = DR[0] + ((i + 0.5) / cw) * (DR[1] - DR[0]), rpm = NR[1] - ((j + 0.5) / ch) * (NR[1] - NR[0]);
+        const e = evalPt(D, rpm), p = (j * cw + i) * 4;
+        let col;
+        if (!e) col = [0, 1, 2].map((k) => bg[k] * 0.7 + grey[k] * 0.3);
+        else {
+          const q = Math.floor(SB.clamp((e.eta - 0.3) / 0.45, 0, 1) * 9) / 9;
+          const band = Math.abs(((e.eta - 0.3) / 0.05) % 1) < 0.12 ? 0.85 : 1;
+          col = [0, 1, 2].map((k) => (bg[k] * 0.25 + (lo[k] * (1 - q) + hi[k] * q) * 0.75) * band);
+        }
+        id.data[p] = col[0]; id.data[p + 1] = col[1]; id.data[p + 2] = col[2]; id.data[p + 3] = 255;
+      }
+      c2.putImageData(id, 0, 0);
+      img = can; imgKey = key; return img;
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), box = { x: 58, y: 16, w: w - 58 - 16, h: h - 16 - 46 };
+      boxRef = box;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(heat(box.w, box.h), box.x, box.y, box.w, box.h);
+      const ch = SB.chart(ctx, box, { x: DR, y: NR, xLabel: "직경 D (m)", yLabel: "회전수 (rpm)", series: [] });
+      const xm = ch.X(gDm());
+      ctx.fillStyle = rgba(P.bad, 0.12); ctx.fillRect(xm, box.y, box.x + box.w - xm, box.h);
+      ctx.strokeStyle = P.bad; ctx.lineWidth = 1.5; seg(ctx, xm, box.y, xm, box.y + box.h);
+      txt(ctx, "흘수 제약", xm + 4, box.y + 12, P.bad, "left", 11, 700);
+      const b = best();
+      if (b) { ctx.strokeStyle = P.text; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(ch.X(b.D), ch.Y(b.rpm), 7, 0, Math.PI * 2); ctx.stroke(); txt(ctx, "최적 η " + b.eta.toFixed(3), ch.X(b.D) - 10, ch.Y(b.rpm) - 12, P.text, "right", 11, 700); }
+      ctx.fillStyle = P.warn; ctx.strokeStyle = P.text; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(ch.X(sel.D), ch.Y(sel.rpm), 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      // 범례
+      const lx = box.x + 8, ly = box.y + box.h - 22;
+      const g = ctx.createLinearGradient(lx, 0, lx + 100, 0); g.addColorStop(0, P.accent2); g.addColorStop(1, P.accent);
+      ctx.fillStyle = rgba(P.bg, 0.85); ctx.fillRect(lx - 4, ly - 16, 150, 32);
+      ctx.fillStyle = g; ctx.fillRect(lx, ly, 100, 8);
+      txt(ctx, "η 0.30", lx, ly - 8, P.dim, "left", 10); txt(ctx, "0.75", lx + 100, ly - 8, P.dim, "right", 10);
+    }
+    const el = $("cv-opt");
+    cv = SB.canvas(el, draw, { aspect: 0.66, minHeight: 320, maxHeight: 460 });
+    const pick = (p) => { if (!boxRef) return; const b = boxRef; sel = { D: SB.clamp(DR[0] + ((p.x - b.x) / b.w) * (DR[1] - DR[0]), DR[0], DR[1]), rpm: SB.clamp(NR[1] - ((p.y - b.y) / b.h) * (NR[1] - NR[0]), NR[0], NR[1]) }; upd(); };
+    SB.drag(el, { down: pick, move: pick });
+    upd();
+  });
+
+  /* =================================================== Sim 6: 단면 캐비테이션 */
+  sim("cav", function () {
+    let cv = null;
+    const D = 7, Va = 8, CLC = 0.3;
+    const gH = SB.range("cv-h", (v) => v.toFixed(1) + " m", upd);
+    const gN = SB.range("cv-n", (v) => v + " rpm", upd);
+    const gA = SB.range("cv-a", (v) => v.toFixed(1) + "°", upd);
+    const gT = SB.range("cv-t", (v) => v.toFixed(3), upd);
+    function st() {
+      const n = gN() / 60, V = Math.hypot(Va, 0.7 * Math.PI * n * D), q = 0.5 * RHO * V * V;
+      const sig = (P_ATM + RHO * G * gH() - P_V) / q, al = SB.rad(gA()), tc = gT();
+      const us = (x) => 1 + 1.15 * tc * Math.sqrt(Math.max(0, 1 - (2 * x - 1) ** 2)) + CLC / 4 + al * Math.sqrt((1 - x) / (x + 0.003));
+      const up = (x) => 1 + 1.15 * tc * Math.sqrt(Math.max(0, 1 - (2 * x - 1) ** 2)) - CLC / 4 - al * Math.sqrt((1 - x) / (x + 0.003));
+      const cps = (x) => us(x) ** 2 - 1, cpp = (x) => Math.sign(up(x)) * up(x) ** 2 - 1;
+      let lenS = 0, lenP = 0, mn = 0;
+      for (let i = 0; i <= 400; i++) { const x = i / 400; mn = Math.max(mn, cps(x), cpp(x)); }
+      for (let i = 0; i <= 400; i++) { const x = i / 400; if (cps(x) > sig) lenS = x; else if (x > 0.02) break; }
+      for (let i = 0; i <= 400; i++) { const x = i / 400; if (cpp(x) > sig) lenP = x; else if (x > 0.02) break; }
+      return { V, sig, cps, cpp, lenS, lenP, mn, tc };
+    }
+    function upd() {
+      const s = st();
+      SB.stat("o-cv-v", sm(s.V.toFixed(1), "m/s"));
+      SB.stat("o-cv-s", s.sig.toFixed(3));
+      SB.stat("o-cv-cp", s.mn.toFixed(3));
+      SB.stat("o-cv-len", sm(((s.lenS || s.lenP) * 100).toFixed(0), "% 코드"));
+      SB.stat("o-cv-st", s.lenS > 0.3 ? "광범위 시트(추력 저하)" : s.lenS > 0 ? "흡입면 시트 캐비테이션" : s.lenP > 0 ? "압력면 캐비테이션" : "없음");
+      $("o-cv-st").style.color = s.lenS > 0 || s.lenP > 0 ? "var(--bad)" : "var(--ok)";
+      if (cv) cv.redraw();
+    }
+    const bubbles = [];
+    let state = st();
+    function draw(ctx, w, h) {
+      const P = SB.palette(), s = state = st();
+      const top = Math.round(h * 0.48), cy = top * 0.55, x0 = 40, cl = w - 80;
+      const X = (x) => x0 + x * cl;
+      const th = (x) => s.tc * 5 * (0.2969 * Math.sqrt(x) - 0.126 * x - 0.3516 * x * x + 0.2843 * x ** 3 - 0.1015 * x ** 4) * cl * 0.9;
+      const cam = (x) => 0.02 * cl * 4 * x * (1 - x) + SB.rad(gA()) * cl * (0.5 - x) * 0.6;
+      // 흐름선
+      ctx.strokeStyle = P.grid; ctx.lineWidth = 1;
+      for (let k = -3; k <= 3; k++) { if (!k) continue; const y = cy + k * 18; seg(ctx, 0, y, w, y); }
+      SB.arrow(ctx, 6, cy - 50, 34, cy - 50, P.dim, 1.5);
+      txt(ctx, "V " + s.V.toFixed(1) + " m/s", 6, cy - 64, P.dim, "left", 10);
+      ctx.fillStyle = "#c9a227"; ctx.strokeStyle = P.dim; ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let i = 0; i <= 60; i++) { const x = (i / 60) ** 1.6; ctx.lineTo(X(x), cy - cam(x) - th(x)); }
+      for (let i = 60; i >= 0; i--) { const x = (i / 60) ** 1.6; ctx.lineTo(X(x), cy - cam(x) + th(x)); }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      // 공동 막
+      const sheet = (len, sgn) => {
+        if (len <= 0) return;
+        ctx.fillStyle = rgba(SB.isDark() ? "#e8f2ff" : "#ffffff", 0.85); ctx.strokeStyle = P.accent; ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let i = 0; i <= 30; i++) { const x = (i / 30) * len; ctx.lineTo(X(x), cy - cam(x) - sgn * th(x)); }
+        for (let i = 30; i >= 0; i--) { const x = (i / 30) * len, thick = 6 * Math.sin(Math.PI * Math.min(1, x / len)) * Math.min(1, len * 4) + 1; ctx.lineTo(X(x), cy - cam(x) - sgn * (th(x) + thick)); }
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+      };
+      sheet(s.lenS, 1); sheet(s.lenP, -1);
+      bubbles.forEach((b) => {
+        const x = b.x, y = cy - cam(x) - b.side * (th(x) + b.off);
+        ctx.strokeStyle = b.pop ? P.bad : P.accent; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.arc(X(x), y, Math.max(0.5, b.r), 0, Math.PI * 2); ctx.stroke();
+      });
+      txt(ctx, "흡입면(날개 등)", X(0.55), cy - 44, P.dim, "center", 11);
+      txt(ctx, "압력면", X(0.55), cy + 40, P.dim, "center", 11);
+      txt(ctx, "앞전", X(0) - 4, cy + 18, P.faint, "right", 10);
+      // -Cp 그래프
+      const box = { x: 58, y: top + 10, w: w - 58 - 16, h: h - top - 10 - 44 };
+      const ser1 = [], ser2 = []; for (let i = 0; i <= 200; i++) { const x = (i / 200) ** 1.5; ser1.push([x, s.cps(x)]); ser2.push([x, s.cpp(x)]); }
+      const ymax = Math.max(1, Math.min(4, Math.max(s.mn, s.sig) * 1.2));
+      SB.chart(ctx, box, { x: [0, 1], y: [-0.6, ymax], xLabel: "코드 위치 x/c", yLabel: "−C_p",
+        series: [{ data: ser1, color: P.accent, width: 2.2 }, { data: ser2, color: P.accent2, width: 1.8, dash: [5, 3] }],
+        hlines: [{ y: s.sig, color: P.bad, label: "σ = " + s.sig.toFixed(2), dash: [] }] });
+      txt(ctx, "흡입면", box.x + 8, box.y + 12, P.accent, "left", 11, 700);
+      txt(ctx, "압력면", box.x + 60, box.y + 12, P.accent2, "left", 11, 700);
+    }
+    cv = SB.canvas($("cv-cav"), draw, { aspect: 0.8, minHeight: 400, maxHeight: 520 });
+    upd();
+    SB.loop($("cv-cav"), (dt) => {
+      const s = state;
+      [[s.lenS, 1, s.cps], [s.lenP, -1, s.cpp]].forEach(([len, side]) => {
+        if (len > 0 && Math.random() < dt * 40) bubbles.push({ x: Math.random() * len * 0.8, side, off: 2 + Math.random() * 6, r: 1 + Math.random() * 2.5, pop: false });
+      });
+      for (let i = bubbles.length - 1; i >= 0; i--) {
+        const b = bubbles[i], cp = b.side > 0 ? s.cps(b.x) : s.cpp(b.x);
+        b.x += dt * 0.35;
+        if (cp < s.sig) { b.pop = true; b.r -= dt * 12; } else b.r = Math.min(5, b.r + dt * 2);
+        if (b.r <= 0 || b.x > 1) bubbles.splice(i, 1);
+      }
+      if (bubbles.length > 300) bubbles.splice(0, bubbles.length - 300);
+      cv.redraw();
+    });
+  });
+
+  /* =================================================== Sim 7: 버릴 선도 */
+  sim("burrill", function () {
+    let cv = null;
+    const D = 7, Va = 8, Z = 4, A0 = (Math.PI * D * D) / 4;
+    const LINES = [[2.5, 0.21], [5, 0.28], [10, 0.35], [20, 0.44], [30, 0.51]];
+    const EXP = 0.57;
+    const gT = SB.range("bu-t", (v) => v + " kN", upd);
+    const gN = SB.range("bu-n", (v) => v + " rpm", upd);
+    const gH = SB.range("bu-h", (v) => v.toFixed(1) + " m", upd);
+    const gA = SB.range("bu-a", (v) => v.toFixed(2), upd);
+    function calc(AE) {
+      const n = gN() / 60, T = gT() * 1000, J = Va / (n * D), KTr = T / (RHO * n * n * D ** 4);
+      const PD = solvePD(J, KTr, AE, Z);
+      const V2 = Va * Va + (0.7 * Math.PI * n * D) ** 2, q = 0.5 * RHO * V2;
+      const sig = (P_ATM + RHO * G * gH() - P_V) / q;
+      const Ap = AE * A0 * (1.067 - 0.229 * (PD || 1)), tau = T / (Ap * q);
+      const ce = tau / Math.pow(sig, EXP);
+      let pct;
+      if (ce <= LINES[0][1]) pct = 2.5 * Math.pow(ce / LINES[0][1], 4);
+      else if (ce >= LINES[4][1]) pct = 30 + (ce - LINES[4][1]) * 200;
+      else for (let i = 1; i < LINES.length; i++) if (ce <= LINES[i][1]) { const a = LINES[i - 1], b = LINES[i], t = (ce - a[1]) / (b[1] - a[1]); pct = a[0] + (b[0] - a[0]) * t; break; }
+      const eta = PD ? ow(J, PD, AE, Z).eta : null;
+      return { sig, tau, pct, eta, PD, J };
+    }
+    $("bu-fit").addEventListener("click", () => {
+      for (let a = 0.35; a <= 1.1001; a += 0.01) { if (calc(a).pct <= 5) { gA.set(+a.toFixed(2)); return; } }
+      gA.set(1.1);
+    });
+    function upd() {
+      const c = calc(gA()), c0 = calc(0.4);
+      SB.stat("o-bu-s", c.sig.toFixed(3));
+      SB.stat("o-bu-tau", c.tau.toFixed(3));
+      SB.stat("o-bu-pct", sm("약 " + Math.min(c.pct, 60).toFixed(0), "%") + (c.pct > 5 ? "<small> 상한 초과</small>" : "<small> 허용</small>"));
+      $("o-bu-pct").style.color = c.pct > 5 ? "var(--bad)" : "var(--ok)";
+      SB.stat("o-bu-eta", c.eta ? "η<sub>0</sub> " + c.eta.toFixed(3) + (c0.eta ? "<small> (0.40일 때 " + c0.eta.toFixed(3) + ")</small>" : "") + "<small> · P/D " + c.PD.toFixed(2) + "</small>" : "피치비 범위 밖");
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), c = calc(gA());
+      const cols = [P.ok, P.accent, P.warn, P.accent2, P.bad];
+      const series = LINES.map(([p, k], i) => { const d = []; for (let e = -1.3; e <= 0.4; e += 0.02) { const s = Math.pow(10, e); d.push([s, k * Math.pow(s, EXP)]); } return { data: d, color: cols[i], width: p === 5 ? 3 : 1.5, dash: p === 5 ? [] : [5, 4] }; });
+      const ch = SB.chart(ctx, null, { x: [0.05, 2.5], y: [0.03, 1], logX: true, logY: true, xLabel: "σ_0.7R", yLabel: "τ_c", series,
+        xTicks: [0.05, 0.1, 0.2, 0.5, 1, 2], yTicks: [0.05, 0.1, 0.2, 0.5, 1], xFmt: (v) => String(v), yFmt: (v) => String(v),
+        points: [{ x: SB.clamp(c.sig, 0.05, 2.5), y: SB.clamp(c.tau, 0.03, 1), color: c.pct > 5 ? P.bad : P.ok, r: 7, label: "운전점" }] });
+      LINES.forEach(([p, k], i) => { const s = 2.2, y = k * Math.pow(s, EXP); txt(ctx, p + "%" + (p === 5 ? " 상선 상한" : ""), ch.X(s) - 4, ch.Y(y) - 9, cols[i], "right", 11, p === 5 ? 700 : 400); });
+    }
+    cv = SB.canvas($("cv-burrill"), draw, { aspect: 0.66, minHeight: 320, maxHeight: 440 });
+    upd();
+  });
+
+  /* =================================================== Sim 8: 3D 프로펠러 */
+  sim("p3d", function () {
+    const el = $("v3d");
+    const gZ = SB.range("p3-z", (v) => v + "장", rebuild);
+    const gP = SB.range("p3-p", (v) => v.toFixed(2), rebuild);
+    const gA = SB.range("p3-a", (v) => v.toFixed(2), rebuild);
+    const gS = SB.range("p3-s", (v) => v + "°", rebuild);
+    const gR = SB.range("p3-r", (v) => v.toFixed(1) + "°", rebuild);
+    const spin = $("p3-spin"), diskCk = $("p3-disk");
+    function stats() {
+      const Z = gZ(), PD = gP(), AE = gA();
+      const c7 = (chordFac(0.7) * AE) / Z; // c/D
+      SB.stat("o-p3-phi", sm(SB.deg(Math.atan(PD / (Math.PI * 0.7))).toFixed(1), "°"));
+      SB.stat("o-p3-c", c7.toFixed(3));
+      // 0.7R에서 원주 대비 날개 코드 합 (투영 기준 근사)
+      const cover = (Z * c7 * Math.cos(Math.atan(PD / (Math.PI * 0.7)))) / (Math.PI * 0.7);
+      SB.stat("o-p3-ov", sm((cover * 100).toFixed(0), "% 원주"));
+      SB.stat("o-p3-bpf", sm(((Z * 90) / 60).toFixed(1), "Hz"));
+    }
+    const T = SB.three(el, { camera: [-2.6, 1.3, 2.4], target: [0, 0, 0], fov: 40, minDistance: 1.6, maxDistance: 8 });
+    if (!T) { stats(); return; }
+    const THREE = T.THREE;
+    const root = new THREE.Group(); T.scene.add(root);
+    const prop = new THREE.Group(); root.add(prop);
+    const bronze = T.material(0xc9a227, { metalness: 0.65, roughness: 0.32, side: THREE.DoubleSide });
+    const RH = 0.18;
+    // 허브와 축(축 = x, 선수 = +x)
+    const hubG = new THREE.CylinderGeometry(RH, RH * 1.05, 0.46, 32); hubG.rotateZ(Math.PI / 2);
+    const hub = new THREE.Mesh(hubG, bronze); root.add(hub);
+    const capG = new THREE.ConeGeometry(RH * 1.04, 0.3, 32); capG.rotateZ(Math.PI / 2);
+    const cap = new THREE.Mesh(capG, bronze); cap.position.x = -0.38; root.add(cap);
+    const shG = new THREE.CylinderGeometry(0.07, 0.07, 2.4, 20); shG.rotateZ(Math.PI / 2);
+    const shaft = new THREE.Mesh(shG, T.material(0x8a93a8, { metalness: 0.7, roughness: 0.3 })); shaft.position.x = 1.4; T.scene.add(shaft);
+    const diskM = new THREE.Mesh(new THREE.RingGeometry(RH, 1, 64), new THREE.MeshBasicMaterial({ color: 0x4fb3ff, transparent: true, opacity: 0.12, side: THREE.DoubleSide, depthWrite: false }));
+    diskM.rotation.y = Math.PI / 2; T.scene.add(diskM);
+    const arrowL = T.label("선수 방향 →", [1.9, 0.25, 0]);
+    void arrowL;
+    function bladeGeo() {
+      const Z = gZ(), PD = gP(), AE = gA(), skew = SB.rad(gS()), rake = SB.rad(gR());
+      const Dm = 2, P = PD * Dm, NR = 26, NC = 22;
+      const pos = [], idx = [];
+      const pts = (side) => {
+        for (let i = 0; i <= NR; i++) {
+          const xr = RH + (1 - RH) * (i / NR), r = xr, u = (xr - RH) / (1 - RH);
+          let c = (chordFac(xr) * Dm * AE) / Z;
+          if (xr > 0.95) c *= Math.sqrt(Math.max(0, (1 - xr) / 0.05)) * 0.9 + 0.1 * (1 - (xr - 0.95) / 0.05);
+          c = Math.max(c, 0.004);
+          const phi = Math.atan(P / (2 * Math.PI * r));
+          const ths = -skew * u * u; // 회전 반대 방향으로 휨
+          const xk = -r * Math.tan(rake) + 0.0;
+          const tmax = (0.045 * (1 - u) + 0.006 * u) * Dm * 0.5;
+          for (let k = 0; k <= NC; k++) {
+            const sNorm = 0.5 - k / NC; // +0.5 = 앞전, -0.5 = 뒷전
+            const s = sNorm * c + c * 0.08; // 약간 앞쪽으로
+            const e = 1 - Math.pow(2 * sNorm, 2);
+            const yt = side > 0 ? tmax * Math.pow(Math.max(0, e), 0.7) : 0;
+            // 펼친 면(원주 방향 arc, 축 방향 x)
+            let arc = s * Math.cos(phi) - yt * Math.sin(phi);
+            let ax = xk + s * Math.sin(phi) + yt * Math.cos(phi);
+            const th = ths + arc / r;
+            pos.push(ax, r * Math.cos(th), r * Math.sin(th));
+          }
+        }
+      };
+      pts(1); pts(-1);
+      const V = (side, i, k) => side * (NR + 1) * (NC + 1) + i * (NC + 1) + k;
+      for (let i = 0; i < NR; i++) for (let k = 0; k < NC; k++) {
+        idx.push(V(0, i, k), V(0, i + 1, k), V(0, i + 1, k + 1), V(0, i, k), V(0, i + 1, k + 1), V(0, i, k + 1));
+        idx.push(V(1, i, k), V(1, i + 1, k + 1), V(1, i + 1, k), V(1, i, k), V(1, i, k + 1), V(1, i + 1, k + 1));
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+      g.setIndex(idx); g.computeVertexNormals();
+      return g;
+    }
+    let geo = null;
+    function rebuild() {
+      stats();
+      while (prop.children.length) prop.remove(prop.children[0]);
+      if (geo) geo.dispose();
+      geo = bladeGeo();
+      const Z = gZ();
+      for (let k = 0; k < Z; k++) { const m = new THREE.Mesh(geo, bronze); m.rotation.x = (k * 2 * Math.PI) / Z; prop.add(m); }
+    }
+    rebuild();
+    diskCk.addEventListener("change", () => (diskM.visible = diskCk.checked));
+    diskM.visible = diskCk.checked;
+    T.onFrame((dt) => { if (spin.checked) root.rotation.x += dt * 1.6; });
+  });
+
+  /* =================================================== Sim 9: 보울러드 풀 */
+  sim("bollard", function () {
+    let cv = null, t0 = 0;
+    const FM = { open: 0.62, duct: 0.68 }, K = { open: 2, duct: 4 };
+    const gP = SB.range("bp-p", (v) => v + " kW", upd);
+    const gD = SB.range("bp-d", (v) => v.toFixed(1) + " m", upd);
+    const gN = SB.range("bp-n", (v) => v + "기", upd);
+    const gTy = SB.seg("bp-type", upd);
+    function thrust(type) {
+      const N = gN(), Pd = (gP() * 1000) / N, A = (Math.PI * gD() ** 2) / 4;
+      const T1 = FM[type] * Math.cbrt(K[type] * RHO * A * Pd * Pd);
+      const u = type === "open" ? 2 * Math.sqrt(T1 / (2 * RHO * A)) : Math.sqrt(T1 / (RHO * A));
+      return { T: T1 * N, u };
+    }
+    let needle = 0;
+    function upd() {
+      const ty = gTy(), r = thrust(ty), ro = thrust("open"), tonnes = r.T / 9806.65;
+      SB.stat("o-bp-t", sm(tonnes.toFixed(1), "t") + "<small> (" + kN(r.T) + " kN)</small>");
+      SB.stat("o-bp-sp", sm(((tonnes / gP()) * 100).toFixed(2), "t"));
+      SB.stat("o-bp-u", sm(r.u.toFixed(1), "m/s"));
+      SB.stat("o-bp-r", ty === "open" ? "기준" : "+" + ((r.T / ro.T - 1) * 100).toFixed(0) + "%");
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), ty = gTy(), r = thrust(ty), tonnes = r.T / 9806.65;
+      const wy = h * 0.5;
+      // 부두와 볼라드
+      ctx.fillStyle = P.surface; ctx.fillRect(0, wy - 30, 60, h - wy + 30); ctx.strokeStyle = P.border; ctx.strokeRect(0, wy - 30, 60, h - wy + 30);
+      ctx.fillStyle = P.text; ctx.fillRect(38, wy - 46, 12, 16); ctx.beginPath(); ctx.ellipse(44, wy - 46, 9, 3, 0, 0, Math.PI * 2); ctx.fill();
+      txt(ctx, "볼라드", 30, wy - 60, P.dim, "center", 10);
+      // 예인선
+      const tx = w * 0.62, s = Math.min(w / 80, 7);
+      const stretch = Math.min(1, tonnes / 120) * 6;
+      const bx = tx + stretch;
+      SB.shipSide(ctx, bx, wy, s, { L: 32, D: 5, T: 4.5, house: true, bulb: false, prop: false });
+      // 추진기와 후류(왼쪽으로 배출 - 배가 오른쪽으로 당김)
+      const px = bx - 14.6 * s; // 선미(왼쪽) 추진기
+      const pY = wy + 3 * s, pr = Math.min(gD() / 2, 2.2) * s;
+      if (ty === "duct") { ctx.strokeStyle = P.dim; ctx.lineWidth = 3; ctx.strokeRect(px - 4, pY - pr - 3, 10, 2 * pr + 6); }
+      ctx.fillStyle = "#c9a227"; ctx.beginPath(); ctx.ellipse(px, pY, 3, pr, 0, 0, Math.PI * 2); ctx.fill();
+      // 후류 띠(부두 쪽으로 분출)
+      ctx.strokeStyle = rgba(P.accent, 0.7); ctx.lineWidth = 2;
+      const sp = r.u * 18;
+      for (let k = 0; k < 8; k++) {
+        const off = ((t0 * sp + k * 30) % 240);
+        const yy = pY + (k % 3 - 1) * pr * 0.5, x = px - 8 - off, len = 14;
+        if (x > 60) seg(ctx, x, yy, Math.max(60, x - len), yy);
+      }
+      SB.water(ctx, w, h, wy, {});
+      // 밧줄
+      ctx.strokeStyle = "#a07a3a"; ctx.lineWidth = 2.5;
+      seg(ctx, 44, wy - 44, bx - 10 * s, wy - 5.5 * s);
+      // 장력계
+      const gx = (44 + bx - 10 * s) / 2, gy = wy - 90, R = 34;
+      ctx.fillStyle = P.surface; ctx.strokeStyle = P.border; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(gx, gy, R, Math.PI, 2 * Math.PI); ctx.closePath(); ctx.fill(); ctx.stroke();
+      for (let v = 0; v <= 150; v += 25) { const a = Math.PI + (v / 150) * Math.PI; ctx.strokeStyle = P.dim; ctx.lineWidth = 1; seg(ctx, gx + Math.cos(a) * (R - 6), gy + Math.sin(a) * (R - 6), gx + Math.cos(a) * R, gy + Math.sin(a) * R); }
+      const ang = Math.PI + (SB.clamp(needle, 0, 150) / 150) * Math.PI;
+      ctx.strokeStyle = P.bad; ctx.lineWidth = 2.5; seg(ctx, gx, gy, gx + Math.cos(ang) * (R - 4), gy + Math.sin(ang) * (R - 4));
+      txt(ctx, needle.toFixed(0) + " t", gx, gy + 12, P.text, "center", 12, 700);
+      txt(ctx, "0", gx - R - 4, gy, P.dim, "right", 10); txt(ctx, "150 t", gx + R + 4, gy, P.dim, "left", 10);
+      txt(ctx, (ty === "duct" ? "덕트형" : "개방형") + " × " + gN() + "기", w - 8, 14, P.dim, "right", 12, 600);
+    }
+    cv = SB.canvas($("cv-bollard"), draw, { aspect: 0.5, minHeight: 260, maxHeight: 340 });
+    upd();
+    SB.loop($("cv-bollard"), (dt) => {
+      t0 += dt;
+      const target = thrust(gTy()).T / 9806.65;
+      needle += (target - needle) * Math.min(1, dt * 3) + Math.sin(t0 * 7) * 0.05;
+      cv.redraw();
+    });
+  });
+
+  /* =================================================== Sim 10: 날개 통과 진동수 */
+  sim("bpf", function () {
+    let cv = null, th = 0, flash = 0;
+    const gZ = SB.range("bf-z", (v) => v + "장", upd);
+    const gN = SB.range("bf-n", (v) => v + " rpm", upd);
+    const gC = SB.range("bf-c", (v) => (v * 100).toFixed(0) + "%", upd);
+    const gF = SB.range("bf-f", (v) => v.toFixed(1) + " Hz", upd);
+    const HULL = [0.9, 1.9, 2.9, 3.9, 4.8];
+    const nat = () => [...HULL.map((f, i) => ({ f, name: "선체 " + (i + 2) + "절점" })), { f: gF(), name: "갑판실" }, { f: 13.5, name: "레이더 마스트" }];
+    function near() {
+      const n = gN() / 60, Z = gZ(), ex = [{ f: n * Z, name: "BPF" }, { f: 2 * n * Z, name: "2×BPF" }];
+      let best = null;
+      ex.forEach((e) => nat().forEach((m) => { const d = Math.abs(e.f - m.f) / m.f; if (!best || d < best.d) best = { d, e, m }; }));
+      return best;
+    }
+    const pulse = () => Math.pow(0.18 / gC(), 2) * (4 / gZ()) ** 0.5;
+    function upd() {
+      const n = gN() / 60, Z = gZ(), b = near();
+      SB.stat("o-bf-f", sm(n.toFixed(2), "Hz") + " / " + sm((n * Z).toFixed(2), "Hz"));
+      SB.stat("o-bf-near", b.m.name + " " + b.m.f.toFixed(1) + "<small> Hz ↔ " + b.e.name + "</small>");
+      SB.stat("o-bf-m", (b.d * 100).toFixed(1) + "<small> %" + (b.d < 0.1 ? " 공진 위험" : " 안전") + "</small>");
+      $("o-bf-m").style.color = b.d < 0.1 ? "var(--bad)" : "var(--ok)";
+      SB.stat("o-bf-p", "×" + pulse().toFixed(2));
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), Z = gZ(), n = gN() / 60, b = near();
+      const top = Math.round(h * 0.5), cx = w * 0.5, R = Math.min(top * 0.32, w * 0.2), cy = top * 0.62;
+      const gap = gC() * 2 * R;
+      const hullY = cy - R - gap;
+      // 선체 바닥(선미에서 본 단면)
+      ctx.fillStyle = cssv("--hull") || "#c8443a";
+      ctx.beginPath(); ctx.moveTo(cx - w * 0.45, 0); ctx.lineTo(cx - w * 0.45, hullY - 30); ctx.quadraticCurveTo(cx - R * 1.6, hullY, cx, hullY); ctx.quadraticCurveTo(cx + R * 1.6, hullY, cx + w * 0.45, hullY - 30); ctx.lineTo(cx + w * 0.45, 0); ctx.closePath(); ctx.fill();
+      // 압력 펄스
+      if (flash > 0.02) {
+        const a = Math.min(0.8, flash * Math.min(2, pulse()));
+        for (let k = 1; k <= 3; k++) { ctx.strokeStyle = rgba(P.warn, a / k); ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, hullY, 8 + k * 12 * (1.2 - flash), 0, Math.PI); ctx.stroke(); }
+      }
+      ctx.fillStyle = rgba(cssv("--water"), 0.12); ctx.fillRect(0, hullY, w, top - hullY);
+      // 프로펠러
+      for (let k = 0; k < Z; k++) {
+        const a = th + (k * 2 * Math.PI) / Z - Math.PI / 2;
+        ctx.save(); ctx.translate(cx, cy); ctx.rotate(a);
+        ctx.fillStyle = "#c9a227"; ctx.beginPath(); ctx.ellipse(R * 0.55, 0, R * 0.47, R * (0.5 / Z + 0.12), 0.25, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+      ctx.fillStyle = "#8a6f1f"; ctx.beginPath(); ctx.arc(cx, cy, R * 0.18, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = P.faint; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      ctx.strokeStyle = P.dim; ctx.lineWidth = 1; seg(ctx, cx + R + 10, cy - R, cx + R + 10, hullY);
+      txt(ctx, "간극", cx + R + 14, (cy - R + hullY) / 2, P.dim, "left", 10);
+      txt(ctx, "선미에서 본 모습 · 실제의 1/10 속도", 8, top - 10, P.faint, "left", 10);
+      // 스펙트럼
+      const box = { x: 58, y: top + 12, w: w - 58 - 16, h: h - top - 12 - 44 };
+      const ch = SB.chart(ctx, box, { x: [0, 20], y: [0, 1.2], xLabel: "진동수 (Hz)", yLabel: "가진 크기(상대)", series: [] });
+      nat().forEach((m) => {
+        const x = ch.X(m.f); if (m.f > 20) return;
+        ctx.fillStyle = rgba(m.name === "갑판실" ? P.accent2 : P.dim, 0.13); ctx.fillRect(ch.X(m.f * 0.9), box.y, ch.X(m.f * 1.1) - ch.X(m.f * 0.9), box.h);
+        ctx.strokeStyle = m.name === "갑판실" ? P.accent2 : P.faint; ctx.setLineDash([4, 3]); ctx.lineWidth = 1.2; seg(ctx, x, box.y, x, box.y + box.h); ctx.setLineDash([]);
+        if (m.name !== "선체 3절점" && m.name !== "선체 4절점" && m.name !== "선체 5절점" && m.name !== "선체 6절점") txt(ctx, m.name, x + 3, box.y + 10 + (m.name === "갑판실" ? 14 : 0), m.name === "갑판실" ? P.accent2 : P.dim, "left", 10);
+      });
+      const pk = Math.min(1, 0.55 * pulse());
+      [[n, 0.3, "축"], [n * Z, Math.max(0.25, pk + 0.3), "BPF"], [2 * n * Z, (pk + 0.3) * 0.5, "2×"], [3 * n * Z, (pk + 0.3) * 0.25, "3×"]].forEach(([f, a, lb]) => {
+        if (f > 20) return;
+        const res = nat().some((m) => Math.abs(f - m.f) / m.f < 0.1) && lb !== "축";
+        ctx.fillStyle = res ? P.bad : P.accent;
+        ctx.fillRect(ch.X(f) - 4, ch.Y(Math.min(1.15, a)), 8, ch.Y(0) - ch.Y(Math.min(1.15, a)));
+        txt(ctx, lb, ch.X(f), ch.Y(Math.min(1.15, a)) - 8, res ? P.bad : P.accent, "center", 10, 700);
+      });
+      if (b.d < 0.1) txt(ctx, "⚠ 공진 위험: " + b.e.name + " ≈ " + b.m.name, box.x + box.w - 6, box.y + 12, P.bad, "right", 12, 700);
+    }
+    cv = SB.canvas($("cv-bpf"), draw, { aspect: 0.8, minHeight: 400, maxHeight: 520 });
+    upd();
+    SB.loop($("cv-bpf"), (dt) => {
+      const Z = gZ(), n = gN() / 60, w0 = 2 * Math.PI * n * 0.1;
+      const before = Math.floor((th * Z) / (2 * Math.PI));
+      th += w0 * dt;
+      if (Math.floor((th * Z) / (2 * Math.PI)) !== before) flash = 1;
+      flash *= Math.exp(-dt * 4);
+      cv.redraw();
+    });
+  });
+})();
 </script>
 </body>
 </html>
