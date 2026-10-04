@@ -790,9 +790,9 @@
       const c0 = cyl[0];
       const lab = (t, pos, obj) => { const L = T.label(t, pos); if (obj) L.obj = obj; labels.push(L); return L; };
       lab("피스톤", [0, 0.25, 0.6], c0.piston);
-      lab("피스톤 로드", [0, 0.6, 0.35], c0.prod);
+      lab("피스톤 로드", [0, -0.9, 0.35], c0.prod);
       lab("크로스헤드", [0, 0.3, 0.6], c0.xh);
-      lab("커넥팅 로드", [0, E.l * 0.55, 0.4], c0.rod);
+      lab("커넥팅 로드", [0, E.l * 0.3, 0.5], c0.rod);
       lab("크랭크", [0.0, E.r * 0.55, 0.9], c0.crank);
       lab("배기 밸브", [0, 0.9, 0.5], c0.valve);
       lab("소기 포트", [c0.cx - 0.2, c0.yPort, 0.9]);
@@ -942,8 +942,8 @@
         if (lift > 0.02) { for (let j = 0; j < 3; j++) { const u = (k + j / 3) % 1; ctx.fillStyle = rgba(P.dim, 0.9); ctx.beginPath(); ctx.arc(X(0.1 * Math.sin(j * 2)), Yp(linT + 0.1 + u * 1.4), 3, 0, TAU); ctx.fill(); } }
       }
       // ---- 타이밍 원
-      const tx = narrow ? w / 2 : ew + (w - ew) / 2, ty = narrow ? eh + (h - eh) / 2 + 6 : h * 0.47;
-      const R = narrow ? Math.min((h - eh) / 2 - 26, w * 0.32) : Math.min((w - ew) / 2 - 30, h * 0.36);
+      const tx = narrow ? w / 2 : ew + (w - ew) / 2, ty = narrow ? eh + (h - eh) / 2 + 12 : h * 0.47;
+      const R = narrow ? Math.min((h - eh) / 2 - 34, w * 0.32) : Math.min((w - ew) / 2 - 30, h * 0.36);
       G.tcx = tx; G.tcy = ty; G.tR = R;
       const ang = (deg) => (deg - 90) * D2R;   // 0° = 위, 시계 방향
       const arc = (a0, a1, rr, col, lw) => { ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); ctx.arc(tx, ty, rr, ang(a0), ang(a1)); ctx.stroke(); };
@@ -1319,7 +1319,7 @@
       txt(ctx, "디스크 사이 틈 (확대)", zx, zt - 18, { bold: true, size: 12.5 });
       ctx.fillStyle = P.surface; ctx.fillRect(zx, zt, zw, zh);
       ctx.fillStyle = rgba(P.accent, 0.6); ctx.fillRect(zx, zt - 5, zw, 5); ctx.fillRect(zx, zt + zh, zw, 5);
-      txt(ctx, "← 기름 흐름(안쪽으로)", zx + zw - 6, zt + zh + 16, { align: "right", size: 11, color: P.dim });
+      txt(ctx, "← 기름 흐름(안쪽으로)", zx + zw - 6, zt + zh - 10, { align: "right", size: 11, color: P.dim });
       txt(ctx, "↑ 원심력 방향", zx + 6, zt + 12, { size: 11, color: P.dim });
       parts.forEach((p) => {
         const x = p.cap ? zx + zw * (1 - p.u0) : zx + zw * (1 - Math.min(1, p.u + (p.done ? 0 : 0))), y = zt + zh * (1 - p.y);
