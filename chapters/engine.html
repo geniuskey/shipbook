@@ -204,9 +204,9 @@
         <div class="sim-controls">
           <label class="ctrl"><span>기하학적 압축비 ε <output id="pv-cr-out"></output></span><input type="range" id="pv-cr" min="12" max="26" step="0.5" value="20"></label>
           <label class="ctrl"><span>1회 연료 분사량 <output id="pv-mf-out"></output></span><input type="range" id="pv-mf" min="30" max="150" step="2" value="120"></label>
-          <label class="ctrl"><span>분사(연소) 시작 <output id="pv-inj-out"></output></span><input type="range" id="pv-inj" min="-10" max="12" step="0.5" value="-2"></label>
+          <label class="ctrl"><span>분사(연소) 시작 <output id="pv-inj-out"></output></span><input type="range" id="pv-inj" min="-10" max="12" step="0.5" value="0"></label>
           <div class="ctrl"><span>축</span><div class="seg" id="pv-ax"><button data-value="lin" class="on">p–V</button><button data-value="log">log p–log V</button><button data-value="th">p–θ</button></div></div>
-          <label class="check"><input type="checkbox" id="pv-ref" checked> 기준 사이클(ε 20, 120 g, −2°) 겹쳐 보기</label>
+          <label class="check"><input type="checkbox" id="pv-ref" checked> 기준 사이클(ε 20, 120 g, 0°) 겹쳐 보기</label>
         </div>
       </div>
       <div class="sim-readout">
@@ -314,7 +314,7 @@
         <div class="stat"><span class="k">공기 과잉률 λ</span><span class="v" id="tc-o-lam">—</span></div>
         <div class="stat"><span class="k">상태</span><span class="v" id="tc-o-st">—</span></div>
       </div>
-      <div class="sim-note">해볼 것: 과급기 효율을 0.66에서 0.55로 떨어뜨리고(터빈 노즐 오염 상태를 흉내) 부하를 100 %로 올려 보자. 소기 압력이 모자라 공기 과잉률이 한계(약 1.9) 아래로 떨어지고 매연이 난다. 흡입 공기가 뜨거운 열대 해역에서도 공기 밀도가 줄어 같은 일이 생긴다. 터빈 입구 온도를 부하의 함수로 주고 과급기 축의 동력 균형만 푼 근사 모델이다.</div>
+      <div class="sim-note">해볼 것: 과급기 효율을 0.66에서 0.55로 떨어뜨리고(터빈 노즐 오염 상태를 흉내) 부하를 100 %로 올려 보자. 소기 압력이 모자라 공기 과잉률이 한계(약 1.9) 아래로 떨어지고 매연이 난다. 흡입 공기가 뜨거운 열대 해역에서도 공기 밀도가 줄어 같은 일이 생긴다. 터빈 입구 온도는 연료량과 공기량의 비로 구하고, 과급기 축의 동력 균형만 푼 근사 모델이다. 공기 과잉률은 실린더에 갇히는 공기(소기 공기의 약 62 %) 기준이다.</div>
     </div>
   </section>
 
@@ -649,7 +649,7 @@
     const Vevc = V(evc), mair = (E.PS * Vevc) / (287 * 318);
     return { p, V: Vv, Vc, W, pmax, thmax, eta: W / (mf * LHV), pmi: W / E.Vs, lam: mair / mf / 14.3, mair, ce: Vevc / Vc, Q: mf * LHV };
   }
-  const BASE = cycle(20, 0.12, E.INJ0);
+  const BASE = cycle(20, 0.12, 0);
   const pAt = (cy, th) => { const t = mod(th, 360) * 2, i = Math.floor(t), f = t - i; return cy.p[i % 720] * (1 - f) + cy.p[(i + 1) % 720] * f; };
 
   // 점화 순서: 외부 모멘트(1차+2차)가 작은 순서를 탐색
@@ -689,7 +689,7 @@
   /* ============================================================ 1. 3D 엔진 */
   run("3d", function () {
     const host = $("v3d");
-    const T = SB.three(host, { camera: [13, 9.5, 17], target: [3.6, 5, 0], fov: 38, minDistance: 5, maxDistance: 60 });
+    const T = SB.three(host, { camera: [15, 10.5, 21], target: [3.6, 5.6, 0], fov: 38, minDistance: 5, maxDistance: 60 });
     if (!T) return;
     const THREE = T.THREE;
     const S3 = { nc: 6, th: 30, playing: true, order: [] };
@@ -855,9 +855,9 @@
     const S = { th: 150, playing: false, t: 0 };
     const gth = SB.range("cy-th", (v) => Math.round(v) + "°", (v) => { S.th = v; cv.redraw(); });
     const gsp = SB.range("cy-sp", (v) => v + " °/s");
-    const gevc = SB.range("cy-evc", (v) => v + "° (" + (360 - v) + "° BTDC)", () => { CY = cycle(20, 0.12, E.INJ0, gevc()); cv.redraw(); });
+    const gevc = SB.range("cy-evc", (v) => v + "° (" + (360 - v) + "° BTDC)", () => { CY = cycle(20, 0.12, 0, gevc()); cv.redraw(); });
     const flow = $("cy-flow"); flow.addEventListener("change", () => cv.redraw());
-    let CY = cycle(20, 0.12, E.INJ0, 250);
+    let CY = cycle(20, 0.12, 0, 250);
     const G = { tcx: 0, tcy: 0, tR: 0 };
     const cv = SB.canvas(el, draw, respAspect(el, 0.62, 1.55));
     $("cy-play").addEventListener("click", () => { S.playing = !S.playing; $("cy-play").textContent = S.playing ? "정지" : "재생"; });
@@ -968,7 +968,7 @@
       // 범례
       const lg = [["배기 밸브", rgba(P.dim, 0.85)], ["소기 포트", P.blue], ["분사", FIRE]];
       lg.forEach((l, i) => {
-        const lx = narrow ? 12 + i * 100 : ew + 14 + i * 92, ly = narrow ? eh + 8 : h - 16;
+        const lx = narrow ? 12 + i * 100 : ew + 14 + i * 92, ly = narrow ? eh + 8 : 14;
         ctx.fillStyle = l[1]; ctx.fillRect(lx, ly - 3, 16, 6); txt(ctx, l[0], lx + 20, ly, { size: 11, color: P.dim });
       });
       // readout
@@ -1102,28 +1102,43 @@
     const el = $("cv-tc");
     const gl = SB.range("tc-l", (v) => v + " %", upd), ge = SB.range("tc-e", (v) => v.toFixed(2), upd), gt = SB.range("tc-t", (v) => v + " °C", upd);
     const blow = $("tc-blow"); blow.addEventListener("change", upd);
-    const KA = (44 * 318) / 4.0;   // 정격에서 공기 44 kg/s @ 4 bar 근처로 보정
+    const KA = (44 * 318) / 4.0;   // 정격 공기량 약 44 kg/s @ 4 bar로 보정
+    // 터빈 입구 온도는 공기량(=소기 압력)에 따라 정해진다: T3 = Ts + f·연료열/(배기 질량·cp)
+    // 동력 균형 g(ps)=압축기 일−터빈 일 이 음→양으로 바뀌는 위쪽 해를 찾는다.
     function solve(L, eta, T1) {
-      const T3 = 450 + 2.8 * L, rg = 1.03, cpa = 1005, cpg = 1100;
-      const f = (pc) => { const ps = pc - 0.03, pt = Math.max(1.0001, (0.9 * ps) / 1.03); return cpa * T1 * (Math.pow(pc, 0.2857) - 1) - eta * rg * cpg * T3 * (1 - Math.pow(pt, -0.254)); };
-      let a = 1.02, b = 7;
-      for (let k = 0; k < 60; k++) { const m = (a + b) / 2; if (f(m) < 0) a = m; else b = m; }
-      let pc = (a + b) / 2, aux = false;
-      if (blow.checked && L < 40 && pc < 1.6) { pc = 1.6; aux = true; }
-      const ps = pc - 0.03, ec = Math.min(0.86, 0.82 * Math.sqrt(eta / 0.66));
-      const T2 = T1 * (1 + (Math.pow(pc, 0.2857) - 1) / ec);
-      const n = Math.cbrt(L / 100), ma = (KA * ps / 318) * n;
-      const mf = (20e6 * (L / 100) * 170e-3) / 3600 / 1000;   // 20 MW 엔진, kg/s
-      // 흡입 온도가 높으면 같은 압력에서 공기 밀도 감소 → 냉각 후 온도도 약간 오른다
-      const Ts = 318 + 0.3 * (T1 - 298), ma2 = ma * (318 / Ts);
-      return { pc, ps, T2, T3, ma: ma2, lam: ma2 / mf / 14.3, aux };
+      const n = Math.cbrt(L / 100), mf = (20e6 * (L / 100) * 170e-3) / 3600 / 1000;   // 20 MW 엔진, kg/s
+      const Ts = 318 + 0.3 * (T1 - 298);
+      const st = (ps) => {
+        const pc = ps + 0.03, ma = ((KA * ps) / Ts) * n, T3 = Ts + (0.5 * mf * 42.7e6) / (ma * 1.03 * 1100);
+        const pt = Math.max(1.0001, (0.95 * ps) / 1.03);
+        return { g: 1005 * T1 * (Math.pow(pc, 0.2857) - 1) - eta * 1.03 * 1100 * T3 * (1 - Math.pow(pt, -0.254)), pc, ma, T3 };
+      };
+      let ps = 1.0, neg = false;
+      for (let q = 1.0; q < 7; q += 0.005) { const v = st(q).g; if (v < 0) neg = true; else if (neg) { ps = q; break; } }
+      let aux = false;
+      if (L < 35 && blow.checked) { ps = Math.max(ps, 1.9); aux = true; }
+      const r = st(ps), ec = Math.min(0.86, 0.82 * Math.sqrt(eta / 0.66));
+      const T2 = T1 * (1 + (Math.pow(r.pc, 0.2857) - 1) / ec);
+      const lam = (0.62 * r.ma) / mf / 14.3;    // 실린더에 갇히는 공기(소기 효율 약 62 %) 기준
+      return { pc: r.pc, ps, T2, T3: r.T3, ma: r.ma, lam, aux, noBlow: L < 35 && !blow.checked };
     }
     let spin = 0;
     const cv = SB.canvas(el, draw, respAspect(el, 0.62, 1.1));
     function upd() { cv.redraw(); }
-    SB.loop(el, (dt) => { const r = solve(gl(), ge(), 273 + gt()); spin += dt * (2 + (r.pc - 1) * 5); cv.redraw(); });
+    let cache = { key: "", r: null, cur: null, ref: null };
+    function get() {
+      const key = [gl(), ge(), gt(), blow.checked].join();
+      if (cache.key !== key) {
+        const eta = ge(), T1 = 273 + gt(), cur = [];
+        for (let l = 20; l <= 110; l += 2) cur.push([l, solve(l, eta, T1).ps]);
+        if (!cache.ref || cache.refBlow !== blow.checked) { cache.ref = []; for (let l = 20; l <= 110; l += 2) cache.ref.push([l, solve(l, 0.66, 298).ps]); cache.refBlow = blow.checked; }
+        cache = Object.assign(cache, { key, r: solve(gl(), eta, T1), cur });
+      }
+      return cache;
+    }
+    SB.loop(el, (dt) => { spin += dt * (2 + (get().r.pc - 1) * 5); cv.redraw(); });
     function draw(ctx, w, h) {
-      const P = SB.palette(), L = gl(), eta = ge(), T1 = 273 + gt(), r = solve(L, eta, T1), narrow = w < 560;
+      const P = SB.palette(), L = gl(), C = get(), r = C.r, narrow = w < 560;
       // 위: 과급기 그림
       const sh = narrow ? h * 0.38 : h * 0.42, cx = w / 2, cy = sh / 2 + 4, R = Math.min(sh * 0.32, w * 0.12);
       const wheel = (x, col, dir) => {
@@ -1139,12 +1154,11 @@
       txt(ctx, "압축기", xc, cy + R * 1.25 + 14, { align: "center", bold: true, size: 12, color: P.accent });
       txt(ctx, "배기 " + Math.round(r.T3 - 273) + " °C →", xt + R * 1.3 + 4, cy - 10, { size: 11, font: mono(11), color: P.accent2 });
       txt(ctx, "← 공기 " + gt() + " °C", xc - R * 1.3 - 4, cy - 10, { size: 11, font: mono(11), color: P.accent, align: "right" });
-      txt(ctx, "출구 " + Math.round(r.T2 - 273) + " °C, " + r.pc.toFixed(2) + " bar", xc - R * 1.3 - 4, cy + 10, { size: 11, font: mono(11), color: P.dim, align: "right" });
+      txt(ctx, "출구 " + Math.round(r.T2 - 273) + " °C, " + r.pc.toFixed(2) + " bar", xc, cy + R * 1.25 + 30, { size: 11, font: mono(11), color: P.dim, align: "center" });
       if (r.aux) txt(ctx, "보조 송풍기 작동", cx, 12, { align: "center", size: 11, bold: true, color: P.warn });
       // 아래: 소기 압력 vs 부하
       const box = { x: 54, y: sh + 22, w: w - 54 - 18, h: h - sh - 22 - 46 };
-      const cur = [], refc = [], lamc = [];
-      for (let l = 20; l <= 110; l += 2) { cur.push([l, solve(l, eta, T1).ps]); refc.push([l, solve(l, 0.66, 298).ps]); }
+      const cur = C.cur, refc = C.ref;
       SB.chart(ctx, box, {
         x: [20, 110], y: [0.8, 5.5], xLabel: "엔진 부하 (% MCR)", yLabel: "소기 압력 (bar 절대)",
         series: [{ data: refc, color: P.faint, width: 1.4, dash: [5, 4] }, { data: cur, color: P.accent, width: 2.4 }],
@@ -1155,7 +1169,7 @@
       SB.stat("tc-o-t2", Math.round(r.T2 - 273) + " <small>°C</small>");
       SB.stat("tc-o-t3", Math.round(r.T3 - 273) + " <small>°C</small>");
       SB.stat("tc-o-lam", r.lam.toFixed(2));
-      const st = r.lam < 1.9 ? "공기 부족(매연)" : r.aux ? "보조 송풍기" : "정상";
+      const st = r.lam < 1.9 ? "공기 부족(매연)" : r.aux ? "보조 송풍기" : r.noBlow ? "저부하 소기 불안정" : "정상";
       SB.stat("tc-o-st", st); $("tc-o-st").style.color = r.lam < 1.9 ? "var(--bad)" : st === "정상" ? "var(--ok)" : "var(--warn)";
     }
   });
@@ -1294,7 +1308,7 @@
       ctx.fillStyle = P.dim; ctx.fillRect(cx - 3, top - 10, 6, bot - top + 10);
       // 슬러지(바깥 벽)
       ctx.fillStyle = rgba("#8a6a4a", 0.6); ctx.fillRect(cx - rr, bot - (bot - top) * 0.45, 6, (bot - top) * 0.4); ctx.fillRect(cx + rr - 6, bot - (bot - top) * 0.45, 6, (bot - top) * 0.4);
-      txt(ctx, "슬러지·물", cx + rr + 6, bot - (bot - top) * 0.25, { size: 10.5, color: P.dim });
+      txt(ctx, "슬러지·물", cx - rr + 10, bot - (bot - top) * 0.5 - 8, { size: 10.5, color: P.dim });
       txt(ctx, "깨끗한 기름 ↑", cx + 8, top - 4, { size: 10.5, color: P.ok });
       txt(ctx, "원심 가속도 " + Math.round(m.g).toLocaleString() + " g", cx, bh - 8, { align: "center", size: 11, color: P.dim, font: mono(11) });
       // 확대 틈 표시
@@ -1306,7 +1320,6 @@
       ctx.fillStyle = P.surface; ctx.fillRect(zx, zt, zw, zh);
       ctx.fillStyle = rgba(P.accent, 0.6); ctx.fillRect(zx, zt - 5, zw, 5); ctx.fillRect(zx, zt + zh, zw, 5);
       txt(ctx, "← 기름 흐름(안쪽으로)", zx + zw - 6, zt + zh + 16, { align: "right", size: 11, color: P.dim });
-      txt(ctx, "바깥쪽 디스크 면(입자가 쌓여 미끄러져 나감)", zx + 4, zt - 5 - 0, { size: 0.1 });
       txt(ctx, "↑ 원심력 방향", zx + 6, zt + 12, { size: 11, color: P.dim });
       parts.forEach((p) => {
         const x = p.cap ? zx + zw * (1 - p.u0) : zx + zw * (1 - Math.min(1, p.u + (p.done ? 0 : 0))), y = zt + zh * (1 - p.y);
@@ -1360,7 +1373,7 @@
       // 입력 막대
       ctx.fillStyle = FIRE; ctx.fillRect(x0 - 14, inTop, 14, 100 * sc);
       ctx.save(); ctx.translate(x0 - 20, inTop + 50 * sc); ctx.rotate(-Math.PI / 2); txt(ctx, "연료 100 %", 0, 0, { align: "center", bold: true, size: 12 }); ctx.restore();
-      let yIn = inTop, yOut = top;
+      let yIn = inTop, yOut = top, lastLab = -1e9;
       outs.forEach((o) => {
         const bh = Math.max(0.5, o.v * sc), xm = (x0 + x1) / 2;
         ctx.beginPath(); ctx.moveTo(x0, yIn);
@@ -1369,8 +1382,9 @@
         ctx.fillStyle = rgba(o.c, 0.55); ctx.fill();
         ctx.fillStyle = o.c; ctx.fillRect(x1, yOut, 8, bh);
         const nm = o.name || NAMES[o.k];
-        txt(ctx, nm, x1 + 14, yOut + bh / 2 - (bh > 26 ? 7 : 0), { size: narrow ? 11 : 12, bold: o.k === "shaft" || o.k === "whr" });
-        txt(ctx, o.v.toFixed(1) + " %", bh > 26 ? x1 + 14 : x1 + (narrow ? 100 : 140), yOut + bh / 2 + (bh > 26 ? 9 : 0), { font: mono(11), color: P.dim, align: "left" });
+        const ly = Math.max(yOut + bh / 2, lastLab + 14); lastLab = ly + (bh > 26 ? 9 : 0);
+        txt(ctx, nm, x1 + 14, ly - (bh > 26 ? 7 : 0), { size: narrow ? 11 : 12, bold: o.k === "shaft" || o.k === "whr" });
+        txt(ctx, o.v.toFixed(1) + " %", bh > 26 ? x1 + 14 : x1 + (narrow ? 100 : 140), ly + (bh > 26 ? 9 : 0), { font: mono(11), color: P.dim, align: "left" });
         yIn += o.v * sc; yOut += bh + gap;
       });
       const etaS = sh.shaft / 100, sfoc = 3.6e6 / (etaS * 42.7e6) * 1000;
@@ -1436,7 +1450,7 @@
     const gz = SB.range("tq-z", (v) => v, upd), go = SB.seg("tq-ord", upd);
     const ci = $("tq-in"), cm = $("tq-mis"), ce = $("tq-each");
     [ci, cm, ce].forEach((c) => c.addEventListener("change", upd));
-    const MIS = cycle(20, 0.0, E.INJ0);   // 실화: 연료 0
+    const MIS = cycle(20, 0.0, 0);   // 실화: 연료 0
     const w = (E.RPM / 60) * TAU;
     const tq1 = (cy, th, inertia) => {
       let F = (pAt(cy, th) - E.PS) * E.A;    // 피스톤 아래는 소기 압력

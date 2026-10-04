@@ -626,3 +626,268 @@
     </div>
   </section>
 </main>
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const cssv = (n) => getComputedStyle(document.body).getPropertyValue(n).trim();
+  const font = (sz, mono, w) => (w ? w + " " : "") + sz + "px " + (mono ? cssv("--mono") : cssv("--font"));
+  const D2R = Math.PI / 180, R2D = 180 / Math.PI;
+  const sm = (v, u) => v + "<small>" + u + "</small>";
+  function txt(ctx, s, x, y, c, a, sz, w, mono) { ctx.font = font(sz || 12, mono, w); ctx.fillStyle = c; ctx.textAlign = a || "left"; ctx.textBaseline = "middle"; ctx.fillText(s, x, y); }
+  function seg(ctx, x1, y1, x2, y2) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+  const wrap360 = (x) => ((x % 360) + 360) % 360;
+  const wrap180 = (x) => ((((x + 180) % 360) + 360) % 360) - 180;
+  const brgS = (x) => String(Math.round(wrap360(x)) % 360).padStart(3, "0") + "°";
+  const fmtB = (v) => String(v).padStart(3, "0") + "°";
+  const vel = (crs, spd) => [spd * Math.sin(crs * D2R), spd * Math.cos(crs * D2R)]; // [동, 북] kn
+  function cpaOf(r, vr) { // r: 상대 위치 nm, vr: 상대 속도 kn → {cpa nm, tcpa h}
+    const v2 = vr[0] * vr[0] + vr[1] * vr[1];
+    const t = v2 < 1e-9 ? 0 : -(r[0] * vr[0] + r[1] * vr[1]) / v2;
+    return { tcpa: t, cpa: Math.hypot(r[0] + vr[0] * t, r[1] + vr[1] * t), pt: [r[0] + vr[0] * t, r[1] + vr[1] * t] };
+  }
+  function run(fn) { try { fn(); } catch (e) { console.error(e); } }
+  const RED = "#e8403a", GREEN = "#27c25a";
+
+  /* =================================================== 1: 선교 배치 */
+  run(function () {
+    const INFO = {
+      radarx: ["X 밴드 레이더 (9 GHz)", "파장 3 cm, 빔폭 약 1°로 해상도가 좋아 연안·입출항에서 주로 쓴다. 비와 파도의 반사에 약하다. ARPA 기능으로 표적을 자동 추적해 CPA·TCPA를 계산하고 AIS 표적과 겹쳐 보여 준다."],
+      radars: ["S 밴드 레이더 (3 GHz)", "파장 10 cm로 비·안개·파도 클러터에 강하고 멀리 본다. 해상도는 X 밴드보다 떨어진다. 3,000 GT 이상 선박은 두 레이더 중 하나를 S 밴드로 두는 것이 일반적이다(SOLAS는 레이더 2대와 ARPA 요구)."],
+      ecdis: ["ECDIS (전자 해도 표시 정보 시스템)", "공식 전자 해도(ENC) 위에 자선 위치, 계획 항로, 레이더 영상, AIS 표적을 겹쳐 보여 준다. 안전 등심선과 항로 점검 경보가 핵심 기능이다. 고장에 대비해 2대(또는 종이 해도)를 둔다."],
+      steer: ["조타대와 오토파일럿", "타륜(또는 작은 조이스틱)과 오토파일럿 제어기. 오토파일럿은 자이로 방위를 받아 설정 침로를 유지하고(heading control), 최신 장비는 ECDIS 항로를 따라가는 track control도 한다. 협수로·혼잡 수역에서는 수동 조타로 바꾼다."],
+      tele: ["엔진 텔레그래프·기관 원격 제어", "선교에서 주기관의 전진·후진과 속력(Full, Half, Slow, Dead Slow, Stop)을 명령한다. 지금은 대개 선교에서 직접 기관 회전수와 가변 피치를 제어하며, 기관실에 명령이 동시에 표시된다(9장)."],
+      gyro: ["자이로컴퍼스 리피터", "자이로컴퍼스(20장)가 찾은 진방위를 표시한다. 같은 신호가 레이더(노스업 안정화), ECDIS, 오토파일럿, AIS(선수 방위)로 간다. 윙 브리지에도 리피터가 있어 물표 방위를 잰다."],
+      vhf: ["VHF 무선·GMDSS 콘솔", "선박 간·관제소(VTS)와 교신하는 VHF(16번 채널 조난·호출 청취), 디지털 선택 호출(DSC), 위성 통신(Inmarsat), NAVTEX, EPIRB 등 세계 해상 조난 안전 시스템(GMDSS) 장비가 모여 있다."],
+      ais: ["AIS 송수신기", "자선의 MMSI·위치·침로·속력을 자동 방송하고 다른 배의 정보를 받는다. 최소 표시 장치(MKD)가 있지만 보통 레이더·ECDIS 화면에 겹쳐 본다."],
+      chart: ["해도대와 GNSS 수신기", "종이 해도 작업과 항해 계획을 하는 곳. GNSS 수신기는 위치·속력·시각을 모든 장비에 공급한다. 위치는 레이더·물표 방위로 계속 교차 확인한다(20장)."],
+      sounder: ["측심기와 속력계(Log)", "측심기는 음파로 선저 아래 수심을 재서 해도 수심·UKC를 확인한다. 속력계는 도플러·전자기 방식으로 대수 속력(STW)을 잰다. 대지 속력(SOG)은 GNSS나 도플러 바닥 추적으로 얻는다."],
+      vdr: ["VDR (항해 데이터 기록 장치)", "비행기의 블랙박스. 위치, 속력, 방위, 레이더 화면, 선교 음성, VHF 교신, 경보 등을 최근 30일 이상(최근 규정) 저장하며 침몰해도 회수할 수 있게 캡슐에 담는다. 사고 조사의 핵심 자료다."],
+      bnwas: ["BNWAS (선교 항해 당직 경보 장치)", "당직 항해사가 일정 시간(3~12분)마다 버튼을 누르거나 움직임이 감지되지 않으면 선교, 이어서 선장·예비 항해사 방에 경보를 울린다. 졸음·부재로 인한 사고를 막기 위한 장치다."],
+    };
+    const box = $("eq-info");
+    document.querySelectorAll("#sim-layout .eq").forEach((g) => g.addEventListener("click", () => {
+      document.querySelectorAll("#sim-layout .eq").forEach((o) => o.classList.toggle("on", o === g));
+      const it = INFO[g.dataset.k]; box.innerHTML = "<h4>" + it[0] + "</h4><p>" + it[1] + "</p>";
+    }));
+  });
+
+  /* =================================================== 2: PPI 레이더 */
+  run(function () {
+    const gRng = SB.seg("pp-rng", () => { st.clear = true; }), band = SB.seg("pp-band", () => { st.clear = true; info(); });
+    const gGain = SB.range("pp-gain", (v) => v + "%"), gStc = SB.range("pp-stc", (v) => v + "%"), gFtc = SB.range("pp-ftc", (v) => v + "%");
+    const gSea = SB.range("pp-sea", (v) => "Beaufort " + v);
+    const ISL = [[2, 2.5], [3.4, 2.2], [4.2, 3], [3.8, 4.2], [2.6, 4.4], [1.8, 3.6]];
+    const RAIN = { x: 4.3, y: 0.4, r: 1.4 };
+    const TG = [
+      { x: -3, y: 3, c: 90, v: 15, s: 3, n: "컨테이너선" }, { x: 2.5, y: -3.5, c: 0, v: 10, s: 2.5, n: "탱커" },
+      { x: -1.1, y: -1.0, c: 300, v: 3, s: 0.45, n: "어선" }, { x: 4.3, y: 1.0, c: 180, v: 6, s: 1.5, n: "비 속 화물선" },
+      { x: -8, y: -6, c: 45, v: 12, s: 2, n: "원거리선" },
+    ];
+    TG.forEach((t) => { t.hist = []; t.seen = 0; t.peak = 0; });
+    const st = { ang: 0, buf: null, img: null, N: 0, clear: false, ht: 0 };
+    const inPoly = (x, y, P) => { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const [xi, yi] = P[i], [xj, yj] = P[j]; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c; } return c; };
+    const bw = () => (band() === "x" ? 1.0 : 2.0);
+    const pulse = () => ({ 3: 0.08, 6: 0.25, 12: 0.7 })[gRng()]; // μs
+    function info() {
+      const R = +gRng();
+      SB.stat("o-pp-bw", sm(bw().toFixed(1) + "°", "") + " / " + sm(Math.round(R * 1852 * bw() * D2R), "m"));
+      SB.stat("o-pp-pl", sm(pulse() + " μs", "") + " / " + sm(Math.round((3e8 * pulse() * 1e-6) / 2), "m"));
+    }
+    gRng.set && SB.seg; info();
+    SB.stat("o-pp-rot", sm("3", "초/회전 (20 rpm)"));
+    function ray(a, R, nb, out) { // a: 방위(rad), out: Float32Array(nb) 표시 밝기
+      const ca = Math.sin(a), cb = Math.cos(a), X = band() === "x";
+      const sea = gSea() / 6, stc = gStc() / 100, ftc = gFtc() / 100, gain = 0.25 + 2.4 * (gGain() / 100);
+      const bwr = bw() * D2R, pl = (3e8 * pulse() * 1e-6) / 2 / 1852 + 0.03;
+      const raw = new Float32Array(nb);
+      for (let i = 0; i < nb; i++) {
+        const r = ((i + 0.5) / nb) * R, x = ca * r, y = cb * r;
+        let v = 0.12 * -Math.log(Math.random() + 1e-9) * 0.5;
+        v += sea * sea * 2.2 * (X ? 1 : 0.55) * Math.exp(-r / 1.1) * Math.pow(Math.random(), 2.5) * 3;
+        const dr = Math.hypot(x - RAIN.x, y - RAIN.y);
+        if (dr < RAIN.r) v += (X ? 0.9 : 0.22) * (1 - (dr / RAIN.r) ** 2) * (0.5 + 0.5 * Math.random());
+        if (inPoly(x, y, ISL)) v += 1.6 + 0.4 * Math.random();
+        raw[i] = v;
+      }
+      const addT = (tx, ty, s) => {
+        const rt = Math.hypot(tx, ty); if (rt > R) return;
+        let da = Math.abs(wrap180((Math.atan2(tx, ty) - a) * R2D)) * D2R;
+        if (da > bwr * 0.9) return;
+        const wA = Math.exp(-((da / (bwr * 0.5)) ** 2) * 1.4);
+        const i0 = Math.floor(((rt - 0.01) / R) * nb), i1 = Math.ceil(((rt + pl) / R) * nb);
+        let att = 1; if (X) { const d = Math.hypot(tx - RAIN.x, ty - RAIN.y); if (d < RAIN.r * 1.2) att = 0.75; }
+        for (let i = Math.max(0, i0); i <= Math.min(nb - 1, i1); i++) raw[i] += s * wA * att * 0.9;
+      };
+      TG.forEach((t) => { addT(t.x, t.y, t.s); if ($("pp-trail").checked) t.hist.forEach((h, k) => addT(h[0], h[1], t.s * 0.12 * (k / t.hist.length))); });
+      let avg = 0;
+      for (let i = 0; i < nb; i++) {
+        const r = ((i + 0.5) / nb) * R;
+        let v = raw[i];
+        if (ftc > 0) { v = Math.max(0, v - ftc * 1.05 * avg); avg = avg * 0.85 + raw[i] * 0.15; } else avg = avg * 0.85 + raw[i] * 0.15;
+        v *= 1 - 0.97 * stc * Math.exp(-r / 1.6);
+        out[i] = SB.clamp(v * gain - 0.35, 0, 1);
+      }
+      return out;
+    }
+    const cv = SB.canvas($("cv-ppi"), (ctx, w, h) => {
+      ctx.fillStyle = "#050a08"; ctx.fillRect(0, 0, w, h);
+      const N = Math.floor(Math.min(w, h) - 24), cx = w / 2, cy = h / 2, Rp = N / 2;
+      if (!st.buf || st.N !== N) { st.N = N; st.buf = new Float32Array(N * N); st.cvs = document.createElement("canvas"); st.cvs.width = N; st.cvs.height = N; st.img = st.cvs.getContext("2d").createImageData(N, N); }
+      ctx.drawImage(st.cvs, cx - Rp, cy - Rp);
+      const R = +gRng(), ring = R / 3 / 2;
+      ctx.strokeStyle = "rgba(90,220,140,0.35)"; ctx.lineWidth = 1;
+      for (let k = 1; k <= 6; k++) { ctx.beginPath(); ctx.arc(cx, cy, (Rp * k) / 6, 0, Math.PI * 2); ctx.stroke(); }
+      for (let a = 0; a < 360; a += 10) { const t = a * D2R, L = a % 30 === 0 ? 10 : 5; seg(ctx, cx + Math.sin(t) * (Rp - L), cy - Math.cos(t) * (Rp - L), cx + Math.sin(t) * Rp, cy - Math.cos(t) * Rp); }
+      ctx.strokeStyle = "rgba(200,255,220,0.7)"; seg(ctx, cx, cy, cx, cy - Rp);
+      const t = st.ang; ctx.strokeStyle = "rgba(140,255,180,0.8)"; ctx.lineWidth = 1.5; seg(ctx, cx, cy, cx + Math.sin(t) * Rp, cy - Math.cos(t) * Rp);
+      txt(ctx, "범위 " + R + " NM · 링 " + (R / 6).toFixed(R === 3 ? 1 : 0) + " NM", 8, 12, "#7fe0a6", "left", 11, 600);
+      txt(ctx, "N-UP · " + (band() === "x" ? "X" : "S") + " 밴드", w - 8, 12, "#7fe0a6", "right", 11, 600);
+      ctx.fillStyle = "#cfe"; ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, 7); ctx.fill();
+      void ring;
+    }, { aspect: 1, maxHeight: 520, minHeight: 280 });
+    SB.loop($("cv-ppi"), (dt) => {
+      if (!st.buf) return;
+      const N = st.N, Rp = N / 2, R = +gRng(), nb = Math.floor(Rp);
+      if (st.clear) { st.buf.fill(0); st.clear = false; }
+      // 표적 이동(시간 20배)
+      st.ht += dt;
+      TG.forEach((t) => {
+        const v = vel(t.c, t.v); t.x += (v[0] * dt * 20) / 3600; t.y += (v[1] * dt * 20) / 3600;
+        if (Math.hypot(t.x, t.y) > 12.5) { t.x = -t.x * 0.95; t.y = -t.y * 0.95; t.hist = []; }
+      });
+      if (st.ht > 0.6) { st.ht = 0; TG.forEach((t) => { t.hist.push([t.x, t.y]); if (t.hist.length > 14) t.hist.shift(); }); }
+      const b = st.buf; for (let i = 0; i < b.length; i++) b[i] *= 0.988;
+      const a0 = st.ang, a1 = a0 + (120 * D2R) * dt, step = 0.3 * D2R, out = new Float32Array(nb);
+      for (let a = a0; a < a1; a += step) {
+        ray(a, R, nb, out);
+        const s = Math.sin(a), c = Math.cos(a);
+        for (let i = 0; i < nb; i++) {
+          const px = Math.round(Rp + s * i), py = Math.round(Rp - c * i);
+          if (px < 0 || py < 0 || px >= N || py >= N) continue;
+          const k = py * N + px; if (out[i] > b[k]) b[k] = out[i];
+          if (i > nb * 0.4 && px + 1 < N) { const k2 = k + 1; if (out[i] > b[k2]) b[k2] = out[i]; }
+        }
+        TG.forEach((t) => {
+          const rt = Math.hypot(t.x, t.y); if (rt > R) return;
+          if (Math.abs(wrap180((Math.atan2(t.x, t.y) - a) * R2D)) < 0.4) { const i = Math.min(nb - 1, Math.floor((rt / R) * nb) + 1); t.peak = Math.max(out[i], out[Math.min(nb - 1, i + 1)]); t.seen = t.peak > 0.25 ? 1 : 0; }
+        });
+      }
+      st.ang = a1 % (Math.PI * 2);
+      const d = st.img.data;
+      for (let i = 0, k = 0; i < b.length; i++, k += 4) { const v = b[i]; d[k] = 60 * v + 10 * v * v * 10; d[k + 1] = 255 * Math.min(1, v * 1.15); d[k + 2] = 120 * v; d[k + 3] = v > 0.01 ? 255 : 0; }
+      // 원 밖 지우기
+      st.cvs.getContext("2d").putImageData(st.img, 0, 0);
+      cv.redraw();
+      const vis = TG.filter((t) => Math.hypot(t.x, t.y) <= R && t.seen).map((t) => t.n);
+      SB.stat("o-pp-vis", '<span style="font-size:13px">' + (vis.length ? vis.join(", ") : "없음") + "</span>");
+    });
+  });
+
+  /* =================================================== 3: 분해능·수평선 */
+  run(function () {
+    let c1 = null, c2 = null;
+    const gBw = SB.range("rs-bw", (v) => v.toFixed(1) + "°", upd), gPl = SB.range("rs-pl", (v) => v.toFixed(2) + " μs", upd);
+    const gR = SB.range("rs-r", (v) => v.toFixed(1) + " NM", upd), gSep = SB.range("rs-sep", (v) => v + " m", upd);
+    const gH1 = SB.range("rs-h1", (v) => v + " m", upd), gH2 = SB.range("rs-h2", (v) => v + " m", upd);
+    const aRes = () => gR() * 1852 * gBw() * D2R, rRes = () => (3e8 * gPl() * 1e-6) / 2;
+    c1 = SB.canvas($("cv-res"), (ctx, w, h) => {
+      const P = SB.palette(), sep = gSep(), A = aRes(), Rr = rRes();
+      const span = Math.max(sep * 2.4, A * 1.6, Rr * 2.4, 200), s = (w - 30) / span;
+      const ph = (h - 20) / 2;
+      [0, 1].forEach((k) => {
+        const y0 = 10 + k * ph, cx = w / 2, cy = y0 + ph / 2 + 4;
+        ctx.fillStyle = "#06120c"; ctx.fillRect(8, y0 + 18, w - 16, ph - 24);
+        txt(ctx, k === 0 ? "옆으로(방위 방향) 붙은 두 배 — 간격 " + sep + " m" : "앞뒤로(거리 방향) 붙은 두 배 — 간격 " + sep + " m", 10, y0 + 8, P.dim, "left", 11, 600);
+        const merged = k === 0 ? sep < A : sep < Rr;
+        const pts = k === 0 ? [[-sep / 2, 0], [sep / 2, 0]] : [[0, -sep / 2], [0, sep / 2]];
+        ctx.fillStyle = "rgba(90,255,150,0.55)";
+        pts.forEach(([dx, dy]) => { // 메아리: 가로 = 빔폭 A, 세로(거리) = 펄스 Rr + 배 길이 20 m (위가 먼 쪽)
+          const ew = Math.max(4, (A + 15) * s), eh = Math.max(4, (Rr + 20) * s);
+          ctx.beginPath(); ctx.ellipse(cx + dx * s, cy - dy * s - eh / 2 + 10 * s, ew / 2, eh / 2, 0, 0, Math.PI * 2); ctx.fill();
+        });
+        ctx.fillStyle = "#fff"; pts.forEach(([dx, dy]) => { ctx.beginPath(); ctx.arc(cx + dx * s, cy - dy * s, 2.5, 0, 7); ctx.fill(); });
+        txt(ctx, merged ? "하나로 합쳐짐" : "두 개로 분리", w - 14, y0 + ph - 14, merged ? P.bad : P.ok, "right", 12, 700);
+      });
+      txt(ctx, "↑ 레이더에서 먼 쪽", 14, h - 6, P.faint, "left", 10);
+    }, { aspect: 0.9, maxHeight: 400, minHeight: 300 });
+    c2 = SB.canvas($("cv-hor"), (ctx, w, h) => {
+      const P = SB.palette(), h1 = gH1(), h2 = gH2(), R = gR(), d1 = 2.2 * Math.sqrt(h1), d2 = 2.2 * Math.sqrt(h2), D = d1 + d2;
+      const xmax = Math.max(D, R) * 1.25 + 1, sx = (w - 40) / xmax;
+      const ymin = -(xmax * xmax) / 4.84, ymax = Math.max(h1, h2) * 1.4 + 5, sy = (h - 60) / (ymax - ymin);
+      const X = (x) => 20 + x * sx, Y = (y) => 30 + (ymax - y) * sy, surf = (x) => -(x * x) / 4.84;
+      ctx.beginPath(); ctx.moveTo(X(0), Y(surf(0))); for (let x = 0; x <= xmax; x += xmax / 100) ctx.lineTo(X(x), Y(surf(x))); ctx.lineTo(X(xmax), h); ctx.lineTo(X(0), h); ctx.closePath();
+      ctx.fillStyle = cssv("--water-soft"); ctx.fill(); ctx.strokeStyle = cssv("--water"); ctx.lineWidth = 2; ctx.stroke();
+      ctx.strokeStyle = P.text; ctx.lineWidth = 3; seg(ctx, X(0), Y(0), X(0), Y(h1));
+      txt(ctx, "h₁ " + h1 + " m", X(0) + 6, Y(h1) - 8, P.text, "left", 11, 600);
+      ctx.strokeStyle = P.warn; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]); seg(ctx, X(0), Y(h1), X(xmax), Y(h1 - (2 * h1 / d1) * xmax)); ctx.setLineDash([]);
+      ctx.fillStyle = P.warn; ctx.beginPath(); ctx.arc(X(d1), Y(surf(d1)), 4, 0, 7); ctx.fill();
+      txt(ctx, "수평선 " + d1.toFixed(1) + " NM", X(d1), Y(surf(d1)) + 14, P.warn, "center", 10, 600);
+      const yb = surf(R), vis = R <= D;
+      ctx.strokeStyle = vis ? P.ok : P.bad; ctx.lineWidth = 4; seg(ctx, X(R), Y(yb), X(R), Y(yb + h2));
+      txt(ctx, vis ? "탐지 가능" : "수평선 아래", X(R), Y(yb + h2) - 12, vis ? P.ok : P.bad, "center", 11, 700);
+      txt(ctx, "레이더 수평선(높이 과장)", 8, 12, P.dim, "left", 11, 600);
+      txt(ctx, "거리 " + R + " NM", X(R), h - 8, P.dim, "center", 10);
+    }, { aspect: 0.9, maxHeight: 400, minHeight: 300 });
+    function upd() {
+      const A = aRes(), Rr = rRes(), sep = gSep(), d1 = 2.2 * Math.sqrt(gH1()), D = d1 + 2.2 * Math.sqrt(gH2());
+      SB.stat("o-rs-ab", sm(Math.round(A), "m"));
+      SB.stat("o-rs-rr", sm(Math.round(Rr), "m"));
+      SB.stat("o-rs-a", sep < A ? '<span style="color:var(--bad)">합쳐짐</span>' : '<span style="color:var(--ok)">분리</span>');
+      SB.stat("o-rs-r", sep < Rr ? '<span style="color:var(--bad)">합쳐짐</span>' : '<span style="color:var(--ok)">분리</span>');
+      SB.stat("o-rs-h", sm(d1.toFixed(1), "NM") + " / " + sm(D.toFixed(1), "NM"));
+      if (c1) { c1.redraw(); c2.redraw(); }
+    }
+    upd();
+  });
+
+  /* =================================================== 4: 진운동 vs 상대 운동 */
+  run(function () {
+    const gOc = SB.range("mo-oc", fmtB), gOs = SB.range("mo-os", (v) => v + " kn"), gTc = SB.range("mo-tc", fmtB), gTs = SB.range("mo-ts", (v) => v + " kn");
+    const ori = SB.seg("mo-ori");
+    let st, running = true;
+    const reset = () => { st = { own: [0, 0], tg: [5, 6], buoy: [-2, 4], ho: [], ht: [], hr: [], rec: 0, ctr: [0, 3] }; };
+    reset();
+    $("mo-run").addEventListener("click", () => { running = !running; $("mo-run").textContent = running ? "일시정지" : "계속"; });
+    $("mo-reset").addEventListener("click", reset);
+    const ship = (ctx, x, y, crs, col, L) => SB.shipTop(ctx, x, y, (crs - 90) * D2R, { len: L || 22, color: col });
+    const c1 = SB.canvas($("cv-tm"), (ctx, w, h) => {
+      const P = SB.palette(), s = Math.min(w, h) / 16, X = (x) => w / 2 + (x - st.ctr[0]) * s, Y = (y) => h / 2 - (y - st.ctr[1]) * s;
+      ctx.strokeStyle = P.grid; ctx.lineWidth = 1;
+      for (let g = Math.floor(st.ctr[0] - 10); g <= st.ctr[0] + 10; g += 2) seg(ctx, X(g), 0, X(g), h);
+      for (let g = Math.floor(st.ctr[1] - 10); g <= st.ctr[1] + 10; g += 2) seg(ctx, 0, Y(g), w, Y(g));
+      const trail = (H, c) => { ctx.fillStyle = c; H.forEach((p) => { ctx.beginPath(); ctx.arc(X(p[0]), Y(p[1]), 1.8, 0, 7); ctx.fill(); }); };
+      trail(st.ho, P.accent); trail(st.ht, P.accent2);
+      ctx.fillStyle = P.warn; ctx.beginPath(); ctx.arc(X(st.buoy[0]), Y(st.buoy[1]), 5, 0, 7); ctx.fill();
+      ship(ctx, X(st.own[0]), Y(st.own[1]), gOc(), P.accent); ship(ctx, X(st.tg[0]), Y(st.tg[1]), gTc(), P.accent2);
+      txt(ctx, "진운동 (노스업) · 격자 2 NM", 8, 12, P.dim, "left", 11, 700);
+    }, { aspect: 0.9, maxHeight: 400 });
+    const c2 = SB.canvas($("cv-rm"), (ctx, w, h) => {
+      const P = SB.palette(), s = Math.min(w, h) / 16, cx = w / 2, cy = h / 2;
+      const rot = ori() === "head" ? -gOc() * D2R : 0;
+      const T = (p) => { const x = p[0] - st.own[0], y = p[1] - st.own[1]; const xr = x * Math.cos(rot) + y * Math.sin(rot), yr = -x * Math.sin(rot) + y * Math.cos(rot); return [cx + xr * s, cy - yr * s]; };
+      ctx.strokeStyle = P.grid; ctx.lineWidth = 1; for (let k = 2; k <= 8; k += 2) { ctx.beginPath(); ctx.arc(cx, cy, k * s, 0, Math.PI * 2); ctx.stroke(); }
+      const nAng = rot; ctx.strokeStyle = P.dim; seg(ctx, cx, cy, cx + Math.sin(nAng) * 7.6 * s, cy - Math.cos(nAng) * 7.6 * s); txt(ctx, "N", cx + Math.sin(nAng) * 8 * s, cy - Math.cos(nAng) * 8 * s, P.dim, "center", 11, 700);
+      ctx.fillStyle = P.accent2; st.hr.forEach((p) => { const q = T([p[0] + st.own[0], p[1] + st.own[1]]); ctx.beginPath(); ctx.arc(q[0], q[1], 1.8, 0, 7); ctx.fill(); });
+      const vr = [vel(gTc(), gTs())[0] - vel(gOc(), gOs())[0], vel(gTc(), gTs())[1] - vel(gOc(), gOs())[1]];
+      const a = T(st.tg), b = T([st.tg[0] + vr[0] * 2, st.tg[1] + vr[1] * 2]);
+      ctx.strokeStyle = P.warn; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5; seg(ctx, a[0], a[1], b[0], b[1]); ctx.setLineDash([]);
+      const bu = T(st.buoy); ctx.fillStyle = P.warn; ctx.beginPath(); ctx.arc(bu[0], bu[1], 5, 0, 7); ctx.fill();
+      ship(ctx, cx, cy, ori() === "head" ? 0 : gOc(), P.accent);
+      ship(ctx, a[0], a[1], gTc() + (ori() === "head" ? -gOc() : 0), P.accent2);
+      const r = [st.tg[0] - st.own[0], st.tg[1] - st.own[1]], c = cpaOf(r, vr);
+      txt(ctx, "상대 운동 (" + (ori() === "head" ? "헤드업" : "노스업") + ") · 링 2 NM", 8, 12, P.dim, "left", 11, 700);
+      txt(ctx, "CPA " + c.cpa.toFixed(2) + " NM" + (c.tcpa > 0 ? " · TCPA " + Math.round(c.tcpa * 60) + "분" : " · 멀어지는 중"), 8, h - 10, c.cpa < 1 && c.tcpa > 0 ? P.bad : P.dim, "left", 11, 700);
+    }, { aspect: 0.9, maxHeight: 400 });
+    SB.loop($("cv-tm"), (dt) => {
+      if (running) {
+        const dh = dt / 60, vo = vel(gOc(), gOs()), vt = vel(gTc(), gTs());
+        st.own[0] += vo[0] * dh; st.own[1] += vo[1] * dh; st.tg[0] += vt[0] * dh; st.tg[1] += vt[1] * dh;
+        st.rec += dh;
+        if (st.rec > 0.025) { st.rec = 0; st.ho.push(st.own.slice()); st.ht.push(st.tg.slice()); st.hr.push([st.tg[0] - st.own[0], st.tg[1] - st.own[1]]); [st.ho, st.ht, st.hr].forEach((H) => { if (H.length > 60) H.shift(); }); }
+        if (Math.hypot(st.own[0] - st.ctr[0], st.own[1] - st.ctr[1]) > 5) st.ctr = st.own.slice();
+        if (Math.hypot(st.tg[0] - st.own[0], st.tg[1] - st.own[1]) > 14) reset();
+      }
+      c1.redraw(); c2.redraw();
+    });
+  });

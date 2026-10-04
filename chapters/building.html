@@ -551,7 +551,7 @@
   function place() {
     const i = Math.min(ST.length - 1, Math.floor(pos)), f = pos - i, a = pts[i], b = pts[Math.min(ST.length - 1, i + 1)];
     const e = f < 0.6 ? 0 : (f - 0.6) / 0.4;   // 공정에서 잠시 머문 뒤 이동
-    dot.setAttribute("cx", a[0] + (b[0] - a[0]) * e); dot.setAttribute("cy", a[1] + (b[1] - a[1]) * e);
+    dot.setAttribute("cx", a[0] + (b[0] - a[0]) * e); dot.setAttribute("cy", a[1] + (b[1] - a[1]) * e - 26);
     select(e > 0.5 ? Math.min(ST.length - 1, i + 1) : i);
   }
   SB.loop(svg, (dt) => {
@@ -566,7 +566,7 @@
 /* ==================================================== 2. 3D 블록 탑재 */
 (function () {
   const box = document.getElementById("v3d-erect");
-  const T = SB.three(box, { camera: [9, 7.5, 11], target: [0, 0.8, 0.6], fov: 40, minDistance: 4, maxDistance: 30 });
+  const T = SB.three(box, { camera: [7.5, 12.5, 10.5], target: [0, 0.3, 0.4], fov: 40, minDistance: 4, maxDistance: 30 });
   if (!T) return;
   const THREE = T.THREE;
   const L = 10, B = 1.6, D = 0.9, NR = 8, WB = 0.18 * B, ZB = 0.22 * D, ZD = 0.86 * D, M2 = 20; // 1 단위 = 20 m
@@ -590,7 +590,7 @@
     const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
     // 무게: 단면 외곽 면적 × 길이 × 등가 밀도
     const [A] = SB.polyArea(section(kind, (x0 + x1) / 2));
-    return { geo: g, w: A * (x1 - x0) * M2 * M2 * M2 * (kind === "deck" ? 0.16 : 0.11) };
+    return { geo: g, w: A * (x1 - x0) * M2 * M2 * M2 * (kind === "deck" ? 0.2 : 0.15) };
   }
   const COL = { bottom: 0xb5503f, sideP: 0x8a96a8, sideS: 0x8a96a8, deck: 0x7c8a6e, house: 0xeef1f5 };
   const KNAME = { bottom: "선저", sideP: "좌현 선측", sideS: "우현 선측", deck: "갑판", house: "거주구" };
@@ -637,7 +637,7 @@
   const cableG = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
   const cable = new THREE.Line(cableG, new THREE.LineBasicMaterial({ color: 0x222831 })); T.scene.add(cable);
   const hook = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.1, 0.12), T.material(0xe0a93a)); T.scene.add(hook);
-  T.label("골리앗 크레인", [0, HC + 0.55, Z1]);
+  T.label("골리앗 크레인", [0.25, HC + 0.5, Z0]);
   T.label("블록 적치장", [-3.5, ground + 0.15, 2.9]);
   T.label("건조 도크", [5.4, 0.2, -1.2]);
   // 순서
@@ -756,6 +756,7 @@
   const area = (p) => p.rects.reduce((a, r) => a + r[2] * r[3], 0);
   function rotate(p) { const [, h] = bbox(p); p.rects = p.rects.map(([x, y, w, hh]) => [h - y - hh, x, hh, w]); }
   function load() { parts = SETS[setI].map((s, i) => mk(s, i)); tray(); }
+  function trayBottom() { let m = PH + 40; SETS.forEach((set) => { let x = 0, y = PH + 8, rowH = 0; set.map((q, i) => mk(q, i)).forEach((p) => { const [w, h] = bbox(p); if (x + w > PW) { x = 0; y += rowH + 3; rowH = 0; } x += w + 3; rowH = Math.max(rowH, h); }); m = Math.max(m, y + rowH); }); return m; }
   function tray() {
     // 트레이(판 아래)에 줄지어 놓기
     let x = 0, y = PH + 8, rowH = 0;
@@ -813,7 +814,7 @@
     SB.stat("o-ns-y", (yld * 100).toFixed(1) + " <small>%</small>");
     SB.stat("o-ns-rem", used ? ((PW - used) / 10).toFixed(1) + " <small>m × 3 m</small>" : "—");
     SB.stat("o-ns-best", (best * 100).toFixed(1) + " <small>%</small>");
-  }, { get height() { const el = document.getElementById("cv-nest"), w = el ? el.parentElement.clientWidth : 600; return Math.round(((w - 24) / PW) * (PH + 8 + 34) + 40); } });
+  }, { get height() { const el = document.getElementById("cv-nest"), w = el ? el.parentElement.clientWidth : 600; return Math.round(((w - 24) / PW) * (trayBottom() + 3) + 34); } });
   const hit = (pt) => { const x = (pt.x - lay.ox) / lay.s, y = (pt.y - lay.oy) / lay.s; for (let i = parts.length - 1; i >= 0; i--) { const p = parts[i]; if (p.rects.some(([rx, ry, rw, rh]) => x >= p.x + rx && x <= p.x + rx + rw && y >= p.y + ry && y <= p.y + ry + rh)) return { p, dx: x - p.x, dy: y - p.y }; } return null; };
   SB.drag(cv.canvas, {
     down: (pt) => { const hh = hit(pt); if (!hh) { sel = null; cv.redraw(); return false; } drag = hh; sel = hh.p; parts.splice(parts.indexOf(hh.p), 1); parts.push(hh.p); hh.ox = hh.p.x; hh.oy = hh.p.y; hh.wasOn = hh.p.on; cv.redraw(); },
@@ -856,7 +857,7 @@
       const px = x0 + (x1 - x0) * Math.min(1, x[i]);
       ctx.fillStyle = P.text; ctx.fillRect(x0, y + lane * 0.42, px - x0, lane * 0.3);
       ctx.fillStyle = SB.color("canvas-bg"); ctx.fillRect(x0, y + lane * 0.56, px - x0, 2);   // 절단선(커프)
-      if (ok) { ctx.fillStyle = i === 0 ? "#ff8a2a" : i === 1 ? "#7fd0ff" : "#ff3b6b"; ctx.beginPath(); ctx.arc(px, y + lane * 0.57, run && x[i] < 1 ? 5 + Math.random() * 2 : 4, 0, Math.PI * 2); ctx.fill(); }
+      if (ok) { ctx.fillStyle = P.series[i]; ctx.beginPath(); ctx.arc(px, y + lane * 0.57, run && x[i] < 1 ? 5 + Math.random() * 2 : 4, 0, Math.PI * 2); ctx.fill(); }
       ctx.fillStyle = ok ? P.text : P.faint; ctx.textBaseline = "bottom"; ctx.font = ff(12.5);
       ctx.fillText(m.n + (ok ? `  ${m.v(t).toFixed(0)} mm/min` : "  — 두께 한계 초과"), x0, y + lane * 0.4);
       if (x[i] >= 1) { ctx.fillStyle = P.ok; ctx.textAlign = "right"; ctx.fillText("완료", x1, y + lane * 0.4); ctx.textAlign = "left"; }

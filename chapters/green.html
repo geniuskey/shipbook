@@ -359,7 +359,7 @@
         <div class="stat"><span class="k">순 절감 동력</span><span class="v" id="o-wd-p">—</span></div>
         <div class="stat"><span class="k">주기관 출력 대비</span><span class="v" id="o-wd-pct">—</span></div>
       </div>
-      <div class="sim-note">로터 1기: 높이 30 m·지름 5 m, 최대 표면 속도 47 m/s. 윙 1기: 높이 35 m·시위 13 m, 최적 받음각 자동. 선박은 12 kn에서 8 MW가 드는 벌크선, 추진 효율 0.7로 가정. 오른쪽 극좌표의 반지름은 추력, 각도는 실제 바람 방향이다. 해볼 것: 왼쪽 그림을 끌어 바람 방향을 바꿔 보라. 선속을 올리면 겉보기 바람이 선수 쪽으로 돌아가 추력이 줄어든다. 맞바람 근처(0~30°)에서는 로터를 멈추는 편이 낫다.</div>
+      <div class="sim-note">로터 1기: 높이 30 m·지름 5 m, 최대 표면 속도 47 m/s. 윙 1기: 높이 35 m·시위 13 m, 최적 받음각 자동. 선박은 12 kn에서 8 MW가 드는 벌크선, 추진 효율 0.7로 가정. 오른쪽 극좌표의 반지름은 추력, 각도는 실제 바람 방향이다. 표시되는 절감률은 이 바람 조건에서의 순간값이며, 바람의 방향·세기가 계속 바뀌므로 연평균 절감은 이보다 훨씬 작다. 해볼 것: 왼쪽 그림을 끌어 바람 방향을 바꿔 보라. 선속을 올리면 겉보기 바람이 선수 쪽으로 돌아가 추력이 줄어든다. 맞바람 근처(0~30°)에서는 로터를 멈추는 편이 낫다.</div>
     </div>
   </section>
 
@@ -439,7 +439,7 @@
         <div class="stat"><span class="k">연간 비용(연료+청소)</span><span class="v" id="o-fo-c">—</span></div>
         <div class="stat"><span class="k">비용 최적 주기</span><span class="v" id="o-fo-opt">—</span></div>
       </div>
-      <div class="sim-note">근사 모델: 동력 증가 \(\Delta(t) = a\,(1-e^{-t/\tau})\), 청소하면 0으로 돌아간다고 가정. 기준 연료 연 20,000 t, 청소 1회 비용(작업+운항 손실) 4만 달러, 5년마다 입거 재도장. 해볼 것: 열대 해역에서 청소 주기를 늘리면 비용이 빠르게 커진다. 오손 방출 도료는 오손이 느리게 쌓여 청소 주기를 길게 잡을 수 있다.</div>
+      <div class="sim-note">근사 모델: 동력 증가 \(\Delta(t) = a\,(1-e^{-t/\tau})\), 청소하면 0으로 돌아간다고 가정. 기준 연료 연 20,000 t, 청소 1회 비용(작업+운항 손실) 15만 달러, 5년마다 입거 재도장. 해볼 것: 열대 해역에서 청소 주기를 늘리면 비용이 빠르게 커진다. 오손 방출 도료는 오손이 느리게 쌓여 청소 주기를 길게 잡을 수 있다.</div>
     </div>
 
     <div class="sim" id="sim-combo">
@@ -616,7 +616,7 @@
       ctx.fillStyle = P.surface; ctx.fillRect(xOf(now, w), 8, w - 24 - xOf(now, w), h - 16);
       label(ctx, "미래", xOf(now, w) + 6, 18, P.dim, "left", 11);
       ctx.strokeStyle = P.axis; ctx.lineWidth = 2; line(ctx, 24, ay, w - 24, ay);
-      for (let y = 2000; y <= 2050; y += 10) { ctx.lineWidth = 1; line(ctx, xOf(y, w), ay - 5, xOf(y, w), ay + 5); label(ctx, String(y), xOf(y, w), ay + 18, P.dim, "center", 11); }
+      for (let y = 2000; y <= 2050; y += 10) { ctx.lineWidth = 1; line(ctx, xOf(y, w), ay - 5, xOf(y, w), ay + 5); }
       EV.forEach((e, i) => {
         const x = xOf(e[0], w), up = i % 2 === 0, len = 26 + (i % 4 < 2 ? 0 : 22);
         const yy = up ? ay - len : ay + len + 12;
@@ -625,8 +625,9 @@
         if (i === sel) { ctx.strokeStyle = P.text; ctx.lineWidth = 2; ctx.stroke(); }
         if (w > 520 || i === sel) label(ctx, String(e[0]), x, yy, i === sel ? P.text : P.dim, "center", 11, i === sel ? 700 : 400);
       });
-      const lg = [["규제·제도", P.accent], ["감축 목표", P.ok], ["가격·연료 기준", P.accent2]];
-      lg.forEach(([n, c], i) => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(30 + i * 110, h - 12, 4.5, 0, Math.PI * 2); ctx.fill(); label(ctx, n, 40 + i * 110, h - 12, P.dim, "left", 11); });
+      const lg = [["규제·제도", P.accent], ["감축 목표", P.ok], ["가격·연료", P.accent2]];
+      const sp = Math.min(110, (w - 40) / 3);
+      lg.forEach(([n, c], i) => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(30 + i * sp, h - 12, 4.5, 0, Math.PI * 2); ctx.fill(); label(ctx, n, 40 + i * sp, h - 12, P.dim, "left", w < 420 ? 10 : 11); });
     }
     cv = SB.canvas(cvEl, draw, { aspect: 0.3, minHeight: 170, maxHeight: 230 });
     cvEl.addEventListener("click", (ev) => {
@@ -752,7 +753,7 @@
     }
     function upd() {
       const c = calc(gY());
-      SB.stat("o-ci-co2", sm(fmtK(c.co2 / 1e12, 1), "천 t"));
+      SB.stat("o-ci-co2", sm(fmtK(c.co2 / 1e9, 1), "천 t"));
       SB.stat("o-ci-att", sm(c.att.toFixed(2), "g/t·nm") + " <small>(" + fmtK(c.dist) + " nm)</small>");
       SB.stat("o-ci-r", sm(c.r.toFixed(3), ""));
       SB.stat("o-ci-g", gradeSpan(c.g));
@@ -886,7 +887,8 @@
           label(ctx, x.f.n, lx, y + bh / 2, P.text, "right", 12, 600);
           ctx.fillStyle = x.f.c; ctx.fillRect(bx, y, Math.max(2, X(vals[i]) - bx), bh);
           const teu = mode === "vol" ? " · " + fmtK(vals[i] / 33.5) + " TEU" : "";
-          label(ctx, fmtK(vals[i]) + " " + unit + (w > 480 ? teu : ""), Math.min(X(vals[i]) + 6, w - 4), y + bh / 2, P.dim, X(vals[i]) + 6 > w - 120 ? "right" : "left", 11);
+          const inside = X(vals[i]) + 6 > w - 120;
+          label(ctx, fmtK(vals[i]) + " " + unit + (w > 480 ? teu : ""), inside ? X(vals[i]) - 6 : X(vals[i]) + 6, y + bh / 2, inside ? "#fff" : P.dim, inside ? "right" : "left", 11, inside ? 700 : 400);
         });
         if (mode === "mass") { const dw = 150000; ctx.strokeStyle = P.bad; ctx.setLineDash([4, 3]); const xx = X(dw); if (xx < w - 10) { line(ctx, xx, 24, xx, h - 20); label(ctx, "15만 DWT", xx, h - 10, P.bad, "center", 10); } ctx.setLineDash([]); }
       } else {
@@ -934,7 +936,7 @@
     function draw(ctx, w, h) {
       const P = SB.palette(), H = hfo(), d = [];
       for (let s = 0; s <= 6.001; s += 0.1) d.push([s, lng(s).tot]);
-      const h1 = h * 0.6;
+      const h1 = h - 90;
       const C = SB.chart(ctx, { x: 58, y: 12, w: w - 76, h: h1 - 46 }, { x: [0, 6], y: [40, Math.max(140, d[d.length - 1][1] * 1.05)], xLabel: "메탄 슬립률 (%)", yLabel: "WtW g CO₂e/MJ",
         series: [{ data: d, color: P.accent, width: 2.6 }], hlines: [{ y: H, color: P.accent2, dash: [], label: "HFO " + H.toFixed(1) }],
         vlines: [{ x: 0.2, color: P.faint, label: "고압 2행정" }, { x: 1.7, color: P.faint, label: "2행정 오토" }, { x: 3.1, color: P.faint, label: "4행정" }],
@@ -1064,8 +1066,9 @@
       const cw = narrow ? w : w * 0.55, cx = cw / 2, cy = narrow ? h * 0.3 : h / 2, R = Math.min(cw, narrow ? h * 0.58 : h) * 0.42;
       geom = { cx, cy, R };
       SB.shipTop(ctx, cx, cy, -Math.PI / 2, { len: R * 1.5, wid: R * 0.32, color: P.dim, full: 0.8 });
-      const sc = R / 22; // px per m/s
-      const toC = (x, y) => [cx + y * sc, cy - x * sc]; // 선체(x 선수, y 우현) → 캔버스
+      const sc = R / 14; // px per m/s
+      const ox = cx + R * 0.05, oy = cy - R * 0.25; // 바람 벡터가 모이는 점(앞쪽 로터)
+      const toC = (x, y) => [ox + y * sc, oy - x * sc]; // 선체(x 선수, y 우현) → 캔버스
       const a = SB.rad(gTWA()), tws = gTWS(), vs = SB.ms(gVs());
       // 실제 바람 벡터: 바람이 오는 쪽에서 중심으로
       const tw0 = toC(tws * Math.cos(a), tws * Math.sin(a)), c0 = toC(0, 0);
@@ -1073,16 +1076,17 @@
       label(ctx, "실제 바람", tw0[0] + 6, tw0[1] - 8, P.blue, "left", 11, 700);
       // 선속에 의한 바람(맞바람)
       const hw0 = toC(vs, 0);
-      SB.arrow(ctx, hw0[0] + 14, hw0[1], c0[0] + 14, c0[1], P.faint, 2);
-      label(ctx, "선속 바람", hw0[0] + 18, hw0[1] + 4, P.dim, "left", 10);
+      SB.arrow(ctx, hw0[0], hw0[1], c0[0], c0[1], P.faint, 2);
+      if (vs > 0.5) label(ctx, "선속 바람", hw0[0] - 6, hw0[1], P.dim, "right", 10);
       // 겉보기 바람
       const aw0 = toC(-f.A.ax, -f.A.ay);
       SB.arrow(ctx, aw0[0], aw0[1], c0[0], c0[1], P.accent2, 3.2);
-      label(ctx, "겉보기 바람", aw0[0] - 6, aw0[1] + 12, P.accent2, aw0[0] < cx ? "left" : "right", 11, 700);
+      label(ctx, "겉보기 바람", aw0[0] + 6, aw0[1] + 12, P.accent2, "left", 11, 700);
       // 힘
       const fsc = (R * 0.8) / 1.2e6;
       const fx = f.T, fy = 0;
-      if (Math.abs(fx) > 1) { SB.arrow(ctx, cx, cy, cx, cy - fx * fsc, fx > 0 ? P.ok : P.bad, 4); label(ctx, (fx > 0 ? "추력 " : "저항 ") + fmtK(Math.abs(fx) / 1000) + " kN", cx + 8, cy - fx * fsc - 4, fx > 0 ? P.ok : P.bad, "left", 12, 700); }
+      const fy0 = cy + R * 0.35;
+      if (Math.abs(fx) > 1) { SB.arrow(ctx, cx, fy0, cx, fy0 - fx * fsc, fx > 0 ? P.ok : P.bad, 4); label(ctx, (fx > 0 ? "추력 " : "저항 ") + fmtK(Math.abs(fx) / 1000) + " kN", cx - 10, fy0 + 6, fx > 0 ? P.ok : P.bad, "right", 12, 700); }
       void fy;
       if (gDev() === "rotor") { ctx.strokeStyle = P.warn; ctx.lineWidth = 2; for (let k = 0; k < gN(); k++) { const yy = cy - R * 0.45 + k * R * 0.3; ctx.beginPath(); ctx.arc(cx, yy, R * 0.07, 0, Math.PI * 2); ctx.stroke(); } }
       else { ctx.fillStyle = P.warn; for (let k = 0; k < gN(); k++) { const yy = cy - R * 0.45 + k * R * 0.3; ctx.save(); ctx.translate(cx, yy); ctx.rotate(-f.A.awa + Math.PI / 2 - 0.25); ctx.fillRect(-R * 0.16, -2, R * 0.32, 4); ctx.restore(); } }
@@ -1141,7 +1145,7 @@
     function draw(ctx, w, h) {
       const P = SB.palette(), h1 = h * 0.38;
       // 선체 측면 + 기포
-      const wy = h1 * 0.42, s = (w - 40) / 380, T = gT();
+      const T = gT(), s = Math.min((w - 40) / 380, h1 * 0.55 / 40), wy = h1 * 0.62;
       SB.shipSide(ctx, w / 2, wy, s, { L: 350, D: 30, T, cargo: "container", house: true, color: "#2b3445" });
       SB.water(ctx, w, h1, wy, { color: "rgba(59,143,224,0.22)" });
       const c = calc(gQ()), nb = Math.round(80 * Math.min(1, gQ() / Math.max(c.Q0 * 2, 0.1)));
@@ -1160,7 +1164,7 @@
       const o = opt();
       SB.chart(ctx, { x: 58, y: h1 + 8, w: w - 76, h: h - h1 - 56 }, { x: [0, 5], y: [-4, 12], xLabel: "공기 유량 Q (m³/s, 노즐 압력 기준)", yLabel: "추진 동력 대비 %",
         series: [{ data: dg, color: P.accent, width: 2 }, { data: dc, color: P.accent2, width: 2, dash: [5, 3] }, { data: dn, color: P.ok, width: 2.8 }],
-        hlines: [{ y: 0, color: P.axis, dash: [] }], vlines: [{ x: o.Q, color: P.ok, label: "최적" }],
+        hlines: [{ y: 0, color: P.axis, dash: [] }], vlines: [{ x: o.Q, color: P.ok }],
         points: [{ x: gQ(), y: c.net / c.Pp * 100, color: P.ok, r: 6 }] });
       const lg = [["총 절감", P.accent], ["압축기 동력", P.accent2], ["순 절감", P.ok]];
       lg.forEach(([n, col], i) => { ctx.fillStyle = col; ctx.fillRect(70 + i * 90, h1 + 16, 14, 3); label(ctx, n, 88 + i * 90, h1 + 18, P.dim, "left", 11); });
@@ -1174,7 +1178,7 @@
   /* =================================================== Sim 11: 선체 오손 */
   sim("foul", () => {
     let cv = null;
-    const BASE = 20000, CLEAN = 40000, YEARS = 5;
+    const BASE = 20000, CLEAN = 150000, YEARS = 5;
     const gSea = SB.seg("fo-sea", upd), gCoat = SB.seg("fo-coat", upd);
     const gI = SB.range("fo-i", (v) => v + " 개월" + (v >= 60 ? " (청소 안 함)" : ""), upd);
     const gFP = SB.range("fo-fp", (v) => v + " $/t", upd);
@@ -1234,7 +1238,7 @@
     }
     function draw(ctx, w, h) {
       const P = SB.palette(), on = M.filter((m) => m[2]);
-      const bx = 50, bw = w - 70, top = 24, bot = h - 30, H = bot - top;
+      const bx = 50, bw = w - 70, top = 36, bot = h - 30, H = bot - top;
       const Z = (v) => top + H * (1 - (v - 50) / 50); // 50~100% 확대
       label(ctx, "남은 연료 소비 (%)", bx, 10, P.dim, "left", 11);
       ctx.strokeStyle = P.grid; ctx.lineWidth = 1;
@@ -1295,7 +1299,7 @@
       const C = SB.chart(ctx, { x: 58, y: 14, w: w - 76, h: h - 64 }, { x: [0, 400], y: [0, ymax], xLabel: "탄소 가격 ($/t CO₂e)", yLabel: "연간 연료+탄소 비용 (M$)",
         series: [{ data: dR, color: P.accent2, width: 2.6 }, { data: dA, color: P.accent, width: 2.6 }], vlines: [{ x: gC(), color: P.dim, label: "현재" }], points: pts });
       const lg = [["VLSFO", P.accent2], [cur.a.n, P.accent]];
-      lg.forEach(([n, c], i) => { ctx.fillStyle = c; ctx.fillRect(C.box.x + 10, C.box.y + 26 + i * 15, 14, 3); label(ctx, n, C.box.x + 28, C.box.y + 28 + i * 15, P.dim, "left", 11); });
+      lg.forEach(([n, c], i) => { ctx.fillStyle = c; ctx.fillRect(C.box.x + C.box.w - 130, C.box.y + C.box.h - 40 + i * 15, 14, 3); label(ctx, n, C.box.x + C.box.w - 112, C.box.y + C.box.h - 38 + i * 15, P.dim, "left", 11); });
       ctx.fillStyle = P.text; const dx = C.X(gC()), dy = C.box.y + C.box.h;
       ctx.beginPath(); ctx.moveTo(dx, dy - 7); ctx.lineTo(dx + 6, dy); ctx.lineTo(dx, dy + 7); ctx.lineTo(dx - 6, dy); ctx.closePath(); ctx.fill();
     }
