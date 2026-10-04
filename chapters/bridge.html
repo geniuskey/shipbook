@@ -151,7 +151,7 @@
         <div class="stat"><span class="k">펄스 폭 / 거리 분해능</span><span class="v" id="o-pp-pl">—</span></div>
         <div class="stat"><span class="k">보이는 표적</span><span class="v" id="o-pp-vis">—</span></div>
       </div>
-      <div class="sim-note">자선은 중앙, 노스업 진운동 표시다. 북동쪽에 섬, 동쪽에 비구름이 있고 배 5척이 움직인다(가장 작은 어선은 자선 남서쪽 1.5해리 부근). 해볼 것: ① 바다 상태를 5~6으로 올리고 STC를 조절해 가까운 어선이 클러터에서 드러나는 지점을 찾아라. STC를 최대로 하면 어선도 지워진다. ② 비구름 속 배는 FTC를 올려야 보인다. ③ S 밴드로 바꾸면 비 클러터는 줄지만 표적이 옆으로 퍼진다(빔폭 2°).</div>
+      <div class="sim-note">자선은 중앙에 멈춰 떠 있고(표류), 화면은 노스업이다. 휘선은 3초에 한 바퀴 돌고, 표적은 실제보다 20배 빠르게 움직인다. 북동쪽에 섬, 동쪽에 비구름이 있고 배 5척이 움직인다(가장 작은 어선은 자선 남서쪽 1.5해리 부근). 해볼 것: ① 바다 상태를 5~6으로 올리고 STC를 조절해 가까운 어선이 클러터에서 드러나는 지점을 찾아라. STC를 최대로 하면 어선도 지워진다. ② 비구름 속 배는 FTC를 올려야 보인다. ③ S 밴드로 바꾸면 비 클러터는 줄지만 표적이 옆으로 퍼진다(빔폭 2°).</div>
     </div>
 
     <div class="sim" id="sim-res">
@@ -694,7 +694,7 @@
       SB.stat("o-pp-bw", sm(bw().toFixed(1) + "°", "") + " / " + sm(Math.round(R * 1852 * bw() * D2R), "m"));
       SB.stat("o-pp-pl", sm(pulse() + " μs", "") + " / " + sm(Math.round((3e8 * pulse() * 1e-6) / 2), "m"));
     }
-    gRng.set && SB.seg; info();
+    info();
     SB.stat("o-pp-rot", sm("3", "초/회전 (20 rpm)"));
     function ray(a, R, nb, out) { // a: 방위(rad), out: Float32Array(nb) 표시 밝기
       const ca = Math.sin(a), cb = Math.cos(a), X = band() === "x";
@@ -735,7 +735,7 @@
       const N = Math.floor(Math.min(w, h) - 24), cx = w / 2, cy = h / 2, Rp = N / 2;
       if (!st.buf || st.N !== N) { st.N = N; st.buf = new Float32Array(N * N); st.cvs = document.createElement("canvas"); st.cvs.width = N; st.cvs.height = N; st.img = st.cvs.getContext("2d").createImageData(N, N); }
       ctx.drawImage(st.cvs, cx - Rp, cy - Rp);
-      const R = +gRng(), ring = R / 3 / 2;
+      const R = +gRng();
       ctx.strokeStyle = "rgba(90,220,140,0.35)"; ctx.lineWidth = 1;
       for (let k = 1; k <= 6; k++) { ctx.beginPath(); ctx.arc(cx, cy, (Rp * k) / 6, 0, Math.PI * 2); ctx.stroke(); }
       for (let a = 0; a < 360; a += 10) { const t = a * D2R, L = a % 30 === 0 ? 10 : 5; seg(ctx, cx + Math.sin(t) * (Rp - L), cy - Math.cos(t) * (Rp - L), cx + Math.sin(t) * Rp, cy - Math.cos(t) * Rp); }
@@ -744,7 +744,6 @@
       txt(ctx, "범위 " + R + " NM · 링 " + (R / 6).toFixed(R === 3 ? 1 : 0) + " NM", 8, 12, "#7fe0a6", "left", 11, 600);
       txt(ctx, "N-UP · " + (band() === "x" ? "X" : "S") + " 밴드", w - 8, 12, "#7fe0a6", "right", 11, 600);
       ctx.fillStyle = "#cfe"; ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, 7); ctx.fill();
-      void ring;
     }, { aspect: 1, maxHeight: 520, minHeight: 280 });
     SB.loop($("cv-ppi"), (dt) => {
       if (!st.buf) return;
@@ -890,4 +889,207 @@
       }
       c1.redraw(); c2.redraw();
     });
+  });
+
+  /* =================================================== 5: ARPA CPA·TCPA */
+  run(function () {
+    const INIT = { r: [3, 3], vo: [0, 14], vt: [-12, 0] };
+    const st = { r: INIT.r.slice(), vo: INIT.vo.slice(), vt: INIT.vt.slice() };
+    let view = null, drag = null, playing = false;
+    const gLim = SB.range("cp-lim", (v) => v.toFixed(1) + " NM", () => upd()), gVt = SB.range("cp-vt", (v) => v + " 분", () => upd());
+    $("cp-tri").addEventListener("change", () => upd());
+    $("cp-play").addEventListener("click", () => { playing = !playing; $("cp-play").textContent = playing ? "일시정지" : "시간 진행"; });
+    $("cp-reset").addEventListener("click", () => { st.r = INIT.r.slice(); st.vo = INIT.vo.slice(); st.vt = INIT.vt.slice(); upd(); });
+    const cv = SB.canvas($("cv-cpa"), (ctx, w, h) => {
+      const P = SB.palette(), s = Math.min(w, h) / 13, cx = w / 2, cy = h / 2, T = gVt() / 60;
+      const X = (x) => cx + x * s, Y = (y) => cy - y * s;
+      view = { X, Y, s, cx, cy, T };
+      ctx.strokeStyle = P.grid; ctx.lineWidth = 1; for (let k = 1; k <= 8; k++) { ctx.beginPath(); ctx.arc(cx, cy, k * s, 0, Math.PI * 2); ctx.stroke(); }
+      ctx.strokeStyle = P.bad; ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.arc(cx, cy, gLim() * s, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      txt(ctx, "N", cx, 10, P.dim, "center", 11, 700);
+      const vr = [st.vt[0] - st.vo[0], st.vt[1] - st.vo[1]], c = cpaOf(st.r, vr);
+      // 상대 운동선
+      ctx.strokeStyle = P.warn; ctx.lineWidth = 1.6; ctx.setLineDash([6, 4]);
+      seg(ctx, X(st.r[0]), Y(st.r[1]), X(st.r[0] + vr[0] * 3), Y(st.r[1] + vr[1] * 3)); ctx.setLineDash([]);
+      if (c.tcpa > 0) { ctx.strokeStyle = P.bad; ctx.lineWidth = 1; seg(ctx, cx, cy, X(c.pt[0]), Y(c.pt[1])); ctx.fillStyle = P.bad; ctx.beginPath(); ctx.arc(X(c.pt[0]), Y(c.pt[1]), 5, 0, 7); ctx.fill(); txt(ctx, "CPA " + c.cpa.toFixed(2), X(c.pt[0]) + 8, Y(c.pt[1]) + 10, P.bad, "left", 11, 700); }
+      // 벡터
+      const ot = [st.vo[0] * T, st.vo[1] * T], tt = [st.r[0] + st.vt[0] * T, st.r[1] + st.vt[1] * T];
+      SB.arrow(ctx, cx, cy, X(ot[0]), Y(ot[1]), P.accent, 2.5);
+      SB.arrow(ctx, X(st.r[0]), Y(st.r[1]), X(tt[0]), Y(tt[1]), P.accent2, 2.5);
+      if ($("cp-tri").checked) {
+        const rt = [st.r[0] + vr[0] * T, st.r[1] + vr[1] * T];
+        ctx.strokeStyle = P.dim; ctx.setLineDash([3, 3]); ctx.lineWidth = 1.5; seg(ctx, X(tt[0]), Y(tt[1]), X(rt[0]), Y(rt[1])); ctx.setLineDash([]);
+        SB.arrow(ctx, X(st.r[0]), Y(st.r[1]), X(rt[0]), Y(rt[1]), P.warn, 2.5);
+        txt(ctx, "−V_o", (X(tt[0]) + X(rt[0])) / 2 + 6, (Y(tt[1]) + Y(rt[1])) / 2, P.dim, "left", 10, 600);
+        txt(ctx, "V_r", X(rt[0]) + 6, Y(rt[1]) + 8, P.warn, "left", 11, 700);
+      }
+      SB.shipTop(ctx, cx, cy, Math.atan2(-st.vo[1], st.vo[0]), { len: 24, color: P.accent });
+      SB.shipTop(ctx, X(st.r[0]), Y(st.r[1]), Math.atan2(-st.vt[1], st.vt[0]), { len: 24, color: P.accent2 });
+      [[ot, P.accent], [tt, P.accent2]].forEach(([p, col]) => { ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(X(p[0]), Y(p[1]), 7, 0, 7); ctx.stroke(); });
+      txt(ctx, "자선", cx - 16, cy + 18, P.accent, "right", 11, 700);
+      txt(ctx, "링 1 NM", 8, h - 10, P.faint, "left", 10);
+    }, { aspect: 0.85, maxHeight: 480, minHeight: 300 });
+    SB.drag($("cv-cpa"), {
+      down(p) {
+        if (!view) return false; const { X, Y, T } = view; drag = null;
+        const cand = [["vo", X(st.vo[0] * T), Y(st.vo[1] * T)], ["vt", X(st.r[0] + st.vt[0] * T), Y(st.r[1] + st.vt[1] * T)], ["r", X(st.r[0]), Y(st.r[1])]];
+        let best = 24; cand.forEach(([k, x, y]) => { const d = Math.hypot(p.x - x, p.y - y); if (d < best) { best = d; drag = k; } });
+        return drag ? undefined : false;
+      },
+      move(p) {
+        const { s, cx, cy, T } = view, x = (p.x - cx) / s, y = -(p.y - cy) / s;
+        const lim = (v) => { const m = Math.hypot(v[0], v[1]); return m > 30 ? [v[0] * 30 / m, v[1] * 30 / m] : v; };
+        if (drag === "vo") st.vo = lim([x / T, y / T]);
+        else if (drag === "vt") st.vt = lim([(x - st.r[0]) / T, (y - st.r[1]) / T]);
+        else if (drag === "r") st.r = [SB.clamp(x, -6.3, 6.3), SB.clamp(y, -6.3, 6.3)];
+        upd();
+      },
+    });
+    SB.loop($("cv-cpa"), (dt) => { if (!playing) return; const dh = dt / 60; st.r[0] += (st.vt[0] - st.vo[0]) * dh; st.r[1] += (st.vt[1] - st.vo[1]) * dh; if (Math.hypot(st.r[0], st.r[1]) > 9) { playing = false; $("cp-play").textContent = "시간 진행"; } upd(); });
+    function upd() {
+      const vr = [st.vt[0] - st.vo[0], st.vt[1] - st.vo[1]], c = cpaOf(st.r, vr);
+      SB.stat("o-cp-br", brgS(Math.atan2(st.r[0], st.r[1]) * R2D) + " / " + sm(Math.hypot(st.r[0], st.r[1]).toFixed(2), "NM"));
+      SB.stat("o-cp-cpa", sm(c.cpa.toFixed(2), "NM"));
+      SB.stat("o-cp-tcpa", c.tcpa > 0 ? sm((c.tcpa * 60).toFixed(1), "분") : sm("지남", "(멀어짐)"));
+      SB.stat("o-cp-rel", brgS(Math.atan2(vr[0], vr[1]) * R2D) + " " + sm(Math.hypot(vr[0], vr[1]).toFixed(1), "kn"));
+      const al = c.tcpa > 0 && c.cpa < gLim();
+      SB.stat("o-cp-al", al ? '<span style="color:var(--bad)">CPA 경보</span>' : '<span style="color:var(--ok)">안전</span>');
+      cv.redraw();
+    }
+    upd();
+  });
+
+  /* =================================================== 6: AIS SOTDMA */
+  run(function () {
+    const NS = 2250, INT = { anch: 180, slow: 10, fast: 6, turn: 2 };
+    let alloc = null, playing = true, t = 0;
+    const gN = SB.range("ai-n", (v) => v + " 척", build), mix = SB.seg("ai-mix", build);
+    $("ai-run").addEventListener("click", () => { playing = !playing; $("ai-run").textContent = playing ? "일시정지" : "계속"; });
+    function build() {
+      const n = gN(), m = mix(), ch = [new Int16Array(NS).fill(-1), new Int16Array(NS).fill(-1)], col = [new Uint8Array(NS), new Uint8Array(NS)];
+      let reports = 0, reuse = 0;
+      for (let i = 0; i < n; i++) {
+        let iv;
+        if (m === "mix") { const u = Math.random(); iv = u < 0.3 ? 180 : u < 0.75 ? 10 : u < 0.95 ? 6 : 2; } else iv = INT[m];
+        const rpm = 60 / iv;
+        if (rpm < 1) { if (Math.random() > rpm) continue; }
+        const k = Math.max(1, Math.round(rpm)), NI = (NS * 2) / k, start = Math.random() * NI;
+        for (let j = 0; j < k; j++) {
+          const c = j % 2, target = Math.floor((start + j * NI) / 2) % NS, SI = Math.max(2, Math.floor((NI / 2) * 0.2));
+          const free = [];
+          for (let d = -SI / 2; d <= SI / 2; d++) { const q = (target + d + NS) % NS; if (ch[c][q] < 0) free.push(q); }
+          let q;
+          if (free.length) q = free[Math.floor(Math.random() * free.length)];
+          else { q = (target + Math.floor((Math.random() - 0.5) * SI) + NS) % NS; col[c][q] = 1; reuse++; }
+          ch[c][q] = i; reports++;
+        }
+      }
+      alloc = { ch, col, reports, reuse };
+      SB.stat("o-ai-r", sm(reports.toLocaleString(), "회/분"));
+      const u = (reports / (NS * 2)) * 100;
+      SB.stat("o-ai-u", '<span style="color:var(' + (u < 50 ? "--ok" : u < 85 ? "--warn" : "--bad") + ')">' + u.toFixed(0) + "</span>" + sm("%", ""));
+      SB.stat("o-ai-c", sm(reuse.toLocaleString(), "슬롯"));
+      if (cv) cv.redraw();
+    }
+    let cv = null;
+    cv = SB.canvas($("cv-ais"), (ctx, w, h) => {
+      if (!alloc) return;
+      const P = SB.palette(), COLS = 50, ROWS = 45, cs = Math.max(2, Math.min((w - 36) / (COLS * 2), (h - 40) / ROWS));
+      const gw = COLS * cs, x0s = [Math.max(8, (w - 2 * gw - 16) / 2), 0];
+      x0s[1] = x0s[0] + gw + 16;
+      const cur = Math.floor((t / 60) * NS);
+      [0, 1].forEach((c) => {
+        const x0 = x0s[c], y0 = 24;
+        txt(ctx, "채널 " + (c ? "B 162.025" : "A 161.975") + " MHz", x0, 12, P.dim, "left", 11, 600);
+        ctx.fillStyle = P.surface; ctx.fillRect(x0, y0, gw, ROWS * cs);
+        for (let q = 0; q < NS; q++) {
+          const v = alloc.ch[c][q]; if (v < 0) continue;
+          const xx = x0 + (q % COLS) * cs, yy = y0 + Math.floor(q / COLS) * cs;
+          ctx.fillStyle = alloc.col[c][q] ? P.bad : "hsl(" + ((v * 137) % 360) + ",55%," + (SB.isDark() ? 55 : 50) + "%)";
+          ctx.globalAlpha = q < cur ? 1 : 0.45;
+          ctx.fillRect(xx, yy, Math.max(1, cs - 0.6), Math.max(1, cs - 0.6));
+        }
+        ctx.globalAlpha = 1;
+        const cx = x0 + (cur % COLS) * cs, cyy = y0 + Math.floor(cur / COLS) * cs;
+        ctx.fillStyle = P.text; ctx.fillRect(cx - 1, cyy - 1, cs + 2, cs + 2);
+      });
+      txt(ctx, "한 칸 = 슬롯 26.7 ms · 한 줄 = 50슬롯 1.33초 · " + (t).toFixed(1) + " s / 60 s", w / 2, h - 8, P.dim, "center", 10);
+    }, { aspect: 0.62, maxHeight: 420, minHeight: 240 });
+    build();
+    SB.loop($("cv-ais"), (dt) => { if (!playing) return; t += dt * 5; if (t >= 60) { t = 0; build(); } cv.redraw(); });
+  });
+
+  /* =================================================== 7: ECDIS */
+  run(function () {
+    const W = 12, H = 9, LEVELS = [5, 10, 15, 20, 30];
+    const depth = (x, y) => 32 - 22 * Math.exp(-((x - 4) ** 2 + (y - 4.6) ** 2) / 2.2) - 26 * Math.exp(-((x - 8.2) ** 2 + (y - 2.6) ** 2) / 1.6) - 18 * Math.exp(-((x - 6.6) ** 2 + (y - 6.9) ** 2) / 1.1) - 45 * Math.exp(-((x - 1.4) ** 2 + (y - 7.8) ** 2) / 2.2) - 30 * Math.exp(-((x - 11.5) ** 2 + (y - 0.4) ** 2) / 1.4) + 3 * Math.sin(x * 1.3) * Math.cos(y * 1.1);
+    const INITWP = [[0.6, 1.0], [5.6, 2.2], [8.6, 5.3], [11.4, 8.2]];
+    let wp = INITWP.map((p) => p.slice()), view = null, dragI = -1, cv = null, grid = null;
+    const gDr = SB.range("ec-dr", (v) => v.toFixed(1) + " m", upd), gUkc = SB.range("ec-ukc", (v) => v.toFixed(1) + " m", upd), gX = SB.range("ec-xtd", (v) => v.toFixed(2) + " NM", upd);
+    $("ec-reset").addEventListener("click", () => { wp = INITWP.map((p) => p.slice()); upd(); });
+    const NX = 96, NY = 72;
+    grid = []; for (let j = 0; j <= NY; j++) { const row = []; for (let i = 0; i <= NX; i++) row.push(depth((i / NX) * W, (j / NY) * H)); grid.push(row); }
+    const sd = () => gDr() + gUkc(), sc = () => LEVELS.find((L) => L >= sd()) || 30;
+    function check() {
+      const L = sc(), xtd = gX(), bad = [], legBad = [];
+      for (let k = 0; k < wp.length - 1; k++) {
+        const [x1, y1] = wp[k], [x2, y2] = wp[k + 1], len = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / len, uy = (y2 - y1) / len;
+        let hit = false;
+        for (let s = 0; s <= len; s += 0.08) for (let o = -xtd; o <= xtd + 1e-9; o += xtd / 3) {
+          const x = x1 + ux * s - uy * o, y = y1 + uy * s + ux * o;
+          if (depth(x, y) < L) { hit = true; if (!bad.some((b) => Math.hypot(b[0] - x, b[1] - y) < 0.35)) bad.push([x, y]); }
+        }
+        legBad.push(hit);
+      }
+      return { bad, legBad };
+    }
+    function contour(ctx, X, Y, L) {
+      const ip = (a, b) => (L - a) / (b - a);
+      ctx.beginPath();
+      for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) {
+        const v = [grid[j][i], grid[j][i + 1], grid[j + 1][i + 1], grid[j + 1][i]], c = [[i, j], [i + 1, j], [i + 1, j + 1], [i, j + 1]], pts = [];
+        for (let e = 0; e < 4; e++) { const a = v[e], b = v[(e + 1) % 4]; if ((a < L) !== (b < L)) { const t = ip(a, b), p0 = c[e], p1 = c[(e + 1) % 4]; pts.push([p0[0] + (p1[0] - p0[0]) * t, p0[1] + (p1[1] - p0[1]) * t]); } }
+        for (let k = 0; k + 1 < pts.length; k += 2) { ctx.moveTo(X((pts[k][0] / NX) * W), Y((pts[k][1] / NY) * H)); ctx.lineTo(X((pts[k + 1][0] / NX) * W), Y((pts[k + 1][1] / NY) * H)); }
+      }
+      ctx.stroke();
+    }
+    cv = SB.canvas($("cv-ec"), (ctx, w, h) => {
+      const P = SB.palette(), dark = SB.isDark(), s = Math.min(w / W, h / H), ox = (w - W * s) / 2, oy = (h - H * s) / 2;
+      const X = (x) => ox + x * s, Y = (y) => oy + (H - y) * s; view = { s, ox, oy, X, Y };
+      const L = sc(), cw = (W / NX) * s + 0.6, ch = (H / NY) * s + 0.6;
+      for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) {
+        const d = (grid[j][i] + grid[j][i + 1] + grid[j + 1][i] + grid[j + 1][i + 1]) / 4;
+        ctx.fillStyle = d < 0 ? (dark ? "#6b6346" : "#d8c99a") : d < 5 ? (dark ? "#1f4f7a" : "#82b6e0") : d < L ? (dark ? "#28628f" : "#a9cfee") : (dark ? "#0f1724" : "#ffffff");
+        ctx.fillRect(X((i / NX) * W), Y(((j + 1) / NY) * H), cw, ch);
+      }
+      ctx.strokeStyle = dark ? "#7aa7cc" : "#5d8fb8"; ctx.lineWidth = 0.8; [5, 10, 15, 20].filter((v) => v !== L).forEach((v) => contour(ctx, X, Y, v));
+      ctx.strokeStyle = dark ? "#e6ebf5" : "#141a26"; ctx.lineWidth = 2.6; contour(ctx, X, Y, L);
+      ctx.strokeStyle = dark ? "#c9b98a" : "#8f7f55"; ctx.lineWidth = 1.2; contour(ctx, X, Y, 0);
+      // 수심 숫자
+      ctx.font = font(9, true); ctx.fillStyle = dark ? "#9aa6bf" : "#566178"; ctx.textAlign = "center";
+      for (let y = 0.5; y < H; y += 1.5) for (let x = 0.6 + (y % 3 ? 0.7 : 0); x < W; x += 1.6) { const d = depth(x, y); if (d > 0) ctx.fillText(Math.round(d), X(x), Y(y)); }
+      const R = check(), xtd = gX();
+      for (let k = 0; k < wp.length - 1; k++) {
+        const [x1, y1] = wp[k], [x2, y2] = wp[k + 1], len = Math.hypot(x2 - x1, y2 - y1), nx = -(y2 - y1) / len, ny = (x2 - x1) / len;
+        ctx.fillStyle = R.legBad[k] ? "rgba(214,69,69,0.15)" : "rgba(31,157,85,0.14)";
+        ctx.beginPath(); ctx.moveTo(X(x1 + nx * xtd), Y(y1 + ny * xtd)); ctx.lineTo(X(x2 + nx * xtd), Y(y2 + ny * xtd)); ctx.lineTo(X(x2 - nx * xtd), Y(y2 - ny * xtd)); ctx.lineTo(X(x1 - nx * xtd), Y(y1 - ny * xtd)); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = R.legBad[k] ? P.bad : "#e0702a"; ctx.lineWidth = 2.5; seg(ctx, X(x1), Y(y1), X(x2), Y(y2));
+      }
+      R.bad.slice(0, 40).forEach(([x, y]) => { ctx.strokeStyle = P.bad; ctx.lineWidth = 2.2; const px = X(x), py = Y(y); seg(ctx, px - 5, py - 5, px + 5, py + 5); seg(ctx, px - 5, py + 5, px + 5, py - 5); });
+      wp.forEach(([x, y], i) => { ctx.fillStyle = dark ? "#121826" : "#fff"; ctx.strokeStyle = "#e0702a"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(X(x), Y(y), 7, 0, 7); ctx.fill(); ctx.stroke(); txt(ctx, "WP" + (i + 1), X(x) + 9, Y(y) - 10, P.text, "left", 10, 700); });
+      txt(ctx, "안전 등심선 " + L + " m (굵은 선) · 1눈금 = 1 NM", 8, h - 10, P.text, "left", 11, 700);
+    }, { aspect: 0.75, maxHeight: 480, minHeight: 280 });
+    SB.drag($("cv-ec"), {
+      down(p) { if (!view) return false; dragI = -1; let b = 24; wp.forEach(([x, y], i) => { const d = Math.hypot(view.X(x) - p.x, view.Y(y) - p.y); if (d < b) { b = d; dragI = i; } }); return dragI < 0 ? false : undefined; },
+      move(p) { wp[dragI] = [SB.clamp((p.x - view.ox) / view.s, 0.1, W - 0.1), SB.clamp(H - (p.y - view.oy) / view.s, 0.1, H - 0.1)]; upd(); },
+    });
+    function upd() {
+      SB.stat("o-ec-sd", sm(sd().toFixed(1) + " m", "→ 등심선 " + sc() + " m"));
+      let len = 0; for (let k = 0; k < wp.length - 1; k++) len += Math.hypot(wp[k + 1][0] - wp[k][0], wp[k + 1][1] - wp[k][1]);
+      SB.stat("o-ec-len", sm(len.toFixed(1), "NM"));
+      const R = check(), n = R.legBad.filter(Boolean).length;
+      SB.stat("o-ec-res", n ? '<span style="color:var(--bad)">경보: ' + n + "개 구간 위험</span>" : '<span style="color:var(--ok)">통과(위험 없음)</span>');
+      if (cv) cv.redraw();
+    }
+    upd();
   });
