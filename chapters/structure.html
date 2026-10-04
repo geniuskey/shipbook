@@ -299,7 +299,7 @@
       <div class="sim-body side">
         <div class="sim-view duo"><div><canvas id="cv-fat"></canvas></div><div><canvas id="cv-fatb"></canvas></div></div>
         <div class="sim-controls">
-          <label class="ctrl"><span>최대 응력 범위(10⁸회 중 1회) <output id="ft-s-out"></output></span><input type="range" id="ft-s" min="100" max="400" step="5" value="220"></label>
+          <label class="ctrl"><span>최대 응력 범위(10⁸회 중 1회) <output id="ft-s-out"></output></span><input type="range" id="ft-s" min="100" max="450" step="5" value="320"></label>
           <label class="ctrl"><span>와이블 형상 계수 h <output id="ft-h-out"></output></span><input type="range" id="ft-h" min="0.7" max="1.2" step="0.01" value="0.9"></label>
           <label class="ctrl"><span>응력 집중 계수 K <output id="ft-k-out"></output></span><input type="range" id="ft-k" min="1" max="3" step="0.05" value="1"></label>
           <label class="ctrl"><span>설계 수명 <output id="ft-y-out"></output></span><input type="range" id="ft-y" min="5" max="40" step="1" value="25"></label>
@@ -537,9 +537,9 @@
     const pts = [];
     for (let i = 0; i < NS; i++) pts.push(map(GIR.xs[i], GD, dfl(GIR.xs[i])));
     pts.push(map(GL / 2 + 3, GD, dfl(GL / 2)));
-    pts.push(map(GL / 2, GIR.bot[NS - 1] + 5, dfl(GL / 2)));
-    for (let i = NS - 1; i >= 0; i--) pts.push(map(GIR.xs[i], GIR.bot[i], dfl(GIR.xs[i])));
-    pts.push(map(-GL / 2 - 2, GIR.bot[0] + 7, dfl(-GL / 2)));
+    pts.push(map(GL / 2, Math.min(GIR.bot[NS - 1], GD * 0.55), dfl(GL / 2)));
+    for (let i = NS - 1; i >= 0; i--) pts.push(map(GIR.xs[i], Math.min(GIR.bot[i], GD * 0.55), dfl(GIR.xs[i])));
+    pts.push(map(-GL / 2 - 2, Math.min(GIR.bot[0] + 4, GD * 0.7), dfl(-GL / 2)));
     pts.push(map(-GL / 2 - 2, GD, dfl(-GL / 2)));
     return pts;
   }
@@ -672,12 +672,12 @@
     function draw(ctx, W, h) {
       const P = SB.palette(), padL = 54, padR = 14, s = (W - padL - padR) / (GL + 40), X = (x) => padL + (x + GL / 2 + 20) * s;
       const sv = s * 2.2, wy = h * 0.27, wv = waveFn(gx()), y = deflect(res.M);
-      const dfl = (x) => y[SB.clamp(Math.round(x + GL / 2), 0, NS)] * 300 * sv;
+      const dfl = (x) => y[SB.clamp(Math.round(x + GL / 2), 0, NS)] * 40 * sv;
       const map = (x, z, d) => [X(x), wy - (z - res.T - res.t * x) * sv - d];
       const hull = hullPts(map, dfl);
       poly(ctx, hull); ctx.fillStyle = P.surface; ctx.fill(); ctx.strokeStyle = P.text; ctx.lineWidth = 1.4; ctx.stroke();
       SB.water(ctx, W, h * 0.5, wy, { wave: (px) => -wv((px - padL) / s - GL / 2 - 20) * sv });
-      label(ctx, "높이 2.2배 · 처짐 300배 과장", W - padR, 12, P.dim, "right", 10);
+      label(ctx, "높이 2.2배 · 처짐 40배 과장", W - padR, 12, P.dim, "right", 10);
       const m = res.M[midJ];
       label(ctx, m >= 0 ? "호깅" : "새깅", padL, 14, m >= 0 ? P.accent : P.accent2, "left", 13, 700);
       const box = { x: padL, y: h * 0.52, w: W - padL - padR, h: h * 0.48 - 46 };
@@ -834,7 +834,7 @@
     // 라벨
     const L = (t, p, obj) => { const lb = T.label(t, p); lb.grp = obj; return lb; };
     const labels = [
-      L("선저 외판", [LB / 2 + 0.1, 0, 0.8], gPlate), L("선측 외판", [LB / 2 + 0.05, DD * 0.6, BB / 2], gPlate), L("갑판", [LB / 2, DD, BB / 2 - dw / 2], gPlate), L("해치 개구", [0, DD + 0.15, 0], gPlate),
+      L("선저 외판", [LB / 2 + 0.1, 0, -1.2], gPlate), L("선측 외판", [LB / 2 + 0.05, DD * 0.6, BB / 2], gPlate), L("갑판", [LB / 2, DD, BB / 2 - dw / 2], gPlate), L("해치 개구", [0, DD + 0.15, 0], gPlate),
       L("내저판", [LB / 2 + 0.1, HDB, -0.6], gIB), L("거더", [LB / 2 + 0.1, HDB / 2, BB / 4], gCommon),
       L("종통재", [LB / 2 + 0.05, HDB + 0.3, BB / 2 - 0.05], gL), L("웹 프레임", [0.16, DD * 0.55, -BB / 2 + 0.1], gL), L("늑판(floor)", [-0.16, HDB / 2, -0.9], gL),
       L("늑골(frame)", [0.2, DD * 0.55, -BB / 2 + 0.05], gT), L("갑판 보", [0.2, DD - 0.03, -BB / 2 + dw / 2], gT), L("갑판 종거더", [LB / 2, DD - 0.1, -HW / 2], gT),
@@ -878,10 +878,10 @@
     function drawP(ctx, w, h) {
       const P = SB.palette(); if (!r) return;
       const ar = r.ar, NX = 40, NY = 12;
-      const pw = Math.min(w - 70, (h - 90) * 2.2 * ar), pd = pw / ar, sx = pw, ox = (w - pw - pd * 0.45) / 2 + 10, oy = h * 0.7;
+      const pw = Math.min(w - 90, (h - 110) * ar / 0.85), pd = pw / ar, sx = pw, ox = (w - pw - pd * 0.4) / 2 + 6, oy = h * 0.5 + pd * 0.42;
       const amp = r.u < 1 ? Math.min(0.5, (0.05 * r.u) / Math.max(0.05, 1 - r.u)) : 0.85 + 0.15 * Math.sin(phase * 3);
       const A = amp * Math.min(pd * 0.4, 40);
-      const proj = (u, v, wz) => [ox + u * sx + v * pd * 0.45, oy - v * pd * 0.3 - wz * A];
+      const proj = (u, v, wz) => [ox + u * sx + v * pd * 0.4, oy - v * pd * 0.85 - wz * A];
       const W = (u, v) => Math.sin(r.m * Math.PI * u) * Math.sin(Math.PI * v);
       const col = r.u < 1 ? P.accent : P.bad;
       // 면
