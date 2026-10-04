@@ -383,7 +383,7 @@
       <li><b>트림</b>: 앞뒤 모멘트가 LCB 둘레에서 맞아야 한다.</li>
       <li><b>종굽힘</b>: 무게가 양 끝에 몰리면 배 중앙이 위로 휘는 호깅(Hogging), 가운데 몰리면 아래로 처지는 새깅(Sagging) 모멘트가 커진다(간단한 근사: 무게의 중앙 모멘트와 고르게 분포한 부력의 차이).</li>
     </ol>
-    <p>그리고 컨테이너 자체의 규칙도 있다. 무거운 컨테이너를 가벼운 컨테이너 위에 올리면 아래 컨테이너의 모서리 기둥이 눌려 찌그러질 수 있다. 아래 게임에서 길이 100 m, 폭 14 m의 소형 피더선에 컨테이너 24개를 실어 보자.</p>
+    <p>그리고 컨테이너 자체의 규칙도 있다. 무거운 컨테이너를 가벼운 컨테이너 위에 올리면 아래 컨테이너의 모서리 기둥이 눌려 찌그러질 수 있다. 아래 게임에서 길이 100 m, 폭 14 m의 소형 피더선에 컨테이너 30개를 실어 보자.</p>
 
     <div class="sim" id="sim-stow">
       <div class="sim-head"><span class="sim-tag">GAME</span><h3>피더선 적재 계획</h3></div>
@@ -912,6 +912,7 @@
       const pr = tf(-L / 2 + 3.3, 2.5);
       ctx.strokeStyle = r.prop >= 100 ? P.ok : r.prop >= 80 ? P.warn : P.bad; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(pr[0], pr[1], 2.3 * s, 0, Math.PI * 2); ctx.stroke();
       draftMarks(ctx, P, tf, r.Ta, r.Tf, wy);
+      if (ex) text(ctx, "트림 ×3 과장", 10, sideTop + 10, P.dim, "left", 10);
       ctx.restore();
       // 단면(횡경사)
       const cx2 = w * 0.84, sc = Math.min((w * 0.26) / 28, sideH / 30), wy2 = sideTop + sideH * 0.45;
@@ -1056,7 +1057,7 @@
     function draw(ctx, w, hh) {
       const P = SB.palette(), r = calc();
       const gh = hh * 0.58, sx = (w - 24) / (L + 8), X = (x) => 12 + (x + L / 2 + 4) * sx;
-      const sy = Math.min(sx * 1.8, (gh - 30) / (Bs + 2)), cy = 14 + gh / 2, Y = (y) => cy + y * sy;
+      const sy = Math.min(sx * 3, (gh - 30) / (Bs + 2)), cy = 14 + gh / 2, Y = (y) => cy + y * sy;
       // 선체 윤곽(폭 과장)
       ctx.beginPath();
       for (let i = 0; i <= 40; i++) { const xi = -1 + i / 20, hb = SB.hullHalf(xi, 1, { full: 0.7 }) * Bs / 2; i ? ctx.lineTo(X(xi * L / 2), Y(-hb)) : ctx.moveTo(X(xi * L / 2), Y(-hb)); }

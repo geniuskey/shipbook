@@ -269,8 +269,8 @@
         <div class="sim-view duo"><div><canvas id="cv-buckle"></canvas></div><div><canvas id="cv-bucklec"></canvas></div></div>
         <div class="sim-controls">
           <label class="ctrl"><span>판 두께 t <output id="bk-t-out"></output></span><input type="range" id="bk-t" min="8" max="30" step="0.5" value="16"></label>
-          <label class="ctrl"><span>보강재 간격 b <output id="bk-b-out"></output></span><input type="range" id="bk-b" min="500" max="1200" step="10" value="800"></label>
-          <label class="ctrl"><span>가로세로비 a/b <output id="bk-ar-out"></output></span><input type="range" id="bk-ar" min="0.3" max="5" step="0.05" value="4"></label>
+          <label class="ctrl"><span>보강재 간격 b <output id="bk-b-out"></output></span><input type="range" id="bk-b" min="500" max="3500" step="10" value="800"></label>
+          <label class="ctrl"><span>가로세로비 a/b <output id="bk-ar-out"></output></span><input type="range" id="bk-ar" min="0.2" max="5" step="0.05" value="4"></label>
           <label class="ctrl"><span>압축 응력 σ <output id="bk-s-out"></output></span><input type="range" id="bk-s" min="0" max="350" step="5" value="150"></label>
           <div class="ctrl"><span>강재</span><div class="seg" id="bk-mat"><button data-value="235" class="on">일반강</button><button data-value="355">AH36</button></div></div>
         </div>
@@ -281,7 +281,7 @@
         <div class="stat"><span class="k">임계 응력 σcr</span><span class="v" id="o-bk-cr">—</span></div>
         <div class="stat"><span class="k">이용률 σ/σcr</span><span class="v" id="o-bk-u">—</span></div>
       </div>
-      <div class="sim-note">왼쪽은 네 변 단순 지지 판(압축은 좌우 방향), 오른쪽은 a/b에 따른 좌굴 계수 k의 '꽃줄' 곡선이다. 해볼 것: ① a/b를 1에서 5까지 움직이면 반파 수 m이 1, 2, 3…으로 바뀌며 k가 4 근처에서 출렁인다. ② a/b를 0.3으로(압축 방향으로 짧고 넓은 판, 횡늑골식 갑판) 바꾸면 k가 커 보이지만, 이때 압축 방향 폭은 a이므로 \((t/b)^2\) 대신 실제로는 넓은 판이 된다. 같은 판 두께에서 종늑골식이 유리한 이유를 확인하자. ③ σ가 σcr을 넘으면 판이 불룩 솟는다.</div>
+      <div class="sim-note">왼쪽은 네 변 단순 지지 판(압축은 좌우 방향), 오른쪽은 a/b에 따른 좌굴 계수 k의 '꽃줄' 곡선이다. 해볼 것: ① a/b를 1에서 5까지 움직이면 반파 수 m이 1, 2, 3…으로 바뀌며 k가 4 근처에서 출렁인다. ② 같은 0.8 m × 3.2 m 판 칸을 비교하자. 종늑골식은 b = 800 mm, a/b = 4이고, 횡늑골식은 압축 방향 길이가 늑골 간격 0.8 m이므로 b = 3,200 mm, a/b = 0.25다. k는 횡늑골식이 크지만 \((t/b)^2\)이 16분의 1로 줄어 좌굴 응력이 몇 배 낮다. ③ σ가 σcr을 넘으면 판이 불룩 솟는다.</div>
     </div>
   </section>
 
@@ -389,7 +389,7 @@
         <div class="stat"><span class="k">증가율</span><span class="v" id="o-wh-r">—</span></div>
         <div class="stat"><span class="k">공진 여부</span><span class="v" id="o-wh-res">—</span></div>
       </div>
-      <div class="sim-note">감쇠비 2%의 1자유도 진동 모형에 파랑 모멘트(진폭 1,500 MN·m)와 매 파곡의 선수 슬래밍 충격을 넣은 개념 모형이다. 해볼 것: ① 슬래밍을 키우면 새깅 쪽(선수가 내리꽂힌 직후) 최댓값이 커진다. ② '고차 파 성분'을 켜고 조우 주기를 2절 주기의 2배(f = 0.6 Hz면 약 3.3 s의 2배인 6.7 s 부근)로 맞추면 진동이 꺼지지 않고 쌓이는 스프링잉이 나타난다.</div>
+      <div class="sim-note">감쇠비 2%의 1자유도 진동 모형에 파랑 모멘트(진폭 1,500 MN·m)와 매 파곡의 선수 슬래밍 충격을 넣은 개념 모형이다. 해볼 것: ① 슬래밍을 키우면 새깅 쪽(선수가 내리꽂힌 직후) 최댓값이 커진다. ② '고차 파 성분'을 켜고 고유 진동수를 0.4 Hz로 둔 뒤 조우 주기를 5.0 s나 7.5 s로 맞추면(조우 주파수의 2배·3배가 고유 진동수와 일치) 진동이 꺼지지 않고 쌓이는 스프링잉이 나타난다.</div>
     </div>
   </section>
 
@@ -456,7 +456,703 @@
   </section>
 </main>
 <script>
-/*SCRIPT*/
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const cssv = (n) => getComputedStyle(document.body).getPropertyValue(n);
+  const font = (sz, mono, w) => (w ? w + " " : "") + sz + "px " + (mono ? cssv("--mono") : cssv("--font"));
+  const sm = (v, u) => v + "<small>" + u + "</small>";
+  const RHO = 1.025, GA = 9.81;
+  function label(ctx, s, x, y, c, a, sz, w, base) { ctx.font = font(sz || 12, false, w); ctx.fillStyle = c; ctx.textAlign = a || "left"; ctx.textBaseline = base || "middle"; ctx.fillText(s, x, y); }
+  function mono(ctx, s, x, y, c, a, sz) { ctx.font = font(sz || 11, true); ctx.fillStyle = c; ctx.textAlign = a || "left"; ctx.textBaseline = "middle"; ctx.fillText(s, x, y); }
+  function seg(ctx, x1, y1, x2, y2) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+  function poly(ctx, pts) { ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.closePath(); }
+  function alphaFill(ctx, color, a) { ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = color; ctx.fill(); ctx.restore(); }
+  function run(name, fn) { try { fn(); } catch (e) { console.error("[" + name + "]", e); } }
+  const waterC = () => SB.color("water") || "#2f8fd0";
+  const fmtInt = (v) => Math.round(v).toLocaleString("en-US");
+
+  /* ------------------------------------------------------------------
+     선체 거더 모형: L 200 m, B 32 m, D 18 m 벌크선. 1 m 간격 200 조각.
+     ------------------------------------------------------------------ */
+  const GL = 200, GB = 32, GD = 18, NS = 200, DX = 1, FULL = 0.75;
+  const HOLDS = [[-58, -32], [-30, -4], [-2, 24], [26, 52], [54, 80]];   // 선미 쪽부터 (5번 창 → 1번 창)
+  function makeGirder() {
+    const xs = [], NZ = 72, dz = GD / NZ, A = [], bot = [];
+    for (let i = 0; i < NS; i++) xs.push(-GL / 2 + (i + 0.5) * DX);
+    xs.forEach((x) => {
+      const row = [0]; let acc = 0, b = null;
+      for (let k = 0; k < NZ; k++) { const hh = SB.hullHalf((2 * x) / GL, ((k + 0.5) * dz) / GD, { full: FULL }); if (b == null && hh > 0.05) b = k * dz; acc += GB * hh * dz; row.push(acc); }
+      A.push(row); bot.push(b == null ? GD : b);
+    });
+    const area = (i, z) => { if (z <= 0) return 0; const f = z / dz, k = Math.floor(f); if (k >= NZ) return A[i][NZ]; return A[i][k] + (A[i][k + 1] - A[i][k]) * (f - k); };
+    // 경하 중량 분포
+    const ls = new Array(NS).fill(0);
+    let ssum = 0; const shp = xs.map((x) => 0.5 + SB.hullHalf((2 * x) / GL, 0.5, { full: FULL })); shp.forEach((v) => (ssum += v));
+    xs.forEach((x, i) => { ls[i] += (7000 * shp[i]) / ssum; if (x > -88 && x < -66) ls[i] += 1200 / 22; if (x > -97 && x < -86) ls[i] += 600 / 11; });
+    function buoy(T, t, wave) { const b = new Array(NS); for (let i = 0; i < NS; i++) { const x = xs[i]; b[i] = RHO * area(i, T + t * x + (wave ? wave(x) : 0)); } return b; }
+    function tot(b) { let F = 0, M = 0; for (let i = 0; i < NS; i++) { F += b[i]; M += b[i] * xs[i]; } return [F, M]; }
+    function solve(W, Mw, wave, guess) {
+      let T = guess ? guess[0] : 9, t = guess ? guess[1] : 0, ok = false;
+      for (let it = 0; it < 40; it++) {
+        const [F, M] = tot(buoy(T, t, wave)), f1 = F - W, f2 = M - Mw;
+        if (Math.abs(f1) < W * 1e-7 && Math.abs(f2) < W * GL * 1e-8) { ok = true; break; }
+        const [Fa, Ma] = tot(buoy(T + 0.01, t, wave)), [Fb, Mb] = tot(buoy(T, t + 1e-5, wave));
+        const a = (Fa - F) / 0.01, b = (Fb - F) / 1e-5, c = (Ma - M) / 0.01, d = (Mb - M) / 1e-5, det = a * d - b * c;
+        if (!isFinite(det) || Math.abs(det) < 1e-12) break;
+        let dT = (-f1 * d + b * f2) / det, dt = (-a * f2 + c * f1) / det;
+        const sc = Math.max(1, Math.abs(dT) / 2, Math.abs(dt * 100) / 2); T += dT / sc; t += dt / sc;
+        T = SB.clamp(T, 0.5, GD * 1.5);
+      }
+      return { T, t, ok, b: buoy(T, t, wave) };
+    }
+    /* 무게 w(t/m) → 평형, 부력, 전단력·굽힘 모멘트(경계 NS+1개, t·m) */
+    function analyze(w, wave, guess) {
+      let W = 0, Mw = 0; for (let i = 0; i < NS; i++) { W += w[i]; Mw += w[i] * xs[i]; }
+      const r = solve(W, Mw, wave, guess);
+      const V = [0], M = [0];
+      for (let i = 0; i < NS; i++) { V.push(V[i] + (r.b[i] - w[i]) * DX); }
+      for (let i = 0; i < NS; i++) { M.push(M[i] + ((V[i] + V[i + 1]) / 2) * DX); }
+      const Mh = M.map((m) => -m);   // 호깅 + 부호
+      return { W, T: r.T, t: r.t, ok: r.ok, b: r.b, w, V, M: Mh };
+    }
+    return { xs, area, bot, ls, analyze };
+  }
+  const GIR = makeGirder();
+  const xb = (j) => -GL / 2 + j * DX;   // 경계 위치
+  function weightOf(blocks) {
+    const w = GIR.ls.slice();
+    blocks.forEach((bk) => { for (let i = 0; i < NS; i++) { const x0 = GIR.xs[i] - 0.5, x1 = x0 + 1, ov = Math.max(0, Math.min(x1, bk.b) - Math.max(x0, bk.a)); if (ov) w[i] += bk.q * ov; } });
+    return w;
+  }
+  function deflect(Mh) {   // M(t·m) → 처짐(m), EI = 206 GPa × 150 m⁴
+    const EI = 206e9 * 150, n = Mh.length, sl = [0], y = [0];
+    for (let j = 1; j < n; j++) sl.push(sl[j - 1] + (-(Mh[j - 1] + Mh[j]) / 2 * 9810 / EI) * DX);
+    for (let j = 1; j < n; j++) y.push(y[j - 1] + ((sl[j - 1] + sl[j]) / 2) * DX);
+    const yN = y[n - 1]; return y.map((v, j) => v - (yN * j) / (n - 1));
+  }
+  const PRESETS = { homo: [280, 280, 280, 280, 280], alt: [560, 0, 560, 0, 560], mid: [0, 320, 700, 320, 0], ends: [620, 80, 80, 80, 620], empty: [0, 0, 0, 0, 0] };
+  const mkBlocks = (qs) => HOLDS.map(([a, b], i) => ({ a, b, q: qs[i] }));
+  function hullPts(map, dfl) {   // 측면 윤곽 (dfl: 경계별 처짐 함수)
+    const pts = [];
+    for (let i = 0; i < NS; i++) pts.push(map(GIR.xs[i], GD, dfl(GIR.xs[i])));
+    pts.push(map(GL / 2 + 3, GD, dfl(GL / 2)));
+    pts.push(map(GL / 2, GIR.bot[NS - 1] + 5, dfl(GL / 2)));
+    for (let i = NS - 1; i >= 0; i--) pts.push(map(GIR.xs[i], GIR.bot[i], dfl(GIR.xs[i])));
+    pts.push(map(-GL / 2 - 2, GIR.bot[0] + 7, dfl(-GL / 2)));
+    pts.push(map(-GL / 2 - 2, GD, dfl(-GL / 2)));
+    return pts;
+  }
+
+  /* =================================================== Sim 1: 적재와 선도 */
+  run("beam", function () {
+    let blocks = mkBlocks(PRESETS.homo), res = null, cv = null, geo = null, drag = null;
+    const QMAX = 750;
+    const gpre = SB.seg("bm-pre", (v) => { blocks = mkBlocks(PRESETS[v]); upd(); });
+    const gex = SB.range("bm-ex", (v) => "×" + fmtInt(Math.pow(10, v)), () => cv && cv.redraw());
+    $("bm-q").addEventListener("change", () => cv && cv.redraw());
+    function upd() {
+      res = GIR.analyze(weightOf(blocks), null, res ? [res.T, res.t] : null);
+      res.y = deflect(res.M);
+      let vmax = 0, vx = 0, mmax = 0, mx = 0;
+      res.V.forEach((v, j) => { if (Math.abs(v) > Math.abs(vmax)) { vmax = v; vx = xb(j); } });
+      res.M.forEach((m, j) => { if (Math.abs(m) > Math.abs(mmax)) { mmax = m; mx = xb(j); } });
+      res.vmax = vmax; res.mmax = mmax; res.mx = mx;
+      SB.stat("o-bm-d", sm(fmtInt(res.W), "t") + " / " + sm(res.T.toFixed(2), "m"));
+      const tr = res.t * GL; SB.stat("o-bm-tr", Math.abs(tr) < 0.01 ? sm("0", "m") : sm(Math.abs(tr).toFixed(2), "m " + (tr > 0 ? "선수" : "선미")));
+      SB.stat("o-bm-v", sm(Math.abs(vmax * GA / 1000).toFixed(0), "MN @ " + vx.toFixed(0) + " m"));
+      SB.stat("o-bm-m", sm(fmtInt(Math.abs(mmax * GA / 1000)), "MN·m " + (mmax >= 0 ? "호깅" : "새깅")));
+      const rv = Math.abs(res.V[NS]) / Math.max(1, Math.abs(vmax)) * 100, rm = Math.abs(res.M[NS]) / Math.max(1, Math.abs(mmax)) * 100;
+      SB.stat("o-bm-res", sm(rv.toFixed(2) + "% · " + rm.toFixed(2) + "%", ""));
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), showQ = $("bm-q").checked, padL = 54, padR = 14, s = (w - padL - padR) / (GL + 10), X = (x) => padL + (x + GL / 2 + 4) * s;
+      const shipTop = 26, shipH = Math.min(h * 0.2, 0.2 * (w - padL)), sv = shipH / GD, base = shipTop + shipH;
+      const ex = Math.pow(10, gex()), ymax = Math.max(...res.y.map(Math.abs));
+      const dfl = (x) => { const j = SB.clamp(Math.round(x + GL / 2), 0, NS); return res.y[j] * ex * sv; };
+      const map = (x, z, d) => [X(x), base - z * sv - d];
+      geo = { X, s, base, sv, dfl };
+      // 수면(트림)
+      ctx.strokeStyle = waterC(); ctx.lineWidth = 1.5; const wl = (x) => base - (res.T + res.t * x) * sv;
+      const hull = hullPts(map, dfl);
+      poly(ctx, hull); ctx.fillStyle = P.surface; ctx.fill(); ctx.strokeStyle = P.text; ctx.lineWidth = 1.4; ctx.stroke();
+      // 기관실, 격벽
+      ctx.fillStyle = P.dim; ctx.globalAlpha = 0.25; const er = [map(-88, 1.8, dfl(-77)), map(-66, 1.8, dfl(-77)), map(-66, 14, dfl(-77)), map(-88, 14, dfl(-77))]; poly(ctx, er); ctx.fill(); ctx.globalAlpha = 1;
+      label(ctx, "기관실", X(-77), map(0, 9, dfl(-77))[1], P.dim, "center", 10);
+      // 화물 블록
+      blocks.forEach((bk, k) => {
+        const d = dfl((bk.a + bk.b) / 2), top = 1.8 + (bk.q / QMAX) * (GD - 2.6);
+        const p1 = map(bk.a, 1.8, d), p2 = map(bk.b, top, d);
+        ctx.fillStyle = P.warn; ctx.globalAlpha = 0.35 + 0.4 * (bk.q / QMAX); ctx.fillRect(p1[0], p2[1], p2[0] - p1[0], p1[1] - p2[1]); ctx.globalAlpha = 1;
+        ctx.strokeStyle = drag && drag.k === k ? P.accent : P.dim; ctx.lineWidth = drag && drag.k === k ? 2 : 1; ctx.strokeRect(p1[0], p2[1], p2[0] - p1[0], p1[1] - p2[1]);
+        ctx.fillStyle = P.accent; ctx.fillRect((p1[0] + p2[0]) / 2 - 7, p2[1] - 2, 14, 4);
+        if (p2[0] - p1[0] > 34) mono(ctx, fmtInt(bk.q), (p1[0] + p2[0]) / 2, p1[1] - 8, P.text, "center", 9);
+      });
+      ctx.save(); ctx.globalAlpha = 0.9; ctx.beginPath(); ctx.moveTo(X(-GL / 2 - 4), wl(-GL / 2 - 4)); ctx.lineTo(X(GL / 2 + 6), wl(GL / 2 + 6)); ctx.stroke(); ctx.restore();
+      label(ctx, "변형 ×" + fmtInt(ex) + " · 실제 중앙 처짐 " + (ymax * 100).toFixed(1) + " cm", w - padR, 12, P.dim, "right", 10);
+      label(ctx, "블록: 가운데 끌기 = 이동 · 좌우 끝 = 길이 · 윗면 = t/m", padL, 12, P.dim, "left", 10);
+      // 차트들
+      const panels = showQ ? ["q", "V", "M"] : ["V", "M"];
+      const top0 = base + 26, avail = h - top0 - 34, ph = avail / panels.length;
+      const xr = [-GL / 2 - 4, GL / 2 + 6];
+      panels.forEach((pn, k) => {
+        const box = { x: padL, y: top0 + k * ph + 6, w: w - padL - padR, h: ph - 30 };
+        const last = k === panels.length - 1;
+        if (pn === "q") {
+          const wd = GIR.xs.map((x, i) => [x, res.w[i]]), bd = GIR.xs.map((x, i) => [x, res.b[i]]);
+          const mx = Math.max(...res.w, ...res.b) * 1.1;
+          SB.chart(ctx, box, { x: xr, y: [0, Math.ceil(mx / 100) * 100], yLabel: "t/m", xFmt: () => "", series: [{ data: bd, color: waterC(), width: 2, fill: SB.color("water-soft") }, { data: wd, color: P.accent2, width: 1.8 }] });
+          label(ctx, "무게 w", box.x + 6, box.y + 8, P.accent2, "left", 10, 700); label(ctx, "부력 b", box.x + 54, box.y + 8, waterC(), "left", 10, 700);
+        } else {
+          const arr = pn === "V" ? res.V : res.M, f = GA / 1000;
+          const data = arr.map((v, j) => [xb(j), v * f]);
+          const mx = Math.max(10, ...data.map((d) => Math.abs(d[1]))) * 1.15;
+          const pts = pn === "M" ? [{ x: res.mx, y: res.mmax * f, color: P.accent2, r: 4 }] : [];
+          SB.chart(ctx, box, { x: xr, y: [-mx, mx], yLabel: pn === "V" ? "V (MN)" : "M (MN·m)", xFmt: last ? (v) => String(v) : () => "", yFmt: (v) => fmtInt(v), series: [{ data, color: pn === "V" ? P.accent : P.accent2, width: 2.2 }], hlines: [{ y: 0, color: P.axis, dash: [] }], points: pts });
+          label(ctx, pn === "V" ? "전단력" : "굽힘 모멘트 (+ 호깅)", box.x + 6, box.y + 8, pn === "V" ? P.accent : P.accent2, "left", 10, 700);
+        }
+      });
+      label(ctx, "x (m, 중앙 0, 선수 +)", padL + (w - padL - padR) / 2, h - 8, P.dim, "center", 11);
+    }
+    upd();
+    cv = SB.canvas($("cv-beam"), draw, { aspect: 1.0, minHeight: 560, maxHeight: 700 });
+    SB.drag(cv.canvas, {
+      down(p) {
+        drag = null; if (!geo) return false;
+        const { X, base, sv, dfl } = geo;
+        blocks.forEach((bk, k) => {
+          const d = dfl((bk.a + bk.b) / 2), top = base - (1.8 + (bk.q / QMAX) * (GD - 2.6)) * sv - d, bt = base - 1.8 * sv - d;
+          const x1 = X(bk.a), x2 = X(bk.b);
+          if (p.x < x1 - 6 || p.x > x2 + 6 || p.y < top - 12 || p.y > bt + 6) return;
+          let mode = "move";
+          if (Math.abs(p.y - top) < 9) mode = "top"; else if (Math.abs(p.x - x1) < 7) mode = "left"; else if (Math.abs(p.x - x2) < 7) mode = "right";
+          drag = { k, mode, x0: p.x, y0: p.y, a: bk.a, b: bk.b, q: bk.q };
+        });
+        if (!drag) return false;
+        cv.redraw();
+      },
+      move(p) {
+        if (!drag) return;
+        const bk = blocks[drag.k], dx = (p.x - drag.x0) / geo.s;
+        if (drag.mode === "move") { const len = drag.b - drag.a; bk.a = SB.clamp(drag.a + dx, -95, 95 - len); bk.b = bk.a + len; }
+        else if (drag.mode === "left") bk.a = SB.clamp(drag.a + dx, -95, bk.b - 5);
+        else if (drag.mode === "right") bk.b = SB.clamp(drag.b + dx, bk.a + 5, 95);
+        else bk.q = SB.clamp(drag.q - ((p.y - drag.y0) / (geo.sv * (GD - 2.6))) * QMAX, 0, QMAX);
+        upd();
+      },
+      up() { drag = null; cv.redraw(); },
+    });
+  });
+
+  /* =================================================== Sim 2: 파랑 중 굽힘 */
+  run("wave", function () {
+    const w = weightOf(mkBlocks(PRESETS.homo));
+    const still = GIR.analyze(w, null, null);
+    const midJ = NS / 2, f = GA / 1000;
+    let res = null, cyc = null, cv = null, playing = false;
+    const gH = SB.range("wv-h", (v) => v.toFixed(1) + " m", () => { cycle(); upd(); });
+    const gl = SB.range("wv-l", (v) => v.toFixed(2), () => { cycle(); upd(); });
+    const gx = SB.range("wv-x", (v) => (v === 0 ? "중앙" : (v > 0 ? "선수 쪽 " : "선미 쪽 ") + Math.abs(v) + " m"), upd);
+    const waveFn = (xc) => { const k = (2 * Math.PI) / (gl() * GL), A = gH() / 2; return (x) => A * Math.cos(k * (x - xc)); };
+    function cycle() {
+      const lam = gl() * GL; let hog = -1e12, sag = 1e12, g = [still.T, still.t];
+      for (let i = 0; i < 36; i++) { const r = GIR.analyze(w, waveFn(-lam / 2 + (lam * i) / 36), g); g = [r.T, r.t]; hog = Math.max(hog, r.M[midJ]); sag = Math.min(sag, r.M[midJ]); }
+      cyc = { hog, sag };
+      SB.stat("o-wv-hog", hog > 0 ? sm(fmtInt(hog * f), "MN·m") : "—");
+      SB.stat("o-wv-sag", sag < 0 ? sm(fmtInt(-sag * f), "MN·m") : "—");
+    }
+    function upd() {
+      res = GIR.analyze(w, waveFn(gx()), res ? [res.T, res.t] : [still.T, still.t]);
+      const m = res.M[midJ] * f;
+      SB.stat("o-wv-m", sm(fmtInt(Math.abs(m)), "MN·m " + (m >= 0 ? "호깅" : "새깅")));
+      if (cv) cv.redraw();
+    }
+    SB.stat("o-wv-sw", sm(fmtInt(Math.abs(still.M[midJ] * f)), "MN·m " + (still.M[midJ] >= 0 ? "호깅" : "새깅")));
+    function draw(ctx, W, h) {
+      const P = SB.palette(), padL = 54, padR = 14, s = (W - padL - padR) / (GL + 40), X = (x) => padL + (x + GL / 2 + 20) * s;
+      const sv = s * 2.2, wy = h * 0.27, wv = waveFn(gx()), y = deflect(res.M);
+      const dfl = (x) => y[SB.clamp(Math.round(x + GL / 2), 0, NS)] * 300 * sv;
+      const map = (x, z, d) => [X(x), wy - (z - res.T - res.t * x) * sv - d];
+      const hull = hullPts(map, dfl);
+      poly(ctx, hull); ctx.fillStyle = P.surface; ctx.fill(); ctx.strokeStyle = P.text; ctx.lineWidth = 1.4; ctx.stroke();
+      SB.water(ctx, W, h * 0.5, wy, { wave: (px) => -wv((px - padL) / s - GL / 2 - 20) * sv });
+      label(ctx, "높이 2.2배 · 처짐 300배 과장", W - padR, 12, P.dim, "right", 10);
+      const m = res.M[midJ];
+      label(ctx, m >= 0 ? "호깅" : "새깅", padL, 14, m >= 0 ? P.accent : P.accent2, "left", 13, 700);
+      const box = { x: padL, y: h * 0.52, w: W - padL - padR, h: h * 0.48 - 46 };
+      const lim = Math.max(3000, Math.abs(cyc.hog * f), Math.abs(cyc.sag * f)) * 1.1;
+      SB.chart(ctx, box, {
+        x: [-GL / 2 - 20, GL / 2 + 20], y: [-lim, lim], xLabel: "x (m)", yLabel: "M (MN·m)", yFmt: (v) => fmtInt(v),
+        series: [{ data: still.M.map((v, j) => [xb(j), v * f]), color: P.faint, width: 1.6, dash: [5, 4] }, { data: res.M.map((v, j) => [xb(j), v * f]), color: P.accent2, width: 2.4 }],
+        hlines: [{ y: 0, color: P.axis, dash: [] }],
+      });
+      label(ctx, "— 파랑 중 (+ 호깅)", box.x + 6, box.y + 8, P.accent2, "left", 10, 700);
+      label(ctx, "-- 정수 중", box.x + 6, box.y + 22, P.dim, "left", 10, 700);
+    }
+    cycle(); upd();
+    cv = SB.canvas($("cv-wave"), draw, { aspect: 0.72, minHeight: 360, maxHeight: 480 });
+    $("wv-play").addEventListener("click", () => { playing = !playing; $("wv-play").textContent = playing ? "멈춤" : "파도 진행"; });
+    let xcF = 0;
+    SB.loop(cv.canvas, (dt) => { if (!playing) { xcF = gx(); return; } xcF += dt * 30; if (xcF > 100) xcF -= 200; gx.set(Math.round(xcF)); });
+  });
+
+  /* =================================================== Sim 3: 중앙 단면 */
+  run("section", function () {
+    const B = 32, D = 18, HDB = 1.8, TIB = 0.016, AL = 0.0045, TG = 0.015;
+    const gtd = SB.range("sc-td", (v) => v + " mm", upd), gts = SB.range("sc-ts", (v) => v + " mm", upd), gtb = SB.range("sc-tb", (v) => v + " mm", upd);
+    const gn = SB.range("sc-n", (v) => v + "개", upd), ghw = SB.range("sc-hw", (v) => v + " m", upd), gm = SB.range("sc-m", (v) => (v > 0 ? "+" : "") + fmtInt(v) + " MN·m", upd);
+    const gmat = SB.seg("sc-mat", upd);
+    let r = null, cv = null;
+    function calc() {
+      const td = gtd() / 1000, ts = gts() / 1000, tb = gtb() / 1000, n = gn(), hw = ghw(), k = Number(gmat());
+      const els = [];
+      const dw = (B - hw) / 2;
+      els.push({ A: 2 * dw * td, z: D, i: 0 });
+      els.push({ A: 2 * D * ts, z: D / 2, i: (2 * ts * D ** 3) / 12 });
+      els.push({ A: B * tb, z: 0, i: 0 });
+      els.push({ A: B * TIB, z: HDB, i: 0 });
+      els.push({ A: 3 * HDB * TG, z: HDB / 2, i: (3 * TG * HDB ** 3) / 12 });
+      const nd = dw > 0.5 ? n : 0;
+      els.push({ A: nd * AL, z: D - 0.15, i: 0 }, { A: n * AL, z: 0.15, i: 0 }, { A: n * AL, z: HDB - 0.15, i: 0 });
+      const nsd = Math.round(n / 3);
+      for (let j = 0; j < nsd; j++) els.push({ A: 2 * AL, z: HDB + ((j + 0.5) * (D - HDB)) / nsd, i: 0 });
+      const A = els.reduce((s, e) => s + e.A, 0), NA = els.reduce((s, e) => s + e.A * e.z, 0) / A;
+      const I = els.reduce((s, e) => s + e.i + e.A * (e.z - NA) ** 2, 0);
+      const Zd = I / (D - NA), Zb = I / NA, M = gm();
+      return { td, ts, tb, n, hw, k, A, NA, I, Zd, Zb, M, sd: M / Zd, sb: -M / Zb, allow: 175 / k, Zr: 16.29 * k, nsd, nd };
+    }
+    function upd() {
+      r = calc();
+      SB.stat("o-sc-na", sm(r.NA.toFixed(2), "m"));
+      SB.stat("o-sc-i", sm(r.I.toFixed(0), "m⁴"));
+      SB.stat("o-sc-z", sm(r.Zd.toFixed(1) + " / " + r.Zb.toFixed(1), "m³"));
+      SB.stat("o-sc-zr", '<span style="color:var(' + (Math.min(r.Zd, r.Zb) >= r.Zr ? "--ok" : "--bad") + ')">' + r.Zr.toFixed(1) + "</span><small>m³</small>");
+      const c = (s) => '<span style="color:var(' + (Math.abs(s) <= r.allow ? "--ok" : "--bad") + ')">' + (s > 0 ? "+" : "") + s.toFixed(0) + "</span>";
+      SB.stat("o-sc-s", c(r.sd) + " / " + c(r.sb) + "<small>MPa (허용 ±" + r.allow.toFixed(0) + ")</small>");
+      SB.stat("o-sc-a", sm(r.A.toFixed(2) + " m² (" + (r.A * 7.85).toFixed(1) + " t/m)", ""));
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(); if (!r) r = calc();
+      const secW = w * 0.6, s = Math.min((secW - 30) / B, (h - 60) / D), cx = 14 + secW / 2, y0 = h - 30;
+      const X = (y) => cx + y * s, Y = (z) => y0 - z * s, lw = (t) => 1 + t * 1000 * 0.12;
+      ctx.lineCap = "butt";
+      // 이중 선저 칸 배경
+      ctx.fillStyle = P.surface; ctx.fillRect(X(-B / 2), Y(D), B * s, D * s);
+      ctx.strokeStyle = P.text;
+      ctx.lineWidth = lw(r.tb); seg(ctx, X(-B / 2), Y(0), X(B / 2), Y(0));
+      ctx.lineWidth = lw(TIB); seg(ctx, X(-B / 2), Y(HDB), X(B / 2), Y(HDB));
+      ctx.lineWidth = lw(r.ts); seg(ctx, X(-B / 2), Y(0), X(-B / 2), Y(D)); seg(ctx, X(B / 2), Y(0), X(B / 2), Y(D));
+      ctx.lineWidth = lw(r.td); const dw = (B - r.hw) / 2; seg(ctx, X(-B / 2), Y(D), X(-B / 2 + dw), Y(D)); seg(ctx, X(B / 2 - dw), Y(D), X(B / 2), Y(D));
+      ctx.lineWidth = 2; [-B / 4, 0, B / 4].forEach((y) => seg(ctx, X(y), Y(0), X(y), Y(HDB)));
+      if (r.hw > 0) { ctx.strokeStyle = P.dim; ctx.lineWidth = 2; seg(ctx, X(-r.hw / 2), Y(D), X(-r.hw / 2), Y(D) - 12); seg(ctx, X(r.hw / 2), Y(D), X(r.hw / 2), Y(D) - 12); label(ctx, "해치 개구", cx, Y(D) - 8, P.dim, "center", 10); }
+      // 종통재
+      ctx.fillStyle = P.accent;
+      const dots = (n, ya, yb, z, dz) => { for (let j = 0; j < n; j++) { const y = ya + ((j + 0.5) * (yb - ya)) / n; ctx.fillRect(X(y) - 1.5, Y(z) + dz - 1.5, 3, 3); } };
+      if (r.nd) { dots(Math.ceil(r.nd / 2), -B / 2, -B / 2 + dw, D, 4); dots(Math.floor(r.nd / 2), B / 2 - dw, B / 2, D, 4); }
+      dots(r.n, -B / 2, B / 2, 0, -4); dots(r.n, -B / 2, B / 2, HDB, 4);
+      for (let j = 0; j < r.nsd; j++) { const z = HDB + ((j + 0.5) * (D - HDB)) / r.nsd; ctx.fillRect(X(-B / 2) + 3, Y(z) - 1.5, 3, 3); ctx.fillRect(X(B / 2) - 6, Y(z) - 1.5, 3, 3); }
+      // 중립축
+      ctx.strokeStyle = P.accent2; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.5; seg(ctx, X(-B / 2) - 10, Y(r.NA), w - 10, Y(r.NA)); ctx.setLineDash([]);
+      label(ctx, "중립축 " + r.NA.toFixed(2) + " m", X(-B / 2) + 6, Y(r.NA) - 9, P.accent2, "left", 11, 700);
+      // 응력 분포
+      const sx0 = 14 + secW + 14, sw = w - sx0 - 12, smax = Math.max(r.allow * 1.3, Math.abs(r.sd), Math.abs(r.sb)) * 1.05;
+      const SX = (v) => sx0 + sw / 2 + (v / smax) * (sw / 2);
+      ctx.strokeStyle = P.axis; ctx.lineWidth = 1; seg(ctx, SX(0), Y(0), SX(0), Y(D));
+      ctx.strokeStyle = P.warn; ctx.setLineDash([3, 3]); seg(ctx, SX(r.allow), Y(0), SX(r.allow), Y(D)); seg(ctx, SX(-r.allow), Y(0), SX(-r.allow), Y(D)); ctx.setLineDash([]);
+      const nB = 18;
+      for (let j = 0; j <= nB; j++) {
+        const z = (j / nB) * D, sg = (r.M * (z - r.NA)) / r.I;
+        ctx.strokeStyle = Math.abs(sg) > r.allow ? P.bad : sg >= 0 ? P.accent2 : P.accent; ctx.lineWidth = 2.2; seg(ctx, SX(0), Y(z), SX(sg), Y(z));
+      }
+      ctx.strokeStyle = P.text; ctx.lineWidth = 1.5; seg(ctx, SX(r.sb), Y(0), SX(r.sd), Y(D));
+      mono(ctx, (r.sd > 0 ? "+" : "") + r.sd.toFixed(0), SX(r.sd), Y(D) - 10, P.text, "center", 11);
+      mono(ctx, (r.sb > 0 ? "+" : "") + r.sb.toFixed(0), SX(r.sb), Y(0) + 12, P.text, "center", 11);
+      label(ctx, "σ (MPa, + 인장)", sx0 + sw / 2, 12, P.dim, "center", 10);
+      label(ctx, "허용 ±" + r.allow.toFixed(0), sx0 + sw / 2, h - 10, P.warn, "center", 10);
+    }
+    upd();
+    cv = SB.canvas($("cv-section"), draw, { aspect: 0.62, minHeight: 300, maxHeight: 440 });
+  });
+
+  /* =================================================== Sim 4: 3D 구조 블록 */
+  run("3d", function () {
+    const el = $("v3d");
+    const T = SB.three(el, { camera: [3.4, 2.6, 3.6], target: [0, 0.8, 0], fov: 38, minDistance: 1.5, maxDistance: 12 });
+    if (!T) return;
+    const THREE = T.THREE, S = 0.1;   // 10 m = 1 단위
+    const LB = 12 * S, BB = 32 * S, DD = 18 * S, HDB = 1.8 * S, HW = 16 * S, TP = 0.025;
+    const box = (g, mat, sx, sy, sz, x, y, z) => { const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat); m.position.set(x, y, z); g.add(m); return m; };
+    const mPlate = T.material(0x9aa7ba, { transparent: true, opacity: 0.45, side: THREE.DoubleSide, depthWrite: false });
+    const mIB = T.material(0x7d8fa8, { transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false });
+    const mLong = T.material(0x2f7fd0), mWeb = T.material(0xd9822b), mFrame = T.material(0xc9443a), mGird = T.material(0x3d9a6a), mBh = T.material(0xb8a03a, { transparent: true, opacity: 0.6, side: THREE.DoubleSide });
+    // 판
+    const gPlate = new THREE.Group(), gIB = new THREE.Group(); T.scene.add(gPlate, gIB);
+    box(gPlate, mPlate, LB, TP, BB, 0, 0, 0);
+    box(gPlate, mPlate, LB, DD, TP, 0, DD / 2, BB / 2); box(gPlate, mPlate, LB, DD, TP, 0, DD / 2, -BB / 2);
+    const dw = (BB - HW) / 2;
+    box(gPlate, mPlate, LB, TP, dw, 0, DD, BB / 2 - dw / 2); box(gPlate, mPlate, LB, TP, dw, 0, DD, -BB / 2 + dw / 2);
+    box(gPlate, T.material(0x6b7a90), LB, 0.12, 0.03, 0, DD + 0.06, HW / 2); box(gPlate, T.material(0x6b7a90), LB, 0.12, 0.03, 0, DD + 0.06, -HW / 2);
+    box(gIB, mIB, LB, TP, BB, 0, HDB, 0);
+    // 이중 선저 거더(공통)
+    const gCommon = new THREE.Group(); T.scene.add(gCommon);
+    [-BB / 4, 0, BB / 4].forEach((z) => box(gCommon, mGird, LB, HDB, 0.02, 0, HDB / 2, z));
+    // 종늑골식
+    const gL = new THREE.Group(); T.scene.add(gL);
+    let nL = 0;
+    const sp = 0.8 * S, lh = 0.035, lw = 0.012;
+    for (let z = -BB / 2 + sp; z < BB / 2 - sp / 2; z += sp) {
+      if (Math.abs(z) < 0.03 || Math.abs(Math.abs(z) - BB / 4) < 0.03) continue;
+      box(gL, mLong, LB, lh, lw, 0, lh / 2 + TP / 2, z); box(gL, mLong, LB, lh, lw, 0, HDB - lh / 2 - TP / 2, z); nL += 2;
+      if (Math.abs(z) > HW / 2 + 0.02) { box(gL, mLong, LB, lh, lw, 0, DD - lh / 2 - TP / 2, z); nL++; }
+    }
+    for (let y = HDB + sp; y < DD - sp / 2; y += sp * 1.2) { box(gL, mLong, LB, lw, lh, 0, y, BB / 2 - lh / 2 - TP / 2); box(gL, mLong, LB, lw, lh, 0, y, -BB / 2 + lh / 2 + TP / 2); nL += 2; }
+    const webX = [-0.48, -0.16, 0.16, 0.48];
+    webX.forEach((x) => {
+      box(gL, mWeb, 0.02, HDB - TP, BB - 0.05, x, HDB / 2, 0);    // 늑판(floor)
+      box(gL, mWeb, 0.02, DD - HDB, 0.22, x, (DD + HDB) / 2, BB / 2 - 0.11); box(gL, mWeb, 0.02, DD - HDB, 0.22, x, (DD + HDB) / 2, -BB / 2 + 0.11);
+      box(gL, mWeb, 0.02, 0.18, dw, x, DD - 0.09, BB / 2 - dw / 2); box(gL, mWeb, 0.02, 0.18, dw, x, DD - 0.09, -BB / 2 + dw / 2);
+      nL += 5;
+    });
+    // 횡늑골식
+    const gT = new THREE.Group(); T.scene.add(gT);
+    let nT = 0;
+    for (let x = -LB / 2 + 0.04; x < LB / 2; x += 0.08) {
+      box(gT, mFrame, 0.015, DD - HDB, 0.06, x, (DD + HDB) / 2, BB / 2 - 0.03); box(gT, mFrame, 0.015, DD - HDB, 0.06, x, (DD + HDB) / 2, -BB / 2 + 0.03);
+      box(gT, mFrame, 0.015, 0.05, dw, x, DD - 0.025, BB / 2 - dw / 2); box(gT, mFrame, 0.015, 0.05, dw, x, DD - 0.025, -BB / 2 + dw / 2);
+      box(gT, mFrame, 0.015, HDB - TP, BB - 0.05, x, HDB / 2, 0);
+      nT += 5;
+    }
+    box(gT, mGird, LB, 0.2, 0.03, 0, DD - 0.1, HW / 2 + 0.02); box(gT, mGird, LB, 0.2, 0.03, 0, DD - 0.1, -HW / 2 - 0.02); nT += 2;
+    // 격벽
+    const gBh = new THREE.Group(); T.scene.add(gBh);
+    box(gBh, mBh, 0.02, DD - HDB, BB, -LB / 2, (DD + HDB) / 2, 0);
+    for (let z = -BB / 2 + 0.25; z < BB / 2; z += 0.25) box(gBh, mBh, 0.05, DD - HDB, 0.015, -LB / 2 + 0.035, (DD + HDB) / 2, z);
+    // 바닥 격자
+    const grid = SB.ground3d(T, 8, 16); grid.position.y = -0.02;
+    // 라벨
+    const L = (t, p, obj) => { const lb = T.label(t, p); lb.grp = obj; return lb; };
+    const labels = [
+      L("선저 외판", [LB / 2 + 0.1, 0, 0.8], gPlate), L("선측 외판", [LB / 2 + 0.05, DD * 0.6, BB / 2], gPlate), L("갑판", [LB / 2, DD, BB / 2 - dw / 2], gPlate), L("해치 개구", [0, DD + 0.15, 0], gPlate),
+      L("내저판", [LB / 2 + 0.1, HDB, -0.6], gIB), L("거더", [LB / 2 + 0.1, HDB / 2, BB / 4], gCommon),
+      L("종통재", [LB / 2 + 0.05, HDB + 0.3, BB / 2 - 0.05], gL), L("웹 프레임", [0.16, DD * 0.55, -BB / 2 + 0.1], gL), L("늑판(floor)", [-0.16, HDB / 2, -0.9], gL),
+      L("늑골(frame)", [0.2, DD * 0.55, -BB / 2 + 0.05], gT), L("갑판 보", [0.2, DD - 0.03, -BB / 2 + dw / 2], gT), L("갑판 종거더", [LB / 2, DD - 0.1, -HW / 2], gT),
+      L("횡격벽", [-LB / 2, DD * 0.7, 0.6], gBh),
+    ];
+    const gm = SB.seg("f3-mode", apply);
+    ["f3-plate", "f3-ib", "f3-bh", "f3-lbl", "f3-rot"].forEach((id) => $(id).addEventListener("change", apply));
+    function apply() {
+      const lg = gm() === "long";
+      gL.visible = lg; gT.visible = !lg;
+      gPlate.visible = $("f3-plate").checked; gIB.visible = $("f3-ib").checked; gBh.visible = $("f3-bh").checked;
+      if (T.controls) T.controls.autoRotate = $("f3-rot").checked;
+      const on = $("f3-lbl").checked;
+      labels.forEach((lb) => lb.setVisible(on && lb.grp.visible));
+      SB.stat("o-f3-dir", lg ? "길이 방향" : "폭(둘레) 방향");
+      SB.stat("o-f3-sp", lg ? sm("0.8", "m (웹 3.2 m)") : sm("0.8", "m (늑골)"));
+      SB.stat("o-f3-ar", lg ? "3.2 × 0.8 m (4 : 1)" : "0.8 × 수 m (1 : 4~6)");
+      SB.stat("o-f3-n", lg ? nL + " + 거더 3" : nT + " + 거더 3");
+    }
+    apply();
+  });
+
+  /* =================================================== Sim 5: 판의 좌굴 */
+  run("buckle", function () {
+    const E = 206000, NU = 0.3, C0 = (Math.PI * Math.PI * E) / (12 * (1 - NU * NU));
+    const gt = SB.range("bk-t", (v) => v.toFixed(1) + " mm", upd), gb = SB.range("bk-b", (v) => v + " mm", upd), gar = SB.range("bk-ar", (v) => v.toFixed(2), upd), gs = SB.range("bk-s", (v) => v + " MPa", upd);
+    const gmat = SB.seg("bk-mat", upd);
+    let r = null, cvP, cvC, phase = 0;
+    const kOf = (ar, m) => Math.pow(m / ar + ar / m, 2);
+    const kMin = (ar) => { let best = 1e9, bm = 1; for (let m = 1; m <= 12; m++) { const k = kOf(ar, m); if (k < best) { best = k; bm = m; } } return [best, bm]; };
+    function upd() {
+      const t = gt(), b = gb(), ar = gar(), sy = Number(gmat()), [k, m] = kMin(ar);
+      const sE = k * C0 * Math.pow(t / b, 2), scr = sE <= sy / 2 ? sE : sy * (1 - sy / (4 * sE));
+      r = { t, b, ar, sy, k, m, sE, scr, u: gs() / scr };
+      SB.stat("o-bk-k", sm(k.toFixed(2), "(m = " + m + ")"));
+      SB.stat("o-bk-e", sm(fmtInt(sE), "MPa"));
+      SB.stat("o-bk-cr", sm(fmtInt(scr), "MPa" + (sE > sy / 2 ? " (소성 보정)" : "")));
+      SB.stat("o-bk-u", '<span style="color:var(' + (r.u < 1 ? "--ok" : "--bad") + ')">' + r.u.toFixed(2) + "</span>" + (r.u >= 1 ? "<small>좌굴</small>" : ""));
+      if (cvC) { cvP.redraw(); cvC.redraw(); }
+    }
+    function drawP(ctx, w, h) {
+      const P = SB.palette(); if (!r) return;
+      const ar = r.ar, NX = 40, NY = 12;
+      const pw = Math.min(w - 70, (h - 90) * 2.2 * ar), pd = pw / ar, sx = pw, ox = (w - pw - pd * 0.45) / 2 + 10, oy = h * 0.7;
+      const amp = r.u < 1 ? Math.min(0.5, (0.05 * r.u) / Math.max(0.05, 1 - r.u)) : 0.85 + 0.15 * Math.sin(phase * 3);
+      const A = amp * Math.min(pd * 0.4, 40);
+      const proj = (u, v, wz) => [ox + u * sx + v * pd * 0.45, oy - v * pd * 0.3 - wz * A];
+      const W = (u, v) => Math.sin(r.m * Math.PI * u) * Math.sin(Math.PI * v);
+      const col = r.u < 1 ? P.accent : P.bad;
+      // 면
+      for (let i = 0; i < NX; i++) for (let j = 0; j < NY; j++) {
+        const u0 = i / NX, u1 = (i + 1) / NX, v0 = j / NY, v1 = (j + 1) / NY;
+        const q = [proj(u0, v0, W(u0, v0)), proj(u1, v0, W(u1, v0)), proj(u1, v1, W(u1, v1)), proj(u0, v1, W(u0, v1))];
+        const sh = 0.5 + 0.5 * Math.cos(r.m * Math.PI * (u0 + u1) / 2) * Math.sin(Math.PI * (v0 + v1) / 2) * Math.sign(amp) * Math.min(1, amp * 2);
+        poly(ctx, q); alphaFill(ctx, col, 0.12 + 0.3 * sh);
+      }
+      ctx.strokeStyle = P.text; ctx.lineWidth = 1.4;
+      const edge = (f) => { ctx.beginPath(); for (let i = 0; i <= 40; i++) { const p = f(i / 40); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); } ctx.stroke(); };
+      edge((s) => proj(s, 0, 0)); edge((s) => proj(s, 1, 0)); edge((s) => proj(0, s, 0)); edge((s) => proj(1, s, 0));
+      ctx.strokeStyle = P.faint; ctx.lineWidth = 0.8; for (let j = 1; j < 4; j++) edge((s) => proj(s, j / 4, W(s, j / 4)));
+      // 압축 화살표
+      for (let j = 1; j < 4; j++) { const a = proj(0, j / 4, 0), b2 = proj(1, j / 4, 0); SB.arrow(ctx, a[0] - 34, a[1], a[0] - 4, a[1], P.accent2, 2); SB.arrow(ctx, b2[0] + 34, b2[1], b2[0] + 4, b2[1], P.accent2, 2); }
+      label(ctx, "σ = " + gs() + " MPa", 10, 16, P.accent2, "left", 12, 700);
+      label(ctx, "a = " + ((r.ar * r.b) / 1000).toFixed(2) + " m, b = " + (r.b / 1000).toFixed(2) + " m", 10, 34, P.dim, "left", 11);
+      label(ctx, r.u < 1 ? "좌굴 전 (초기 처짐 확대)" : "좌굴! 반파 " + r.m + "개", w / 2, h - 14, col, "center", 13, 700);
+      const pb = proj(0, 0, 0); label(ctx, "a", proj(0.5, 0, 0)[0], pb[1] + 14, P.dim, "center", 11); label(ctx, "b", proj(1, 0.5, 0)[0] + 10, proj(1, 0.5, 0)[1], P.dim, "left", 11);
+    }
+    function drawC(ctx, w, h) {
+      const P = SB.palette(); if (!r) return;
+      const ser = [];
+      for (let m = 1; m <= 5; m++) { const d = []; for (let a = 0.2; a <= 5.001; a += 0.02) d.push([a, kOf(a, m)]); ser.push({ data: d, color: P.faint, width: 1 }); }
+      const env = []; for (let a = 0.2; a <= 5.001; a += 0.02) env.push([a, kMin(a)[0]]); ser.push({ data: env, color: P.accent, width: 2.6 });
+      SB.chart(ctx, { x: 46, y: 14, w: w - 60, h: h - 58 }, { x: [0.2, 5], y: [0, 12], xLabel: "가로세로비 a/b", yLabel: "k", series: ser, hlines: [{ y: 4, color: P.warn, label: "k = 4" }], points: [{ x: r.ar, y: Math.min(12, r.k), color: P.accent2, r: 6, label: "m = " + r.m }] });
+    }
+    upd();
+    cvP = SB.canvas($("cv-buckle"), drawP, { aspect: 0.85, minHeight: 260, maxHeight: 340 });
+    cvC = SB.canvas($("cv-bucklec"), drawC, { aspect: 0.85, minHeight: 260, maxHeight: 340 });
+    SB.loop(cvP.canvas, (dt) => { if (r && r.u >= 1) { phase += dt; cvP.redraw(); } });
+  });
+
+  /* =================================================== Sim 6: 피로 */
+  run("fatigue", function () {
+    const LA1 = 12.164, LA2 = 15.606, NK = 1e7, SK = Math.pow(10, (LA1 - 7) / 3);   // 꺾이는 점 응력
+    const Nsn = (ds) => (ds > SK ? Math.pow(10, LA1 - 3 * Math.log10(ds)) : Math.pow(10, LA2 - 5 * Math.log10(ds)));
+    const gS = SB.range("ft-s", (v) => v + " MPa", upd), gh = SB.range("ft-h", (v) => v.toFixed(2), upd), gk = SB.range("ft-k", (v) => v.toFixed(2), upd), gy = SB.range("ft-y", (v) => v + "년", upd);
+    let r = null, cvA, cvB, anim = { t: 0, on: false };
+    function upd() {
+      const S0 = gS() * gk(), h = gh(), Y = gy(), Tz = 4 * Math.log10(200);
+      const Ntot = (Y * 365.25 * 86400 * 0.85) / Tz, q = S0 / Math.pow(Math.log(1e8), 1 / h);
+      const Q = (s) => Math.exp(-Math.pow(s / q, h));
+      const NB = 400, smax = S0 * 1.6, ds = smax / NB, bins = [];
+      let D = 0;
+      for (let i = 0; i < NB; i++) { const s0 = i * ds, s1 = s0 + ds, n = Ntot * (Q(s0) - Q(s1)), sm2 = (s0 + s1) / 2, d = n / Nsn(sm2); D += d; bins.push([sm2, d, n]); }
+      let bm = bins[0]; bins.forEach((b) => { if (b[1] > bm[1]) bm = b; });
+      r = { S0, h, Y, Ntot, q, Q, D, bins, bm };
+      SB.stat("o-ft-n", sm((Ntot / 1e6).toFixed(1), "백만 회"));
+      SB.stat("o-ft-d", '<span style="color:var(' + (D <= 1 ? "--ok" : "--bad") + ')">' + D.toFixed(2) + "</span>");
+      SB.stat("o-ft-l", sm((Y / D).toFixed(1), "년"));
+      SB.stat("o-ft-c", sm(fmtInt(bm[0]), "MPa 부근"));
+      if (cvB) { cvA.redraw(); cvB.redraw(); }
+    }
+    function drawA(ctx, w, h) {
+      const P = SB.palette(); if (!r) return;
+      const sn = []; for (let e = 3; e <= 9.001; e += 0.05) { const N = Math.pow(10, e); const s = N <= NK ? Math.pow(10, (LA1 - e) / 3) : Math.pow(10, (LA2 - e) / 5); sn.push([N, s]); }
+      const lt = []; for (let s = r.S0; s > 5; s *= 0.97) lt.push([Math.max(1, r.Ntot * r.Q(s)), s]);
+      SB.chart(ctx, { x: 50, y: 14, w: w - 64, h: h - 58 }, { x: [1e3, 1e9], y: [10, 1000], logX: true, logY: true, xLabel: "반복 수 N", yLabel: "응력 범위 Δσ (MPa)", series: [{ data: sn, color: P.accent, width: 2.4 }, { data: lt, color: P.dim, width: 2, dash: [5, 3] }], points: [{ x: NK, y: SK, color: P.accent, r: 3 }] });
+      label(ctx, "— S–N 곡선(D 등급)", 58, 22, P.accent, "left", 10, 700);
+      label(ctx, "-- 겪는 응력(초과 횟수)", 58, 36, P.dim, "left", 10, 700);
+    }
+    function drawB(ctx, w, h) {
+      const P = SB.palette(); if (!r) return;
+      const G = 40, grp = [];
+      for (let i = 0; i < r.bins.length; i += 10) { let d = 0; for (let j = i; j < i + 10; j++) d += r.bins[j][1]; grp.push([r.bins[i + 5][0], d]); }
+      const box = { x: 50, y: 14, w: w - 64, h: (h - 58) * 0.58 };
+      const dmax = Math.max(...grp.map((g) => g[1])) * 1.15 || 1;
+      SB.chart(ctx, box, { x: [0, r.S0 * 1.6], y: [0, dmax], xLabel: "", yLabel: "손상 기여", yFmt: (v) => v.toFixed(2), series: [] });
+      const bw = box.w / grp.length;
+      grp.forEach((g, i) => { const bh = (g[1] / dmax) * box.h; ctx.fillStyle = P.accent2; ctx.globalAlpha = 0.75; ctx.fillRect(box.x + i * bw + 1, box.y + box.h - bh, bw - 2, bh); ctx.globalAlpha = 1; });
+      label(ctx, "응력 범위 Δσ (MPa) →  0 ~ " + fmtInt(r.S0 * 1.6), box.x + box.w / 2, box.y + box.h + 22, P.dim, "center", 10);
+      // 누적 막대
+      const yb = box.y + box.h + 40, bw2 = w - 64, frac = anim.on || anim.t > 0 ? Math.min(1, anim.t / 6) : 1;
+      const Dn = r.D * frac, yr = r.Y * frac;
+      ctx.fillStyle = P.surface; ctx.fillRect(50, yb, bw2, 22); ctx.strokeStyle = P.border; ctx.strokeRect(50, yb, bw2, 22);
+      const Dscale = Math.max(1.2, r.D * 1.05);
+      ctx.fillStyle = Dn < 1 ? P.ok : P.bad; ctx.fillRect(50, yb, (bw2 * Dn) / Dscale, 22);
+      ctx.strokeStyle = P.text; ctx.setLineDash([3, 3]); seg(ctx, 50 + bw2 / Dscale, yb - 4, 50 + bw2 / Dscale, yb + 26); ctx.setLineDash([]);
+      label(ctx, "D = 1", 50 + bw2 / Dscale, yb - 9, P.text, "center", 10, 700);
+      label(ctx, yr.toFixed(1) + "년 · D = " + Dn.toFixed(2) + (Dn >= 1 ? " → 균열 발생 (" + (r.Y / r.D).toFixed(1) + "년)" : ""), 50, yb + 38, Dn >= 1 ? P.bad : P.text, "left", 11, 700);
+    }
+    upd();
+    cvA = SB.canvas($("cv-fat"), drawA, { aspect: 0.85, minHeight: 280, maxHeight: 360 });
+    cvB = SB.canvas($("cv-fatb"), drawB, { aspect: 0.85, minHeight: 280, maxHeight: 360 });
+    $("ft-run").addEventListener("click", () => { anim = { t: 0, on: true }; });
+    SB.loop(cvB.canvas, (dt) => { if (!anim.on) return; anim.t += dt; if (anim.t >= 6) anim.on = false; cvB.redraw(); });
+  });
+
+  /* =================================================== Sim 7: 타원 구멍 응력장 */
+  run("hatch", function () {
+    const C = (re, im = 0) => ({ re, im });
+    const add = (a, b) => C(a.re + b.re, a.im + b.im), sub = (a, b) => C(a.re - b.re, a.im - b.im), mul = (a, b) => C(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re);
+    const div = (a, b) => { const d = b.re * b.re + b.im * b.im; return C((a.re * b.re + a.im * b.im) / d, (a.im * b.re - a.re * b.im) / d); };
+    const conj = (a) => C(a.re, -a.im), sc = (a, s) => C(a.re * s, a.im * s);
+    /* 무한 평판, 타원 구멍(x 반축 a, y 반축 b), y 방향 원거리 인장 1: 무스켈리슈빌리 해 */
+    function field(a, b, x, y) {
+      const R = (a + b) / 2, m = (a - b) / (a + b), E = C(-1, 0), one = C(1);
+      const wv = C(x / R, y / R), disc = sub(mul(wv, wv), C(4 * m));
+      const rr = Math.hypot(disc.re, disc.im), th = Math.atan2(disc.im, disc.re), sq = C(Math.sqrt(rr) * Math.cos(th / 2), Math.sqrt(rr) * Math.sin(th / 2));
+      let zt = sc(add(wv, sq), 0.5); if (Math.hypot(zt.re, zt.im) < 1) zt = sc(sub(wv, sq), 0.5);
+      const z2 = mul(zt, zt), z3 = mul(z2, zt), K = sub(sc(E, 2), C(m));
+      const dphi = sc(sub(one, div(K, z2)), R / 4), d2phi = sc(div(sc(K, 2), z3), R / 4);
+      const A = add(sub(one, sc(E, m)), C(m * m)), den = sub(z3, sc(zt, m)), num = sub(mul(A, z2), E);
+      const dF = div(sub(mul(sc(mul(A, zt), 2), den), mul(num, sub(sc(z2, 3), C(m)))), mul(den, den));
+      const dpsi = sc(add(conj(E), dF), -R / 2);
+      const dw = sc(sub(one, div(C(m), z2)), R), d2w = sc(div(C(2 * m), z3), R);
+      const Phi = div(dphi, dw), Psi = div(dpsi, dw), dPhi = div(sub(div(d2phi, dw), div(mul(dphi, d2w), mul(dw, dw))), dw);
+      const s1 = 4 * Phi.re, t = sc(add(mul(C(x, -y), dPhi), Psi), 2);
+      return { sxx: (s1 - t.re) / 2, syy: (s1 + t.re) / 2, sxy: t.im / 2 };
+    }
+    const gr = SB.range("hc-r", (v) => v.toFixed(2), upd), gc = SB.seg("hc-c", upd);
+    let cvM, cvC;
+    function upd() {
+      const a = gr(), b = 1;
+      SB.stat("o-hc-k", sm((1 + (2 * a) / b).toFixed(2), "(수치 " + field(a, b, a * 1.0005, 0).syy.toFixed(2) + ")"));
+      SB.stat("o-hc-r", sm(((b * b) / a / b).toFixed(3), ""));
+      SB.stat("o-hc-t", sm(field(a, b, 0, b * 1.0005).sxx.toFixed(2), "σ₀ (횡방향)"));
+      if (cvC) { cvM.redraw(); cvC.redraw(); }
+    }
+    function drawM(ctx, w, h) {
+      const P = SB.palette(), a = gr(), b = 1, vm = gc() === "vm";
+      const half = Math.max(a, b) * 2.6, s = Math.min(w, h) / (2 * half), cx = w / 2, cy = h / 2, cell = 4;
+      const Kt = 1 + 2 * a / b;
+      // 캔버스 가로 = 하중 방향 = 해의 y, 세로 = 해의 x
+      for (let px = 0; px < w; px += cell) for (let py = 0; py < h; py += cell) {
+        const fy = (px + cell / 2 - cx) / s, fx = (py + cell / 2 - cy) / s;
+        if ((fx * fx) / (a * a) + (fy * fy) / (b * b) <= 1) continue;
+        const f = field(a, b, fx, fy);
+        const v = vm ? Math.sqrt(f.sxx * f.sxx - f.sxx * f.syy + f.syy * f.syy + 3 * f.sxy * f.sxy) : f.syy;
+        if (v >= 1) { ctx.fillStyle = "rgba(217,72,59," + Math.min(0.92, (v - 1) / 2.2).toFixed(3) + ")"; }
+        else { ctx.fillStyle = "rgba(47,111,224," + Math.min(0.75, (1 - v) * 0.75).toFixed(3) + ")"; }
+        ctx.fillRect(px, py, cell, cell);
+      }
+      ctx.beginPath(); ctx.ellipse(cx, cy, b * s, a * s, 0, 0, Math.PI * 2); ctx.fillStyle = P.bg; ctx.fill(); ctx.strokeStyle = P.text; ctx.lineWidth = 1.5; ctx.stroke();
+      SB.arrow(ctx, 30, h - 16, 4, h - 16, P.text, 2); SB.arrow(ctx, w - 30, h - 16, w - 4, h - 16, P.text, 2);
+      label(ctx, "σ₀ 인장 (하중 방향 ↔)", w / 2, h - 14, P.text, "center", 11, 700);
+      label(ctx, "Kt = " + Kt.toFixed(2), 10, 16, P.text, "left", 13, 700);
+      label(ctx, "빨강 > σ₀ > 파랑", w - 10, 16, P.dim, "right", 10);
+      ctx.fillStyle = P.accent2; ctx.beginPath(); ctx.arc(cx, cy - a * s, 3.5, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(cx, cy + a * s, 3.5, 0, 7); ctx.fill();
+    }
+    function drawC(ctx, w, h) {
+      const P = SB.palette(), a = gr(), b = 1, d = [], dc = [];
+      for (let u = 0.001; u <= 4; u += 0.02) { d.push([u, field(a, b, a + u * b, 0).syy]); dc.push([u, field(1, 1, 1 + u, 0).syy]); }
+      const Kt = 1 + 2 * a / b;
+      SB.chart(ctx, { x: 46, y: 14, w: w - 60, h: h - 58 }, { x: [0, 4], y: [0, Math.max(3.5, Math.ceil(Kt + 0.5))], xLabel: "구멍 끝에서의 거리 / b", yLabel: "σ / σ₀", series: [{ data: dc, color: P.faint, width: 1.6, dash: [5, 4] }, { data: d, color: P.accent2, width: 2.4 }], hlines: [{ y: 1, color: P.axis }] });
+      label(ctx, "— 현재 구멍", 54, 22, P.accent2, "left", 10, 700); label(ctx, "-- 원형 구멍(Kt = 3)", 54, 36, P.dim, "left", 10, 700);
+    }
+    cvM = SB.canvas($("cv-hatch"), drawM, { aspect: 0.85, minHeight: 260, maxHeight: 340 });
+    cvC = SB.canvas($("cv-hatchc"), drawC, { aspect: 0.85, minHeight: 260, maxHeight: 340 });
+    upd();
+  });
+
+  /* =================================================== Sim 8: 비틀림 */
+  run("torsion", function () {
+    const B = 51, D = 30, WS = 2.5, HDB = 2, TS = 0.02, TI = 0.016, TD = 0.03, HT = 4, Gm = 79e9, TQ = 1e9;
+    const gw = SB.range("to-w", (v) => (v * 100).toFixed(0) + " %", upd), gt = SB.range("to-t", (v) => v + " mm", upd);
+    $("to-anim").addEventListener("change", () => {});
+    let r = null, cvA, cvB, ph = 0;
+    const cell = (b, h, per) => (4 * (b * h) ** 2) / per;
+    function calc() {
+      const rw = gw(), tb = gt() / 1000;
+      const Jc = cell(B, D, B / TD + B / TS + (2 * D) / TS);
+      if (rw <= 0.001) return { rw, J: Jc, Jc, closed: true };
+      const ds = ((1 - rw) * B) / 2, bw = Math.max(WS, ds);
+      const side = cell(WS, D - HDB - HT, (2 * WS) / TI + (2 * (D - HDB - HT)) / ((TS + TI) / 2));
+      const db = cell(B, HDB, (2 * B) / 0.018 + (2 * HDB) / 0.015);
+      const tbox = cell(bw, HT, (2 * bw) / tb + (2 * HT) / tb);
+      const open = (2 * Math.max(0, ds - bw) * TD ** 3) / 3;
+      const J = 2 * side + db + 2 * tbox + open;
+      return { rw, J, Jc, closed: false, bw };
+    }
+    function upd() {
+      r = calc(); r.th = (TQ * 100) / (Gm * r.J);
+      SB.stat("o-to-j", sm(r.J < 100 ? r.J.toFixed(1) : fmtInt(r.J), "m⁴"));
+      SB.stat("o-to-r", sm(((r.J / r.Jc) * 100).toFixed(r.J / r.Jc < 0.1 ? 2 : 0), "%"));
+      SB.stat("o-to-a", sm(SB.deg(r.th).toFixed(r.th < 0.01 ? 3 : 2), "°"));
+      if (cvB) { cvA.redraw(); cvB.redraw(); }
+    }
+    function drawA(ctx, w, h) {
+      const P = SB.palette(); if (!r) return;
+      const s = Math.min((w - 40) / B, (h - 50) / D), cx = w / 2, y0 = h - 22, X = (y) => cx + y * s, Y = (z) => y0 - z * s;
+      ctx.fillStyle = P.surface; ctx.fillRect(X(-B / 2), Y(D), B * s, D * s);
+      // 닫힌 칸 음영
+      ctx.fillStyle = P.accent; ctx.globalAlpha = 0.22;
+      if (r.closed) ctx.fillRect(X(-B / 2), Y(D), B * s, D * s);
+      else {
+        ctx.fillRect(X(-B / 2), Y(HDB), B * s, HDB * s);
+        ctx.fillRect(X(-B / 2), Y(D - HT), WS * s, (D - HT - HDB) * s); ctx.fillRect(X(B / 2 - WS), Y(D - HT), WS * s, (D - HT - HDB) * s);
+        ctx.fillStyle = P.accent2; ctx.globalAlpha = 0.35; ctx.fillRect(X(-B / 2), Y(D), r.bw * s, HT * s); ctx.fillRect(X(B / 2 - r.bw), Y(D), r.bw * s, HT * s);
+      }
+      ctx.globalAlpha = 1; ctx.strokeStyle = P.text; ctx.lineWidth = 2;
+      ctx.strokeRect(X(-B / 2), Y(D), B * s, D * s);
+      if (!r.closed) {
+        ctx.fillStyle = P.bg; const hw = r.rw * B; ctx.fillRect(X(-hw / 2), Y(D) - 3, hw * s, 6);
+        ctx.lineWidth = 1.2; seg(ctx, X(-B / 2), Y(HDB), X(B / 2), Y(HDB)); seg(ctx, X(-B / 2 + WS), Y(HDB), X(-B / 2 + WS), Y(D - HT)); seg(ctx, X(B / 2 - WS), Y(HDB), X(B / 2 - WS), Y(D - HT));
+        ctx.lineWidth = 2.4; ctx.strokeStyle = P.accent2; ctx.strokeRect(X(-B / 2), Y(D), r.bw * s, HT * s); ctx.strokeRect(X(B / 2 - r.bw), Y(D), r.bw * s, HT * s);
+        label(ctx, "토션 박스", X(-B / 2) + 4, Y(D) - 10, P.accent2, "left", 11, 700);
+        label(ctx, "열린 해치", cx, Y(D) + 14, P.dim, "center", 11);
+      } else label(ctx, "닫힌 상자 단면", cx, Y(D / 2), P.accent, "center", 13, 700);
+      label(ctx, "음영 = 닫힌 칸(비틀림을 주로 받는 곳)", cx, h - 8, P.dim, "center", 10);
+    }
+    function drawB(ctx, w, h) {
+      const P = SB.palette(); if (!r) return;
+      const anim = $("to-anim").checked ? Math.sin(ph) : 1;
+      const lenPx = w - 40, widPx = Math.min(h - 70, lenPx * 0.42), x0 = 20, y0 = (h - widPx) / 2 + 6;
+      const skew = SB.clamp(SB.deg(r.th) * 14, 0, widPx * 0.5) * anim;
+      ctx.fillStyle = P.surface; ctx.strokeStyle = P.text; ctx.lineWidth = 1.5;
+      // 갑판 외곽: 각 단면이 비틀려 좌우로 밀리는 모습(위에서 본 전단 변형)
+      const shift = (u) => (u - 0.5) * 2 * skew;
+      const deck = [[x0, y0 + shift(0)], [x0 + lenPx, y0 + shift(1)], [x0 + lenPx, y0 + widPx + shift(1)], [x0, y0 + widPx + shift(0)]];
+      poly(ctx, deck); ctx.fill(); ctx.stroke();
+      if (!r.closed) {
+        const nH = 4, gap = lenPx * 0.04, hl = (lenPx - gap * (nH + 1)) / nH, hw = widPx * r.rw;
+        for (let i = 0; i < nH; i++) {
+          const xa = x0 + gap + i * (hl + gap), xb2 = xa + hl, ua = (xa - x0) / lenPx, ub = (xb2 - x0) / lenPx, yc = y0 + widPx / 2;
+          const q = [[xa, yc - hw / 2 + shift(ua)], [xb2, yc - hw / 2 + shift(ub)], [xb2, yc + hw / 2 + shift(ub)], [xa, yc + hw / 2 + shift(ua)]];
+          poly(ctx, q); ctx.fillStyle = P.bg; ctx.fill(); ctx.strokeStyle = P.accent2; ctx.lineWidth = 1.6; ctx.stroke();
+          ctx.strokeStyle = P.faint; ctx.setLineDash([3, 3]); ctx.strokeRect(xa, yc - hw / 2, hl, hw); ctx.setLineDash([]);
+        }
+      }
+      label(ctx, "위에서 본 갑판 · 찌그러짐 과장", w / 2, 14, P.dim, "center", 10);
+      label(ctx, "선미", x0, h - 12, P.dim, "left", 10); label(ctx, "선수", x0 + lenPx, h - 12, P.dim, "right", 10);
+    }
+    upd();
+    cvA = SB.canvas($("cv-tor"), drawA, { aspect: 0.75, minHeight: 240, maxHeight: 320 });
+    cvB = SB.canvas($("cv-tor2"), drawB, { aspect: 0.75, minHeight: 240, maxHeight: 320 });
+    SB.loop(cvB.canvas, (dt) => { if (!$("to-anim").checked) return; ph += dt * 1.4; cvB.redraw(); });
+  });
+
+  /* =================================================== Sim 9: 휘핑과 스프링잉 */
+  run("whip", function () {
+    const MW = 1500, ZETA = 0.02, TMAX = 90;
+    const gte = SB.range("wh-te", (v) => v.toFixed(1) + " s", calc), gs = SB.range("wh-s", (v) => v.toFixed(2), calc), gf = SB.range("wh-f", (v) => v.toFixed(2) + " Hz", calc);
+    $("wh-sp").addEventListener("change", calc);
+    let data = null, cv = null, cursor = 0;
+    function calc() {
+      const Te = gte(), we = (2 * Math.PI) / Te, wn = 2 * Math.PI * gf(), S = gs(), sp = $("wh-sp").checked;
+      const dt = 0.004, wave = [], tot = [];
+      let x = 0, v = 0, nextSlam = Te * 0.5, mx = 0, mn = 0;
+      for (let t = 0, k = 0; t <= TMAX; t += dt, k++) {
+        const Mw = MW * Math.cos(we * t);
+        let F = 0; if (sp) F = wn * wn * MW * 0.035 * (Math.cos(2 * we * t) + Math.cos(3 * we * t));
+        const acc = F - 2 * ZETA * wn * v - wn * wn * x;
+        v += acc * dt; x += v * dt;
+        if (S > 0 && t >= nextSlam) { v += -S * MW * 0.9 * wn; nextSlam += Te; }
+        const Mt = Mw + x;
+        if (k % 10 === 0) { wave.push([t, Mw]); tot.push([t, Mt]); }
+        if (t > 20) { mx = Math.max(mx, Mt); mn = Math.min(mn, Mt); }
+      }
+      const res2 = Math.abs(2 / Te - gf()) / gf() < 0.04 || Math.abs(3 / Te - gf()) / gf() < 0.04;
+      data = { wave, tot, mx, mn, res2 };
+      SB.stat("o-wh-w", sm(fmtInt(MW), "MN·m"));
+      SB.stat("o-wh-max", sm(fmtInt(-mn), "MN·m"));
+      SB.stat("o-wh-r", sm("+" + ((-mn / MW - 1) * 100).toFixed(0), "%"));
+      SB.stat("o-wh-res", sp && res2 ? '<span style="color:var(--bad)">스프링잉 공진</span>' : "아님");
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(); if (!data) return;
+      const t0 = 20 + (cursor % 40), t1 = t0 + 30;
+      const lim = Math.max(2500, Math.abs(data.mn), data.mx) * 1.1;
+      const ch = SB.chart(ctx, { x: 56, y: 14, w: w - 70, h: h - 58 }, { x: [t0, t1], y: [-lim, lim], xLabel: "시간 (s)", yLabel: "M (MN·m, + 호깅)", yFmt: (v) => fmtInt(v), series: [{ data: data.wave.filter((p) => p[0] >= t0 - 1 && p[0] <= t1 + 1), color: P.faint, width: 1.6, dash: [5, 4] }, { data: data.tot.filter((p) => p[0] >= t0 - 1 && p[0] <= t1 + 1), color: P.accent2, width: 2 }], hlines: [{ y: 0, color: P.axis, dash: [] }, { y: -MW, color: P.warn, label: "파랑 모멘트만의 새깅" }] });
+      label(ctx, "-- 파랑 모멘트  — 합성(휘핑·스프링잉 포함)", 64, 24, P.dim, "left", 10, 700);
+    }
+    calc();
+    cv = SB.canvas($("cv-whip"), draw, { aspect: 0.5, minHeight: 260, maxHeight: 360 });
+    SB.loop(cv.canvas, (dt) => { cursor += dt * 2; cv.redraw(); });
+  });
+})();
+
 </script>
 </body>
 </html>

@@ -1102,7 +1102,7 @@
     const cvm = SB.canvas($("cv-gcm"), (ctx, w, h) => {
       if (!route) return;
       const P = SB.palette();
-      M = makeMap({ x: 4, y: 4, w: w - 8, h: h - 8 }, route.lon0, 12, "merc");
+      M = makeMap({ x: 4, y: 4, w: w - 8, h: h - 8 }, route.lon0, route.latC, "merc");
       drawMap(ctx, M, { step: 30 });
       ctx.save(); ctx.beginPath(); ctx.rect(M.box.x, M.box.y, M.box.w, M.box.h); ctx.clip();
       ctx.lineWidth = 2.5;
@@ -1135,7 +1135,9 @@
     function upd(moveCam, keepCenter) {
       const gc = gcPts(A, B, 120), rl = rhumb(A, B, 120);
       const lon0 = keepCenter && route ? route.lon0 : A.lon + wrap180(B.lon - A.lon) / 2;
-      route = { gc, rl: rl.pts, lon0 };
+      const lats = gc.map((p) => p[0]).concat([A.lat, B.lat]);
+      const latC = keepCenter && route ? route.latC : SB.clamp((Math.max(...lats) + Math.min(...lats)) / 2, -35, 35);
+      route = { gc, rl: rl.pts, lon0, latC };
       const dG = gcAngle(A, B) * RE, dR = rl.ang * RE;
       const maxLat = gc.reduce((m, p) => (Math.abs(p[0]) > Math.abs(m) ? p[0] : m), 0);
       SB.stat("o-gc-d", sm(Math.round(dG).toLocaleString(), "NM"));

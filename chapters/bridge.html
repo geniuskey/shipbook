@@ -853,7 +853,7 @@
     reset();
     $("mo-run").addEventListener("click", () => { running = !running; $("mo-run").textContent = running ? "일시정지" : "계속"; });
     $("mo-reset").addEventListener("click", reset);
-    const ship = (ctx, x, y, crs, col, L) => SB.shipTop(ctx, x, y, (crs - 90) * D2R, { len: L || 22, color: col });
+    const ship = (ctx, x, y, crs, col, L) => SB.shipTop(ctx, x, y, (crs - 90) * D2R, { len: L || 22, wid: (L || 22) * 0.3, color: col });
     const c1 = SB.canvas($("cv-tm"), (ctx, w, h) => {
       const P = SB.palette(), s = Math.min(w, h) / 16, X = (x) => w / 2 + (x - st.ctr[0]) * s, Y = (y) => h / 2 - (y - st.ctr[1]) * s;
       ctx.strokeStyle = P.grid; ctx.lineWidth = 1;
@@ -927,8 +927,8 @@
         txt(ctx, "−V_o", (X(tt[0]) + X(rt[0])) / 2 + 6, (Y(tt[1]) + Y(rt[1])) / 2, P.dim, "left", 10, 600);
         txt(ctx, "V_r", X(rt[0]) + 6, Y(rt[1]) + 8, P.warn, "left", 11, 700);
       }
-      SB.shipTop(ctx, cx, cy, Math.atan2(-st.vo[1], st.vo[0]), { len: 24, color: P.accent });
-      SB.shipTop(ctx, X(st.r[0]), Y(st.r[1]), Math.atan2(-st.vt[1], st.vt[0]), { len: 24, color: P.accent2 });
+      SB.shipTop(ctx, cx, cy, Math.atan2(-st.vo[1], st.vo[0]), { len: 24, wid: 7, color: P.accent });
+      SB.shipTop(ctx, X(st.r[0]), Y(st.r[1]), Math.atan2(-st.vt[1], st.vt[0]), { len: 24, wid: 7, color: P.accent2 });
       [[ot, P.accent], [tt, P.accent2]].forEach(([p, col]) => { ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(X(p[0]), Y(p[1]), 7, 0, 7); ctx.stroke(); });
       txt(ctx, "자선", cx - 16, cy + 18, P.accent, "right", 11, 700);
       txt(ctx, "링 1 NM", 8, h - 10, P.faint, "left", 10);
@@ -1132,8 +1132,8 @@
       if (J.cp.tcpa > 0) { ctx.fillStyle = J.risk ? P.bad : P.dim; ctx.beginPath(); ctx.arc(X(J.cp.pt[0]), Y(J.cp.pt[1]), 4, 0, 7); ctx.fill(); }
       SB.arrow(ctx, cx, cy, X(J.vo[0] * T), Y(J.vo[1] * T), P.accent, 2.4);
       SB.arrow(ctx, X(J.r[0]), Y(J.r[1]), X(J.r[0] + J.vt[0] * T), Y(J.r[1] + J.vt[1] * T), P.accent2, 2.4);
-      SB.shipTop(ctx, cx, cy, -Math.PI / 2, { len: 26, color: P.accent });
-      SB.shipTop(ctx, X(J.r[0]), Y(J.r[1]), (gC() - 90) * D2R, { len: 26, color: P.accent2 });
+      SB.shipTop(ctx, cx, cy, -Math.PI / 2, { len: 26, wid: 8, color: P.accent });
+      SB.shipTop(ctx, X(J.r[0]), Y(J.r[1]), (gC() - 90) * D2R, { len: 26, wid: 8, color: P.accent2 });
       txt(ctx, TYPE[$("cl-type").value], X(J.r[0]) + 14, Y(J.r[1]) - 14, P.accent2, "left", 11, 700);
       txt(ctx, J.sit, 8, 12, J.risk ? P.bad : P.dim, "left", 12, 700);
       txt(ctx, "링 1 NM · 벡터 12분", 8, h - 10, P.faint, "left", 10);
@@ -1262,13 +1262,13 @@
       R.forEach((o) => {
         const t = o.t, vt = vel(t.c, t.v), danger = o.c.tcpa > 0 && o.c.cpa < 1;
         SB.arrow(ctx, X(t.x), Y(t.y), X(t.x + vt[0] * 0.1), Y(t.y + vt[1] * 0.1), danger ? P.bad : P.accent2, 2);
-        SB.shipTop(ctx, X(t.x), Y(t.y), (t.c - 90) * D2R, { len: 20, color: danger ? P.bad : P.accent2 });
+        SB.shipTop(ctx, X(t.x), Y(t.y), (t.c - 90) * D2R, { len: 20, wid: 6, color: danger ? P.bad : P.accent2 });
         txt(ctx, o.c.tcpa > 0 ? o.c.cpa.toFixed(1) : "—", X(t.x) + 12, Y(t.y) - 12, danger ? P.bad : P.dim, "left", 11, 700, true);
       });
       const vo = vel(st.hdg, st.spd);
       ctx.strokeStyle = P.bad; ctx.globalAlpha = 0.4; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.arc(X(st.x), Y(st.y), s, 0, 7); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
       SB.arrow(ctx, X(st.x), Y(st.y), X(st.x + vo[0] * 0.1), Y(st.y + vo[1] * 0.1), P.accent, 2.4);
-      SB.shipTop(ctx, X(st.x), Y(st.y), (st.hdg - 90) * D2R, { len: 22, color: P.accent });
+      SB.shipTop(ctx, X(st.x), Y(st.y), (st.hdg - 90) * D2R, { len: 22, wid: 7, color: P.accent });
       if (st.msgT > 0) txt(ctx, st.msg, w / 2, 16, P.bad, "center", 12, 700);
       if (st.over) { ctx.fillStyle = "rgba(0,0,0,0.45)"; ctx.fillRect(0, h / 2 - 30, w, 60); txt(ctx, st.over, w / 2, h / 2, "#fff", "center", 16, 700); }
       txt(ctx, "격자 2 NM · 벡터 6분 · 점선 원 1 NM", 8, h - 10, P.faint, "left", 10);
