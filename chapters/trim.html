@@ -908,7 +908,7 @@
       const sideTop = 2 * stripH + 20, sideH = hh - sideTop;
       const s = Math.min((w * 0.62) / 160, sideH / 26), x0 = w * 0.36, wy = sideTop + sideH * 0.45;
       ctx.save(); ctx.beginPath(); ctx.rect(0, sideTop, w, sideH); ctx.clip();
-      const tf = drawSide(ctx, w, hh, { s, x0, wy, Ta: r.Ta, Tf: r.Tf, ex: ex ? 4 : 1 });
+      const tf = drawSide(ctx, w * 0.7, hh, { s, x0, wy, Ta: r.Ta, Tf: r.Tf, ex: ex ? 3 : 1 });
       const pr = tf(-L / 2 + 3.3, 2.8);
       ctx.strokeStyle = r.prop >= 100 ? P.ok : r.prop >= 80 ? P.warn : P.bad; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(pr[0], pr[1], 2.5 * s, 0, Math.PI * 2); ctx.stroke();
       draftMarks(ctx, P, tf, r.Ta, r.Tf, wy);
@@ -1081,7 +1081,7 @@
         ["트림", Math.abs(r.trim), 0, 1.5, LIM.trim, r.trim.toFixed(2) + " m", ok[2]],
         ["굽힘", Math.abs(r.bm), 0, 5000, LIM.bm, Math.round(r.bm) + " t·m", ok[3]],
       ];
-      const by = gh + 20, bh = (hh - by - 8) / 4, lx = 64, bw = w - lx - 110;
+      const by = gh + 20, bh = (hh - by - 30) / 4, lx = 64, bw = w - lx - 110;
       rows.forEach(([n, v, a, b, lim, s, good, minType], k) => {
         const y = by + k * bh;
         text(ctx, n, 10, y + bh / 2, P.text, "left", 12, 600);
@@ -1128,7 +1128,7 @@
       const GMe = KM - KG - (Math.min(r.P, r.Pc) * KM) / DEL;
       const top = hh * 0.6, sc = (w * 0.8) / (L * 1.1), x0 = w * 0.5;
       const Ta0 = SH.T + ((t0 / 100) * (L / 2 + SH.LCF)) / L, depth = Ta0 - s / 100;
-      const yb = top - 16, wyw = yb - 6 - depth * sc, EX = 8;
+      const yb = top - 16, wyw = yb - 6 - depth * sc, EX = 3;
       // 도크 바닥과 블록
       ctx.fillStyle = P.surface; ctx.fillRect(0, yb, w, top - yb);
       for (let x = -70; x <= 70; x += 10) { const px = x0 + x * sc; ctx.fillStyle = P.dim; ctx.fillRect(px - 4, yb - 6, 8, 6); }
@@ -1140,7 +1140,7 @@
       ctx.fillStyle = cssv("--water-soft"); ctx.fillRect(0, wyw, w, yb - wyw); seg(ctx, 0, wyw, w, wyw, cssv("--water"), 1.6);
       if (r.P > 1) { const px = x0 + (-L / 2 + 0.075 * L) * sc; SB.arrow(ctx, px, yb + 4, px, yb - 8 - Math.min(60, r.P / 20), P.accent2, 3); text(ctx, "P = " + Math.round(r.P) + " t", px + 8, yb - 20, P.accent2, "left", 12, 700); }
       text(ctx, r.full ? "용골 전체가 블록에 닿음 — 옆 블록·지주로 지지" : r.P > 0 ? "선미만 닿아 있음: 임계 구간" : "물에 떠 있음", 10, 14, r.full ? P.ok : r.P > 0 ? P.warn : P.dim, "left", 12, 700);
-      text(ctx, "트림 ×8 과장", w - 10, 14, P.dim, "right", 11);
+      text(ctx, "트림 ×3 과장", w - 10, 14, P.dim, "right", 11);
       ctx.restore();
       // 그래프
       const bx = { x: 54, y: top + 12, w: w - 70, h: hh - top - 52 };
