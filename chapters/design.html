@@ -1,0 +1,1209 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<title>선박 설계 · ShipBook</title>
+<meta name="description" content="설계 나선과 설계 단계, 주요 치수 비와 블록 계수, 중량 방정식으로 푸는 개략 설계, 선도와 일반 배치, 선급과 국제 협약, 요구 운임까지 시뮬레이터로 직접 설계해 본다.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../css/style.css">
+<script src="../js/common.js"></script>
+<style>
+  .sim-view canvas.grab { cursor: pointer; touch-action: none; }
+  .sp-info { padding: 12px 16px; border-top: 1px solid var(--border); font-size: 15px; min-height: 64px; background: var(--bg-elev); }
+  .sp-info .en { margin-left: 4px; }
+  .iter-wrap { max-height: 220px; overflow: auto; border-top: 1px solid var(--border); background: var(--bg-elev); }
+  .iter-wrap table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .iter-wrap th, .iter-wrap td { padding: 4px 8px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .iter-wrap th { color: var(--text-dim); font-weight: 600; position: sticky; top: 0; background: var(--bg-elev); }
+  .iter-wrap tr.last td { color: var(--accent); font-weight: 700; }
+  .rq-box { padding: 22px 18px; display: grid; gap: 16px; }
+  .rq-card { font-size: 18px; font-weight: 600; padding: 18px 20px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-elev); min-height: 72px; }
+  .rq-card small { display: block; font-size: 13px; font-weight: 400; color: var(--text-dim); margin-top: 6px; }
+  .rq-bins { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+  .rq-bins button { font: inherit; font-size: 14px; padding: 12px 8px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
+  .rq-bins button:hover { border-color: var(--accent); }
+  .rq-bins button.right { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 18%, transparent); }
+  .rq-bins button.wrong { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 16%, transparent); }
+  .rq-fb { font-size: 14.5px; color: var(--text-dim); min-height: 42px; }
+  .fig-lg svg .t, .fig-lg svg .t-acc { font-size: 15px; }
+</style>
+</head>
+<body data-chapter="design">
+<main class="chapter">
+  <header class="chapter-hero">
+    <div class="eyebrow">Chapter 14</div>
+    <h1>선박 설계</h1>
+    <p class="lead">선주가 조선소에 건네는 요구서는 대개 몇 줄뿐이다. "재화중량 18만 톤, 서비스 속력 14.5노트, 브라질–중국 항로." 이 몇 줄에서 길이 290 m, 강재 2만 톤, 부품 수십만 개의 배가 나온다. 이 장에서는 앞 장들에서 배운 부력·복원성·저항·구조를 한데 모아, 설계 나선을 돌며 주요 치수를 정하고, 중량 방정식을 풀고, 선도와 일반 배치를 그리고, 선급 규칙과 경제성으로 검증하는 과정을 직접 따라가 본다.</p>
+    <ul class="objectives">
+      <li>개념·기본·상세·생산 설계의 단계와 설계 나선이 반복을 통해 수렴하는 이유를 설명한다.</li>
+      <li>L/B, B/T, L/D, \(C_B\)가 저항·복원성·화물 용적·건조비에 미치는 영향을 비교한다.</li>
+      <li>프루드 수로부터 경험식을 써서 블록 계수를 고른다.</li>
+      <li>중량 방정식 \(\Delta = DWT + LW\)를 반복해 주요 치수와 경하중량을 추정한다.</li>
+      <li>선도의 정면도·측면도·반폭도를 읽고 스테이션·수선·버톡의 관계를 이해한다.</li>
+      <li>일반 배치가 트림과 용적에 주는 영향, 선급·국제 협약의 역할, 요구 운임(RFR)의 계산을 안다.</li>
+    </ul>
+  </header>
+
+  <!-- =============================================================== 1 -->
+  <section id="stages">
+    <h2>설계 나선: 모든 것이 모든 것에 걸려 있다</h2>
+    <p>배의 설계가 어려운 이유는 결정들이 서로 물고 물리기 때문이다. 화물을 더 실으려면 배가 커져야 하고, 배가 커지면 강재가 늘어 경하중량이 무거워지고, 무거워진 만큼 배수량을 다시 키워야 한다. 길이를 늘리면 조파 저항은 줄지만 강재와 건조비가 늘고, 폭을 늘리면 복원성은 좋아지지만 저항과 운하 통과 조건이 문제가 된다. 어느 하나를 먼저 확정할 수 없으니, 설계자는 모든 항목을 대략 한 바퀴 정하고, 그 결과로 다시 처음 가정을 고치는 일을 되풀이한다.</p>
+    <p>1959년 에반스<span class="en">(J. H. Evans)</span>는 이 반복을 <span class="term">설계 나선</span><span class="en">(Design Spiral)</span>으로 그렸다. 바퀴살마다 설계 항목이 있고, 한 바퀴를 돌 때마다 정밀도가 높아지며 나선이 안쪽으로 감겨 하나의 설계안으로 수렴한다. 실제 설계는 몇 개의 큰 단계로 나뉜다.</p>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 250" role="img" aria-label="선박 설계 단계">
+        <g font-size="14">
+          <rect x="10" y="40" width="170" height="120" rx="12" class="f-acc-soft"/>
+          <rect x="196" y="40" width="170" height="120" rx="12" class="f-acc-soft"/>
+          <rect x="382" y="40" width="170" height="120" rx="12" class="f-acc2-soft"/>
+          <rect x="568" y="40" width="180" height="120" rx="12" class="f-acc2-soft"/>
+          <text x="95" y="66" class="t-acc" text-anchor="middle" font-weight="700">개념 설계</text>
+          <text x="281" y="66" class="t-acc" text-anchor="middle" font-weight="700">기본 설계</text>
+          <text x="467" y="66" class="t-acc" text-anchor="middle" font-weight="700">상세 설계</text>
+          <text x="658" y="66" class="t-acc" text-anchor="middle" font-weight="700">생산 설계</text>
+          <text x="95" y="92" class="t" text-anchor="middle">주요 치수·선형 후보</text>
+          <text x="95" y="114" class="t" text-anchor="middle">개략 중량·동력</text>
+          <text x="95" y="136" class="t-dim" text-anchor="middle">수 주 · 입찰용</text>
+          <text x="281" y="92" class="t" text-anchor="middle">선도·일반 배치도</text>
+          <text x="281" y="114" class="t" text-anchor="middle">사양서·중앙 단면</text>
+          <text x="281" y="136" class="t-dim" text-anchor="middle">수 개월 · 계약용</text>
+          <text x="467" y="92" class="t" text-anchor="middle">구조·배관·전기 도면</text>
+          <text x="467" y="114" class="t" text-anchor="middle">선급 승인 도면</text>
+          <text x="467" y="136" class="t-dim" text-anchor="middle">수천 장 · 승인용</text>
+          <text x="658" y="92" class="t" text-anchor="middle">블록 분할·부재 정보</text>
+          <text x="658" y="114" class="t" text-anchor="middle">절단·용접 지시</text>
+          <text x="658" y="136" class="t-dim" text-anchor="middle">수만 장 · 현장용</text>
+        </g>
+        <g class="s-acc" stroke-width="2.5">
+          <line x1="180" y1="100" x2="194" y2="100"/><line x1="366" y1="100" x2="380" y2="100"/><line x1="552" y1="100" x2="566" y2="100"/>
+        </g>
+        <line x1="20" y1="200" x2="740" y2="200" class="s-axis"/>
+        <path d="M20 225 C 200 222 300 210 380 196 S 600 178 740 176" class="s-acc" fill="none" stroke-width="2.5"/>
+        <path d="M20 182 C 200 186 300 196 380 206 S 600 222 740 228" fill="none" stroke="var(--warn)" stroke-width="2.5" stroke-dasharray="6 4"/>
+        <text x="30" y="242" class="t-dim">결정된 비용 비율 ↑</text>
+        <text x="560" y="168" class="t-dim">설계 변경의 자유도 ↓</text>
+      </svg>
+      <figcaption><b>그림 14-1.</b> 설계 단계. 개념 설계 단계에서 쓰는 돈은 전체 설계비의 몇 %에 불과하지만, 이때 정해진 치수와 배치가 건조비와 운항비의 대부분을 결정한다. 뒤로 갈수록 바꾸기 어렵고 비싸다.</figcaption>
+    </figure>
+
+    <p>개념 설계에서는 선주 요구를 만족하는 치수와 선형의 후보를 빨리 여러 개 만들어 비교한다. 기본 설계에서는 선도, 일반 배치도, 중앙 단면도, 사양서가 나오고 이것으로 건조 계약을 맺는다. 상세 설계는 선급 승인을 받을 구조·기관·배관·전기 도면이고, 생산 설계는 이를 <a href="building.html">15장</a>의 블록으로 쪼개 부재 하나하나의 절단·용접 정보를 만드는 단계다.</p>
+
+    <div class="sim" id="sim-spiral">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>설계 나선 돌려 보기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view">
+          <canvas id="cv-spiral" class="grab"></canvas>
+          <div class="sp-info" id="sp-info">바퀴살을 클릭하면 그 항목의 설명이 나온다.</div>
+        </div>
+        <div class="sim-controls">
+          <button class="btn primary" id="sp-play">일시정지</button>
+          <button class="btn" id="sp-reset">처음부터</button>
+          <label class="ctrl"><span>회전 속도 <output id="sp-speed-out"></output></span><input type="range" id="sp-speed" min="0.2" max="2" step="0.1" value="0.8"></label>
+          <label class="check"><input type="checkbox" id="sp-shrink" checked> 불확실성 띠 표시</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">설계 단계</span><span class="v" id="o-sp-stage">—</span></div>
+        <div class="stat"><span class="k">현재 항목</span><span class="v" id="o-sp-spoke">—</span></div>
+        <div class="stat"><span class="k">바퀴</span><span class="v" id="o-sp-turn">—</span></div>
+        <div class="stat"><span class="k">치수 불확실성</span><span class="v" id="o-sp-unc">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 점이 한 바퀴를 돌 때마다 불확실성 띠가 좁아지는 것을 보라. 바퀴살을 클릭하면 회전이 멈추고 그 항목을 다루는 장으로 가는 링크가 나온다. "복원성"을 확인하고 나서 "중량"으로 돌아오면 왜 다시 치수를 고쳐야 하는지 생각해 보자.</div>
+    </div>
+
+    <div class="callout">
+      <strong>나선은 비유다</strong>
+      <p>실제 설계는 순서대로 돌지 않는다. 요즘은 수십 개의 설계 변수를 한꺼번에 놓고 최적화 알고리즘으로 탐색하거나(설계 공간 탐색), 여러 분야가 동시에 일하는 동시 공학<span class="en">(Concurrent Engineering)</span>을 쓴다. 그래도 "가정 → 계산 → 검증 → 가정 수정"의 반복이라는 본질은 그대로다.</p>
+    </div>
+  </section>
+
+  <!-- =============================================================== 2 -->
+  <section id="ratios">
+    <h2>주요 치수 비: 숫자 네 개의 줄다리기</h2>
+    <p>배수량이 정해져도 그 부피를 담는 상자의 모양은 무수히 많다. 설계자는 치수 자체보다 무차원 비를 먼저 생각한다. 비가 같으면 성능의 경향이 비슷하기 때문이다.</p>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 260" role="img" aria-label="주요 치수 정의">
+        <rect x="0" y="150" width="500" height="110" class="f-water"/>
+        <line x1="0" y1="150" x2="500" y2="150" class="s-water"/>
+        <path d="M60 110 L60 140 Q 64 190 90 200 L 420 200 Q 470 200 478 160 L 488 110 Z" class="f-hull" fill="var(--surface-2)" stroke="var(--text)" stroke-width="1.6"/>
+        <line x1="64" y1="225" x2="470" y2="225" class="s-line"/><line x1="64" y1="215" x2="64" y2="235" class="s-line"/><line x1="470" y1="215" x2="470" y2="235" class="s-line"/>
+        <text x="267" y="248" class="t" text-anchor="middle">L (Lpp, 수선간장)</text>
+        <line x1="515" y1="110" x2="515" y2="200" class="s-line"/><text x="500" y="128" class="t-mono" text-anchor="end">D</text>
+        <line x1="45" y1="150" x2="45" y2="200" class="s-acc" stroke-width="2"/><text x="38" y="180" class="t-acc" text-anchor="end">T</text>
+        <rect x="590" y="110" width="140" height="90" rx="10" fill="var(--surface-2)" stroke="var(--text)" stroke-width="1.6"/>
+        <rect x="560" y="150" width="200" height="60" class="f-water"/>
+        <line x1="560" y1="150" x2="760" y2="150" class="s-water"/>
+        <line x1="590" y1="98" x2="730" y2="98" class="s-line"/><text x="660" y="90" class="t" text-anchor="middle">B</text>
+        <text x="660" y="132" class="t-dim" text-anchor="middle">건현 F = D − T</text>
+        <text x="660" y="232" class="t-dim" text-anchor="middle">중앙 횡단면</text>
+        <text x="270" y="40" class="t" text-anchor="middle">\(C_B = \nabla/(L\,B\,T)\)</text>
+        <text x="270" y="70" class="t-dim" text-anchor="middle">배수 용적 ∇를 L·B·T 상자에 담았을 때 채운 비율</text>
+      </svg>
+      <figcaption><b>그림 14-2.</b> 주요 치수. 수선간장 L, 형폭 B, 흘수 T, 형깊이 D와 블록 계수 \(C_B\)(<a href="buoyancy.html">2장</a>)가 설계의 출발점이다.</figcaption>
+    </figure>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>비</th><th>대표 범위</th><th>크게 하면 좋아지는 것</th><th>크게 하면 나빠지는 것</th></tr></thead>
+      <tbody>
+        <tr><td>L/B</td><td>5~7.5</td><td>조파 저항↓, 침로 안정성↑</td><td>강재 중량↑(종강도), 복원성↓, 선회성↓</td></tr>
+        <tr><td>B/T</td><td>2.3~3.5</td><td>복원성(GM)↑, 흘수 제한 항만 접근</td><td>마찰 저항(침수 면적)↑, 횡동요 가속도↑</td></tr>
+        <tr><td>L/D</td><td>10~14</td><td>강재 절약(얕은 선체)</td><td>종강도↓(단면 계수 ∝ D²), 건현·화물 용적↓</td></tr>
+        <tr><td>\(C_B\)</td><td>0.55~0.87</td><td>같은 L·B·T에 더 많은 배수량, 건조 단순</td><td>조파·형상 저항↑, 고속에 불리</td></tr>
+      </tbody>
+    </table></div>
+
+    <p>아래 시뮬레이터는 배수 용적을 80,000 m³(대략 6만 톤급 재화중량)로 고정하고 네 가지 비를 바꾸었을 때 다섯 가지 지표가 기준선(점선)에 비해 어떻게 변하는지 보여 준다. 저항은 ITTC-1957 마찰 계수와 와타나베의 형상 계수 \(k\), 조파 저항은 \(C_B\)와 \(F_n\)에 대한 단순 근사, 복원성은 \(KM = KB + BM\)에 \(KG \approx 0.62D\)를 가정한 근사다.</p>
+    <div class="formula">$$BM \approx \frac{C_{WP}^2\,B^2}{12\,C_B\,T},\qquad KB \approx T\left(\frac{5}{6}-\frac{C_B}{3C_{WP}}\right),\qquad C_{WP}\approx\frac{1+2C_B}{3}$$
+      <div class="where">\(C_{WP}\): 수선면 계수. \(BM\)은 \(B^2/T\)에 비례하므로 폭을 조금만 늘려도 복원성이 크게 오른다(<a href="stability.html">3장</a>).</div>
+    </div>
+
+    <div class="sim" id="sim-ratio">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>치수 비 트레이드오프 레이더</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-ratio"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>L/B <output id="ra-lb-out"></output></span><input type="range" id="ra-lb" min="4.5" max="9" step="0.1" value="6"></label>
+          <label class="ctrl"><span>B/T <output id="ra-bt-out"></output></span><input type="range" id="ra-bt" min="2" max="4.5" step="0.05" value="2.7"></label>
+          <label class="ctrl"><span>L/D <output id="ra-ld-out"></output></span><input type="range" id="ra-ld" min="8" max="16" step="0.1" value="11.5"></label>
+          <label class="ctrl"><span>블록 계수 <output id="ra-cb-out"></output></span><input type="range" id="ra-cb" min="0.55" max="0.88" step="0.01" value="0.78"></label>
+          <button class="btn" id="ra-reset">기준선으로</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">L × B × T × D</span><span class="v" id="o-ra-dim">—</span></div>
+        <div class="stat"><span class="k">F<sub>n</sub> (14.5 kn)</span><span class="v" id="o-ra-fn">—</span></div>
+        <div class="stat"><span class="k">전 저항 R<sub>T</sub></span><span class="v" id="o-ra-r">—</span></div>
+        <div class="stat"><span class="k">GM (근사)</span><span class="v" id="o-ra-gm">—</span></div>
+        <div class="stat"><span class="k">화물 용적</span><span class="v" id="o-ra-vc">—</span></div>
+        <div class="stat"><span class="k">강재 중량</span><span class="v" id="o-ra-ws">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: L/B를 9까지 올리면 저항 효율은 좋아지지만 복원성과 건조비 지표가 찌그러진다. B/T를 키우면 복원성 꼭짓점이 튀어나오지만 저항이 늘어난다. L/D를 15 이상으로 하면 건현이 모자라 경고가 뜬다. 다섯 꼭짓점을 모두 기준선 밖으로 밀어낼 수 있는 조합이 있는지 찾아보라(아마 없을 것이다).</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 3 -->
+  <section id="cb">
+    <h2>블록 계수 고르기: 속도가 날씬함을 정한다</h2>
+    <p>블록 계수는 경제성의 핵심 손잡이다. \(C_B\)가 크면 같은 크기에 화물을 더 싣지만, 선수·선미가 뭉툭해져 고속에서 조파 저항이 급격히 커진다(<a href="resistance.html">6장</a>). 조파 저항을 지배하는 것은 프루드 수 \(F_n = V/\sqrt{gL}\)이므로, 오랜 실적선 자료는 "\(F_n\)이 정해지면 적절한 \(C_B\)가 정해진다"는 경험식으로 정리되어 있다.</p>
+    <div class="formula">$$C_B = 0.70 + \frac{1}{8}\tan^{-1}\!\left(\frac{23-100F_n}{4}\right)\quad\text{(Watson–Gilfillan)},\qquad C_B = 1.06 - 1.68\,F_n\quad\text{(Ayre)}$$
+      <div class="where">\(F_n\)은 서비스 속력과 수선간장으로 계산한다. 두 식 모두 실적선의 회귀선이며, 실제 선택은 화물 특성과 항로 제약에 따라 ±0.03 정도 달라진다.</div>
+    </div>
+    <p>같은 14노트라도 길이 300 m 배(\(F_n \approx 0.13\))에게는 느린 속도라 \(C_B\) 0.83의 뭉툭한 선형이 경제적이지만, 길이 120 m 배(\(F_n \approx 0.21\))에게는 꽤 빠른 속도라 0.7 정도로 날씬해야 한다. 큰 배일수록 뚱뚱해도 되는 이유다. 컨테이너선은 화물이 가볍고 부피를 많이 차지해 무게보다 갑판 면적이 중요하므로, 경험식보다 \(C_B\)를 낮게 잡는 경우가 많다.</p>
+
+    <div class="sim" id="sim-cb">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>프루드 수로 블록 계수 정하기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-cb" class="grab"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>서비스 속력 <output id="cb-v-out"></output></span><input type="range" id="cb-v" min="8" max="30" step="0.5" value="14.5"></label>
+          <label class="ctrl"><span>수선간장 L <output id="cb-l-out"></output></span><input type="range" id="cb-l" min="60" max="400" step="5" value="280"></label>
+          <label class="check"><input type="checkbox" id="cb-types" checked> 선종별 대표 값 표시</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">F<sub>n</sub></span><span class="v" id="o-cb-fn">—</span></div>
+        <div class="stat"><span class="k">C<sub>B</sub> (Watson–Gilfillan)</span><span class="v" id="o-cb-wg">—</span></div>
+        <div class="stat"><span class="k">C<sub>B</sub> (Ayre)</span><span class="v" id="o-cb-ay">—</span></div>
+        <div class="stat"><span class="k">비슷한 선종</span><span class="v" id="o-cb-type">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 그래프 위의 점을 좌우로 끌면 속력이 바뀐다. 속력을 14.5노트에 두고 길이를 400 m에서 100 m로 줄여 보라. 같은 속력인데 권장 \(C_B\)가 0.85에서 0.6대로 떨어진다. \(F_n\) 0.2~0.3 사이에서 곡선이 가장 가파른 이유는 조파 저항의 험프가 이 영역에 있기 때문이다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 4 -->
+  <section id="sizing">
+    <h2>개략 설계: 중량 방정식 풀기</h2>
+    <p>개념 설계의 중심에는 두 개의 식이 있다. 하나는 무게의 합, 다른 하나는 부력이다. 배는 떠 있으므로 둘은 같아야 한다.</p>
+    <div class="formula">$$\Delta = DWT + LW,\qquad \Delta = \rho\,L\,B\,T\,C_B\,(1+s),\qquad LW = W_S + W_O + W_M$$
+      <div class="where">\(DWT\): 재화중량(화물·연료·청수·선원 등 실을 수 있는 무게), \(LW\): 경하중량(빈 배의 무게), \(W_S\): 강재, \(W_O\): 의장(갑판 기기·거주구·배관 등), \(W_M\): 기관. \(s\)는 외판·부가물 보정(약 0.5%)이며 여기서는 생략한다.</div>
+    </div>
+    <p>문제는 \(LW\)가 치수에 따라 달라진다는 것이다. 그래서 처음에는 실적선의 \(DWT/\Delta\) 비(벌크선 약 0.84, 탱커 0.85, 컨테이너선 0.70)로 배수량을 가정하고, 치수를 정한 다음 경하중량을 추정하고, 그 결과로 배수량을 고쳐 다시 치수를 정한다. 경하중량의 각 항목은 실적선 자료로 만든 근사식을 쓴다. 강재 중량은 왓슨<span class="en">(Watson)</span>의 선체 수치 \(E\)를 쓴다.</p>
+    <div class="formula">$$E = L(B+T) + 0.85L(D-T) + 0.75\sum l_ih_i,\qquad W_S = K\,E^{1.36}\left[1 + 0.5\,(C_B' - 0.70)\right]$$
+      $$C_B' = C_B + (1-C_B)\frac{0.8D - T}{3T},\qquad W_O = K_O\,L\,B,\qquad W_M \approx 0.72\,\mathrm{MCR}^{0.78}$$
+      <div class="where">\(K\): 선종별 계수(이 장의 시뮬레이터는 탱커 0.029, 벌크선 0.028, 컨테이너선 0.034를 쓴다), \(\sum l_ih_i\): 상부 구조물 측면적, \(K_O\): 의장 계수(t/m²), MCR: 주기관 최대 연속 출력(kW). 동력은 어드미럴티 계수 \(P_B = \Delta^{2/3}V^3/C_{adm}\)(\(P_B\) kW, \(V\) kn, \(C_{adm}\) 비대선 약 750~800, 컨테이너선 약 600)로 추정하고, 해상 여유 15%와 상용 출력 90%를 더해 MCR로 만든다(<a href="propulsion.html">8장</a>).</div>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 210" role="img" aria-label="선종별 경하중량 구성">
+        <text x="10" y="22" class="t-dim">경하중량의 대표적 구성 (%)</text>
+        <g font-size="13">
+          <text x="10" y="62" class="t">VLCC</text>
+          <rect x="120" y="44" width="456" height="28" class="f-acc"/><rect x="576" y="44" width="78" height="28" class="f-acc2-soft"/><rect x="654" y="44" width="66" height="28" class="f-dim-soft"/>
+          <text x="348" y="63" text-anchor="middle" fill="#fff">강재 76</text><text x="615" y="63" class="t" text-anchor="middle">의장 13</text><text x="687" y="63" class="t" text-anchor="middle">기관 11</text>
+          <text x="10" y="112" class="t">벌크선</text>
+          <rect x="120" y="94" width="438" height="28" class="f-acc"/><rect x="558" y="94" width="96" height="28" class="f-acc2-soft"/><rect x="654" y="94" width="66" height="28" class="f-dim-soft"/>
+          <text x="339" y="113" text-anchor="middle" fill="#fff">강재 73</text><text x="606" y="113" class="t" text-anchor="middle">의장 16</text><text x="687" y="113" class="t" text-anchor="middle">기관 11</text>
+          <text x="10" y="162" class="t">컨테이너선</text>
+          <rect x="120" y="144" width="390" height="28" class="f-acc"/><rect x="510" y="144" width="126" height="28" class="f-acc2-soft"/><rect x="636" y="144" width="84" height="28" class="f-dim-soft"/>
+          <text x="315" y="163" text-anchor="middle" fill="#fff">강재 65</text><text x="573" y="163" class="t" text-anchor="middle">의장 21</text><text x="678" y="163" class="t" text-anchor="middle">기관 14</text>
+        </g>
+        <text x="120" y="200" class="t-dim">빠르고 복잡한 배일수록 기관·의장의 몫이 커진다. 비율은 대표적인 값이다.</text>
+      </svg>
+      <figcaption><b>그림 14-3.</b> 경하중량 구성. 상선에서는 강재가 경하중량의 2/3~3/4을 차지하므로 강재 중량 추정의 정확도가 개념 설계의 정확도를 좌우한다.</figcaption>
+    </figure>
+
+    <div class="sim" id="sim-size">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>개략 설계 도구: 중량 방정식 반복</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view">
+          <canvas id="cv-size"></canvas>
+          <div class="iter-wrap"><table><thead><tr><th>#</th><th>Δ 가정(t)</th><th>L(m)</th><th>B(m)</th><th>T(m)</th><th>C<sub>B</sub></th><th>LW(t)</th><th>DWT+LW</th><th>오차</th></tr></thead><tbody id="sz-rows"></tbody></table></div>
+        </div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>선종</span><div class="seg" id="sz-type"><button data-value="bulk" class="on">벌크선</button><button data-value="tanker">탱커</button><button data-value="container">컨테이너선</button></div></div>
+          <label class="ctrl"><span>요구 재화중량 <output id="sz-dwt-out"></output></span><input type="range" id="sz-dwt" min="10000" max="320000" step="5000" value="180000"></label>
+          <label class="ctrl"><span>서비스 속력 <output id="sz-v-out"></output></span><input type="range" id="sz-v" min="10" max="25" step="0.5" value="14.5"></label>
+          <div class="ctrl"><span>항로 제약</span><div class="seg" id="sz-con"><button data-value="none" class="on">없음</button><button data-value="panamax">구 파나마</button><button data-value="neo">신 파나마</button><button data-value="malacca">말라카</button></div></div>
+          <button class="btn primary" id="sz-step">한 바퀴 돌리기</button>
+          <button class="btn" id="sz-auto">자동 수렴</button>
+          <button class="btn" id="sz-reset">초기화</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">L × B × T × D</span><span class="v" id="o-sz-dim">—</span></div>
+        <div class="stat"><span class="k">C<sub>B</sub> / F<sub>n</sub></span><span class="v" id="o-sz-cb">—</span></div>
+        <div class="stat"><span class="k">배수량 Δ</span><span class="v" id="o-sz-disp">—</span></div>
+        <div class="stat"><span class="k">경하중량 (강재/의장/기관)</span><span class="v" id="o-sz-lw">—</span></div>
+        <div class="stat"><span class="k">주기관 MCR</span><span class="v" id="o-sz-mcr">—</span></div>
+        <div class="stat"><span class="k">상태</span><span class="v" id="o-sz-st">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: "한 바퀴 돌리기"를 눌러 배수량 가정이 3~5회 만에 수렴하는 것을 확인하라. 벌크선 8만 톤에 "구 파나마"를 걸면 폭 32.26 m에 막혀 L/B가 커진다. 컨테이너선을 25노트로 올리면 기관 중량과 \(F_n\)이 커지고 \(C_B\)가 떨어진다. 32만 톤 탱커에 "말라카"(흘수 20.5 m)를 걸면 어떤 치수가 제약에 걸리는가?</div>
+    </div>
+
+    <div class="callout warn">
+      <strong>근사식의 한계</strong>
+      <p>여기서 쓴 계수들은 대표적인 값이고, 실적선에 비해 10~15% 정도의 오차를 가질 수 있다. 실제 개념 설계에서는 조선소가 가진 유사 실적선 데이터베이스로 계수를 보정한다. 그래도 반복 구조와 각 제약이 치수를 미는 방향은 똑같다.</p>
+    </div>
+  </section>
+
+  <!-- =============================================================== 5 -->
+  <section id="lines">
+    <h2>선도: 곡면을 세 장의 평면도로</h2>
+    <p>선체 외판은 어디 하나 평평하지 않은 3차원 곡면이다. 이를 종이에 옮기기 위해 조선 기술자들은 수백 년 동안 <span class="term">선도</span><span class="en">(Lines Plan)</span>를 써 왔다. 선체를 서로 직교하는 세 종류의 평면 묶음으로 자른 단면 곡선들을 세 장의 도면에 그린 것이다.</p>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 250" role="img" aria-label="선도의 세 종류 단면">
+        <path d="M80 190 L520 190 Q 600 190 640 130 L 650 70 L 120 70 Q 60 70 60 130 Z" fill="var(--surface-2)" stroke="var(--text)" stroke-width="1.5"/>
+        <g stroke="var(--accent)" stroke-width="2"><line x1="200" y1="62" x2="200" y2="198"/><line x1="330" y1="62" x2="330" y2="198"/><line x1="460" y1="62" x2="460" y2="198"/></g>
+        <g stroke="var(--water)" stroke-width="2"><line x1="70" y1="160" x2="610" y2="160"/><line x1="64" y1="130" x2="634" y2="130"/><line x1="62" y1="100" x2="646" y2="100"/></g>
+        <path d="M100 168 Q 250 176 400 176 Q 560 176 600 120" fill="none" stroke="var(--warn)" stroke-width="2.2" stroke-dasharray="7 4"/>
+        <text x="200" y="40" class="t-acc" text-anchor="middle">스테이션(횡단면) → 정면도</text>
+        <text x="680" y="104" class="t" fill="var(--water)">수선 → 반폭도</text>
+        <text x="420" y="225" class="t" fill="var(--warn)" text-anchor="middle">버톡(종단면) → 측면도</text>
+      </svg>
+      <figcaption><b>그림 14-4.</b> 선도의 세 가지 단면. 스테이션은 길이 방향으로 등간격(보통 10등분), 수선은 높이 방향, 버톡은 폭 방향으로 일정 거리마다 자른다. 한 점은 세 도면에 모두 나타나야 하므로, 세 도면이 서로 맞는지 맞추는 작업을 페어링<span class="en">(Fairing)</span>이라 한다.</figcaption>
+    </figure>
+
+    <ul>
+      <li><b>정면도</b><span class="en">(Body Plan)</span>: 스테이션 단면을 겹쳐 그린다. 관례상 왼쪽 반은 선미 쪽 스테이션, 오른쪽 반은 선수 쪽 스테이션이다.</li>
+      <li><b>반폭도</b><span class="en">(Half-Breadth Plan)</span>: 위에서 본 수선 곡선. 좌우 대칭이므로 반쪽만 그린다.</li>
+      <li><b>측면도</b><span class="en">(Sheer Plan)</span>: 옆에서 본 버톡 곡선과 선수미 윤곽.</li>
+    </ul>
+    <p>선도에서 각 스테이션·수선의 반폭 값을 표로 뽑은 것을 <span class="term">오프셋 표</span><span class="en">(Table of Offsets)</span>라 한다. 이 표를 심프슨 공식으로 적분하면 배수량, 부심, 수선면적, 메타센터 반지름을 모두 계산할 수 있다(<a href="buoyancy.html">2장</a>). 아래 시뮬레이터는 이 책의 공용 선형을 실제로 적분해 형상 계수를 구한다.</p>
+
+    <div class="sim" id="sim-lines">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>선도 탐색기: 정면도·반폭도·측면도</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-lines" class="grab"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>선택할 단면</span><div class="seg" id="ln-kind"><button data-value="st" class="on">스테이션</button><button data-value="wl">수선</button><button data-value="bt">버톡</button></div></div>
+          <label class="ctrl"><span>번호 <output id="ln-idx-out"></output></span><input type="range" id="ln-idx" min="0" max="10" step="1" value="8"></label>
+          <label class="ctrl"><span>비대도 full <output id="ln-full-out"></output></span><input type="range" id="ln-full" min="0.5" max="0.85" step="0.01" value="0.7"></label>
+          <label class="check"><input type="checkbox" id="ln-grid" checked> 다른 단면선 표시</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">선택</span><span class="v" id="o-ln-sel">—</span></div>
+        <div class="stat"><span class="k">C<sub>B</sub></span><span class="v" id="o-ln-cb">—</span></div>
+        <div class="stat"><span class="k">C<sub>M</sub> / C<sub>P</sub></span><span class="v" id="o-ln-cm">—</span></div>
+        <div class="stat"><span class="k">C<sub>WP</sub></span><span class="v" id="o-ln-cwp">—</span></div>
+        <div class="stat"><span class="k">LCB (중앙 기준)</span><span class="v" id="o-ln-lcb">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 반폭도나 측면도를 클릭하면 그 위치의 스테이션이 선택되어 정면도에서 강조된다. 스테이션 9번(선수 근처)을 고르고 비대도를 0.5→0.85로 올리면 단면이 V형에서 U형으로 부풀고 \(C_B\)가 커진다. 버톡을 고르면 측면도의 곡선이 반폭도에서는 직선으로, 정면도에서는 수직선으로 나타나는 것을 확인하라.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 6 -->
+  <section id="ga">
+    <h2>일반 배치: 공간을 나누는 퍼즐</h2>
+    <p><span class="term">일반 배치도</span><span class="en">(General Arrangement, GA)</span>는 배의 공간을 화물창, 기관실, 거주구, 각종 탱크로 나눈 도면이다. 배치는 단순한 공간 나누기가 아니라 무게중심과 트림, 손상 시의 침수 범위, 화물 효율을 함께 결정한다.</p>
+    <ul>
+      <li><b>충돌 격벽</b><span class="en">(Collision Bulkhead)</span>: SOLAS는 선수 수선(FP)에서 0.05L~0.08L 사이에 두도록 요구한다. 선수가 부딪혀 찢어져도 침수를 선수창에 가두기 위해서다(<a href="damage.html">5장</a>).</li>
+      <li><b>기관실</b>: 현대 상선은 거의 모두 선미에 둔다. 축계가 짧아지고 화물창이 하나로 이어지기 때문이다. 대신 화물창이 배의 앞쪽으로 몰리므로 만재 시에는 선수 트림, 화물이 없는 밸러스트 상태에서는 무거운 기관 때문에 선미 트림 경향이 생긴다. 비대선은 부심(LCB)을 중앙보다 2~3% L 앞에 두는 선형으로 이 균형을 맞춘다(시뮬레이터의 선형도 그렇게 만들었다).</li>
+      <li><b>밸러스트 탱크</b>: 이중저, 선수·선미 탱크, 톱사이드 탱크. 빈 배로 돌아갈 때 프로펠러를 물에 잠기게 하고 선수 슬래밍을 피할 만큼 흘수를 확보한다. MARPOL은 분리 밸러스트만으로 평균 흘수 \(2.0 + 0.02L\) 이상, 선미 트림 \(0.015L\) 이하, 프로펠러 완전 잠김을 요구한다.</li>
+    </ul>
+
+    <div class="sim" id="sim-ga">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>일반 배치 드래그: 격벽을 옮겨 트림 맞추기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-ga" class="grab"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>적재 상태</span><div class="seg" id="ga-cond"><button data-value="full" class="on">만재</button><button data-value="ballast">밸러스트</button></div></div>
+          <div class="ctrl"><span>화물</span><div class="seg" id="ga-cargo"><button data-value="0.78" class="on">곡물</button><button data-value="0.9">석탄</button><button data-value="2.6">철광석</button></div></div>
+          <label class="ctrl"><span>화물창 수 <output id="ga-n-out"></output></span><input type="range" id="ga-n" min="4" max="9" step="1" value="7"></label>
+          <label class="ctrl"><span>기관실 길이 <output id="ga-er-out"></output></span><input type="range" id="ga-er" min="18" max="40" step="1" value="28"></label>
+          <button class="btn" id="ga-reset">기본 배치</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">화물창 용적</span><span class="v" id="o-ga-vol">—</span></div>
+        <div class="stat"><span class="k">화물량</span><span class="v" id="o-ga-cargo">—</span></div>
+        <div class="stat"><span class="k">흘수 선미 / 선수</span><span class="v" id="o-ga-t">—</span></div>
+        <div class="stat"><span class="k">트림 (+선미)</span><span class="v" id="o-ga-trim">—</span></div>
+        <div class="stat"><span class="k">충돌 격벽 위치</span><span class="v" id="o-ga-col">—</span></div>
+        <div class="stat"><span class="k">판정</span><span class="v" id="o-ga-ok">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 갑판 위 삼각형 손잡이로 선미 탱크 격벽과 충돌 격벽을, 회색 기관실 블록을 끌어서 옮긴다. 기관실을 중앙으로 옮기면(옛 탱커 배치) 화물창이 기관실 앞뒤로 갈려 화물 무게중심이 뒤로 가므로 만재 시 선미 트림이 커진다. 밸러스트 상태로 바꾸어 충돌 격벽을 뒤로 밀어 선수 탱크를 키우면 선미 트림이 줄고, 선미 탱크 격벽을 앞으로 밀면 트림이 0.015L을 넘는다. 철광석은 무거워 화물창이 3분의 1도 차지 않는다는 것도 확인하라.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 7 -->
+  <section id="rules">
+    <h2>선급과 국제 협약: 누가 무엇을 정하나</h2>
+    <p>배는 국경을 넘나들며 여러 나라의 항구에 들르므로, 안전과 환경 기준은 국제적으로 통일되어야 한다. 이 일을 두 축이 나누어 맡는다.</p>
+    <ul>
+      <li><b>국제해사기구</b><span class="en">(IMO)</span>의 협약: 회원국(기국)이 국내법으로 받아들여 집행한다. <b>SOLAS</b>(해상 인명 안전: 구획·복원성, 방화, 구명 설비, 항해 장비), <b>MARPOL</b>(해양 오염 방지: 기름, 유해 액체, 하수, 쓰레기, 대기 오염과 에너지 효율), <b>국제 만재흘수선 협약</b><span class="en">(Load Line)</span>(건현과 수밀·풍우밀 폐쇄 장치)이 설계에 가장 큰 영향을 준다.</li>
+      <li><b>선급</b><span class="en">(Classification Society)</span>: ABS(미국), DNV(노르웨이), LR(영국), BV(프랑스), ClassNK(일본), KR(한국선급) 등. 선체 구조·기관·전기 설비의 기술 규칙을 만들고, 도면을 승인하고, 건조 중과 운항 중 검사를 한다. 선급에 들지 않은 배는 보험에 들기 어려워 사실상 상업 운항이 불가능하다. 주요 선급의 협의체인 <b>IACS</b>는 공통 구조 규칙(CSR)과 통일 규칙을 만든다. 많은 기국이 협약 검사도 선급에 위임한다.</li>
+    </ul>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 220" role="img" aria-label="도면 승인 흐름">
+        <g font-size="13">
+          <rect x="10" y="30" width="130" height="60" rx="10" class="f-acc-soft"/><text x="75" y="56" class="t" text-anchor="middle">조선소 설계팀</text><text x="75" y="76" class="t-dim" text-anchor="middle">도면·계산서 제출</text>
+          <rect x="200" y="30" width="140" height="60" rx="10" class="f-acc2-soft"/><text x="270" y="56" class="t" text-anchor="middle">선급 도면 승인</text><text x="270" y="76" class="t-dim" text-anchor="middle">규칙 대조·코멘트</text>
+          <rect x="400" y="30" width="140" height="60" rx="10" class="f-acc-soft"/><text x="470" y="56" class="t" text-anchor="middle">건조 중 검사</text><text x="470" y="76" class="t-dim" text-anchor="middle">재료·용접·탱크 시험</text>
+          <rect x="600" y="30" width="150" height="60" rx="10" class="f-acc2-soft"/><text x="675" y="56" class="t" text-anchor="middle">입급·협약 증서</text><text x="675" y="76" class="t-dim" text-anchor="middle">선급 증서, SOLAS 등</text>
+          <rect x="200" y="140" width="140" height="56" rx="10" class="f-dim-soft"/><text x="270" y="164" class="t" text-anchor="middle">선주 감독관</text><text x="270" y="182" class="t-dim" text-anchor="middle">사양 대조·검토</text>
+          <rect x="400" y="140" width="140" height="56" rx="10" class="f-dim-soft"/><text x="470" y="164" class="t" text-anchor="middle">기국 정부</text><text x="470" y="182" class="t-dim" text-anchor="middle">등록·위임 검사</text>
+        </g>
+        <g class="s-acc" stroke-width="2"><line x1="140" y1="60" x2="198" y2="60"/><line x1="340" y1="60" x2="398" y2="60"/><line x1="540" y1="60" x2="598" y2="60"/></g>
+        <path d="M270 92 Q 200 116 75 92" fill="none" stroke="var(--warn)" stroke-width="1.8" stroke-dasharray="5 4"/>
+        <text x="172" y="125" class="t-dim" text-anchor="middle" fill="var(--warn)">수정 요구 → 재제출</text>
+        <line x1="140" y1="80" x2="200" y2="160" class="s-line"/><line x1="470" y1="140" x2="600" y2="85" class="s-line"/>
+      </svg>
+      <figcaption><b>그림 14-5.</b> 승인 도면의 흐름. 상세 설계 도면은 선급과 선주에게 동시에 제출되어 승인을 받은 뒤에야 생산 설계로 넘어간다. 승인이 늦으면 강재 절단 일정이 밀린다.</figcaption>
+    </figure>
+
+    <div class="sim" id="sim-rules">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>이 요구는 어디서 왔을까: 규정 분류 게임</h3></div>
+      <div class="sim-body">
+        <div class="sim-view">
+          <div class="rq-box">
+            <div class="rq-card" id="rq-card">—</div>
+            <div class="rq-bins" id="rq-bins">
+              <button data-bin="SOLAS">SOLAS</button><button data-bin="MARPOL">MARPOL</button><button data-bin="LL">만재흘수선(LL)</button><button data-bin="CLASS">선급 규칙</button>
+            </div>
+            <div class="rq-fb" id="rq-fb">카드의 요구 사항이 어느 규정에서 왔는지 고르라.</div>
+            <div><button class="btn" id="rq-next">다음 카드</button> <button class="btn" id="rq-restart">처음부터</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">점수</span><span class="v" id="o-rq-score">0 / 0</span></div>
+        <div class="stat"><span class="k">남은 카드</span><span class="v" id="o-rq-left">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 열두 장의 카드를 모두 분류해 보라. 경계가 모호한 것도 있다. 예를 들어 손상 복원성은 SOLAS가 요구하지만 계산 방법의 해석은 IACS 통일 해석과 선급이 맡는다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 8 -->
+  <section id="econ">
+    <h2>경제성: 요구 운임으로 설계를 평가한다</h2>
+    <p>상선은 돈을 벌기 위한 기계다. 두 설계안 중 어느 쪽이 나은지는 결국 "화물 1톤을 나르는 데 얼마가 드는가"로 판단한다. 이를 <span class="term">요구 운임</span><span class="en">(Required Freight Rate, RFR)</span>이라 한다. 선주가 투자 수익률을 맞추려면 최소한 이만큼의 운임을 받아야 한다는 뜻이다.</p>
+    <div class="formula">$$RFR = \frac{\mathrm{CRF}\cdot P_{ship} + C_{op} + C_{voy}}{Q_{year}},\qquad \mathrm{CRF} = \frac{i(1+i)^n}{(1+i)^n - 1}$$
+      <div class="where">\(P_{ship}\): 선가, CRF: 자본 회수 계수(이자율 \(i\), 내용 연수 \(n\)년), \(C_{op}\): 연간 운항비(선원·보험·수리), \(C_{voy}\): 연간 항해비(연료·항비), \(Q_{year}\): 연간 수송량(t).</div>
+    </div>
+    <p>배가 커지면 선가와 운항비는 크기만큼 늘지 않는다(선가는 대략 \(DWT^{0.6}\), 선원 수는 거의 같다). 이것이 <span class="term">규모의 경제</span>다. 그러나 너무 크면 항만에서 하역 시간이 늘고 들어갈 수 있는 항구가 줄어든다. 속도는 반대 방향으로 작용한다. 빠르면 1년에 더 많이 나르지만 연료 소비는 속도의 세제곱으로 늘어 운항 거리당 연료는 제곱으로 는다. 그래서 RFR에는 최적 속도가 있고, 그 값은 연료 가격에 따라 움직인다(<a href="green.html">19장</a>의 감속 운항).</p>
+
+    <div class="sim" id="sim-rfr">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>요구 운임 계산기와 최적점</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-rfr"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>재화중량 <output id="rf-dwt-out"></output></span><input type="range" id="rf-dwt" min="20000" max="400000" step="5000" value="180000"></label>
+          <label class="ctrl"><span>서비스 속력 <output id="rf-v-out"></output></span><input type="range" id="rf-v" min="8" max="20" step="0.25" value="14"></label>
+          <label class="ctrl"><span>편도 항해 거리 <output id="rf-d-out"></output></span><input type="range" id="rf-d" min="2000" max="14000" step="250" value="11000"></label>
+          <label class="ctrl"><span>연료 가격 <output id="rf-fp-out"></output></span><input type="range" id="rf-fp" min="250" max="1200" step="10" value="600"></label>
+          <label class="ctrl"><span>이자율 <output id="rf-i-out"></output></span><input type="range" id="rf-i" min="2" max="14" step="0.5" value="8"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">선가 (추정)</span><span class="v" id="o-rf-price">—</span></div>
+        <div class="stat"><span class="k">MCR</span><span class="v" id="o-rf-mcr">—</span></div>
+        <div class="stat"><span class="k">연간 항차 / 수송량</span><span class="v" id="o-rf-q">—</span></div>
+        <div class="stat"><span class="k">비용 비율 자본/운항/항해</span><span class="v" id="o-rf-split">—</span></div>
+        <div class="stat"><span class="k">요구 운임 RFR</span><span class="v" id="o-rf-rfr">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 연료 가격을 300 → 1,200 $/t으로 올리면 왼쪽 그래프의 최적 속력이 4~5노트 내려간다(연간 연료비는 \(V^3\)에 비례하므로 최적점에서 연료비가 자본비+운항비의 절반이 된다). 항해 거리를 3,000해리로 줄이면 항만 시간의 비중이 커져 큰 배의 이점이 줄어든다. 오른쪽 그래프에서 규모의 경제가 어디서 완만해지는지 보라. 비용 모델은 교육용 근사다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 9 -->
+  <section id="digital">
+    <h2>디지털 설계: 도면에서 모델로</h2>
+    <p>1980년대까지 선도는 실물 크기 마루(형판장, mould loft) 위에 나무 자(배튼)로 그렸다. 지금은 모든 설계가 하나의 3차원 제품 모델에서 출발한다.</p>
+    <ul>
+      <li><b>CAD</b>: 선형은 NURBS 곡면으로 정의되고, 구조·배관·전기가 같은 3차원 모델 위에서 설계된다. 간섭 검사가 자동으로 되고, 생산 설계의 부재 정보(절단 경로, 용접 길이, 블록 중량)가 모델에서 바로 나온다.</li>
+      <li><b>CAE</b>: 유한 요소법<span class="en">(FEM)</span>으로 전선 구조 해석과 피로 해석을 하고(<a href="structure.html">13장</a>), 손상 복원성·적재 계산을 한다.</li>
+      <li><b>CFD</b>: 점성 유동 계산으로 저항·반류·프로펠러 성능을 예측해 모형 시험 전에 선형 후보를 걸러낸다. 수만 개의 선형 변형을 자동으로 계산하는 선형 최적화도 일반적이다.</li>
+      <li><b>디지털 트윈</b>: 인도된 배의 센서 데이터(속력, 연료, 응력, 운동)를 설계 모델과 연결해, 운항 중 성능 저하와 피로 손상을 추적하고 다음 설계에 되먹인다.</li>
+    </ul>
+    <figure class="diagram">
+      <svg viewBox="0 0 760 170" role="img" aria-label="디지털 스레드">
+        <g font-size="13">
+          <rect x="10" y="50" width="120" height="56" rx="10" class="f-acc-soft"/><text x="70" y="74" class="t" text-anchor="middle">선형 최적화</text><text x="70" y="94" class="t-dim" text-anchor="middle">CFD·NURBS</text>
+          <rect x="160" y="50" width="120" height="56" rx="10" class="f-acc-soft"/><text x="220" y="74" class="t" text-anchor="middle">3D 제품 모델</text><text x="220" y="94" class="t-dim" text-anchor="middle">구조·배관·전기</text>
+          <rect x="310" y="50" width="120" height="56" rx="10" class="f-acc-soft"/><text x="370" y="74" class="t" text-anchor="middle">해석</text><text x="370" y="94" class="t-dim" text-anchor="middle">FEM·복원성</text>
+          <rect x="460" y="50" width="120" height="56" rx="10" class="f-acc2-soft"/><text x="520" y="74" class="t" text-anchor="middle">생산 정보</text><text x="520" y="94" class="t-dim" text-anchor="middle">절단·용접·블록</text>
+          <rect x="610" y="50" width="140" height="56" rx="10" class="f-acc2-soft"/><text x="680" y="74" class="t" text-anchor="middle">디지털 트윈</text><text x="680" y="94" class="t-dim" text-anchor="middle">운항 데이터</text>
+        </g>
+        <g class="s-acc" stroke-width="2"><line x1="130" y1="78" x2="158" y2="78"/><line x1="280" y1="78" x2="308" y2="78"/><line x1="430" y1="78" x2="458" y2="78"/><line x1="580" y1="78" x2="608" y2="78"/></g>
+        <path d="M680 108 Q 680 150 400 150 Q 70 150 70 108" fill="none" stroke="var(--warn)" stroke-width="1.8" stroke-dasharray="6 4"/>
+        <text x="400" y="142" class="t-dim" text-anchor="middle">운항 실적을 다음 설계로 되먹임</text>
+      </svg>
+      <figcaption><b>그림 14-6.</b> 디지털 스레드. 하나의 모델이 설계에서 생산, 운항까지 이어지면 설계 나선의 한 바퀴가 몇 주에서 며칠로 줄어든다.</figcaption>
+    </figure>
+  </section>
+
+  <section class="keypoints" id="summary">
+    <h2>핵심 정리</h2>
+    <ol>
+      <li>선박 설계는 개념 → 기본 → 상세 → 생산 설계로 진행하며, 항목들이 서로 의존하므로 설계 나선처럼 반복하며 수렴한다. 초기 결정이 비용 대부분을 확정한다.</li>
+      <li>L/B는 저항과 강재·복원성, B/T는 복원성과 저항, L/D는 종강도·건현과 강재, \(C_B\)는 적재량과 저항 사이의 트레이드오프다. \(BM \propto B^2/T\)다.</li>
+      <li>\(C_B\)는 프루드 수로 정한다. Watson–Gilfillan 식 \(C_B = 0.70 + \tfrac18\tan^{-1}\!\big((23-100F_n)/4\big)\)에 따르면 크고 느린 배일수록 비대해도 된다.</li>
+      <li>개략 설계는 \(\Delta = DWT + LW\)와 \(\Delta = \rho LBTC_B\)를 반복해 푼다. 경하중량은 강재(\(K E^{1.36}\)), 의장, 기관으로 나누어 추정하며, 운하 폭·흘수 같은 항로 제약이 치수 비를 바꾼다.</li>
+      <li>선도는 스테이션·수선·버톡 단면을 정면도·반폭도·측면도에 그린 것이며, 오프셋 표를 적분해 형상 계수와 부심을 구한다.</li>
+      <li>일반 배치는 무게중심과 트림, 손상 시 침수 범위를 정한다. 충돌 격벽은 FP로부터 0.05L~0.08L, 밸러스트 상태는 MARPOL의 흘수·트림 조건을 만족해야 한다.</li>
+      <li>IMO 협약(SOLAS, MARPOL, Load Line)은 기국이 집행하고, 선급은 구조·기관 규칙과 도면 승인·검사를 맡는다. 경제성은 요구 운임으로 평가하며 크기와 속력에 최적점이 있다.</li>
+    </ol>
+  </section>
+
+  <section class="quiz-sec" id="quiz">
+    <h2>확인 퀴즈</h2>
+    <div class="quiz">
+      <div class="quiz-q"><p>Q1. 설계 나선에서 "중량" 항목을 계산한 뒤 다시 "주요 치수"로 돌아가야 하는 가장 근본적인 이유는?</p><div class="opts">
+        <button class="opt">선급이 두 번 계산하도록 요구하기 때문</button>
+        <button class="opt" data-correct>경하중량이 치수에 따라 달라져 처음 가정한 배수량과 맞지 않기 때문</button>
+        <button class="opt">프로펠러 지름이 정해지지 않았기 때문</button>
+        <button class="opt">설계 단계마다 선주가 바뀌기 때문</button>
+      </div><div class="quiz-exp">\(\Delta = DWT + LW\)에서 \(LW\)는 치수의 함수다. 가정한 배수량으로 치수를 정하면 \(LW\)가 새로 계산되고, 그 결과 배수량이 바뀌므로 다시 치수를 고쳐야 한다. 이 반복이 나선의 본질이다.</div></div>
+
+      <div class="quiz-q"><p>Q2. 배수량을 유지한 채 B/T만 키우면(폭↑, 흘수↓) 가장 확실하게 커지는 것은?</p><div class="opts">
+        <button class="opt">조파 저항의 감소</button>
+        <button class="opt" data-correct>메타센터 반지름 BM과 초기 복원성</button>
+        <button class="opt">종강도의 단면 계수</button>
+        <button class="opt">프루드 수</button>
+      </div><div class="quiz-exp">\(BM \approx C_{WP}^2B^2/(12C_BT)\)이므로 폭이 늘고 흘수가 줄면 BM이 빠르게 커진다. 대신 침수 면적이 늘어 마찰 저항이 커지고, 지나치게 큰 GM은 횡동요를 급하게 만든다.</div></div>
+
+      <div class="quiz-q"><p>Q3. 길이 289 m, 서비스 속력 14.5노트인 벌크선의 \(F_n\)과 Watson–Gilfillan 권장 \(C_B\)에 가장 가까운 것은?</p><div class="opts">
+        <button class="opt">\(F_n \approx 0.26\), \(C_B \approx 0.62\)</button>
+        <button class="opt">\(F_n \approx 0.20\), \(C_B \approx 0.77\)</button>
+        <button class="opt" data-correct>\(F_n \approx 0.14\), \(C_B \approx 0.84\)</button>
+        <button class="opt">\(F_n \approx 0.08\), \(C_B \approx 0.90\)</button>
+      </div><div class="quiz-exp">\(V = 14.5 \times 0.5144 = 7.46\) m/s, \(\sqrt{9.81 \times 289} = 53.2\) m/s → \(F_n = 0.140\). \((23-14)/4 = 2.25\), \(\tan^{-1}2.25 = 1.153\) rad, \(/8 = 0.144\) → \(C_B \approx 0.844\).</div></div>
+
+      <div class="quiz-q"><p>Q4. 개략 설계에서 운하 폭 제한(예: 구 파나마 32.26 m)에 걸렸을 때 같은 재화중량을 유지하려면 치수는 대체로 어떻게 바뀌는가?</p><div class="opts">
+        <button class="opt">L/B가 작아지고 배가 짧아진다</button>
+        <button class="opt" data-correct>폭이 고정되어 L/B가 커지고, 흘수 제한까지 걸리면 길이가 더 늘어난다</button>
+        <button class="opt">\(C_B\)를 줄여야 한다</button>
+        <button class="opt">재화중량은 폭과 무관하므로 변하지 않는다</button>
+      </div><div class="quiz-exp">\(\nabla = C_BLBT\)에서 B가 막히면 L과 T가 커져야 한다. 흘수까지 막히면 길이만 남는다. 그래서 파나막스 벌크선은 L/B가 6.5~7 정도로 날씬하다. 길이마저 제한되면 \(C_B\)를 높이는 수밖에 없다.</div></div>
+
+      <div class="quiz-q"><p>Q5. 선도에서 버톡(Buttock)은 반폭도에 어떻게 나타나는가?</p><div class="opts">
+        <button class="opt">곡선</button>
+        <button class="opt" data-correct>중심선에 평행한 직선</button>
+        <button class="opt">수직선</button>
+        <button class="opt">나타나지 않는다</button>
+      </div><div class="quiz-exp">버톡은 중심면에서 일정 거리 떨어진 세로 평면이다. 위에서 보면(반폭도) 중심선과 평행한 직선, 정면도에서는 수직선, 측면도에서만 곡선으로 보인다. 스테이션과 수선도 마찬가지로 자기 도면에서만 곡선이다.</div></div>
+
+      <div class="quiz-q"><p>Q6. 길이 200 m 벌크선의 충돌 격벽은 SOLAS에 따라 선수 수선에서 어느 범위에 두어야 하는가?</p><div class="opts">
+        <button class="opt">2~6 m</button>
+        <button class="opt" data-correct>10~16 m</button>
+        <button class="opt">20~30 m</button>
+        <button class="opt">기관실 바로 앞</button>
+      </div><div class="quiz-exp">0.05L = 10 m, 0.08L = 16 m(길이가 아주 긴 배는 각각 10 m, 10 m + 0.08L 상한 적용 등 세부 규정이 있다). 너무 앞이면 선수 손상이 격벽을 넘고, 너무 뒤면 선수창 침수만으로 선수 트림이 과도해진다.</div></div>
+
+      <div class="quiz-q"><p>Q7. 연료 가격이 크게 오르면 요구 운임(RFR)을 최소로 하는 속력은 어떻게 되는가?</p><div class="opts">
+        <button class="opt">빨라진다</button>
+        <button class="opt" data-correct>느려진다</button>
+        <button class="opt">변하지 않는다</button>
+        <button class="opt">배 크기에만 영향을 준다</button>
+      </div><div class="quiz-exp">운항 거리당 연료비는 대략 속력의 제곱에 비례하고, 자본비·운항비는 빨리 갈수록(연간 수송량이 늘수록) 톤당 줄어든다. 연료비 비중이 커지면 균형점이 낮은 속력 쪽으로 이동한다. 2008년 이후 감속 운항이 일반화된 이유다.</div></div>
+
+      <div class="quiz-q"><p>Q8. 다음 중 선급(Classification Society)의 역할이 아닌 것은?</p><div class="opts">
+        <button class="opt">선체 구조 규칙을 제정한다</button>
+        <button class="opt">상세 설계 도면을 승인한다</button>
+        <button class="opt">건조 중 용접과 탱크 시험을 검사한다</button>
+        <button class="opt" data-correct>국제 협약을 제정해 회원국에 비준을 요구한다</button>
+      </div><div class="quiz-exp">국제 협약(SOLAS, MARPOL 등)은 IMO에서 회원국이 채택한다. 선급은 자체 기술 규칙을 만들고, 기국 정부의 위임을 받아 협약 검사를 대행할 뿐이다.</div></div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ==================================================== 1. 설계 나선 */
+(function () {
+  const cv = document.getElementById("cv-spiral"), info = document.getElementById("sp-info");
+  const ff = (px) => px + "px " + getComputedStyle(document.body).getPropertyValue("--font");
+  const SP = [
+    { k: "임무 요구", en: "Owner's Requirements", d: "재화중량·속력·항로·화물 종류·항만 제약. 모든 계산의 입력이다.", l: '<a href="overview.html">1장</a>' },
+    { k: "주요 치수", en: "Main Dimensions", d: "L, B, T, D와 \\(C_B\\). 배수량을 담을 상자의 모양을 정한다.", l: '<a href="buoyancy.html">2장</a>, <a href="#ratios">이 장 2절</a>' },
+    { k: "선형", en: "Hull Form", d: "선수·선미 형상, 벌브, 단면 모양. 선도로 표현한다.", l: '<a href="#lines">이 장 5절</a>' },
+    { k: "저항·동력", en: "Resistance & Powering", d: "모형 시험·CFD로 저항을 구하고 프로펠러와 주기관을 고른다.", l: '<a href="resistance.html">6장</a>, <a href="propulsion.html">8장</a>' },
+    { k: "일반 배치", en: "General Arrangement", d: "화물창·기관실·탱크·거주구의 위치와 크기.", l: '<a href="#ga">이 장 6절</a>' },
+    { k: "구조", en: "Structure", d: "종강도·횡강도를 만족하는 부재 치수. 강재 중량을 정한다.", l: '<a href="structure.html">13장</a>' },
+    { k: "중량·무게중심", en: "Weight & CG", d: "경하중량과 무게중심 추정. 배수량 가정을 검증한다.", l: '<a href="#sizing">이 장 4절</a>, <a href="trim.html">4장</a>' },
+    { k: "복원성", en: "Stability", d: "적재 상태별 GM·GZ와 손상 복원성 검토.", l: '<a href="stability.html">3장</a>, <a href="damage.html">5장</a>' },
+    { k: "비용", en: "Cost", d: "건조비·운항비·요구 운임으로 설계안을 평가한다.", l: '<a href="#econ">이 장 8절</a>' },
+  ];
+  const STAGES = ["개념 설계", "기본 설계", "상세 설계", "생산 설계"];
+  const N = SP.length, TURNS = 4, TOT = TURNS * 2 * Math.PI;
+  let th = 0, playing = true, sel = 0, geo = { cx: 0, cy: 0, R: 1 };
+  const speed = SB.range("sp-speed", (v) => v.toFixed(1) + "×");
+  const shrink = document.getElementById("sp-shrink");
+  const ang = (i) => -Math.PI / 2 + (i * 2 * Math.PI) / N;
+  const curSpoke = () => Math.floor(((th % (2 * Math.PI)) / (2 * Math.PI)) * N + 0.5) % N;
+  function showInfo(i) {
+    const s = SP[i];
+    info.innerHTML = `<b>${s.k}</b><span class="en">(${s.en})</span> — ${s.d} 관련: ${s.l}`;
+    if (window.renderMathInElement) try { renderMathInElement(info, { delimiters: [{ left: "\\(", right: "\\)", display: false }] }); } catch (e) {}
+  }
+  const c = SB.canvas(cv, (ctx, w, h) => {
+    const P = SB.palette();
+    const cx = w / 2, cy = h / 2, R = Math.min(w * 0.31, h * 0.4);
+    geo = { cx, cy, R };
+    const rOf = (t) => R * (1 - (0.8 * t) / TOT);
+    const frac = Math.min(1, th / TOT);
+    // 불확실성 띠
+    if (shrink.checked) {
+      const band = R * 0.22 * (1 - frac) + 3;
+      ctx.beginPath(); ctx.arc(cx, cy, rOf(th) + band, 0, Math.PI * 2); ctx.arc(cx, cy, Math.max(2, rOf(th) - band), 0, Math.PI * 2, true);
+      ctx.fillStyle = SB.color("accent-soft") || "rgba(80,120,255,0.12)"; ctx.fill();
+    }
+    // 단계 링
+    for (let k = 1; k <= TURNS; k++) { ctx.beginPath(); ctx.arc(cx, cy, rOf(k * 2 * Math.PI), 0, Math.PI * 2); ctx.strokeStyle = P.grid; ctx.lineWidth = 1; ctx.stroke(); }
+    // 바퀴살
+    const cs = curSpoke();
+    ctx.font = ff(w < 480 ? 11 : 13);
+    for (let i = 0; i < N; i++) {
+      const a = ang(i), on = i === sel;
+      ctx.strokeStyle = on ? P.accent : P.border; ctx.lineWidth = on ? 3 : 1.4;
+      ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * R * 0.12, cy + Math.sin(a) * R * 0.12); ctx.lineTo(cx + Math.cos(a) * (R + 6), cy + Math.sin(a) * (R + 6)); ctx.stroke();
+      const lx = cx + Math.cos(a) * (R + 12), ly = cy + Math.sin(a) * (R + 12);
+      ctx.textAlign = Math.abs(Math.cos(a)) < 0.25 ? "center" : Math.cos(a) > 0 ? "left" : "right";
+      ctx.textBaseline = Math.abs(Math.sin(a)) < 0.3 ? "middle" : Math.sin(a) > 0 ? "top" : "bottom";
+      ctx.fillStyle = on ? P.accent : i === cs && playing ? P.text : P.dim;
+      ctx.font = (on ? "bold " : "") + ff(w < 480 ? 11 : 13);
+      ctx.fillText(SP[i].k, lx, ly);
+    }
+    // 나선
+    ctx.beginPath();
+    for (let t = 0; t <= TOT; t += 0.04) { const a = -Math.PI / 2 + t, r = rOf(t); t ? ctx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r) : ctx.moveTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); }
+    ctx.strokeStyle = P.faint; ctx.setLineDash([3, 4]); ctx.lineWidth = 1; ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath();
+    for (let t = 0; t <= th; t += 0.04) { const a = -Math.PI / 2 + t, r = rOf(t); t ? ctx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r) : ctx.moveTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); }
+    ctx.strokeStyle = P.accent; ctx.lineWidth = 2.4; ctx.stroke();
+    const a = -Math.PI / 2 + th, r = rOf(th);
+    ctx.fillStyle = P.accent2; ctx.beginPath(); ctx.arc(cx + Math.cos(a) * r, cy + Math.sin(a) * r, 6, 0, Math.PI * 2); ctx.fill();
+    // 중앙
+    ctx.fillStyle = th >= TOT ? P.ok : P.text; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = "bold " + ff(13);
+    ctx.fillText(th >= TOT ? "수렴!" : STAGES[Math.min(3, Math.floor(th / (2 * Math.PI)))], cx, cy);
+  }, { aspect: 0.66, minHeight: 300, maxHeight: 470 });
+  function stats() {
+    const st = Math.min(3, Math.floor(th / (2 * Math.PI)));
+    SB.stat("o-sp-stage", th >= TOT ? "완료" : STAGES[st]);
+    SB.stat("o-sp-spoke", SP[playing ? curSpoke() : sel].k);
+    SB.stat("o-sp-turn", Math.min(TURNS, Math.floor(th / (2 * Math.PI)) + 1) + " / " + TURNS);
+    SB.stat("o-sp-unc", "±" + (30 * Math.pow(1 - Math.min(1, th / TOT), 1.6) + 1).toFixed(0) + " %");
+  }
+  const btn = document.getElementById("sp-play");
+  let lastSpoke = -1;
+  SB.loop(cv, (dt) => {
+    if (playing) {
+      th = Math.min(TOT, th + dt * speed() * 0.9);
+      const cs = curSpoke();
+      if (cs !== lastSpoke) { lastSpoke = cs; sel = cs; showInfo(cs); }
+      if (th >= TOT) { playing = false; btn.textContent = "재생"; }
+    }
+    c.redraw(); stats();
+  });
+  btn.addEventListener("click", () => { if (th >= TOT) th = 0; playing = !playing; btn.textContent = playing ? "일시정지" : "재생"; });
+  document.getElementById("sp-reset").addEventListener("click", () => { th = 0; playing = true; btn.textContent = "일시정지"; });
+  cv.addEventListener("click", (e) => {
+    const r = cv.getBoundingClientRect(), x = e.clientX - r.left - geo.cx, y = e.clientY - r.top - geo.cy;
+    if (Math.hypot(x, y) < geo.R * 0.25) return;
+    let a = Math.atan2(y, x) + Math.PI / 2; if (a < 0) a += 2 * Math.PI;
+    sel = Math.round((a / (2 * Math.PI)) * N) % N;
+    playing = false; btn.textContent = "재생"; showInfo(sel); c.redraw(); stats();
+  });
+  showInfo(0); stats();
+})();
+
+/* ==================================================== 2. 치수 비 레이더 */
+(function () {
+  const ff = (px) => px + "px " + getComputedStyle(document.body).getPropertyValue("--font");
+  const VOL = 80000, VKN = 14.5, BASE = { lb: 6, bt: 2.7, ld: 11.5, cb: 0.78 };
+  function calc(lb, bt, ld, cb) {
+    const L = Math.cbrt((VOL * lb * lb * bt) / cb), B = L / lb, T = B / bt, D = L / ld;
+    const v = SB.ms(VKN), Fn = v / Math.sqrt(SB.G * L), Re = (v * L) / SB.NU;
+    const Cf = 0.075 / Math.pow(Math.log10(Re) - 2, 2);
+    const S = 1.7 * L * T + VOL / T;                              // Denny–Mumford 침수 면적
+    const k = Math.max(0.05, -0.095 + (25.6 * cb) / (lb * lb * Math.sqrt(bt)));   // Watanabe 형상 계수
+    const Cw = 0.00045 * Math.pow(cb / 0.75, 3) * Math.pow(Fn / 0.18, 4);         // 조파 저항 단순 근사
+    const R = 0.5 * SB.RHO * S * v * v * ((1 + k) * Cf + Cw) / 1000;               // kN
+    const Cwp = (1 + 2 * cb) / 3;
+    const KB = T * (5 / 6 - cb / (3 * Cwp)), BM = (Cwp * Cwp * B * B) / (12 * cb * T), GM = KB + BM - 0.62 * D;
+    const cbd = cb + ((1 - cb) * (0.8 * D - T)) / (3 * T);
+    const Vc = L * B * D * Math.min(cbd, 0.98) * 0.78;
+    const E = L * (B + T) + 0.85 * L * Math.max(0, D - T) + 250;
+    const Ws = 0.031 * Math.pow(E, 1.36) * (1 + 0.5 * (cbd - 0.7));
+    return { L, B, T, D, Fn, R, GM, Vc, Ws, fb: D - T };
+  }
+  const b0 = calc(BASE.lb, BASE.bt, BASE.ld, BASE.cb);
+  const AX = ["저항 효율", "복원성(GM)", "화물 용적", "건조비 절감", "흘수 여유"];
+  const idx = (r) => [b0.R / r.R, Math.max(0, r.GM) / b0.GM, r.Vc / b0.Vc, b0.Ws / r.Ws, b0.T / r.T];
+  const g = { lb: 0, bt: 0, ld: 0, cb: 0 };
+  const draw = (ctx, w, h) => {
+    const P = SB.palette(), r = calc(g.lb(), g.bt(), g.ld(), g.cb()), v0 = [1, 1, 1, 1, 1], v1 = idx(r);
+    const cx = w * (w > 520 ? 0.36 : 0.5), cy = h * 0.53, R = Math.min(w * (w > 520 ? 0.24 : 0.28), h * 0.36), MAX = 1.8;
+    const pt = (i, v) => { const a = -Math.PI / 2 + (i * 2 * Math.PI) / 5, rr = (Math.min(v, MAX) / MAX) * R; return [cx + Math.cos(a) * rr, cy + Math.sin(a) * rr]; };
+    ctx.lineWidth = 1;
+    [0.5, 1, 1.5].forEach((lv) => { ctx.beginPath(); for (let i = 0; i <= 5; i++) { const [x, y] = pt(i % 5, lv); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.strokeStyle = lv === 1 ? P.axis : P.grid; ctx.stroke(); });
+    ctx.font = ff(w < 480 ? 11 : 12.5);
+    for (let i = 0; i < 5; i++) {
+      const [x, y] = pt(i, MAX); ctx.strokeStyle = P.grid; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y); ctx.stroke();
+      const a = -Math.PI / 2 + (i * 2 * Math.PI) / 5, lx = cx + Math.cos(a) * (R + 10), ly = cy + Math.sin(a) * (R + 10);
+      ctx.fillStyle = P.text; ctx.textAlign = Math.abs(Math.cos(a)) < 0.2 ? "center" : Math.cos(a) > 0 ? "left" : "right"; ctx.textBaseline = Math.sin(a) < -0.5 ? "bottom" : Math.sin(a) > 0.5 ? "top" : "middle";
+      ctx.fillText(AX[i], lx, ly);
+      ctx.fillStyle = P.dim; ctx.fillText((v1[i] * 100).toFixed(0) + "%", lx, ly + (Math.sin(a) < -0.5 ? -15 : 15));
+    }
+    const poly = (vals, fill, stroke, dash) => { ctx.beginPath(); vals.forEach((v, i) => { const [x, y] = pt(i, v); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.closePath(); if (fill) { ctx.fillStyle = fill; ctx.fill(); } ctx.setLineDash(dash || []); ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]); };
+    poly(v0, null, P.dim, [5, 4]);
+    poly(v1, SB.color("accent-soft"), P.accent);
+    // 단면 스케치
+    if (w > 520) {
+      const sx = w * 0.83, sy = h * 0.6, s = Math.min(w * 0.1, h * 0.3) / 22;
+      ctx.fillStyle = P.dim; ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.font = ff(11);
+      ctx.fillText("중앙 단면 (점선: 기준선)", sx, sy - 22 * s);
+      SB.section(ctx, sx, sy, s, { B: b0.B, D: b0.D, T: b0.T, fill: false, stroke: P.faint });
+      SB.section(ctx, sx, sy, s, { B: r.B, D: r.D, T: r.T, color: SB.color("accent-soft"), stroke: P.accent });
+      ctx.strokeStyle = SB.color("water"); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(sx - 30 * s, sy); ctx.lineTo(sx + 30 * s, sy); ctx.stroke();
+    }
+    SB.stat("o-ra-dim", `${r.L.toFixed(0)}×${r.B.toFixed(1)}<small> m</small><br><small>T ${r.T.toFixed(1)} · D ${r.D.toFixed(1)} m</small>`);
+    SB.stat("o-ra-fn", r.Fn.toFixed(3));
+    SB.stat("o-ra-r", r.R.toFixed(0) + " <small>kN</small>");
+    SB.stat("o-ra-gm", (r.GM < 0.15 ? '<span style="color:var(--bad)">' : "<span>") + r.GM.toFixed(2) + "</span> <small>m</small>");
+    SB.stat("o-ra-vc", (r.Vc / 1000).toFixed(1) + " <small>천 m³</small>" + (r.fb < 0.18 * r.D ? ' <small style="color:var(--bad)">건현 부족</small>' : ""));
+    SB.stat("o-ra-ws", (r.Ws / 1000).toFixed(1) + " <small>천 t</small>");
+  };
+  let cv;
+  const re = () => cv && cv.redraw();
+  g.lb = SB.range("ra-lb", (v) => v.toFixed(1), re);
+  g.bt = SB.range("ra-bt", (v) => v.toFixed(2), re);
+  g.ld = SB.range("ra-ld", (v) => v.toFixed(1), re);
+  g.cb = SB.range("ra-cb", (v) => v.toFixed(2), re);
+  cv = SB.canvas(document.getElementById("cv-ratio"), draw, { aspect: 0.62, minHeight: 320, maxHeight: 440 });
+  document.getElementById("ra-reset").addEventListener("click", () => { g.lb.set(BASE.lb); g.bt.set(BASE.bt); g.ld.set(BASE.ld); g.cb.set(BASE.cb); });
+})();
+
+/* ==================================================== 3. 블록 계수 */
+(function () {
+  const WG = (fn) => 0.7 + Math.atan((23 - 100 * fn) / 4) / 8, AY = (fn) => 1.06 - 1.68 * fn;
+  const TYPES = [
+    { n: "VLCC", fn: 0.138, cb: 0.82, dx: -1, dy: 6 }, { n: "케이프사이즈", fn: 0.14, cb: 0.85, dx: -1, dy: -6 }, { n: "파나막스 벌크", fn: 0.155, cb: 0.85, dy: -10 },
+    { n: "PC 탱커", fn: 0.19, cb: 0.79 }, { n: "LNG선", fn: 0.18, cb: 0.75, dx: -1 }, { n: "대형 컨테이너선", fn: 0.195, cb: 0.65 },
+    { n: "피더 컨테이너선", fn: 0.24, cb: 0.62 }, { n: "자동차 운반선", fn: 0.26, cb: 0.57, dx: -1 }, { n: "로팍스", fn: 0.29, cb: 0.56, dy: 8 },
+  ];
+  let cv, box = null, X, Y;
+  const re = () => cv && cv.redraw();
+  const gV = SB.range("cb-v", (v) => v.toFixed(1) + " kn", re), gL = SB.range("cb-l", (v) => v + " m", re);
+  const showT = document.getElementById("cb-types"); showT.addEventListener("change", re);
+  const fnOf = () => SB.ms(gV()) / Math.sqrt(SB.G * gL());
+  cv = SB.canvas(document.getElementById("cv-cb"), (ctx, w, h) => {
+    const P = SB.palette(), fn = fnOf();
+    const dat = (f) => { const a = []; for (let x = 0.08; x <= 0.36; x += 0.004) a.push([x, f(x)]); return a; };
+    const pts = [];
+    if (showT.checked) TYPES.forEach((t) => pts.push({ x: t.fn, y: t.cb, color: P.faint, r: 3.5 }));
+    pts.push({ x: fn, y: WG(fn), color: P.accent2, r: 7, label: "현재 설계" });
+    const ch = SB.chart(ctx, null, {
+      x: [0.08, 0.36], y: [0.45, 0.92], xLabel: "프루드 수 Fn = V/√(gL)", yLabel: "블록 계수 CB",
+      series: [{ data: dat(WG), color: P.accent, width: 2.5 }, { data: dat(AY), color: P.warn, width: 2, dash: [6, 4] }],
+      vlines: [{ x: fn, color: P.accent2 }], points: pts,
+      xFmt: (v) => v.toFixed(2), yFmt: (v) => v.toFixed(2),
+    });
+    X = ch.X; Y = ch.Y; box = ch.box;
+    if (showT.checked && w > 480) {
+      ctx.font = "11px " + getComputedStyle(document.body).getPropertyValue("--font"); ctx.fillStyle = P.dim; ctx.textBaseline = "middle";
+      TYPES.forEach((t) => { const left = t.dx < 0; ctx.textAlign = left ? "right" : "left"; ctx.fillText(t.n, X(t.fn) + (left ? -7 : 7), Y(t.cb) + (t.dy || 0)); });
+    }
+    ctx.font = "12px " + getComputedStyle(document.body).getPropertyValue("--font");
+    ctx.textAlign = "right"; ctx.fillStyle = P.accent; ctx.fillText("Watson–Gilfillan", box.x + box.w - 6, box.y + 14);
+    ctx.fillStyle = P.warn; ctx.fillText("Ayre (점선)", box.x + box.w - 6, box.y + 30);
+    const t = TYPES.reduce((a, b) => (Math.abs(b.fn - fn) < Math.abs(a.fn - fn) ? b : a));
+    SB.stat("o-cb-fn", fn.toFixed(3));
+    SB.stat("o-cb-wg", WG(fn).toFixed(3));
+    SB.stat("o-cb-ay", Math.min(0.92, AY(fn)).toFixed(3));
+    SB.stat("o-cb-type", t.n);
+  }, { aspect: 0.58, minHeight: 280, maxHeight: 420 });
+  const fromX = (px) => { if (!box) return; const fn = 0.08 + ((px - box.x) / box.w) * 0.28; gV.set(SB.clamp(Math.round((fn * Math.sqrt(SB.G * gL())) / SB.KN * 2) / 2, 8, 30)); };
+  SB.drag(cv.canvas, { down: (p) => fromX(p.x), move: (p) => fromX(p.x) });
+})();
+
+/* ==================================================== 4. 개략 설계 도구 */
+(function () {
+  const ff = (px) => px + "px " + getComputedStyle(document.body).getPropertyValue("--font");
+  const TYPE = {
+    bulk:      { lb: 6.1, bt: 2.75, td: 0.70, r: 0.84, K: 0.028, Ko: 0.18, Ca: 780, dcb: 0, cargo: "bulk" },
+    tanker:    { lb: 5.5, bt: 2.85, td: 0.72, r: 0.85, K: 0.029, Ko: 0.22, Ca: 760, dcb: 0, cargo: "tanker" },
+    container: { lb: 7.0, bt: 3.3, td: 0.55, r: 0.70, K: 0.034, Ko: 0.36, Ca: 620, dcb: -0.08, cargo: "container" },
+  };
+  const CON = { none: { B: 1e9, T: 1e9, L: 1e9, n: "없음" }, panamax: { B: 32.26, T: 12.04, L: 283, n: "B≤32.26, T≤12.04, Lpp≤283" }, neo: { B: 51.25, T: 15.2, L: 352, n: "B≤51.25, T≤15.2, Lpp≤352" }, malacca: { B: 1e9, T: 20.5, L: 1e9, n: "T≤20.5" } };
+  const WG = (fn) => 0.7 + Math.atan((23 - 100 * fn) / 4) / 8;
+  let rows = [], auto = null, cv;
+  const gType = SB.seg("sz-type", reset), gCon = SB.seg("sz-con", reset);
+  const gD = SB.range("sz-dwt", (v) => (v / 1000).toFixed(0) + "천 t", reset), gV = SB.range("sz-v", (v) => v.toFixed(1) + " kn", reset);
+  function evalDelta(Delta) {
+    const p = TYPE[gType()], c = CON[gCon()], V = Delta / 1.025, v = SB.ms(gV());
+    let cb = 0.75, L, B, T, D, Fn, flag = "";
+    for (let j = 0; j < 6; j++) {
+      L = Math.cbrt((V * p.lb * p.lb * p.bt) / cb); B = L / p.lb; T = B / p.bt;
+      flag = "";
+      if (B > c.B) { B = c.B; flag = "폭 제한"; }
+      if (T > c.T) { T = c.T; flag = flag ? flag + "·흘수 제한" : "흘수 제한"; }
+      L = V / (cb * B * T);
+      if (L > c.L) { L = c.L; T = V / (cb * L * B); flag = T > c.T + 0.01 ? "불가능(제약 초과)" : (flag ? flag + "·길이 제한" : "길이 제한"); }
+      Fn = v / Math.sqrt(SB.G * L);
+      cb = SB.clamp(WG(Fn) + p.dcb, 0.56, 0.87);
+    }
+    L = V / (cb * B * T);
+    D = Math.max(T / p.td, T + 2.5);
+    const E = L * (B + T) + 0.85 * L * (D - T) + 0.75 * (0.1 * L) * (p.cargo === "container" ? 30 : 14);
+    const cbd = cb + ((1 - cb) * (0.8 * D - T)) / (3 * T);
+    const Ws = p.K * Math.pow(E, 1.36) * (1 + 0.5 * (cbd - 0.7));
+    const Wo = p.Ko * L * B;
+    const PB = (Math.pow(Delta, 2 / 3) * Math.pow(gV(), 3)) / p.Ca;  // kW
+    const MCR = (PB * 1.15) / 0.9;
+    const Wm = 0.72 * Math.pow(MCR, 0.78);
+    const LW = (Ws + Wo + Wm) * 1.03;
+    return { Delta, L, B, T, D, cb, Fn, Ws, Wo, Wm, LW, MCR, next: gD() + LW, flag };
+  }
+  function step() {
+    const d0 = rows.length ? rows[rows.length - 1].next : gD() / TYPE[gType()].r;
+    const r = evalDelta(d0); r.err = (r.next - r.Delta) / r.Delta; rows.push(r); render();
+    return Math.abs(r.err) < 0.001 || rows.length >= 15;
+  }
+  function render() {
+    const tb = document.getElementById("sz-rows");
+    tb.innerHTML = rows.map((r, i) => `<tr class="${i === rows.length - 1 ? "last" : ""}"><td>${i + 1}</td><td>${r.Delta.toFixed(0)}</td><td>${r.L.toFixed(1)}</td><td>${r.B.toFixed(2)}</td><td>${r.T.toFixed(2)}</td><td>${r.cb.toFixed(3)}</td><td>${r.LW.toFixed(0)}</td><td>${r.next.toFixed(0)}</td><td>${(r.err * 100).toFixed(2)}%</td></tr>`).join("");
+    const wrap = tb.closest(".iter-wrap"); if (wrap) wrap.scrollTop = wrap.scrollHeight;
+    const r = rows[rows.length - 1];
+    if (r) {
+      SB.stat("o-sz-dim", `${r.L.toFixed(1)}×${r.B.toFixed(1)}<small> m</small><br><small>T ${r.T.toFixed(2)} · D ${r.D.toFixed(1)} m</small>`);
+      SB.stat("o-sz-cb", `${r.cb.toFixed(3)} / ${r.Fn.toFixed(3)}`);
+      SB.stat("o-sz-disp", (r.Delta / 1000).toFixed(1) + " <small>천 t</small>");
+      SB.stat("o-sz-lw", `${(r.LW / 1000).toFixed(1)}<small>천 t</small> <small>(${(r.Ws / 1000).toFixed(1)}/${(r.Wo / 1000).toFixed(1)}/${(r.Wm / 1000).toFixed(1)})</small>`);
+      SB.stat("o-sz-mcr", (r.MCR / 1000).toFixed(1) + " <small>MW</small>");
+      const conv = Math.abs(r.err) < 0.001;
+      SB.stat("o-sz-st", (conv ? '<span style="color:var(--ok)">수렴</span>' : rows.length + "회째") + (r.flag ? ` <small style="color:${r.flag.startsWith("불가능") ? "var(--bad)" : "var(--warn)"}">${r.flag}</small>` : ""));
+    } else ["o-sz-dim", "o-sz-cb", "o-sz-disp", "o-sz-lw", "o-sz-mcr", "o-sz-st"].forEach((id) => SB.stat(id, "—"));
+    cv && cv.redraw();
+  }
+  function reset() { rows = []; if (auto) { clearInterval(auto); auto = null; } render(); runAuto(); }
+  function runAuto() {
+    if (auto) clearInterval(auto);
+    auto = setInterval(() => { if (step()) { clearInterval(auto); auto = null; } }, 450);
+  }
+  cv = SB.canvas(document.getElementById("cv-size"), (ctx, w, h) => {
+    const P = SB.palette(), r = rows[rows.length - 1];
+    const topH = h * 0.5;
+    const s = (w - 40) / 420;
+    // 상단: 배 옆모습(같은 축척, 최대 400 m)
+    ctx.font = ff(12); ctx.fillStyle = P.dim; ctx.textAlign = "left"; ctx.textBaseline = "top";
+    ctx.fillText("측면 (축척 고정, 눈금 50 m)", 12, 8);
+    const wy = topH * 0.62;
+    for (let m = 0; m <= 400; m += 50) { const x = 20 + m * s; ctx.strokeStyle = P.grid; ctx.beginPath(); ctx.moveTo(x, topH - 14); ctx.lineTo(x, topH - 8); ctx.stroke(); }
+    SB.water(ctx, w, topH - 16, wy);
+    if (r) {
+      SB.shipSide(ctx, 20 + (r.L / 2) * s * 1.02, wy, s, { L: r.L, D: r.D, T: r.T, cargo: TYPE[gType()].cargo });
+      ctx.fillStyle = P.text; ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.font = ff(12);
+      ctx.fillText(`L ${r.L.toFixed(0)} m · T ${r.T.toFixed(1)} m · Δ ${(r.Delta / 1000).toFixed(0)}천 t`, 20 + (r.L / 2) * s, wy + r.T * s + 4);
+      const c = CON[gCon()];
+      if (c.L < 1e8) { ctx.strokeStyle = P.bad; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(20 + c.L * s, 22); ctx.lineTo(20 + c.L * s, topH - 16); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = P.bad; ctx.textAlign = "right"; ctx.fillText("길이 한도", 20 + c.L * s - 4, 24); }
+    }
+    // 하단: 반복 그래프
+    const n = Math.max(6, rows.length + 1);
+    const ymax = Math.max(1, ...rows.map((q) => Math.max(q.Delta, q.next))) * 1.15 / 1000;
+    const ch = SB.chart(ctx, { x: 58, y: topH + 8, w: w - 76, h: h - topH - 50 }, { x: [0, n], y: [0, ymax], xLabel: "반복 횟수", yLabel: "천 t", xFmt: (v) => String(Math.round(v)), xTicks: Array.from({ length: n + 1 }, (_, i) => i) });
+    const bw = Math.max(6, (ch.box.w / n) * 0.5);
+    rows.forEach((q, i) => {
+      const x = ch.X(i + 1) - bw / 2;
+      ctx.fillStyle = P.accent; ctx.fillRect(x, ch.Y(gD() / 1000), bw, ch.Y(0) - ch.Y(gD() / 1000));
+      ctx.fillStyle = P.accent2; ctx.fillRect(x, ch.Y(q.next / 1000), bw, ch.Y(gD() / 1000) - ch.Y(q.next / 1000));
+      ctx.fillStyle = P.text; ctx.beginPath(); ctx.arc(ch.X(i + 1), ch.Y(q.Delta / 1000), 4, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.font = ff(11.5); ctx.textAlign = "left"; ctx.textBaseline = "top";
+    const lx = ch.box.x + ch.box.w - 190, ly = ch.box.y + 4;
+    ctx.fillStyle = P.accent; ctx.fillRect(lx, ly + 3, 10, 10); ctx.fillStyle = P.dim; ctx.fillText("DWT", lx + 14, ly);
+    ctx.fillStyle = P.accent2; ctx.fillRect(lx + 56, ly + 3, 10, 10); ctx.fillStyle = P.dim; ctx.fillText("LW", lx + 70, ly);
+    ctx.fillStyle = P.text; ctx.beginPath(); ctx.arc(lx + 112, ly + 8, 4, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = P.dim; ctx.fillText("가정한 Δ", lx + 120, ly);
+  }, { aspect: 0.6, minHeight: 360, maxHeight: 480 });
+  document.getElementById("sz-step").addEventListener("click", () => { if (auto) { clearInterval(auto); auto = null; } step(); });
+  document.getElementById("sz-auto").addEventListener("click", () => { rows = []; runAuto(); });
+  document.getElementById("sz-reset").addEventListener("click", () => { if (auto) { clearInterval(auto); auto = null; } rows = []; render(); });
+  runAuto();
+})();
+
+/* ==================================================== 5. 선도 */
+(function () {
+  const ff = (px) => px + "px " + getComputedStyle(document.body).getPropertyValue("--font");
+  const S = SB.SHIP, L = S.L, B = S.B, D = S.D, T = S.T;
+  const NST = 10, WLS = [0.1, 0.2, 0.3, 0.45, 0.61, 0.8, 1.0].map((z) => z * D), BTS = [0.2, 0.4, 0.6, 0.8].map((y) => (y * B) / 2);
+  const gKind = SB.seg("ln-kind", (v) => { const mx = v === "st" ? NST : v === "wl" ? WLS.length - 1 : BTS.length - 1; gIdx.el.max = mx; gIdx.set(Math.min(gIdx(), mx)); });
+  const gIdx = SB.range("ln-idx", (v) => String(v), () => cv && cv.redraw());
+  const gFull = SB.range("ln-full", (v) => v.toFixed(2), () => cv && cv.redraw());
+  const grid = document.getElementById("ln-grid"); grid.addEventListener("change", () => cv.redraw());
+  const half = (x, z) => SB.hullHalf((2 * x) / L - 1, z / D, { full: gFull() }) * (B / 2);
+  let lay = null, cv;
+  function coeffs() {
+    const nx = 80, nz = 30, dx = L / nx, dz = T / nz;
+    let vol = 0, mx = 0, awp = 0, amid = 0;
+    for (let i = 0; i < nx; i++) {
+      const x = (i + 0.5) * dx; let A = 0;
+      for (let k = 0; k < nz; k++) A += 2 * half(x, (k + 0.5) * dz) * dz;
+      vol += A * dx; mx += A * x * dx; awp += 2 * half(x, T) * dx;
+    }
+    for (let k = 0; k < nz; k++) amid += 2 * half(L / 2, (k + 0.5) * dz) * dz;
+    const cb = vol / (L * B * T), cm = amid / (B * T);
+    return { cb, cm, cp: cb / cm, cwp: awp / (L * B), lcb: mx / vol - L / 2 };
+  }
+  cv = SB.canvas(document.getElementById("cv-lines"), (ctx, w, h) => {
+    const P = SB.palette(), kind = gKind(), id = gIdx(), dim = grid.checked;
+    const s = (w - 40) / L, x0 = 20;
+    const y1 = 30, hs = D * s * 1.6;        // 측면도: 세로 1.6배 과장
+    const y2 = y1 + hs + 34, hh = (B / 2) * s * 1.6;   // 반폭도
+    const sb = Math.min((w * 0.6) / B, 12, (h - (y2 + hh + 66)) / D), y3 = y2 + hh + 44 + D * sb, cxb = w / 2;
+    lay = { s, x0, y1, hs, y2, hh, sb, y3, cxb };
+    const sy = s * 1.6;
+    const hiC = P.accent2, stC = P.accent, wlC = SB.color("water"), btC = P.warn;
+    const lw = (on) => (on ? 3 : 1);
+    const alphaOf = (on) => (on ? 1 : dim ? 0.45 : 0);
+    ctx.font = ff(12); ctx.textAlign = "left"; ctx.textBaseline = "bottom"; ctx.fillStyle = P.dim;
+    ctx.fillText("측면도 (Sheer plan, 세로 1.6배)", x0, y1 - 4);
+    ctx.fillText("반폭도 (Half-breadth plan)", x0, y2 - 4);
+    ctx.fillText("정면도 (Body plan) ← 선미 | 선수 →", Math.max(8, cxb - (B / 2) * sb - 40), y3 - D * sb - 6);
+    const X = (x) => x0 + x * s;
+    // --- 측면도 윤곽
+    ctx.strokeStyle = P.text; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(X(0), y1 + hs); ctx.lineTo(X(L), y1 + hs); ctx.moveTo(X(0), y1); ctx.lineTo(X(L), y1); ctx.stroke();
+    ctx.strokeStyle = P.faint; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(X(0), y1 + hs - T * sy); ctx.lineTo(X(L), y1 + hs - T * sy); ctx.stroke(); ctx.setLineDash([]);
+    // 스테이션 (측면/반폭: 수직선)
+    for (let i = 0; i <= NST; i++) {
+      const on = kind === "st" && i === id, a = alphaOf(on); if (!a) continue;
+      ctx.globalAlpha = a; ctx.strokeStyle = on ? hiC : stC; ctx.lineWidth = lw(on);
+      ctx.beginPath(); ctx.moveTo(X((i * L) / NST), y1); ctx.lineTo(X((i * L) / NST), y1 + hs); ctx.moveTo(X((i * L) / NST), y2); ctx.lineTo(X((i * L) / NST), y2 + hh); ctx.stroke();
+      ctx.globalAlpha = 1;
+      if (on || w > 600) { ctx.fillStyle = on ? hiC : P.faint; ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.font = ff(10.5); ctx.fillText(String(i), X((i * L) / NST), y1 + hs + 3); }
+    }
+    // 수선: 측면도 수평선, 반폭도 곡선
+    WLS.forEach((z, i) => {
+      const on = kind === "wl" && i === id, a = alphaOf(on); if (!a) return;
+      ctx.globalAlpha = a; ctx.strokeStyle = on ? hiC : wlC; ctx.lineWidth = lw(on);
+      ctx.beginPath(); ctx.moveTo(X(0), y1 + hs - z * sy); ctx.lineTo(X(L), y1 + hs - z * sy); ctx.stroke();
+      ctx.beginPath(); for (let k = 0; k <= 120; k++) { const x = (k * L) / 120, yy = y2 + hh - half(x, z) * sy; k ? ctx.lineTo(X(x), yy) : ctx.moveTo(X(x), yy); } ctx.stroke();
+      ctx.globalAlpha = 1;
+    });
+    // 버톡: 반폭도 수평선, 측면도 곡선
+    BTS.forEach((yb, i) => {
+      const on = kind === "bt" && i === id, a = alphaOf(on); if (!a) return;
+      ctx.globalAlpha = a; ctx.strokeStyle = on ? hiC : btC; ctx.lineWidth = lw(on);
+      ctx.beginPath(); ctx.moveTo(X(0), y2 + hh - yb * sy); ctx.lineTo(X(L), y2 + hh - yb * sy); ctx.stroke();
+      ctx.beginPath(); let st = false;
+      for (let k = 0; k <= 160; k++) {
+        const x = (k * L) / 160; let zf = null;
+        for (let j = 0; j <= 60; j++) { const z = (j / 60) * D; if (half(x, z) >= yb) { zf = z; break; } }
+        if (zf == null) { st = false; continue; }
+        const yy = y1 + hs - zf * sy; st ? ctx.lineTo(X(x), yy) : ctx.moveTo(X(x), yy); st = true;
+      }
+      ctx.stroke(); ctx.globalAlpha = 1;
+    });
+    // 반폭도 윤곽(갑판선)
+    ctx.strokeStyle = P.text; ctx.lineWidth = 1.4;
+    ctx.beginPath(); for (let k = 0; k <= 120; k++) { const x = (k * L) / 120, yy = y2 + hh - half(x, D) * sy; k ? ctx.lineTo(X(x), yy) : ctx.moveTo(X(x), yy); } ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(X(0), y2 + hh); ctx.lineTo(X(L), y2 + hh); ctx.stroke();
+    // --- 정면도
+    const BX = (y) => cxb + y * sb, BY = (z) => y3 - z * sb;
+    ctx.strokeStyle = P.axis; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cxb, BY(0) + 6); ctx.lineTo(cxb, BY(D) - 6); ctx.moveTo(BX(-B / 2) - 6, BY(0)); ctx.lineTo(BX(B / 2) + 6, BY(0)); ctx.stroke();
+    WLS.forEach((z, i) => { const on = kind === "wl" && i === id, a = alphaOf(on); if (!a) return; ctx.globalAlpha = a; ctx.strokeStyle = on ? hiC : wlC; ctx.lineWidth = lw(on); ctx.beginPath(); ctx.moveTo(BX(-B / 2), BY(z)); ctx.lineTo(BX(B / 2), BY(z)); ctx.stroke(); ctx.globalAlpha = 1; });
+    BTS.forEach((yb, i) => { const on = kind === "bt" && i === id, a = alphaOf(on); if (!a) return; ctx.globalAlpha = a; ctx.strokeStyle = on ? hiC : btC; ctx.lineWidth = lw(on); ctx.beginPath(); ctx.moveTo(BX(yb), BY(0)); ctx.lineTo(BX(yb), BY(D)); ctx.moveTo(BX(-yb), BY(0)); ctx.lineTo(BX(-yb), BY(D)); ctx.stroke(); ctx.globalAlpha = 1; });
+    for (let i = 0; i <= NST; i++) {
+      const on = kind === "st" && i === id;
+      const x = (i * L) / NST, sgn = i < NST / 2 ? -1 : 1;
+      const sides = i === NST / 2 ? [-1, 1] : [sgn];
+      ctx.strokeStyle = on ? hiC : P.text; ctx.lineWidth = on ? 3 : 1.1; ctx.globalAlpha = on ? 1 : 0.75;
+      sides.forEach((sg) => { ctx.beginPath(); for (let k = 0; k <= 40; k++) { const z = (k / 40) * D, y = half(x, z); k ? ctx.lineTo(BX(sg * y), BY(z)) : ctx.moveTo(BX(sg * y), BY(z)); } ctx.stroke(); });
+      ctx.globalAlpha = 1;
+    }
+    ctx.strokeStyle = P.faint; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(BX(-B / 2), BY(T)); ctx.lineTo(BX(B / 2), BY(T)); ctx.stroke(); ctx.setLineDash([]);
+    const sel = kind === "st" ? `St.${id} <small>x=${((id * L) / NST).toFixed(0)} m</small>` : kind === "wl" ? `WL${id} <small>z=${WLS[id].toFixed(1)} m</small>` : `BL${id} <small>y=${BTS[id].toFixed(1)} m</small>`;
+    SB.stat("o-ln-sel", sel);
+    const c = coeffs();
+    SB.stat("o-ln-cb", c.cb.toFixed(3)); SB.stat("o-ln-cm", c.cm.toFixed(3) + " / " + c.cp.toFixed(3)); SB.stat("o-ln-cwp", c.cwp.toFixed(3));
+    SB.stat("o-ln-lcb", (c.lcb >= 0 ? "+" : "") + c.lcb.toFixed(2) + " <small>m (" + ((c.lcb / L) * 100).toFixed(1) + "% L)</small>");
+  }, { get height() { const el = document.getElementById("cv-lines"), w = Math.max(200, el ? el.parentElement.clientWidth : 600), s = (w - 40) / L; return Math.round(30 + D * s * 1.6 + 34 + (B / 2) * s * 1.6 + 44 + D * Math.min((w * 0.6) / B, 12) + 26); } });
+  SB.drag(cv.canvas, {
+    down: (p) => {
+      if (!lay || p.y > lay.y2 + lay.hh + 10) return false;
+      const i = Math.round(((p.x - lay.x0) / lay.s / L) * NST); if (i < 0 || i > NST) return false;
+      gKind.set("st"); gIdx.el.max = NST; gIdx.set(i);
+    },
+  });
+})();
+
+/* ==================================================== 6. 일반 배치 */
+(function () {
+  const ff = (px) => px + "px " + getComputedStyle(document.body).getPropertyValue("--font");
+  const L = 200, B = 32, D = 18, TD = 11.5, FULL = 0.82, LSH = 0.14, DB = 1.8, NX = 200, NZ = 36, dx = L / NX, dz = D / NZ;
+  // 비대선답게 평행부를 앞으로 옮긴 선형(LCB가 중앙보다 앞): xi를 살짝 비틀어 공용 선형을 쓴다
+  const hb = (xi, zeta) => SB.hullHalf(xi - LSH * (1 - xi * xi), zeta, { full: FULL }) * B / 2;
+  const HB = [];   // 반폭 표 [i][k]
+  for (let i = 0; i < NX; i++) { HB.push([]); for (let k = 0; k < NZ; k++) HB[i].push(hb((2 * (i + 0.5) * dx) / L - 1, ((k + 0.5) * dz) / D)); }
+  const area = (i, t) => { let A = 0; for (let k = 0; k < NZ; k++) { const z0 = k * dz; if (z0 >= t) break; A += 2 * HB[i][k] * Math.min(dz, t - z0); } return A; };
+  function hydro(Tm, trim) { // trim = Ta - Tf
+    let V = 0, M = 0;
+    for (let i = 0; i < NX; i++) { const x = (i + 0.5) * dx, t = Tm + trim * (0.5 - x / L); if (t <= 0) continue; const A = area(i, Math.min(D, t)); V += A * dx; M += A * x * dx; }
+    return { V, lcb: M / Math.max(V, 1e-6) };
+  }
+  // 설계 흘수의 수선면 → GML
+  let Awp = 0, Ix = 0, xf = 0;
+  for (let i = 0; i < NX; i++) { const x = (i + 0.5) * dx, b = 2 * hb((2 * x) / L - 1, TD / D); Awp += b * dx; xf += b * x * dx; }
+  xf /= Awp;
+  for (let i = 0; i < NX; i++) { const x = (i + 0.5) * dx, b = 2 * hb((2 * x) / L - 1, TD / D); Ix += b * (x - xf) * (x - xf) * dx; }
+  const Vd = hydro(TD, 0).V, GML = Ix / Vd, DISP = Vd * 1.025;
+  const LS = { steel: 6000, mach: 1400, house: 800, stern: 400 };
+  const LW = LS.steel + LS.mach + LS.house + LS.stern, DWT = DISP - LW;
+  // 강재 분포(갑판 높이까지의 단면적에 비례)
+  const steelW = []; let sw = 0; for (let i = 0; i < NX; i++) { const a = area(i, D) + 8; steelW.push(a); sw += a; }
+  function volBetween(x1, x2, z1, z2) { let V = 0, M = 0; for (let i = Math.max(0, Math.floor(x1 / dx)); i < Math.min(NX, Math.ceil(x2 / dx)); i++) { const xa = Math.max(x1, i * dx), xb = Math.min(x2, (i + 1) * dx); if (xb <= xa) continue; let A = 0; for (let k = 0; k < NZ; k++) { const za = Math.max(z1, k * dz), zb = Math.min(z2, (k + 1) * dz); if (zb > za) A += 2 * HB[i][k] * (zb - za); } V += A * (xb - xa); M += A * (xb - xa) * (xa + xb) / 2; } return { V, x: M / Math.max(V, 1e-9) }; }
+  const DEF = { xa: 9, er: 18.5, xc: 189 };   // er = 기관실 선미 측 격벽 위치
+  let st = Object.assign({}, DEF), cv, lay = null, dragging = null;
+  const re = () => cv && cv.redraw();
+  const gCond = SB.seg("ga-cond", re), gCargo = SB.seg("ga-cargo", re);
+  const gN = SB.range("ga-n", (v) => v + "개", re), gEr = SB.range("ga-er", (v) => v + " m", () => { clampER(); re(); });
+  function clampER() { const len = gEr(); st.er = SB.clamp(st.er, st.xa, st.xc - len - 20); }
+  function layout() {
+    const len = gEr(), e0 = st.er, e1 = st.er + len;
+    const segs = [[st.xa, e0], [e1, st.xc]].filter((s) => s[1] - s[0] > 6);
+    const tot = segs.reduce((a, s) => a + s[1] - s[0], 0), N = gN(), holds = [];
+    let left = N;
+    segs.forEach((s, j) => {
+      let n = j === segs.length - 1 ? left : Math.max(1, Math.round((N * (s[1] - s[0])) / tot)); n = Math.min(n, left - (segs.length - 1 - j)); n = Math.max(1, n); left -= n;
+      for (let k = 0; k < n; k++) holds.push([s[0] + ((s[1] - s[0]) * k) / n, s[0] + ((s[1] - s[0]) * (k + 1)) / n]);
+    });
+    return { e0, e1, holds };
+  }
+  function solve() {
+    const lo = layout(), full = gCond() === "full", rc = Number(gCargo());
+    const items = [];
+    for (let i = 0; i < NX; i++) items.push({ w: (LS.steel * steelW[i]) / sw, x: (i + 0.5) * dx });
+    const ex = (lo.e0 + lo.e1) / 2;
+    items.push({ w: LS.mach, x: ex }, { w: LS.house, x: lo.e0 + (lo.e1 - lo.e0) * 0.35 }, { w: LS.stern, x: 6 });
+    const fuel = full ? 2600 : 1300; items.push({ w: fuel + 500, x: lo.e0 + (lo.e1 - lo.e0) * 0.6 });
+    const hv = lo.holds.map((h) => volBetween(h[0], h[1], DB, D - 0.4)), holdVol = hv.reduce((a, v) => a + v.V * 0.94, 0);
+    let cargo = 0, fill = 0;
+    const tanks = { apt: volBetween(0, st.xa, 2, D * 0.75), fpt: volBetween(st.xc, L, 0, D * 0.8), db: lo.holds.map((h) => volBetween(h[0], h[1], 0, DB)), ts: lo.holds.map((h) => { const v = volBetween(h[0], h[1], 0.72 * D, D - 0.4); return { V: v.V * 0.45, x: v.x }; }) };
+    if (full) {
+      const cap = DWT - fuel - 500; cargo = Math.min(cap, holdVol * rc); fill = cargo / (holdVol * rc);
+      hv.forEach((v) => items.push({ w: v.V * 0.94 * rc * fill, x: v.x }));
+    } else {
+      items.push({ w: tanks.apt.V * 1.025, x: tanks.apt.x }, { w: tanks.fpt.V * 1.025, x: tanks.fpt.x });
+      tanks.db.concat(tanks.ts).forEach((v) => items.push({ w: v.V * 1.025, x: v.x }));
+    }
+    const W = items.reduce((a, b) => a + b.w, 0), LCG = items.reduce((a, b) => a + b.w * b.x, 0) / W;
+    let Tm = full ? TD : 6, trim = 0, hy;
+    for (let it = 0; it < 40; it++) {
+      hy = hydro(Tm, trim);
+      Tm += (W / 1.025 - hy.V) / Awp;
+      trim += ((hy.lcb - LCG) * L) / GML * 0.8;
+      Tm = SB.clamp(Tm, 1, D); trim = SB.clamp(trim, -8, 12);
+    }
+    return { lo, hv, holdVol, cargo, fill, W, LCG, Tm, trim, Ta: Tm + trim / 2, Tf: Tm - trim / 2, full, tanks };
+  }
+  cv = SB.canvas(document.getElementById("cv-ga"), (ctx, w, h) => {
+    const P = SB.palette(), r = solve();
+    const sx = (w - 40) / (L * 1.06), sy = Math.min(sx * 2.4, (h - 80) / (D + 6)), x0 = 20 + 0.03 * L * sx, yK = h - 40;
+    const X = (x) => x0 + x * sx, Y = (z) => yK - z * sy;
+    lay = { X, Y, sx, sy, x0 };
+    // 선체 윤곽
+    const hull = new Path2D();
+    hull.moveTo(X(-0.02 * L), Y(D)); hull.lineTo(X(-0.02 * L), Y(D * 0.55)); hull.quadraticCurveTo(X(0.01 * L), Y(0.2 * D), X(0.05 * L), Y(0));
+    hull.lineTo(X(0.95 * L), Y(0)); hull.quadraticCurveTo(X(1.02 * L), Y(0), X(1.01 * L), Y(D * 0.5)); hull.lineTo(X(1.035 * L), Y(D)); hull.closePath();
+    ctx.fillStyle = P.surface; ctx.fill(hull);
+    ctx.save(); ctx.clip(hull);
+    const soft = SB.color("accent-soft"), water = SB.color("water");
+    // 탱크
+    const tankFill = (x1, x2, z1, z2, filled) => { ctx.fillStyle = filled ? water : SB.color("water-soft"); ctx.globalAlpha = filled ? 0.55 : 1; ctx.fillRect(X(x1), Y(z2), (x2 - x1) * sx, (z2 - z1) * sy); ctx.globalAlpha = 1; };
+    const bal = !r.full;
+    tankFill(-0.05 * L, st.xa, 2, D * 0.75, bal); tankFill(st.xc, L * 1.05, 0, D * 0.8, bal);
+    r.lo.holds.forEach((hd) => tankFill(hd[0], hd[1], 0, DB, bal));
+    // 화물창과 화물
+    r.lo.holds.forEach((hd, i) => {
+      ctx.fillStyle = soft; ctx.fillRect(X(hd[0]), Y(D - 0.4), (hd[1] - hd[0]) * sx, (D - 0.4 - DB) * sy);
+      if (r.full && r.fill > 0) { const top = DB + (D - 0.4 - DB) * r.fill; ctx.fillStyle = P.warn; ctx.globalAlpha = 0.75; ctx.fillRect(X(hd[0]), Y(top), (hd[1] - hd[0]) * sx, (top - DB) * sy); ctx.globalAlpha = 1; }
+    });
+    // 기관실
+    ctx.fillStyle = P.dim; ctx.globalAlpha = 0.55; ctx.fillRect(X(r.lo.e0), Y(D), (r.lo.e1 - r.lo.e0) * sx, D * sy); ctx.globalAlpha = 1;
+    ctx.restore();
+    // 격벽 선
+    ctx.strokeStyle = P.text; ctx.lineWidth = 1.2;
+    const bh = (x) => { ctx.beginPath(); ctx.moveTo(X(x), Y(0)); ctx.lineTo(X(x), Y(D)); ctx.stroke(); };
+    [st.xa, r.lo.e0, r.lo.e1, st.xc].forEach(bh); r.lo.holds.forEach((hd) => bh(hd[0]));
+    ctx.strokeStyle = P.text; ctx.lineWidth = 1.6; ctx.stroke(hull);
+    // 거주구
+    const hx = r.lo.e0 + (r.lo.e1 - r.lo.e0) * 0.1, hw = (r.lo.e1 - r.lo.e0) * 0.55;
+    ctx.fillStyle = "#eef1f5"; ctx.strokeStyle = P.text; ctx.lineWidth = 1; ctx.fillRect(X(hx), Y(D + 5.5), hw * sx, 5.5 * sy); ctx.strokeRect(X(hx), Y(D + 5.5), hw * sx, 5.5 * sy);
+    ctx.fillStyle = "#3a4152"; ctx.fillRect(X(hx + hw * 0.15), Y(D + 7), hw * 0.25 * sx, 1.5 * sy);
+    // 라벨
+    ctx.font = ff(w < 500 ? 10 : 11.5); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = P.text;
+    if (w > 420) { r.lo.holds.forEach((hd, i) => ctx.fillText("No." + (r.lo.holds.length - i), X((hd[0] + hd[1]) / 2), Y(D * 0.62))); }
+    ctx.fillText("기관실", X((r.lo.e0 + r.lo.e1) / 2), Y(D * 0.45));
+    // 수선(트림)
+    const wl = (x) => Y(r.Tm + r.trim * (0.5 - x / L));
+    ctx.beginPath(); ctx.moveTo(0, wl(-x0 / sx)); ctx.lineTo(w, wl((w - x0) / sx)); ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
+    ctx.fillStyle = SB.color("water-soft"); ctx.fill();
+    ctx.strokeStyle = water; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, wl(-x0 / sx)); ctx.lineTo(w, wl((w - x0) / sx)); ctx.stroke();
+    // 손잡이
+    const handle = (x, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(X(x), Y(D) - 2); ctx.lineTo(X(x) - 8, Y(D) - 16); ctx.lineTo(X(x) + 8, Y(D) - 16); ctx.closePath(); ctx.fill(); };
+    handle(st.xa, P.accent); handle(st.xc, P.accent);
+    // 충돌 격벽 허용 범위
+    ctx.fillStyle = P.ok; ctx.globalAlpha = 0.25; ctx.fillRect(X(L - 0.08 * L), Y(D) - 22, 0.03 * L * sx, 4); ctx.globalAlpha = 1;
+    ctx.fillStyle = P.dim; ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.font = ff(11);
+    ctx.fillText("AP", X(0) - 6, yK + 6); ctx.textAlign = "right"; ctx.fillText("FP", X(L) + 6, yK + 6);
+    ctx.textAlign = "center"; ctx.fillText("세로 축척 약 " + (sy / sx).toFixed(1) + "배 과장", w / 2, yK + 20);
+    // 수치
+    const col = L - st.xc, colOK = col >= 0.05 * L - 0.01 && col <= 0.08 * L + 0.01;
+    SB.stat("o-ga-vol", (r.holdVol / 1000).toFixed(1) + " <small>천 m³</small>");
+    SB.stat("o-ga-cargo", r.full ? (r.cargo / 1000).toFixed(1) + " <small>천 t (창 " + (r.fill * 100).toFixed(0) + "% 참)</small>" : "0 <small>(밸러스트 " + ((r.W - LW - 1800) / 1000).toFixed(1) + "천 t)</small>");
+    SB.stat("o-ga-t", r.Ta.toFixed(2) + " / " + r.Tf.toFixed(2) + " <small>m</small>");
+    SB.stat("o-ga-trim", (r.trim >= 0 ? "+" : "") + r.trim.toFixed(2) + " <small>m</small>");
+    SB.stat("o-ga-col", `<span style="color:${colOK ? "var(--ok)" : "var(--bad)"}">${col.toFixed(1)} m (${((col / L) * 100).toFixed(1)}% L)</span>`);
+    let ok = [];
+    if (!colOK) ok.push("충돌 격벽 위치 위반");
+    if (r.full) { if (Math.abs(r.trim) > 1.0) ok.push(r.trim > 0 ? "선미 트림 과다" : "선수 트림"); }
+    else { if (r.Tm < 2 + 0.02 * L) ok.push("평균 흘수 부족"); if (r.trim > 0.015 * L) ok.push("트림 > 0.015L"); if (r.Ta < 7.0) ok.push("프로펠러 노출"); }
+    SB.stat("o-ga-ok", ok.length ? `<small style="color:var(--bad)">${ok.join(", ")}</small>` : '<span style="color:var(--ok)">적합</span>');
+  }, { aspect: 0.42, minHeight: 250, maxHeight: 380 });
+  SB.drag(cv.canvas, {
+    down: (p) => {
+      if (!lay) return false;
+      const xm = (p.x - lay.x0) / lay.sx, tol = 12 / lay.sx;
+      if (Math.abs(xm - st.xa) < tol) dragging = "xa";
+      else if (Math.abs(xm - st.xc) < tol) dragging = "xc";
+      else if (xm > st.er && xm < st.er + gEr()) dragging = { er: xm - st.er };
+      else return false;
+    },
+    move: (p) => {
+      const xm = (p.x - lay.x0) / lay.sx;
+      if (dragging === "xa") st.xa = SB.clamp(Math.round(xm), 4, Math.min(24, st.er));
+      else if (dragging === "xc") st.xc = SB.clamp(Math.round(xm), Math.max(L - 26, st.er + gEr() + 20), L - 5);
+      else if (dragging) st.er = SB.clamp(Math.round(xm - dragging.er), st.xa, st.xc - gEr() - 20);
+      cv.redraw();
+    },
+    up: () => { dragging = null; },
+  });
+  document.getElementById("ga-reset").addEventListener("click", () => { st = Object.assign({}, DEF); gEr.set(28); gN.set(7); });
+})();
+
+/* ==================================================== 7. 규정 분류 게임 */
+(function () {
+  const CARDS = [
+    ["구명정과 구명뗏목의 수용 인원과 배치", "SOLAS", "SOLAS 제III장(구명 설비)."],
+    ["이중선체 유조선과 슬롭 탱크, 기름 배출 감시 장치", "MARPOL", "MARPOL 부속서 I(기름)."],
+    ["건현을 계산하고 선측에 만재흘수선 마크를 표시", "LL", "국제 만재흘수선 협약의 핵심이다."],
+    ["종강도 단면 계수의 최소값과 외판 두께", "CLASS", "선급 규칙(IACS CSR 포함)이 정한다."],
+    ["주 수직 구역의 방화 구조와 고정식 소화 설비", "SOLAS", "SOLAS 제II-2장(화재 안전)."],
+    ["연료유 황 함량 상한 0.5%와 배출 통제 해역", "MARPOL", "MARPOL 부속서 VI(대기 오염)."],
+    ["화물창 해치 코밍 높이와 풍우밀 해치 덮개", "LL", "노출 갑판 개구부의 높이와 폐쇄 장치는 만재흘수선 협약이 정한다."],
+    ["용접 절차 승인과 용접사 자격 시험", "CLASS", "재료·용접 규칙은 선급 규칙에 속한다."],
+    ["확률론적 손상 복원성 지수 A ≥ R", "SOLAS", "SOLAS 제II-1장. 계산 해석은 IACS·선급이 보조한다."],
+    ["에너지 효율 설계 지수(EEDI)와 탄소 집약도 등급(CII)", "MARPOL", "MARPOL 부속서 VI 제4장."],
+    ["프로펠러 축 직경과 축계 정렬", "CLASS", "기관 규칙은 선급 규칙이 정한다."],
+    ["선박 하수 처리 장치와 쓰레기 배출 금지 구역", "MARPOL", "MARPOL 부속서 IV(하수)와 V(쓰레기)."],
+  ];
+  const NAME = { SOLAS: "SOLAS", MARPOL: "MARPOL", LL: "만재흘수선 협약", CLASS: "선급 규칙" };
+  let order = [], pos = 0, score = 0, answered = false;
+  const card = document.getElementById("rq-card"), fb = document.getElementById("rq-fb"), bins = [...document.querySelectorAll("#rq-bins button")];
+  function shuffle() { order = CARDS.map((_, i) => i); for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; } pos = 0; score = 0; show(); }
+  function show() {
+    answered = false; bins.forEach((b) => b.classList.remove("right", "wrong"));
+    if (pos >= order.length) { card.innerHTML = `끝! ${CARDS.length}장 중 ${score}장을 맞혔다.<small>"처음부터"로 다시 섞어서 해 보라.</small>`; fb.textContent = ""; }
+    else { card.innerHTML = CARDS[order[pos]][0] + "<small>카드 " + (pos + 1) + " / " + CARDS.length + "</small>"; fb.textContent = "어느 규정의 요구일까?"; }
+    SB.stat("o-rq-score", score + " / " + Math.min(pos, CARDS.length)); SB.stat("o-rq-left", String(Math.max(0, CARDS.length - pos)));
+  }
+  bins.forEach((b) => b.addEventListener("click", () => {
+    if (answered || pos >= order.length) return;
+    answered = true; const c = CARDS[order[pos]], ok = b.dataset.bin === c[1];
+    if (ok) score++;
+    b.classList.add(ok ? "right" : "wrong"); bins.find((x) => x.dataset.bin === c[1]).classList.add("right");
+    fb.innerHTML = (ok ? "<b style='color:var(--ok)'>정답.</b> " : "<b style='color:var(--bad)'>아쉽다.</b> 정답은 " + NAME[c[1]] + ". ") + c[2];
+    pos++; SB.stat("o-rq-score", score + " / " + pos); SB.stat("o-rq-left", String(CARDS.length - pos));
+  }));
+  document.getElementById("rq-next").addEventListener("click", () => { if (answered || pos >= order.length) show(); });
+  document.getElementById("rq-restart").addEventListener("click", shuffle);
+  shuffle();
+})();
+
+/* ==================================================== 8. 요구 운임 */
+(function () {
+  const ff = (px) => px + "px " + getComputedStyle(document.body).getPropertyValue("--font");
+  let cv;
+  const re = () => cv && cv.redraw();
+  const gD = SB.range("rf-dwt", (v) => (v / 1000).toFixed(0) + "천 t", re), gV = SB.range("rf-v", (v) => v.toFixed(2) + " kn", re);
+  const gR = SB.range("rf-d", (v) => v.toLocaleString() + " nm", re), gF = SB.range("rf-fp", (v) => v + " $/t", re), gI = SB.range("rf-i", (v) => v.toFixed(1) + " %", re);
+  function model(dwt, V) {
+    const disp = dwt / 0.84, PB = (Math.pow(disp, 2 / 3) * V * V * V) / 780, MCR = (PB * 1.15) / 0.9;
+    const price = 0.04 * Math.pow(dwt, 0.6) + 0.0005 * MCR;               // M$
+    const i = gI() / 100, n = 25, crf = (i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1);
+    const sea = (2 * gR()) / (V * 24), port = 4 + dwt / 40000;               // 일
+    const trips = 350 / (sea + port);
+    const fuelSea = (PB * 1.15 * 24 * sea * 175e-6) * (0.5 + 0.5 * 0.8);     // 만재·밸러스트 평균
+    const fuelPort = port * 8;                                              // t (보조기관 등)
+    const voyage = (trips * ((fuelSea + fuelPort) * gF() + 60000 + dwt * 0.6)) / 1e6;   // M$/yr
+    const opex = 2.6 + 0.012 * price + dwt / 1e5 * 0.5;                    // M$/yr
+    const cap = price * crf, Q = dwt * 0.95 * trips;
+    return { price, MCR, trips, Q, cap, opex, voyage, rfr: ((cap + opex + voyage) * 1e6) / Q };
+  }
+  cv = SB.canvas(document.getElementById("cv-rfr"), (ctx, w, h) => {
+    const P = SB.palette(), dwt = gD(), V = gV(), m = model(dwt, V);
+    const two = w > 560, bw = two ? (w - 30) / 2 : w - 10, bh = two ? h - 10 : (h - 20) / 2;
+    const vs = [], ds = [];
+    for (let v = 8; v <= 20.001; v += 0.25) vs.push([v, model(dwt, v).rfr]);
+    for (let d = 20000; d <= 400000; d += 5000) ds.push([d / 1000, model(d, V).rfr]);
+    const vb = vs.reduce((a, b) => (b[1] < a[1] ? b : a)), db = ds.reduce((a, b) => (b[1] < a[1] ? b : a));
+    const ymax1 = Math.max(...vs.map((p) => p[1])) * 1.08, ymin1 = Math.min(...vs.map((p) => p[1])) * 0.9;
+    const box1 = { x: 56, y: 22, w: bw - 66, h: bh - 66 };
+    SB.chart(ctx, box1, { x: [8, 20], y: [ymin1, ymax1], xLabel: "속력 (kn)", yLabel: "RFR ($/t)", series: [{ data: vs, color: P.accent, width: 2.5 }],
+      points: [{ x: vb[0], y: vb[1], color: P.ok, r: 5, label: "최적 " + vb[0].toFixed(1) + " kn" }, { x: V, y: m.rfr, color: P.accent2, r: 6 }], yFmt: (v) => v.toFixed(0) });
+    const ox = two ? bw + 20 : 0, oy = two ? 0 : bh + 20;
+    const ymax2 = Math.min(ds[0][1], Math.max(...ds.map((p) => p[1]))) * 1.05, ymin2 = Math.min(...ds.map((p) => p[1])) * 0.9;
+    SB.chart(ctx, { x: ox + 56, y: oy + 22, w: bw - 66, h: bh - 66 }, { x: [20, 400], y: [ymin2, ymax2], xLabel: "재화중량 (천 t)", yLabel: two ? "" : "RFR ($/t)", series: [{ data: ds, color: P.warn, width: 2.5 }],
+      points: [{ x: dwt / 1000, y: m.rfr, color: P.accent2, r: 6 }], yFmt: (v) => v.toFixed(0) });
+    ctx.font = ff(12); ctx.fillStyle = P.dim; ctx.textAlign = "left"; ctx.textBaseline = "top";
+    ctx.fillText("속력에 따른 RFR (현재 크기)", 60, 4); ctx.fillText("크기에 따른 RFR (현재 속력)", ox + 60, oy + 4);
+    SB.stat("o-rf-price", m.price.toFixed(0) + " <small>M$</small>");
+    SB.stat("o-rf-mcr", (m.MCR / 1000).toFixed(1) + " <small>MW</small>");
+    SB.stat("o-rf-q", m.trips.toFixed(1) + " <small>항차 /</small> " + (m.Q / 1e6).toFixed(2) + " <small>Mt</small>");
+    const tot = m.cap + m.opex + m.voyage;
+    SB.stat("o-rf-split", `${((m.cap / tot) * 100).toFixed(0)} / ${((m.opex / tot) * 100).toFixed(0)} / ${((m.voyage / tot) * 100).toFixed(0)} <small>%</small>`);
+    SB.stat("o-rf-rfr", m.rfr.toFixed(2) + " <small>$/t</small>");
+  }, { aspect: 0.5, maxHeight: 560, get minHeight() { const el = document.getElementById("cv-rfr"); return el && el.parentElement.clientWidth < 560 ? 520 : 300; } });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<title>프로펠러 · ShipBook</title>
+<meta name="description" content="액추에이터 디스크 운동량 이론, 날개 요소 이론과 속도 삼각형, 피치와 슬립, 추력·토크 계수와 단독 효율, 직경·회전수 최적화, 캐비테이션과 버릴 선도, 3D 프로펠러 생성기, 덕트·가변 피치·포드 추진기와 날개 진동수를 시뮬레이터로 배운다.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../css/style.css">
+<script src="../js/common.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<style>
+  .sim-view canvas.grab { cursor: crosshair; touch-action: none; }
+  .fig-lg svg .t, .fig-lg svg .t-acc { font-size: 15px; }
+  .fig-lg svg .t-dim { font-size: 13px; }
+  .ctrl-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .ctrl-row .btn { flex: 1 1 auto; }
+  .ctrl > span i { font-style: normal; }
+</style>
+</head>
+<body data-chapter="propeller">
+<main class="chapter">
+  <header class="chapter-hero">
+    <div class="eyebrow">Chapter 07</div>
+    <h1>프로펠러</h1>
+    <p class="lead">대형 컨테이너선의 프로펠러는 지름이 9 m를 넘고 무게가 100 t에 이르지만, 1분에 80바퀴 남짓 천천히 돈다. 이 거대한 청동 덩어리는 물을 뒤로 밀어 보내는 반작용으로 수십 MW의 동력을 추력으로 바꾼다. 이 장에서는 프로펠러를 “물을 가속하는 원판”으로 보는 운동량 이론에서 시작해, 날개 단면 하나하나가 만드는 양력으로 추력과 토크를 쌓는 날개 요소 이론, 설계자가 쓰는 단독 특성 곡선, 효율을 깎고 날개를 갉아 먹는 캐비테이션, 그리고 다양한 추진기의 비교까지 다룬다.</p>
+    <ul class="objectives">
+      <li>운동량 이론으로 이상 효율을 계산하고 “큰 프로펠러를 천천히 돌려라”의 근거를 설명한다.</li>
+      <li>날개 요소의 속도 삼각형에서 받음각을 구하고 양력·항력을 추력과 토크로 분해한다.</li>
+      <li>기하학적 피치, 전진비, 슬립비의 관계를 이해한다.</li>
+      <li>\(K_T\), \(K_Q\), \(\eta_0\) 단독 특성 곡선을 읽고 운전점과 최적 직경·회전수를 찾는다.</li>
+      <li>캐비테이션 수를 계산하고, 압력 분포와 버릴 선도로 캐비테이션 위험을 판단한다.</li>
+      <li>날개 수·피치·스큐·면적비가 형상에 주는 영향을 3D로 확인하고, 여러 추진기와 날개 진동수 문제를 이해한다.</li>
+    </ul>
+  </header>
+
+  <!-- =============================================================== 1 -->
+  <section id="momentum">
+    <h2>물을 뒤로 던지는 원판: 운동량 이론</h2>
+    <p>배가 앞으로 가려면 무언가를 뒤로 밀어야 한다(뉴턴의 제3법칙). 프로펠러는 매초 수십 t의 물을 붙잡아 뒤로 가속하고, 그 운동량 변화의 반작용이 <span class="term">추력</span><span class="en">(Thrust, \(T\))</span>이다. 날개의 세부를 모두 지우고 프로펠러를 압력을 계단처럼 높이는 얇은 원판으로 본 모델이 <span class="term">액추에이터 디스크</span><span class="en">(Actuator Disk)</span>, 곧 랭킨–프루드의 운동량 이론이다.</p>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 760 270" role="img" aria-label="액추에이터 디스크의 흐름관">
+        <path d="M40 60 C 250 62 330 82 380 92 C 440 104 520 110 720 112" fill="none" stroke="var(--accent)" stroke-width="2"/>
+        <path d="M40 210 C 250 208 330 188 380 178 C 440 166 520 160 720 158" fill="none" stroke="var(--accent)" stroke-width="2"/>
+        <rect x="374" y="88" width="12" height="94" fill="var(--accent-2)" opacity="0.85"/>
+        <text x="380" y="78" class="t" text-anchor="middle" fill="var(--accent-2)">디스크 면적 A</text>
+        <g stroke="var(--text)" stroke-width="2">
+          <line x1="70" y1="135" x2="130" y2="135"/><line x1="350" y1="135" x2="420" y2="135"/><line x1="610" y1="135" x2="700" y2="135"/>
+        </g>
+        <g fill="var(--text)"><path d="M130 135 l -10 -5 v 10 z"/><path d="M420 135 l -10 -5 v 10 z"/><path d="M700 135 l -10 -5 v 10 z"/></g>
+        <text x="100" y="125" class="t" text-anchor="middle">V<tspan baseline-shift="sub" font-size="10">A</tspan></text>
+        <text x="330" y="125" class="t" text-anchor="end">V<tspan baseline-shift="sub" font-size="10">A</tspan>(1+a)</text>
+        <text x="655" y="125" class="t" text-anchor="middle">V<tspan baseline-shift="sub" font-size="10">A</tspan>(1+2a)</text>
+        <text x="100" y="240" class="t-dim" text-anchor="middle">먼 앞: 넓은 흐름관</text>
+        <text x="380" y="240" class="t-dim" text-anchor="middle">디스크: 압력 Δp 점프</text>
+        <text x="655" y="240" class="t-dim" text-anchor="middle">먼 뒤: 수축한 후류(slipstream)</text>
+        <path d="M40 30 L 330 30 L 380 30 L 380 20 L 386 20 L 386 45 L 720 45" fill="none" stroke="var(--warn)" stroke-width="2"/>
+        <text x="200" y="22" class="t-dim">압력</text>
+      </svg>
+      <figcaption><b>그림 7-1.</b> 액추에이터 디스크. 흐름은 디스크 앞에서 이미 빨라지기 시작해 \(V_A(1+a)\)로 디스크를 지나고, 먼 뒤에서 \(V_A(1+2a)\)까지 가속된다. 속도가 빨라지는 만큼 흐름관은 가늘어진다. 디스크 앞뒤의 압력 차가 추력을 만든다.</figcaption>
+    </figure>
+
+    <p>디스크를 지나는 질량 유량은 \(\dot m = \rho A V_A(1+a)\)이고, 이 물이 \(2aV_A\)만큼 빨라지므로 추력은 \(T = \dot m\cdot 2aV_A\)다. 쓸모 있는 일률은 \(TV_A\), 물에 준 일률은 \(T V_A(1+a)\)이므로 효율이 정해진다.</p>
+    <div class="formula">$$C_T = \frac{T}{\tfrac12\rho A V_A^2} = 4a(1+a),\qquad \eta_i = \frac{1}{1+a} = \frac{2}{1+\sqrt{1+C_T}}$$
+      <div class="where">\(V_A\): 프로펠러로 들어오는 전진 속도(m/s), \(A = \pi D^2/4\): 디스크 면적, \(a\): 축방향 유도 속도 계수, \(C_T\): 추력 하중 계수, \(\eta_i\): 이상 효율(마찰·회전 손실이 없을 때의 상한).</div>
+    </div>
+    <p>효율을 깎는 것은 후류에 남는 운동 에너지 \(\tfrac12\dot m(2aV_A)^2\)이다. 같은 추력을 많은 물을 조금씩 가속해서 얻으면(큰 \(A\), 작은 \(a\)) 버리는 에너지가 줄어든다. 이것이 선박 설계의 오랜 격언 “<b>큰 프로펠러를 천천히 돌려라</b>”의 물리적 뿌리다. 비행기의 고바이패스 터보팬, 헬리콥터의 큰 로터도 같은 원리다.</p>
+
+    <div class="sim" id="sim-disk">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>액추에이터 디스크와 이상 효율</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-disk"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>직경 D <output id="dk-d-out"></output></span><input type="range" id="dk-d" min="2" max="12" step="0.1" value="7"></label>
+          <label class="ctrl"><span>추력 T <output id="dk-t-out"></output></span><input type="range" id="dk-t" min="100" max="4000" step="50" value="1500"></label>
+          <label class="ctrl"><span>전진 속도 V<sub>A</sub> <output id="dk-v-out"></output></span><input type="range" id="dk-v" min="1" max="14" step="0.1" value="8"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">C<sub>T</sub></span><span class="v" id="o-dk-ct">—</span></div>
+        <div class="stat"><span class="k">후류 속도</span><span class="v" id="o-dk-wake">—</span></div>
+        <div class="stat"><span class="k">후류 직경</span><span class="v" id="o-dk-dw">—</span></div>
+        <div class="stat"><span class="k">이상 효율 η<sub>i</sub></span><span class="v" id="o-dk-eta">—</span></div>
+        <div class="stat"><span class="k">필요 동력</span><span class="v" id="o-dk-p">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 추력 1,500 kN, 8 m/s에서 직경을 4 m → 10 m로 키우며 이상 효율과 필요 동력을 비교한다. 속도를 1 m/s로 낮추면(예인선이 부두에 묶여 당기는 상황) \(C_T\)가 수백이 되고 효율이 바닥으로 떨어진다. 점들의 속도는 실제 흐름 속도에 비례한다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 2 -->
+  <section id="blade-element">
+    <h2>날개 하나를 들여다보기: 날개 요소 이론</h2>
+    <p>운동량 이론은 효율의 상한을 알려 주지만 날개를 어떻게 만들지는 말해 주지 않는다. 프로펠러 날개를 반지름 방향으로 얇게 잘라 보면 각 조각은 비행기 날개와 같은 <span class="term">날개 단면</span><span class="en">(Blade Section)</span>이다. 반경 \(r\)의 단면이 보는 물의 흐름은 전진 속도 \(V_A\)와 회전 속도 \(\omega r\)의 합이고, 여기에 프로펠러 자신이 만든 <span class="term">유도 속도</span><span class="en">(Induced Velocity)</span>가 더해진다.</p>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 760 300" role="img" aria-label="날개 단면의 속도 삼각형">
+        <g transform="translate(120 230)">
+          <line x1="0" y1="0" x2="460" y2="0" stroke="var(--text)" stroke-width="2.4"/><path d="M460 0 l -12 -6 v 12 z" fill="var(--text)"/>
+          <line x1="0" y1="0" x2="0" y2="-150" stroke="var(--text)" stroke-width="2.4"/><path d="M0 -150 l -6 12 h 12 z" fill="var(--text)"/>
+          <line x1="0" y1="0" x2="460" y2="-150" stroke="var(--accent)" stroke-width="2.6"/>
+          <line x1="0" y1="0" x2="430" y2="-185" stroke="var(--accent-2)" stroke-width="2.6"/>
+          <line x1="460" y1="0" x2="460" y2="-150" stroke="var(--text-faint)" stroke-dasharray="4 3"/>
+          <line x1="460" y1="-150" x2="430" y2="-185" stroke="var(--ok)" stroke-width="2.2"/>
+          <path d="M80 0 A 80 80 0 0 0 76 -26" fill="none" stroke="var(--accent)"/>
+          <path d="M120 0 A 120 120 0 0 0 110 -47" fill="none" stroke="var(--accent-2)"/>
+          <text x="230" y="22" class="t" text-anchor="middle">ωr (회전 속도)</text>
+          <text x="-12" y="-75" class="t" text-anchor="end">V<tspan baseline-shift="sub" font-size="10">A</tspan></text>
+          <text x="260" y="-100" class="t-acc">유입 속도 W</text>
+          <text x="300" y="-170" class="t" fill="var(--accent-2)">피치선(날개 면)</text>
+          <text x="470" y="-170" class="t" fill="var(--ok)">유도 속도</text>
+          <text x="92" y="-8" class="t" fill="var(--accent)">β</text>
+          <text x="128" y="-30" class="t" fill="var(--accent-2)">φ</text>
+          <text x="150" y="-60" class="t">α = φ − β<tspan baseline-shift="sub" font-size="10">i</tspan></text>
+        </g>
+        <text x="20" y="30" class="t-dim">프로펠러를 위에서 반경 r 단면으로 자른 모습. 선수 방향 = 위, 회전 방향 = 오른쪽</text>
+      </svg>
+      <figcaption><b>그림 7-2.</b> 날개 단면의 속도 삼각형. 기하학적 진입각 \(\beta = \arctan\frac{V_A}{\omega r}\)에 유도 속도가 더해진 유체 진입각 \(\beta_i\)와 날개의 피치각 \(\varphi\)의 차이가 받음각 \(\alpha\)다. 양력은 유입 속도 \(W\)에 수직, 항력은 나란하다.</figcaption>
+    </figure>
+
+    <div class="formula">$$\tan\varphi = \frac{P}{2\pi r},\qquad dL = \tfrac12\rho W^2 c\,C_L\,dr,\qquad dD = \tfrac12\rho W^2 c\,C_D\,dr$$
+    $$dT = Z\,(dL\cos\beta_i - dD\sin\beta_i),\qquad dQ = Z\,r\,(dL\sin\beta_i + dD\cos\beta_i)$$
+      <div class="where">\(P\): 피치, \(c\): 날개 코드 길이, \(Z\): 날개 수, \(C_L, C_D\): 단면 양력·항력 계수. 양력의 앞쪽 성분이 추력, 회전 반대 방향 성분이 토크(엔진이 이겨야 할 저항)가 된다. 항력은 추력을 깎고 토크를 늘린다.</div>
+    </div>
+    <p>유도 속도는 운동량 이론으로 각 원환(annulus)마다 구하고, 날개 요소의 힘과 원환의 운동량 변화가 같아질 때까지 반복해 푼다. 이를 <span class="term">날개 요소 운동량 이론</span><span class="en">(BEMT)</span>이라 한다. 아래 시뮬레이터가 바로 그 계산을 한다(직경 7 m, 날개 4장, 면적비 0.7).</p>
+
+    <div class="sim" id="sim-bem">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>날개 요소의 속도 삼각형과 힘 분해</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-bem"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>반경 위치 r/R <output id="be-r-out"></output></span><input type="range" id="be-r" min="0.25" max="0.95" step="0.01" value="0.7"></label>
+          <label class="ctrl"><span>회전수 <output id="be-n-out"></output></span><input type="range" id="be-n" min="40" max="160" step="1" value="100"></label>
+          <label class="ctrl"><span>전진 속도 V<sub>A</sub> <output id="be-v-out"></output></span><input type="range" id="be-v" min="1" max="14" step="0.1" value="8"></label>
+          <label class="ctrl"><span>피치비 P/D <output id="be-p-out"></output></span><input type="range" id="be-p" min="0.5" max="1.5" step="0.01" value="1.0"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">β / β<sub>i</sub> / φ</span><span class="v" id="o-be-ang">—</span></div>
+        <div class="stat"><span class="k">받음각 α</span><span class="v" id="o-be-a">—</span></div>
+        <div class="stat"><span class="k">C<sub>L</sub></span><span class="v" id="o-be-cl">—</span></div>
+        <div class="stat"><span class="k">전체 추력</span><span class="v" id="o-be-t">—</span></div>
+        <div class="stat"><span class="k">국소 효율</span><span class="v" id="o-be-eta">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 회전수를 고정하고 전진 속도를 올리면 β가 커져 받음각이 줄고, 결국 음수가 되어 추력이 뒤집힌다(프로펠러가 물레방아처럼 돈다). r/R을 0.3 → 0.9로 움직여 보면 날개 바깥쪽일수록 피치각이 작아져야(비틀림) 받음각이 고르게 유지되는 이유가 보인다. 아래 그래프는 반경별 추력 분포다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 3 -->
+  <section id="pitch">
+    <h2>피치와 슬립</h2>
+    <p>날개면은 나사의 나사산처럼 <span class="term">나선면</span><span class="en">(Helicoidal Surface)</span>으로 만든다. 단단한 너트 속에서 한 바퀴 돌 때 나아갈 거리가 <span class="term">기하학적 피치</span><span class="en">(Pitch, \(P\))</span>다. 물은 너트가 아니므로 실제로는 한 바퀴에 \(V_A/n\)만큼만 나아가는데, 이 거리를 <span class="term">전진 거리</span><span class="en">(Advance)</span>라 한다. 둘의 차이가 <span class="term">슬립</span><span class="en">(Slip)</span>이다.</p>
+    <div class="formula">$$J = \frac{V_A}{nD},\qquad s_R = 1 - \frac{V_A}{nP} = 1 - \frac{J}{P/D}$$
+      <div class="where">\(n\): 회전수(rps), \(J\): 전진비(Advance Ratio), \(s_R\): 실 슬립비(Real Slip Ratio). 슬립이 0이면 날개가 물을 밀지 못해 추력이 거의 0이고, 슬립이 1이면 배가 멈춘 채(보울러드 상태) 물만 휘젓는다.</div>
+    </div>
+    <p>슬립은 낭비가 아니다. 날개가 물에 받음각을 갖고 들어가야 양력이 생기므로 어느 정도의 슬립은 필수다. 상선의 정상 운항에서 실 슬립비는 보통 20~35%다. 선장들이 쓰는 “겉보기 슬립”은 배의 대지 속도로 계산하므로 반류(<a href="propulsion.html">8장</a>) 때문에 이보다 작게 나온다.</p>
+
+    <div class="sim" id="sim-slip">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>물속을 파고드는 나사</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-slip"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>피치비 P/D <output id="sl-p-out"></output></span><input type="range" id="sl-p" min="0.5" max="1.5" step="0.01" value="1.0"></label>
+          <label class="ctrl"><span>회전수 <output id="sl-n-out"></output></span><input type="range" id="sl-n" min="40" max="160" step="1" value="90"></label>
+          <label class="ctrl"><span>전진 속도 V<sub>A</sub> <output id="sl-v-out"></output></span><input type="range" id="sl-v" min="0" max="14" step="0.1" value="7.5"></label>
+          <div class="ctrl-row"><button class="btn primary" id="sl-run">일시정지</button><button class="btn" id="sl-reset">처음으로</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">피치 P</span><span class="v" id="o-sl-p">—</span></div>
+        <div class="stat"><span class="k">한 바퀴 전진</span><span class="v" id="o-sl-adv">—</span></div>
+        <div class="stat"><span class="k">J</span><span class="v" id="o-sl-j">—</span></div>
+        <div class="stat"><span class="k">실 슬립비</span><span class="v" id="o-sl-s">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 날개 끝이 물속에 그리는 나선(실선)과, 단단한 너트였다면 그렸을 나선(점선)을 비교한다. 전진 속도를 0으로 내리면 슬립 100%, 피치를 낮추면 같은 속도에서 슬립이 줄어 추력이 약해진다. 직경 7 m 기준.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 4 -->
+  <section id="open-water">
+    <h2>단독 특성 곡선: K<sub>T</sub>, K<sub>Q</sub>, η<sub>0</sub></h2>
+    <p>프로펠러만 따로 균일한 흐름 속에서 시험한 성능을 <span class="term">단독 특성</span><span class="en">(Open Water Characteristics)</span>이라 한다. 차원 해석을 하면 추력과 토크는 전진비 \(J\) 하나의 함수인 무차원 계수로 정리된다(같은 형상이면 크기와 회전수에 관계없이 같은 곡선).</p>
+    <div class="formula">$$K_T = \frac{T}{\rho n^2 D^4},\qquad K_Q = \frac{Q}{\rho n^2 D^5},\qquad \eta_0 = \frac{T V_A}{2\pi n Q} = \frac{J}{2\pi}\frac{K_T}{K_Q}$$
+      <div class="where">\(Q\): 토크(N·m), \(\eta_0\): 단독 효율. 관례상 \(K_Q\)는 10배(\(10K_Q\))로 그려 \(K_T\)와 같은 축에 놓는다.</div>
+    </div>
+    <p>네덜란드 해양연구소(MARIN)의 <span class="term">바헤닝언 B 시리즈</span><span class="en">(Wageningen B-series)</span>는 날개 수·면적비·피치비를 체계적으로 바꾼 120여 개 모형 프로펠러의 시험 결과를 다항식으로 정리한 것으로, 초기 설계의 표준 자료다. 아래 시뮬레이터는 B 시리즈의 경향(곡선 모양, 최고 효율 0.5~0.75)을 흉내 낸 <b>매끄러운 근사식</b>이며 실제 계수와는 다르다.</p>
+
+    <div class="sim" id="sim-ow">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>단독 특성 곡선과 운전점</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-ow" class="grab"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>피치비 P/D <output id="ow-p-out"></output></span><input type="range" id="ow-p" min="0.5" max="1.4" step="0.01" value="1.0"></label>
+          <label class="ctrl"><span>전개 면적비 A<sub>E</sub>/A<sub>0</sub> <output id="ow-a-out"></output></span><input type="range" id="ow-a" min="0.4" max="1.05" step="0.01" value="0.7"></label>
+          <label class="ctrl"><span>날개 수 Z <output id="ow-z-out"></output></span><input type="range" id="ow-z" min="3" max="7" step="1" value="4"></label>
+          <label class="ctrl"><span>운전점 J <output id="ow-j-out"></output></span><input type="range" id="ow-j" min="0" max="1.5" step="0.01" value="0.7"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">K<sub>T</sub></span><span class="v" id="o-ow-kt">—</span></div>
+        <div class="stat"><span class="k">10K<sub>Q</sub></span><span class="v" id="o-ow-kq">—</span></div>
+        <div class="stat"><span class="k">η<sub>0</sub></span><span class="v" id="o-ow-eta">—</span></div>
+        <div class="stat"><span class="k">최고 효율</span><span class="v" id="o-ow-max">—</span></div>
+        <div class="stat"><span class="k">D 7 m · 100 rpm이면</span><span class="v" id="o-ow-dim">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 그래프 위를 끌어 운전점 J를 옮겨 본다. 피치비를 0.6 → 1.3으로 올리면 최고 효율이 오르고 그 위치가 높은 J로 옮겨 간다. 면적비를 키우면 마찰이 늘어 효율이 약간 떨어진다. 그런데도 큰 면적비를 쓰는 이유는 캐비테이션 때문이다(뒤에서 다룬다).</div>
+    </div>
+    <div class="callout tip">
+      <strong>계산 예</strong>
+      <p>\(D\) = 7 m, \(n\) = 100 rpm(1.667 rps), \(V_A\) = 8 m/s이면 \(J = 8/(1.667\times7) = 0.686\)이다. 이때 \(K_T\) = 0.22라면 \(T = 0.22\times1025\times1.667^2\times7^4 = 1{,}500\) kN, \(10K_Q\) = 0.38이라면 \(Q = 0.038\times1025\times1.667^2\times7^5 = 1{,}815\) kN·m, 전달 동력 \(2\pi nQ\) = 19.0 MW, 단독 효율 \(\eta_0 = 0.686\times0.22/(2\pi\times0.038) = 0.63\)이다.</p>
+    </div>
+  </section>
+
+  <!-- =============================================================== 5 -->
+  <section id="optimum">
+    <h2>최적 직경과 회전수</h2>
+    <p>설계자는 보통 배의 저항에서 정해진 <b>필요 추력</b>과 <b>전진 속도</b>를 받아 들고 시작한다. 같은 추력을 내는 프로펠러 조합(직경 \(D\), 회전수 \(n\), 피치비)은 무수히 많은데, 그중 효율이 가장 높은 것을 고른다. 직경이 클수록 운동량 손실이 줄어 유리하지만, 흘수와 선미 형상이 직경을 제한하고(선체와의 간극), 너무 느리게 돌리면 엔진이 무거워진다. 저속 2행정 디젤 엔진(<a href="engine.html">9장</a>)이 프로펠러에 직결되어 분당 60~100회로 도는 이유가 여기에 있다.</p>
+
+    <div class="sim" id="sim-opt">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>직경–회전수 효율 지도</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-opt" class="grab"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>필요 추력 <output id="op-t-out"></output></span><input type="range" id="op-t" min="300" max="3000" step="50" value="1500"></label>
+          <label class="ctrl"><span>전진 속도 V<sub>A</sub> <output id="op-v-out"></output></span><input type="range" id="op-v" min="4" max="12" step="0.1" value="8"></label>
+          <label class="ctrl"><span>최대 직경(흘수 제약) <output id="op-dm-out"></output></span><input type="range" id="op-dm" min="4" max="11" step="0.1" value="8.5"></label>
+          <button class="btn" id="op-best">제약 안 최적점으로</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">D / 회전수</span><span class="v" id="o-op-dn">—</span></div>
+        <div class="stat"><span class="k">필요 P/D</span><span class="v" id="o-op-pd">—</span></div>
+        <div class="stat"><span class="k">J</span><span class="v" id="o-op-j">—</span></div>
+        <div class="stat"><span class="k">η<sub>0</sub></span><span class="v" id="o-op-eta">—</span></div>
+        <div class="stat"><span class="k">전달 동력</span><span class="v" id="o-op-p">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 지도 위를 클릭하거나 끌어 (D, rpm) 조합을 고른다. 색이 진할수록 효율이 높고, 회색은 피치비 0.5~1.5로는 그 추력을 낼 수 없는 영역이다. 같은 추력이라도 큰 직경 쪽 등고선이 높은 효율을 준다. 최대 직경을 줄이면 최적점이 어떻게 밀려나는지 본다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 6 -->
+  <section id="cavitation">
+    <h2>캐비테이션: 물이 끓는 날개</h2>
+    <p>물은 100 °C에서만 끓는 것이 아니다. 압력을 낮추면 상온에서도 끓는다. 15 °C 해수의 증기압은 약 1.7 kPa로 대기압의 2%도 안 되지만, 빠르게 도는 날개의 등(흡입면) 앞쪽에서는 압력이 그 아래로 떨어질 수 있다. 그러면 증기 공동(cavity)이 생기는데 이를 <span class="term">캐비테이션</span><span class="en">(Cavitation)</span>이라 한다. 공동이 압력이 회복되는 곳으로 흘러가 터지면 날개 표면을 때려 <b>침식</b>시키고, 강한 <b>소음과 진동</b>을 내며, 심하면 날개 면에 붙은 공동이 양력을 망가뜨려 <b>추력이 급감</b>한다(추력 붕괴).</p>
+    <div class="formula">$$\sigma = \frac{p_0 + \rho g h - p_v}{\tfrac12\rho V^2},\qquad C_p = \frac{p - p_\infty}{\tfrac12\rho V^2},\qquad \text{cavitation where } -C_p > \sigma$$
+      <div class="where">\(p_0\): 대기압(101.3 kPa), \(h\): 날개 단면의 수심, \(p_v\): 증기압, \(V\): 단면의 유입 속도(보통 0.7R에서 \(V^2 = V_A^2 + (0.7\pi nD)^2\)), \(C_p\): 압력 계수. 단면 표면의 최저 압력 계수가 캐비테이션 수를 넘는 구간에서 공동이 생긴다.</div>
+    </div>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 760 250" role="img" aria-label="캐비테이션의 종류">
+        <circle cx="200" cy="125" r="18" fill="var(--surface-2)" stroke="var(--text-dim)"/>
+        <g fill="var(--f-surface, var(--surface))" stroke="var(--text-dim)" stroke-width="1.5">
+          <path d="M200 107 C 230 60 260 30 280 22 C 300 30 285 70 216 113 Z"/>
+          <path d="M218 128 C 270 140 320 150 345 160 C 345 185 300 180 214 140 Z"/>
+          <path d="M193 141 C 170 190 150 220 128 228 C 110 215 130 180 184 140 Z"/>
+          <path d="M182 120 C 130 110 90 100 66 90 C 62 66 110 80 186 110 Z"/>
+        </g>
+        <path d="M280 22 C 330 10 380 14 430 8" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="2 3"/>
+        <path d="M240 72 C 255 55 268 40 276 30" fill="none" stroke="var(--accent)" stroke-width="6" opacity="0.45"/>
+        <g fill="none" stroke="var(--accent)"><circle cx="300" cy="152" r="3"/><circle cx="312" cy="157" r="2.5"/><circle cx="290" cy="148" r="2"/><circle cx="325" cy="160" r="3"/></g>
+        <path d="M218 125 C 250 125 280 126 330 128" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="3 3"/>
+        <text x="440" y="20" class="t-acc">① 날개 끝 와류 캐비테이션</text>
+        <text x="440" y="70" class="t" fill="var(--accent)">② 시트 캐비테이션(날개 등 앞쪽 막)</text>
+        <text x="440" y="120" class="t" fill="var(--accent)">③ 허브 와류 캐비테이션</text>
+        <text x="440" y="170" class="t" fill="var(--accent)">④ 버블 캐비테이션(날개 중앙, 침식 위험)</text>
+        <text x="440" y="220" class="t-dim">압력면 캐비테이션: 받음각이 음수일 때</text>
+        <line x1="330" y1="22" x2="434" y2="18" stroke="var(--text-faint)"/><line x1="268" y1="50" x2="434" y2="66" stroke="var(--text-faint)"/><line x1="330" y1="128" x2="434" y2="116" stroke="var(--text-faint)"/><line x1="326" y1="160" x2="434" y2="166" stroke="var(--text-faint)"/>
+      </svg>
+      <figcaption><b>그림 7-3.</b> 프로펠러 캐비테이션의 대표적인 형태(선미에서 본 모습). 날개 끝 와류와 시트 캐비테이션은 흔하며 어느 정도 허용되지만, 터지는 자리가 날개 면 위인 버블·구름 캐비테이션은 침식을 일으킨다.</figcaption>
+    </figure>
+
+    <div class="sim" id="sim-cav">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>날개 단면 압력 분포와 캐비테이션</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-cav"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>단면 수심 h <output id="cv-h-out"></output></span><input type="range" id="cv-h" min="1" max="20" step="0.5" value="8"></label>
+          <label class="ctrl"><span>회전수 <output id="cv-n-out"></output></span><input type="range" id="cv-n" min="50" max="160" step="1" value="105"></label>
+          <label class="ctrl"><span>하중(받음각) <output id="cv-a-out"></output></span><input type="range" id="cv-a" min="-4" max="7" step="0.1" value="2.5"></label>
+          <label class="ctrl"><span>두께비 t/c <output id="cv-t-out"></output></span><input type="range" id="cv-t" min="0.02" max="0.12" step="0.005" value="0.05"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">V<sub>0.7R</sub></span><span class="v" id="o-cv-v">—</span></div>
+        <div class="stat"><span class="k">σ</span><span class="v" id="o-cv-s">—</span></div>
+        <div class="stat"><span class="k">−C<sub>p,min</sub></span><span class="v" id="o-cv-cp">—</span></div>
+        <div class="stat"><span class="k">공동 길이</span><span class="v" id="o-cv-len">—</span></div>
+        <div class="stat"><span class="k">상태</span><span class="v" id="o-cv-st">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 회전수를 올리면 σ가 빠르게 낮아져(속도 제곱) 앞전 부근부터 공동이 생긴다. 프로펠러가 수면 가까이 올라가는 밸러스트 상태(h를 2 m로)도 시험해 보자. 받음각을 음수로 내리면 압력면(아래쪽)에 공동이 생긴다. 단면 압력은 박익 이론에 기반한 근사다(직경 7 m, \(V_A\) 8 m/s).</div>
+    </div>
+
+    <h3>버릴 선도로 날개 면적 정하기</h3>
+    <p>캐비테이션을 피하는 가장 직접적인 방법은 날개 면적을 늘려 단위 면적당 하중을 낮추는 것이다. 영국의 버릴(L. C. Burrill)은 수많은 실선 경험을 정리해, 0.7R의 캐비테이션 수 \(\sigma_{0.7R}\)과 평균 하중 계수 \(\tau_c\)로 날개 등 면적의 몇 %에 캐비테이션이 생길지 보여 주는 <span class="term">버릴 선도</span><span class="en">(Burrill Diagram)</span>를 만들었다.</p>
+    <div class="formula">$$\tau_c = \frac{T}{A_P\cdot\tfrac12\rho V_{0.7R}^2},\qquad A_P \approx A_E\,(1.067 - 0.229\,P/D)$$
+      <div class="where">\(A_P\): 투영 면적, \(A_E\): 전개 면적. 상선은 보통 날개 등 면적의 약 5% 이하 캐비테이션 선을 상한으로 삼는다.</div>
+    </div>
+
+    <div class="sim" id="sim-burrill">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>버릴 선도(근사 곡선)</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-burrill"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>추력 T <output id="bu-t-out"></output></span><input type="range" id="bu-t" min="300" max="3500" step="50" value="1800"></label>
+          <label class="ctrl"><span>회전수 <output id="bu-n-out"></output></span><input type="range" id="bu-n" min="60" max="160" step="1" value="100"></label>
+          <label class="ctrl"><span>축 중심 수심 <output id="bu-h-out"></output></span><input type="range" id="bu-h" min="3" max="15" step="0.5" value="9"></label>
+          <label class="ctrl"><span>면적비 A<sub>E</sub>/A<sub>0</sub> <output id="bu-a-out"></output></span><input type="range" id="bu-a" min="0.35" max="1.1" step="0.01" value="0.55"></label>
+          <button class="btn" id="bu-fit">5% 선에 맞는 최소 면적비</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">σ<sub>0.7R</sub></span><span class="v" id="o-bu-s">—</span></div>
+        <div class="stat"><span class="k">τ<sub>c</sub></span><span class="v" id="o-bu-tau">—</span></div>
+        <div class="stat"><span class="k">예상 캐비테이션</span><span class="v" id="o-bu-pct">—</span></div>
+        <div class="stat"><span class="k">단독 효율 영향</span><span class="v" id="o-bu-eta">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 기본값에서 점이 5% 선 위에 있다. 면적비를 올려 점을 선 아래로 내린 뒤, 그 대가로 효율이 얼마나 떨어지는지 오른쪽 수치를 본다. 회전수를 낮추고 같은 추력을 내면(피치 증가) σ가 커져 오른쪽으로 이동한다. 직경 7 m, \(V_A\) 8 m/s, P/D 1.0 기준.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 7 -->
+  <section id="geometry">
+    <h2>프로펠러의 모양: 3D 생성기</h2>
+    <p>프로펠러 형상은 몇 개의 숫자로 정해진다.</p>
+    <ul>
+      <li><b>날개 수 \(Z\)</b>: 상선은 4~6장. 날개가 많으면 날개 하나의 하중과 진동 진폭이 줄지만, 효율은 조금 떨어진다.</li>
+      <li><b>피치비 \(P/D\)</b>: 0.6~1.4. 반경마다 다를 수 있고(가변 피치 분포), 보통 0.7R 값을 대표값으로 쓴다.</li>
+      <li><b>전개 면적비 \(A_E/A_0\)</b>: 날개를 평평하게 편 면적의 합을 원판 면적으로 나눈 값. 0.4~1.1. 캐비테이션 여유로 정한다.</li>
+      <li><b>스큐</b><span class="en">(Skew)</span>: 날개를 회전 반대 방향으로 휘게 한 것. 날개 각 반경이 선미 반류의 불균일한 구역을 시간차를 두고 지나므로 압력 변동과 진동이 크게 준다. 고스큐 프로펠러는 날개 끝 스큐가 40° 이상이다.</li>
+      <li><b>레이크</b><span class="en">(Rake)</span>: 날개를 축 방향으로 뒤로 기울인 것. 선체와 날개 끝 간극을 넓힌다.</li>
+    </ul>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 760 260" role="img" aria-label="프로펠러 날개 기하 용어">
+        <circle cx="180" cy="130" r="110" fill="none" stroke="var(--text-faint)" stroke-dasharray="4 4"/>
+        <circle cx="180" cy="130" r="22" fill="var(--surface-2)" stroke="var(--text-dim)"/>
+        <path d="M168 110 C 150 70 140 40 165 22 C 200 15 215 45 196 110 Z" class="f-acc-soft" stroke="var(--accent)" stroke-width="1.5"/>
+        <line x1="180" y1="130" x2="180" y2="20" stroke="var(--text-faint)"/>
+        <path d="M180 108 C 175 80 170 50 165 22" fill="none" stroke="var(--accent-2)" stroke-width="2" stroke-dasharray="5 3"/>
+        <path d="M180 40 A 90 90 0 0 0 166 41" fill="none" stroke="var(--accent-2)" stroke-width="2"/>
+        <text x="108" y="50" class="t" fill="var(--accent-2)">스큐 각</text>
+        <text x="180" y="262" class="t-dim" text-anchor="middle">선미에서 본 모습(정면)</text>
+        <text x="300" y="30" class="t-dim">D = 2R</text>
+        <g transform="translate(470 0)">
+          <line x1="40" y1="130" x2="260" y2="130" stroke="var(--text-dim)" stroke-width="6"/>
+          <rect x="110" y="110" width="60" height="40" rx="8" fill="var(--surface-2)" stroke="var(--text-dim)"/>
+          <path d="M150 110 L 132 20 L 158 22 L 168 110 Z" class="f-acc-soft" stroke="var(--accent)" stroke-width="1.5"/>
+          <line x1="150" y1="110" x2="150" y2="20" stroke="var(--text-faint)" stroke-dasharray="4 3"/>
+          <path d="M150 50 A 60 60 0 0 0 142 51" fill="none" stroke="var(--accent-2)" stroke-width="2"/>
+          <text x="80" y="55" class="t" fill="var(--accent-2)">레이크</text>
+          <text x="250" y="122" class="t-dim" text-anchor="end">선수 →</text>
+          <text x="150" y="262" class="t-dim" text-anchor="middle">옆에서 본 모습</text>
+        </g>
+      </svg>
+      <figcaption><b>그림 7-4.</b> 스큐와 레이크. 스큐는 날개 기준선이 회전면 안에서 휜 정도, 레이크는 축 방향으로 기운 정도다.</figcaption>
+    </figure>
+
+    <p>아래 3D 생성기는 반경별 코드 길이(B 시리즈와 비슷한 분포), 피치각 \(\varphi(r) = \arctan\frac{P}{2\pi r}\), 스큐·레이크, 두께 분포로 날개 단면을 나선면 위에 배치해 <code>BufferGeometry</code>로 직접 만든다.</p>
+
+    <div class="sim" id="sim-3d">
+      <div class="sim-head"><span class="sim-tag three">3D</span><h3>3D 프로펠러 생성기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view three" id="v3d"><span class="hint">드래그: 회전 · 휠: 확대</span></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>날개 수 Z <output id="p3-z-out"></output></span><input type="range" id="p3-z" min="3" max="7" step="1" value="5"></label>
+          <label class="ctrl"><span>피치비 P/D <output id="p3-p-out"></output></span><input type="range" id="p3-p" min="0.5" max="1.5" step="0.01" value="0.9"></label>
+          <label class="ctrl"><span>면적비 A<sub>E</sub>/A<sub>0</sub> <output id="p3-a-out"></output></span><input type="range" id="p3-a" min="0.3" max="1.1" step="0.01" value="0.7"></label>
+          <label class="ctrl"><span>끝단 스큐 <output id="p3-s-out"></output></span><input type="range" id="p3-s" min="0" max="50" step="1" value="25"></label>
+          <label class="ctrl"><span>레이크 <output id="p3-r-out"></output></span><input type="range" id="p3-r" min="0" max="15" step="0.5" value="5"></label>
+          <label class="check"><input type="checkbox" id="p3-spin" checked> 회전</label>
+          <label class="check"><input type="checkbox" id="p3-disk"> 프로펠러 원판 표시</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">0.7R 피치각</span><span class="v" id="o-p3-phi">—</span></div>
+        <div class="stat"><span class="k">0.7R 코드/D</span><span class="v" id="o-p3-c">—</span></div>
+        <div class="stat"><span class="k">날개 간 겹침</span><span class="v" id="o-p3-ov">—</span></div>
+        <div class="stat"><span class="k">BPF (90 rpm)</span><span class="v" id="o-p3-bpf">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 날개 수 7, 면적비 1.1로 만들면 날개끼리 거의 겹친다(군함·고하중 프로펠러). 스큐를 0 → 50°로 바꿔 초승달 모양 날개를 만들어 보고, 피치비를 0.5와 1.5로 바꿔 날개 뿌리와 끝의 비틀림 차이를 옆에서 확인한다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 8 -->
+  <section id="types">
+    <h2>여러 가지 추진기</h2>
+    <p>대부분의 상선은 단순하고 효율 좋은 <b>고정 피치 프로펠러</b>를 쓰지만, 임무에 따라 다른 추진기가 쓰인다.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>추진기</th><th>원리와 특징</th><th>주로 쓰는 배</th></tr></thead>
+      <tbody>
+        <tr><td><b>고정 피치(FPP)</b></td><td>한 덩어리로 주조. 단순·고효율·저렴. 후진은 엔진 역회전으로.</td><td>대형 상선 대부분</td></tr>
+        <tr><td><b>가변 피치(CPP)</b></td><td>허브 안 유압 기구로 날개 각도를 바꾼다. 일정 회전수로 축발전기 구동, 엔진 역회전 없이 후진. 허브가 커서 효율 1~3% 손해.</td><td>페리, 예인선, 어선, 군함</td></tr>
+        <tr><td><b>덕트 프로펠러</b></td><td>날개 둘레에 날개 단면 모양의 링(노즐). 고하중에서 덕트가 추가 추력을 내 보울러드 풀이 30~40% 증가. 고속에서는 덕트 저항이 손해.</td><td>예인선, 트롤선, 저속 비대선</td></tr>
+        <tr><td><b>이중 반전(CRP)</b></td><td>같은 축에서 반대로 도는 두 프로펠러. 앞 날개가 남긴 회전 에너지를 뒤 날개가 회수해 효율 3~8% 향상. 축계가 복잡.</td><td>일부 대형선, 어뢰</td></tr>
+        <tr><td><b>워터젯</b></td><td>선체 안 펌프가 물을 빨아 노즐로 분사. 방향 노즐로 조종. 30노트 이상에서 효율 좋고 흘수가 얕다.</td><td>고속선, 쌍동 페리, 경비정</td></tr>
+        <tr><td><b>포드 추진기</b></td><td>전동기를 수중 포드 안에 넣고 360° 회전. 타가 필요 없고 조종성 우수. 전기 추진(<a href="electric.html">18장</a>)과 짝.</td><td>크루즈선, 쇄빙선, 해양 작업선</td></tr>
+      </tbody>
+    </table></div>
+
+    <p>멈춰 선 채(\(V_A = 0\)) 낼 수 있는 최대 추력을 <span class="term">보울러드 풀</span><span class="en">(Bollard Pull)</span>이라 하며 예인선의 핵심 성능이다. 운동량 이론으로 정지 상태의 이상 추력을 구하면 동력의 2/3제곱에 비례한다. 덕트는 후류 수축을 막아(출구 면적 ≈ 원판 면적) 같은 동력에서 이상 추력을 \(2^{1/3}\approx1.26\)배로 키운다.</p>
+    <div class="formula">$$T_{open} = \left(2\rho A P_D^2\right)^{1/3}\cdot FM,\qquad T_{duct} \approx \left(4\rho A P_D^2\right)^{1/3}\cdot FM_d$$
+      <div class="where">\(P_D\): 프로펠러에 전달된 동력(W), \(FM\): 성능 지수(실제/이상 추력, 0.6~0.75). 경험적으로 개방형은 100 kW당 약 1.3 t, 덕트형은 약 1.7 t의 보울러드 풀을 낸다.</div>
+    </div>
+
+    <div class="sim" id="sim-bollard">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>예인선 보울러드 풀 비교</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-bollard"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>전달 동력 <output id="bp-p-out"></output></span><input type="range" id="bp-p" min="500" max="8000" step="100" value="3000"></label>
+          <label class="ctrl"><span>프로펠러 직경 <output id="bp-d-out"></output></span><input type="range" id="bp-d" min="1.5" max="5" step="0.1" value="3"></label>
+          <div class="ctrl"><span>추진기</span><div class="seg" id="bp-type"><button data-value="open">개방형</button><button data-value="duct" class="on">덕트형</button></div></div>
+          <label class="ctrl"><span>추진기 수 <output id="bp-n-out"></output></span><input type="range" id="bp-n" min="1" max="2" step="1" value="2"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">보울러드 풀</span><span class="v" id="o-bp-t">—</span></div>
+        <div class="stat"><span class="k">100 kW당</span><span class="v" id="o-bp-sp">—</span></div>
+        <div class="stat"><span class="k">후류 속도</span><span class="v" id="o-bp-u">—</span></div>
+        <div class="stat"><span class="k">개방형 대비</span><span class="v" id="o-bp-r">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 같은 동력에서 직경을 2 m → 4 m로 키우면 보울러드 풀이 몇 % 느는지 본다(\(D^{2/3}\)). 덕트형과 개방형을 바꿔 가며 밧줄 장력계 바늘을 비교한다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 9 -->
+  <section id="vibration">
+    <h2>날개 진동수와 선체 진동</h2>
+    <p>선미의 물 흐름은 고르지 않다. 선체 바로 뒤 위쪽(12시 방향)은 느리고 양옆은 빠르다(<a href="propulsion.html">8장</a>의 반류). 그래서 날개가 12시를 지날 때마다 받음각과 하중이 출렁이고, 날개 끝이 선체 바닥을 가까이 지나며 압력 펄스를 때린다. 이 가진의 기본 진동수가 <span class="term">날개 통과 진동수</span><span class="en">(Blade Passing Frequency)</span>다.</p>
+    <div class="formula">$$f_{BPF} = Z\cdot n,\qquad f_{shaft} = n$$
+      <div class="where">\(n\): 축 회전수(rps). 90 rpm의 5날개 프로펠러면 \(f_{BPF}\) = 7.5 Hz. 그 배수(2Z·n, 3Z·n)도 가진한다.</div>
+    </div>
+    <p>이 진동수가 선체 거더의 고유 진동수나 거주 구역(갑판실), 마스트, 기관 받침대의 국부 고유 진동수와 겹치면 공진이 일어나 승무원이 견디기 힘든 진동과 피로 균열이 생긴다. 설계에서는 날개 수와 회전수를 골라 주요 고유 진동수와 ±10~15% 이상 떨어뜨리고, 날개 끝 간극을 직경의 15~25% 이상 두며, 스큐로 압력 펄스를 줄인다. 선체 진동은 <a href="structure.html">13장</a>에서 더 다룬다.</p>
+
+    <div class="sim" id="sim-bpf">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>날개 통과 진동수와 공진 피하기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-bpf"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>날개 수 Z <output id="bf-z-out"></output></span><input type="range" id="bf-z" min="3" max="7" step="1" value="4"></label>
+          <label class="ctrl"><span>축 회전수 <output id="bf-n-out"></output></span><input type="range" id="bf-n" min="50" max="140" step="1" value="105"></label>
+          <label class="ctrl"><span>날개 끝 간극 / D <output id="bf-c-out"></output></span><input type="range" id="bf-c" min="0.08" max="0.35" step="0.01" value="0.18"></label>
+          <label class="ctrl"><span>갑판실 고유 진동수 <output id="bf-f-out"></output></span><input type="range" id="bf-f" min="5" max="16" step="0.1" value="7.2"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">축 / BPF</span><span class="v" id="o-bf-f">—</span></div>
+        <div class="stat"><span class="k">가장 가까운 고유 진동</span><span class="v" id="o-bf-near">—</span></div>
+        <div class="stat"><span class="k">이격</span><span class="v" id="o-bf-m">—</span></div>
+        <div class="stat"><span class="k">압력 펄스(상대)</span><span class="v" id="o-bf-p">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 기본값(4날개, 105 rpm)에서 BPF 7.0 Hz가 갑판실 고유 진동수 7.2 Hz와 겹쳐 공진 경고가 뜬다. 날개 수를 5로 바꾸거나 회전수를 조정해 경고를 없애 보자. 간극을 줄이면 압력 펄스가 급격히 커진다(간극의 약 제곱에 반비례하는 근사).</div>
+    </div>
+  </section>
+
+  <section class="keypoints" id="summary">
+    <h2>핵심 정리</h2>
+    <ol>
+      <li>프로펠러는 물을 뒤로 가속한 반작용으로 추력을 얻는다. 운동량 이론의 이상 효율 \(\eta_i = 2/(1+\sqrt{1+C_T})\)는 추력 하중 계수가 작을수록, 즉 큰 직경으로 많은 물을 조금씩 가속할수록 높다.</li>
+      <li>날개 요소 이론: 단면은 \(V_A\), \(\omega r\), 유도 속도로 이뤄진 유입 속도를 받고, 피치각과 유입각의 차이인 받음각으로 양력을 낸다. 양력의 축 방향 성분이 추력, 회전 방향 성분이 토크다.</li>
+      <li>기하학적 피치는 한 바퀴의 이상 전진 거리다. 실 슬립비 \(1 - J/(P/D)\)가 있어야 받음각과 추력이 생긴다.</li>
+      <li>\(K_T = T/\rho n^2D^4\), \(K_Q = Q/\rho n^2D^5\), \(\eta_0 = JK_T/2\pi K_Q\). 단독 효율은 J에 따라 최고점을 지나며, 피치비가 높을수록 최고 효율이 높다.</li>
+      <li>필요 추력과 속도가 주어지면 직경이 클수록, 그에 맞게 회전수가 낮을수록 효율이 좋다. 직경은 흘수와 선체 간극이 제한한다.</li>
+      <li>국소 압력이 증기압 아래로 떨어지면(\(-C_p &gt; \sigma\)) 캐비테이션이 생겨 침식·소음·진동·추력 붕괴를 일으킨다. 면적비를 늘리거나 회전수를 낮추고 깊이 잠기게 해 피한다. 버릴 선도는 면적 선정의 경험 도구다.</li>
+      <li>CPP, 덕트, CRP, 워터젯, 포드는 각각 조종성·저속 고하중·회전 손실 회수·고속·배치 자유도에서 장점이 있다. 덕트는 보울러드 풀을 30~40% 높인다.</li>
+      <li>날개 통과 진동수 \(Z\cdot n\)이 선체·국부 구조의 고유 진동수와 겹치지 않게 날개 수와 회전수를 고른다. 스큐와 충분한 간극이 압력 펄스를 줄인다.</li>
+    </ol>
+  </section>
+
+  <section class="quiz-sec" id="quiz">
+    <h2>확인 퀴즈</h2>
+    <div class="quiz">
+      <div class="quiz-q"><p>Q1. 추력 하중 계수 \(C_T\) = 3인 프로펠러의 이상 효율은?</p><div class="opts">
+        <button class="opt">0.33</button><button class="opt" data-correct>0.67</button><button class="opt">0.75</button><button class="opt">0.90</button>
+      </div><div class="quiz-exp">\(\eta_i = 2/(1+\sqrt{1+3}) = 2/3 = 0.67\). 실제 효율은 마찰과 회전 손실 때문에 이보다 낮다.</div></div>
+
+      <div class="quiz-q"><p>Q2. 같은 추력·같은 속도에서 직경을 키우면 이상 효율이 높아지는 이유는?</p><div class="opts">
+        <button class="opt">날개 수가 늘어나기 때문</button>
+        <button class="opt" data-correct>더 많은 물을 조금만 가속하면 되어 후류에 버리는 운동 에너지가 줄기 때문</button>
+        <button class="opt">캐비테이션이 사라지기 때문</button>
+        <button class="opt">마찰 저항이 줄기 때문</button>
+      </div><div class="quiz-exp">추력 = 질량 유량 × 속도 증가, 손실 = ½ × 질량 유량 × 속도 증가². 질량 유량을 키우고 속도 증가를 줄이면 같은 추력에서 손실이 준다.</div></div>
+
+      <div class="quiz-q"><p>Q3. 날개 단면의 받음각을 키우는 변화는?</p><div class="opts">
+        <button class="opt">전진 속도를 높인다</button><button class="opt">피치를 줄인다</button>
+        <button class="opt" data-correct>회전수를 높인다</button><button class="opt">직경을 줄이고 회전수는 그대로 둔다</button>
+      </div><div class="quiz-exp">회전수가 오르면 \(\omega r\)이 커져 유입각 β가 작아지고, 피치각 φ는 그대로이므로 받음각 α = φ − β가 커진다.</div></div>
+
+      <div class="quiz-q"><p>Q4. P/D = 1.0인 프로펠러가 J = 0.7로 운전한다. 실 슬립비는?</p><div class="opts">
+        <button class="opt">0.7</button><button class="opt" data-correct>0.3</button><button class="opt">1.43</button><button class="opt">0</button>
+      </div><div class="quiz-exp">\(s_R = 1 - J/(P/D) = 1 - 0.7 = 0.3\). 한 바퀴에 피치의 70%만 전진한다.</div></div>
+
+      <div class="quiz-q"><p>Q5. \(K_T\) = 0.2, \(10K_Q\) = 0.35, J = 0.7일 때 단독 효율은?</p><div class="opts">
+        <button class="opt">0.40</button><button class="opt">0.56</button><button class="opt" data-correct>0.64</button><button class="opt">0.80</button>
+      </div><div class="quiz-exp">\(\eta_0 = \frac{J}{2\pi}\frac{K_T}{K_Q} = \frac{0.7}{6.283}\times\frac{0.2}{0.035} = 0.637\).</div></div>
+
+      <div class="quiz-q"><p>Q6. 캐비테이션 수 σ를 키우는(캐비테이션을 줄이는) 방법이 <b>아닌</b> 것은?</p><div class="opts">
+        <button class="opt">프로펠러를 더 깊이 잠기게 한다</button><button class="opt">회전수를 낮춘다</button>
+        <button class="opt" data-correct>같은 추력에서 날개 면적을 줄인다</button><button class="opt">따뜻한 물보다 차가운 물(낮은 증기압)에서 운항한다</button>
+      </div><div class="quiz-exp">σ = (p₀ + ρgh − pᵥ)/(½ρV²)는 수심·속도·증기압으로만 정해진다. 날개 면적을 줄이면 σ는 그대로지만 단위 면적 하중(\(-C_p\))이 커져 캐비테이션이 오히려 늘어난다.</div></div>
+
+      <div class="quiz-q"><p>Q7. 예인선에 덕트 프로펠러를 쓰는 가장 큰 이유는?</p><div class="opts">
+        <button class="opt">최고 속도를 높이기 위해</button>
+        <button class="opt" data-correct>정지·저속 고하중 상태에서 같은 동력으로 더 큰 추력(보울러드 풀)을 내기 위해</button>
+        <button class="opt">후진을 가능하게 하기 위해</button><button class="opt">소음을 없애기 위해</button>
+      </div><div class="quiz-exp">덕트는 후류 수축을 막고 덕트 자체가 추력을 내 정지 상태 추력을 30~40% 높인다. 고속에서는 덕트 저항 때문에 개방형보다 불리하다.</div></div>
+
+      <div class="quiz-q"><p>Q8. 6날개 프로펠러가 80 rpm으로 돌 때 날개 통과 진동수는?</p><div class="opts">
+        <button class="opt">1.33 Hz</button><button class="opt" data-correct>8 Hz</button><button class="opt">13.3 Hz</button><button class="opt">480 Hz</button>
+      </div><div class="quiz-exp">\(n = 80/60 = 1.333\) rps, \(f_{BPF} = Z\cdot n = 6\times1.333 = 8\) Hz.</div></div>
+    </div>
+  </section>
+</main>
+<script>
+/* PLACEHOLDER */
+</script>
+</body>
+</html>

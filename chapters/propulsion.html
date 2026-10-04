@@ -1,0 +1,1255 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<title>추진 효율과 동력 · ShipBook</title>
+<meta name="description" content="반류와 추력 감소, 선체·단독·상대 회전 효율로 나눈 준추진 효율, 동력 사슬 Sankey, 엔진 부하 다이어그램 위의 프로펠러 곡선, 해상 여유와 MCR, 속력과 연료, 자항 시험과 해상 시운전, 에너지 절감 장치를 시뮬레이터로 익힌다.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../css/style.css">
+<script src="../js/common.js"></script>
+<style>
+  .pp-drag { touch-action: none; cursor: grab; }
+  .pp-drag:active { cursor: grabbing; }
+  .pp-runs { font-family: var(--mono); font-size: 13px; color: var(--text-dim); padding: 8px 18px 0; line-height: 1.7; word-break: break-all; }
+  .pp-runs b { color: var(--text); font-weight: 600; }
+</style>
+</head>
+<body data-chapter="propulsion">
+<main class="chapter">
+  <header class="chapter-hero">
+    <div class="eyebrow">Chapter 08</div>
+    <h1>추진 효율과 동력</h1>
+    <p class="lead"><a href="resistance.html">6장</a>에서 배를 끌고 가는 데 드는 힘(저항)을, <a href="propeller.html">7장</a>에서 물속에 홀로 놓인 프로펠러가 만드는 추력을 따로 살폈다. 실제 배에서 두 이야기는 하나로 엮인다. 프로펠러는 선체가 끌고 온 느린 물을 먹고, 선체는 프로펠러가 빨아들이는 물 때문에 조금 더 무거워진다. 이 장에서는 엔진 크랭크축에서 나온 동력이 선체를 미는 일이 되기까지의 사슬을 한 고리씩 따라가고, 엔진과 프로펠러를 맞추는 법, 바다에서 실제로 속력을 재는 법, 그리고 몇 퍼센트의 효율을 되찾기 위한 장치들을 직접 만져 본다.</p>
+    <ul class="objectives">
+      <li>반류 계수와 추력 감소 계수를 정의하고, 선체 효율이 1보다 클 수 있는 이유를 설명한다.</li>
+      <li>유효 동력에서 제동 동력까지의 동력 사슬과 준추진 효율 \(\eta_D=\eta_H\eta_0\eta_R\)의 분해를 이해한다.</li>
+      <li>프로펠러 법칙 \(P\propto n^3\)과 엔진 부하 다이어그램에서 운전점이 어떻게 움직이는지 설명한다.</li>
+      <li>해상 여유와 엔진 여유로 상용 출력(NCR)과 최대 연속 출력(MCR)을 정한다.</li>
+      <li>속력과 연료 소비의 관계(일일 \(\propto V^3\), 거리당 \(\propto V^2\))로 감속 운항의 경제성을 계산한다.</li>
+      <li>자항 시험의 마찰 수정과 해상 시운전의 왕복 주행 보정 원리를 이해한다.</li>
+      <li>에너지 절감 장치가 어떤 손실을 되찾는지 구분한다.</li>
+    </ul>
+  </header>
+
+  <!-- =============================================================== 1 -->
+  <section id="chain">
+    <h2>저항에서 엔진까지: 동력의 사슬</h2>
+    <p>속력 \(V\)로 달리는 배가 받는 전저항이 \(R_T\)라면, 배를 그 속력으로 끌고 가는 데 필요한 동력은 \(P_E=R_T V\)이다. 이것을 <b>유효 동력</b><span class="en">(effective power)</span>이라 한다. 만약 밧줄로 배를 끌 수 있다면 이 동력만 있으면 된다. 그러나 배는 스스로 프로펠러를 돌려 나아가고, 엔진에서 프로펠러를 거쳐 물에 이르는 동안 동력은 단계마다 조금씩 새어 나간다. 엔진 쪽에서부터 차례로 이름을 붙이면 다음과 같다.</p>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 780 300" role="img" aria-label="엔진에서 선체까지 동력의 사슬">
+        <defs>
+          <marker id="pp-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker>
+        </defs>
+        <g font-size="13">
+          <rect x="190" y="12" width="96" height="34" rx="8" class="f-acc-soft"/><text x="238" y="34" text-anchor="middle" class="t" font-weight="700">P_B 제동</text>
+          <rect x="306" y="12" width="96" height="34" rx="8" class="f-acc-soft"/><text x="354" y="34" text-anchor="middle" class="t" font-weight="700">P_S 축</text>
+          <rect x="422" y="12" width="96" height="34" rx="8" class="f-acc-soft"/><text x="470" y="34" text-anchor="middle" class="t" font-weight="700">P_D 전달</text>
+          <rect x="538" y="12" width="96" height="34" rx="8" class="f-acc-soft"/><text x="586" y="34" text-anchor="middle" class="t" font-weight="700">P_T 추력</text>
+          <rect x="654" y="12" width="96" height="34" rx="8" class="f-acc2-soft"/><text x="702" y="34" text-anchor="middle" class="t" font-weight="700">P_E 유효</text>
+        </g>
+        <g class="s-axis"><line x1="286" y1="29" x2="306" y2="29"/><line x1="402" y1="29" x2="422" y2="29"/><line x1="518" y1="29" x2="538" y2="29"/><line x1="634" y1="29" x2="654" y2="29"/></g>
+        <text x="296" y="64" text-anchor="middle" class="t-mono">η_G</text>
+        <text x="412" y="64" text-anchor="middle" class="t-mono">η_S</text>
+        <text x="528" y="64" text-anchor="middle" class="t-mono">η_0·η_R</text>
+        <text x="644" y="64" text-anchor="middle" class="t-mono">η_H</text>
+        <rect x="0" y="170" width="780" height="130" class="f-water"/>
+        <path d="M44 86 L720 86 L764 96 L742 190 Q735 246 690 252 L170 252 Q140 252 128 232 L124 214 Q110 200 92 184 Q72 172 56 150 Z" class="f-surface" stroke-width="1.5"/>
+        <line x1="0" y1="170" x2="780" y2="170" class="s-water"/>
+        <rect x="160" y="168" width="96" height="66" rx="6" class="f-elev s-line"/>
+        <text x="208" y="196" text-anchor="middle" class="t" font-weight="700">주기관</text>
+        <text x="208" y="216" text-anchor="middle" class="t-mono">P_B</text>
+        <line x1="160" y1="214" x2="102" y2="214" stroke="var(--text-dim)" stroke-width="5"/>
+        <rect x="128" y="207" width="12" height="14" class="f-dim-soft"/>
+        <text x="134" y="268" text-anchor="middle" class="t-mono">축계 P_S</text>
+        <ellipse cx="100" cy="214" rx="6" ry="26" fill="#c9a227"/>
+        <rect x="58" y="186" width="16" height="64" rx="4" class="f-dim-soft"/>
+        <text x="40" y="290" class="t-mono">프로펠러 P_D → P_T</text>
+        <line x1="420" y1="132" x2="580" y2="132" class="s-acc" stroke-width="3" marker-end="url(#pp-ah)"/>
+        <text x="500" y="122" text-anchor="middle" class="t-acc">P_E = R_T · V</text>
+        <text x="500" y="222" text-anchor="middle" class="t-dim">선체가 프로펠러 앞의 물을 늦춰 놓기 때문에</text>
+        <text x="500" y="240" text-anchor="middle" class="t-dim">마지막 고리(η_H)는 1보다 클 수 있다</text>
+      </svg>
+      <figcaption><b>그림 8-1.</b> 동력의 사슬. 엔진(제동 동력) → 감속기 → 축(축 동력) → 축 베어링 → 프로펠러(전달 동력) → 추력이 하는 일(추력 동력) → 배를 미는 일(유효 동력).</figcaption>
+    </figure>
+
+    <ul>
+      <li><b>제동 동력</b> \(P_B\)<span class="en">(brake power)</span>: 엔진 출력축에서 잰 동력. 엔진 명판의 kW가 이것이다.</li>
+      <li><b>축 동력</b> \(P_S\)<span class="en">(shaft power)</span>: 감속기를 지난 축의 동력. 저속 2행정 디젤처럼 프로펠러를 직결하면 \(P_S\approx P_B\)이다. 축에 붙인 토크 게이지(shaft power meter)로 재는 값이 대개 이것이다.</li>
+      <li><b>전달 동력</b> \(P_D\)<span class="en">(delivered power)</span>: 선미관 베어링과 중간축 베어링의 마찰을 지나 프로펠러에 실제로 들어가는 동력. \(P_D = 2\pi n Q\).</li>
+      <li><b>추력 동력</b> \(P_T = T V_A\)<span class="en">(thrust power)</span>: 프로펠러 추력 \(T\)와 프로펠러에 들어오는 물의 속도 \(V_A\)의 곱.</li>
+      <li><b>유효 동력</b> \(P_E = R_T V\): 배를 속력 \(V\)로 끄는 데 드는 동력.</li>
+    </ul>
+    <div class="formula">$$P_B \xrightarrow{\;\eta_G\;} P_S \xrightarrow{\;\eta_S\;} P_D \xrightarrow{\;\eta_0\,\eta_R\;} P_T \xrightarrow{\;\eta_H\;} P_E, \qquad \eta_D=\frac{P_E}{P_D}=\eta_H\,\eta_0\,\eta_R$$
+      <div class="where">\(\eta_G\)는 감속기 효율(직결이면 1), \(\eta_S\)는 축계 효율(대표적으로 0.98~0.99), \(\eta_0\)는 프로펠러 단독 효율, \(\eta_R\)은 상대 회전 효율, \(\eta_H\)는 선체 효율이다. 셋을 곱한 \(\eta_D\)를 <b>준추진 효율</b><span class="en">(quasi-propulsive efficiency)</span>이라 한다.</div>
+    </div>
+    <p>이 사슬에서 새로운 것은 \(\eta_H\)와 \(\eta_R\)이다. \(\eta_0\)는 7장의 단독 시험(프로펠러만 균일한 물속에서 돌린 시험)에서 이미 얻었다. 배 뒤에 붙은 프로펠러는 균일하지 않은, 그리고 선체가 끌고 가는 느린 물을 먹는다. 그리고 선체 역시 프로펠러가 뒤에서 물을 빨아들이는 영향을 받는다. 이 두 상호작용을 각각 <b>반류</b>와 <b>추력 감소</b>라고 부른다.</p>
+  </section>
+
+  <!-- =============================================================== 2 -->
+  <section id="wake">
+    <h2>반류: 선체 뒤의 느린 물</h2>
+    <p>배가 물속을 지나가면 선체 표면의 물은 점성 때문에 배에 끌려 함께 움직인다(<a href="resistance.html">6장</a>의 경계층). 선미로 갈수록 경계층은 두꺼워지고, 선미 형상 때문에 흐름이 느려지는 효과와 선미 파도의 영향까지 더해진다. 그 결과 프로펠러가 있는 자리의 물은 배에 대해 \(V\)보다 느린 속도 \(V_A\)로 들어온다. 이 "배를 따라오는 물"을 <b>반류</b><span class="en">(wake)</span>라 하고, 그 크기를 반류 계수로 나타낸다.</p>
+    <div class="formula">$$w = \frac{V - V_A}{V}, \qquad V_A = V(1-w)$$
+      <div class="where">\(V\)는 배의 속력, \(V_A\)는 프로펠러 원판에 들어오는 평균 유입 속도(advance speed)다. 테일러(Taylor)의 반류 계수라고도 한다.</div>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 780 270" role="img" aria-label="반류의 세 가지 성분">
+        <rect x="0" y="50" width="780" height="220" class="f-water"/>
+        <path d="M780 20 L420 20 Q350 22 320 70 Q295 118 230 128 L230 140 L780 140 Z" class="f-hull" opacity="0.85"/>
+        <line x1="0" y1="50" x2="780" y2="50" class="s-water"/>
+        <path d="M780 146 C 600 148, 450 154, 330 160 C 260 164, 200 170, 120 176" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <path d="M318 74 C 280 110, 230 118, 140 112" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <ellipse cx="200" cy="134" rx="6" ry="30" fill="#c9a227"/>
+        <g stroke="var(--accent)" stroke-width="2">
+          <line x1="700" y1="142" x2="740" y2="142"/><line x1="700" y1="148" x2="736" y2="148"/>
+          <line x1="470" y1="142" x2="494" y2="142"/><line x1="470" y1="148" x2="498" y2="148"/><line x1="470" y1="154" x2="502" y2="154"/>
+          <line x1="250" y1="146" x2="258" y2="146"/><line x1="250" y1="154" x2="262" y2="154"/><line x1="250" y1="162" x2="268" y2="162"/><line x1="250" y1="170" x2="274" y2="170"/>
+        </g>
+        <path d="M300 50 Q 330 38 360 50 Q 390 62 420 50" fill="none" class="s-water"/>
+        <g class="s-axis"><line x1="300" y1="40" x2="250" y2="34"/><line x1="290" y1="112" x2="300" y2="196"/><line x1="560" y1="152" x2="560" y2="222"/></g>
+        <text x="244" y="34" text-anchor="end" class="t-dim">① 선미 파도의 궤도 운동 → 파랑 반류(작다)</text>
+        <text x="300" y="212" text-anchor="middle" class="t-dim">② 선미 형상이 흐름을 늦춘다 → 포텐셜 반류</text>
+        <text x="600" y="240" text-anchor="middle" class="t-dim">③ 경계층이 선미로 갈수록 두꺼워진다 → 마찰 반류(가장 크다)</text>
+        <text x="200" y="186" text-anchor="middle" class="t" font-weight="700">프로펠러</text>
+        <text x="640" y="100" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">선체(선미부)</text>
+      </svg>
+      <figcaption><b>그림 8-2.</b> 반류의 세 성분. 단일 축 상선에서는 마찰 반류가 가장 크고, 포텐셜 반류가 그다음, 파랑 반류는 작다. 그림은 개념도다.</figcaption>
+    </figure>
+
+    <p>반류는 선체가 뚱뚱할수록 크다. 방형 계수 \(C_B\)가 큰 비대선은 선미가 갑자기 좁아지므로 경계층이 두껍고 흐름이 느리다. 단일 축 선박의 대략적인 값으로 테일러가 제안한 \(w\approx 0.5C_B-0.05\)가 자주 쓰인다. 컨테이너선(\(C_B\approx0.6\))은 0.2~0.25, VLCC(\(C_B\approx 0.82\))는 0.35~0.45 수준이다. 2축선은 프로펠러가 선체에서 떨어져 있어 반류가 훨씬 작다.</p>
+    <p>더 중요한 것은 반류가 <b>원판 위에서 고르지 않다</b>는 점이다. 프로펠러 바로 앞에는 선미 골재(skeg)가 세로로 서 있어서, 원판의 12시 방향 위쪽은 거의 멈춘 물이고 3시·9시 방향은 빠르다. 모형선 뒤에서 피토관으로 잰 이 속도 분포를 <b>공칭 반류장</b><span class="en">(nominal wake field)</span>이라 한다. 날개는 한 바퀴 도는 동안 빠른 물과 느린 물을 번갈아 지나고, 그때마다 받음각이 바뀐다.</p>
+
+    <div class="sim" id="sim-wake">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>공칭 반류장과 날개 받음각의 변동</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-wake" class="pp-drag"></canvas><span class="hint">원판을 끌어 날개 돌리기</span></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>선형</span><div class="seg" id="wk-hull"><button data-value="slender">날씬 C_B 0.60</button><button data-value="mid" class="on">중간 0.72</button><button data-value="full">비대 0.84</button></div></div>
+          <label class="ctrl"><span>반지름 r/R <output id="wk-x-out"></output></span><input type="range" id="wk-x" min="0.3" max="1" step="0.05" value="0.7"></label>
+          <label class="ctrl"><span>날개 위치각 <output id="wk-th-out"></output></span><input type="range" id="wk-th" min="0" max="359" step="1" value="40"></label>
+          <label class="ctrl"><span>전진비 J <output id="wk-j-out"></output></span><input type="range" id="wk-j" min="0.4" max="0.8" step="0.01" value="0.6"></label>
+          <div class="ctrl-row"><button class="btn primary" id="wk-play">회전</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">원판 평균 반류 w</span><span class="v" id="wk-o-mean">—</span></div>
+        <div class="stat"><span class="k">테일러 추정 0.5C_B−0.05</span><span class="v" id="wk-o-tay">—</span></div>
+        <div class="stat"><span class="k">날개 위치의 국부 반류</span><span class="v" id="wk-o-loc">—</span></div>
+        <div class="stat"><span class="k">받음각 α</span><span class="v" id="wk-o-a">—</span></div>
+        <div class="stat"><span class="k">한 바퀴 α 변동폭</span><span class="v" id="wk-o-da">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 날개가 12시(0°)를 지나는 순간 받음각이 치솟는다. 비대선으로 바꾸면 느린 영역이 넓어지고 변동폭이 커진다. 이 맥동이 프로펠러 유기 진동과 캐비테이션(<a href="propeller.html">7장</a>)의 주원인이다. 반류장은 단일 축 선박의 전형적 모양을 흉내 낸 근사 모델이며, 받음각은 피치비 0.9의 기하학적 피치각에서 유입각을 뺀 값(유도 속도 무시)이다.</div>
+    </div>
+
+    <div class="callout">
+      <strong>공칭 반류와 유효 반류</strong>
+      <p>프로펠러 없이 잰 반류가 공칭 반류다. 프로펠러가 돌면 앞의 물을 빨아들여 유입 속도 자체가 바뀌므로, 실제 추진에 쓰이는 반류는 이와 다르다. 실무에서 말하는 \(w\)는 보통 <b>유효 반류</b>(effective wake)로, 자항 시험에서 측정한 추력과 단독 시험 곡선을 맞추어(추력 일치법, thrust identity) 거꾸로 구한다. 단일 축 상선에서는 유효 반류가 공칭 반류보다 조금 작다.</p>
+    </div>
+  </section>
+
+  <!-- =============================================================== 3 -->
+  <section id="thrust">
+    <h2>추력 감소와 선체 효율</h2>
+    <p>배를 그냥 끌 때 선미 쪽 수면 아래에서는 흐름이 다시 느려지면서 압력이 회복되고, 이 압력이 선미를 앞으로 밀어 준다. 그런데 프로펠러가 돌면 바로 앞의 물을 빨아들여 선미의 압력을 낮춘다. 선미를 앞으로 밀던 압력이 줄어드니 배의 저항은 끌 때보다 커진 셈이다. 그래서 프로펠러는 저항 \(R_T\)보다 큰 추력 \(T\)를 내야 한다. 그 차이를 추력 감소 계수 \(t\)<span class="en">(thrust deduction fraction)</span>로 나타낸다.</p>
+    <div class="formula">$$R_T = T(1-t), \qquad t = \frac{T-R_T}{T}$$
+      <div class="where">단일 축 상선에서 \(t\)는 대표적으로 0.15~0.25, 경험적으로 \(t\approx 0.5\,w\sim0.7\,w\) 정도다.</div>
+    </div>
+    <p>이제 선체 효율을 보자. 프로펠러가 하는 일은 \(P_T = TV_A\), 배를 미는 일은 \(P_E = R_TV\)이므로</p>
+    <div class="formula">$$\eta_H = \frac{P_E}{P_T} = \frac{R_T V}{T V_A} = \frac{1-t}{1-w}$$</div>
+    <p>\(t\)가 \(w\)보다 작으면 \(\eta_H>1\)이다. 에너지 보존을 어기는 것처럼 보이지만 그렇지 않다. 선체가 이미 경계층으로 물을 끌고 가며 에너지를 쏟아 놓았고(이것이 마찰 저항의 일부다), 프로펠러는 그 느린 물을 다시 밀어 뒤로 보내면서 버려질 에너지를 일부 되찾는다. 같은 추력을 내는 데 느린 물을 미는 편이 빠른 물을 미는 것보다 일이 적다(\(P_T=TV_A\)에서 \(V_A\)가 작다). 그래서 프로펠러는 반류가 가장 큰 선미 중앙에 두는 것이 유리하다.</p>
+
+    <div class="sim" id="sim-td">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>선미 압력, 추력 감소, 선체 효율</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-td"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>반류 계수 w <output id="td-w-out"></output></span><input type="range" id="td-w" min="0.05" max="0.45" step="0.01" value="0.30"></label>
+          <label class="ctrl"><span>추력 감소 계수 t <output id="td-t-out"></output></span><input type="range" id="td-t" min="0.05" max="0.35" step="0.01" value="0.19"></label>
+          <label class="check"><input type="checkbox" id="td-prop" checked> 프로펠러 작동(자항 상태)</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">필요 추력 T / R_T</span><span class="v" id="td-o-tr">—</span></div>
+        <div class="stat"><span class="k">유입 속도 V_A / V</span><span class="v" id="td-o-va">—</span></div>
+        <div class="stat"><span class="k">선체 효율 η_H</span><span class="v" id="td-o-eh">—</span></div>
+        <div class="stat"><span class="k">P_T / P_E</span><span class="v" id="td-o-pt">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 프로펠러를 끄면(예인 상태) 선미 압력 화살표가 다시 커진다. 켜면 프로펠러 앞에 저압 영역이 생기고 선미를 앞으로 밀던 힘이 줄어 추가 저항 \(tT\)가 생긴다. \(w=t\)로 맞추면 \(\eta_H=1\)이고, \(w\)를 \(t\)보다 크게 하면 1을 넘는다. 2축선(w 0.08, t 0.08 정도)과 VLCC(w 0.40, t 0.22 정도)를 비교해 보자.</div>
+    </div>
+
+    <p>마지막으로 <b>상대 회전 효율</b> \(\eta_R\)<span class="en">(relative rotative efficiency)</span>이 남는다. 같은 추력을 내는 데 선체 뒤의 고르지 않은 흐름에서 드는 토크가 단독 시험의 토크와 조금 다르기 때문에 생기는 보정이다. \(\eta_R = Q_0/Q_B\)이며, 단일 축선에서 대개 1.00~1.07, 2축선에서 0.98 안팎이다.</p>
+  </section>
+
+  <!-- =============================================================== 4 -->
+  <section id="sankey">
+    <h2>추진 효율의 분해</h2>
+    <p>이제 사슬 전체를 하나로 묶을 수 있다. 배를 정해진 속력으로 움직이는 데 엔진이 내야 하는 동력은</p>
+    <div class="formula">$$P_B = \frac{P_E}{\eta_D\,\eta_S\,\eta_G} = \frac{R_T V}{\eta_H\,\eta_0\,\eta_R\,\eta_S\,\eta_G}$$</div>
+    <p>대표적인 값을 넣어 보면 \(\eta_0\)가 0.55~0.70으로 가장 작은 고리다. 프로펠러가 물을 뒤로 가속하며 남기는 운동 에너지(축 방향 손실), 물을 돌리며 남기는 회전 에너지, 날개 마찰이 여기에 들어간다. 반면 \(\eta_H\)는 1.0~1.25로 손실이 아니라 이득이다. 그래서 \(\eta_D\)는 대개 0.65~0.80이 된다.</p>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>선종(대표값)</th><th>w</th><th>t</th><th>η_H</th><th>η_0</th><th>η_R</th><th>η_D</th></tr></thead>
+      <tbody>
+        <tr><td>컨테이너선(단일 축, C_B 0.65)</td><td>0.24</td><td>0.18</td><td>1.08</td><td>0.68</td><td>1.02</td><td>0.75</td></tr>
+        <tr><td>VLCC(단일 축, C_B 0.82)</td><td>0.40</td><td>0.22</td><td>1.30</td><td>0.55</td><td>1.03</td><td>0.74</td></tr>
+        <tr><td>여객선(2축, C_B 0.60)</td><td>0.08</td><td>0.08</td><td>1.00</td><td>0.70</td><td>0.98</td><td>0.69</td></tr>
+      </tbody>
+    </table></div>
+    <p>VLCC는 프로펠러 하중이 커서 단독 효율이 낮지만, 큰 반류 덕분에 선체 효율로 이를 상당 부분 만회한다. 아래 Sankey 다이어그램에서 띠의 굵기는 동력의 크기다. 손실은 아래로 빠져나가고, 선체 효율에 의한 이득은 위에서 합류한다.</p>
+
+    <div class="sim" id="sim-sankey">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>동력 사슬 Sankey 다이어그램</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-sankey"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>유효 동력 P_E <output id="sk-pe-out"></output></span><input type="range" id="sk-pe" min="5" max="40" step="0.5" value="20"></label>
+          <label class="ctrl"><span>단독 효율 η_0 <output id="sk-e0-out"></output></span><input type="range" id="sk-e0" min="0.40" max="0.75" step="0.01" value="0.62"></label>
+          <label class="ctrl"><span>반류 w <output id="sk-w-out"></output></span><input type="range" id="sk-w" min="0.05" max="0.45" step="0.01" value="0.30"></label>
+          <label class="ctrl"><span>추력 감소 t <output id="sk-t-out"></output></span><input type="range" id="sk-t" min="0.05" max="0.35" step="0.01" value="0.19"></label>
+          <label class="ctrl"><span>상대 회전 η_R <output id="sk-er-out"></output></span><input type="range" id="sk-er" min="0.95" max="1.07" step="0.005" value="1.02"></label>
+          <label class="ctrl"><span>축계 효율 η_S <output id="sk-es-out"></output></span><input type="range" id="sk-es" min="0.96" max="0.995" step="0.005" value="0.985"></label>
+          <label class="check"><input type="checkbox" id="sk-gear"> 감속기 있음(중속 기관, η_G 0.975)</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">선체 효율 η_H</span><span class="v" id="sk-o-eh">—</span></div>
+        <div class="stat"><span class="k">준추진 효율 η_D</span><span class="v" id="sk-o-ed">—</span></div>
+        <div class="stat"><span class="k">전체 P_E / P_B</span><span class="v" id="sk-o-tot">—</span></div>
+        <div class="stat"><span class="k">필요 제동 동력 P_B</span><span class="v" id="sk-o-pb">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: \(\eta_0\)를 0.05만 올려도 \(P_B\)가 몇 MW 줄어든다. 프로펠러 직경을 키워 하중을 낮추는 설계(<a href="propeller.html">7장</a>)가 왜 중요한지 보인다. \(t\)를 \(w\)보다 크게 하면 위에서 합류하던 띠가 손실로 바뀐다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 5 -->
+  <section id="matching">
+    <h2>엔진–프로펠러 매칭</h2>
+    <p>고정 피치 프로펠러를 단 배가 일정한 조건에서 달리면 전진비 \(J=V_A/(nD)\)는 회전수와 상관없이 거의 일정하다. 저항이 대략 \(V^2\)에 비례하고, 추력도 \(n^2\)에 비례하기 때문이다. \(J\)가 일정하면 \(K_Q\)도 일정하므로 토크는 \(n^2\), 동력은 \(n^3\)에 비례한다. 이것을 <b>프로펠러 법칙</b><span class="en">(propeller law)</span>이라 한다.</p>
+    <div class="formula">$$Q = K_Q\,\rho\, n^2 D^5 \propto n^2, \qquad P_D = 2\pi n Q = 2\pi K_Q\,\rho\, n^3 D^5 \propto n^3$$
+      <div class="where">\(K_Q\)는 토크 계수, \(\rho\)는 해수 밀도, \(n\)은 회전수(rps), \(D\)는 프로펠러 직경이다.</div>
+    </div>
+    <p>회전수를 10 % 낮추면 동력은 27 % 줄어든다. 이 곡선을 엔진의 <b>부하 다이어그램</b><span class="en">(load diagram)</span> 위에 그려 보면 엔진과 프로펠러의 궁합이 한눈에 보인다. 부하 다이어그램은 가로축이 회전수, 세로축이 출력이고 둘 다 로그 눈금이다. 로그 눈금에서 \(P\propto n^3\)은 기울기 3인 직선, 일정 토크(\(P\propto n\))는 기울기 1인 직선이 된다.</p>
+    <p>배가 오래 운항하면 선체에 따개비와 해초가 붙고(오손, fouling), 파도와 바람이 저항을 더하며, 만재 상태에서는 흘수가 깊어 저항이 크다. 저항이 커지면 같은 회전수에서 배가 느려지고, \(J\)가 작아져 \(K_Q\)가 커진다. 즉 프로펠러 곡선이 왼쪽 위로 옮겨 가 <b>무겁게 도는</b><span class="en">(heavy running)</span> 상태가 된다. 그러면 엔진은 정격 회전수에 이르기 전에 토크 한계에 걸린다. 그래서 신조선의 프로펠러는 깨끗한 선체·평수 조건에서 일부러 <b>가볍게 돌도록</b>, 즉 같은 출력에서 회전수가 몇 퍼센트 높게 나오도록 설계한다. 이 여유를 <b>라이트 러닝 마진</b><span class="en">(light running margin, LRM)</span>이라 하고 보통 4~7 %를 준다.</p>
+
+    <div class="sim" id="sim-load">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>엔진 부하 다이어그램과 운전점</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-load"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>엔진 회전수 <output id="ld-n-out"></output></span><input type="range" id="ld-n" min="60" max="108" step="0.5" value="92"></label>
+          <label class="ctrl"><span>선체 오손(저항 증가) <output id="ld-f-out"></output></span><input type="range" id="ld-f" min="0" max="40" step="1" value="0"></label>
+          <div class="ctrl"><span>해상 상태</span><div class="seg" id="ld-sea"><button data-value="0" class="on">평수</button><button data-value="15">보통</button><button data-value="35">거침</button></div></div>
+          <div class="ctrl"><span>적재</span><div class="seg" id="ld-load"><button data-value="-12">밸러스트</button><button data-value="0" class="on">만재</button></div></div>
+          <label class="ctrl"><span>라이트 러닝 마진 <output id="ld-lrm-out"></output></span><input type="range" id="ld-lrm" min="0" max="10" step="0.5" value="5"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">엔진 출력(MCR 대비)</span><span class="v" id="ld-o-p">—</span></div>
+        <div class="stat"><span class="k">엔진 토크(MCR 대비)</span><span class="v" id="ld-o-q">—</span></div>
+        <div class="stat"><span class="k">전진비 J</span><span class="v" id="ld-o-j">—</span></div>
+        <div class="stat"><span class="k">선속</span><span class="v" id="ld-o-v">—</span></div>
+        <div class="stat"><span class="k">상태</span><span class="v" id="ld-o-st">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 오손 25 %, 거친 바다로 두고 회전수를 올려 보자. 운전점이 토크 한계선에 먼저 닿아 정격 회전수까지 올릴 수 없다. 라이트 러닝 마진을 0으로 하면 이 문제가 더 빨리 생긴다. 프로펠러는 \(K_T=0.40-0.36J\), \(K_Q=0.055-0.040J\)인 선형 근사, 저항은 \(V^2\) 비례로 두고 \(J\)를 풀었다. 토크 한계는 MCR을 지나는 일정 토크선으로 단순화했다(실제 엔진 제작사 다이어그램은 이보다 조금 복잡하다).</div>
+    </div>
+    <div class="callout warn">
+      <strong>헤비 러닝의 위험</strong>
+      <p>토크 한계를 넘는 운전은 실린더에 공기보다 연료가 많이 들어가는 상태다. 배기 온도가 오르고, 매연과 열부하로 피스톤과 배기 밸브가 상한다. 엔진 조속기는 토크(연료) 한계로 이를 막지만, 그러면 배는 계획한 속력을 낼 수 없다. 선체 청소, 프로펠러 연마가 단순한 미관 관리가 아닌 이유다.</p>
+    </div>
+  </section>
+
+  <!-- =============================================================== 6 -->
+  <section id="margin">
+    <h2>해상 여유와 엔진 여유: MCR 정하기</h2>
+    <p>모형 시험으로 얻는 동력은 깨끗한 선체가 잔잔한 물에서 달릴 때의 값이다. 실제 항로에서는 바람과 파도, 오손으로 저항이 늘어난다. 이 증가분을 미리 더해 주는 것이 <b>해상 여유</b><span class="en">(sea margin)</span>로, 보통 평수 동력의 15 %를 준다(북대서양 항로처럼 거친 곳은 20~30 %). 또 엔진을 늘 최대 출력으로 돌리면 정비 주기가 짧아지고 연료 효율도 떨어지므로, 상시 운항 출력은 최대 연속 출력보다 낮게 잡는다. 이 차이가 <b>엔진 여유</b><span class="en">(engine margin)</span>이며 보통 10~15 %다.</p>
+    <div class="formula">$$P_{NCR} = \frac{P_{D,\,calm}(V_s)\,(1+SM)}{\eta_S}, \qquad P_{MCR} = \frac{P_{NCR}}{1-EM}$$
+      <div class="where">\(P_{NCR}\)은 상용 출력(normal continuous rating), \(P_{MCR}\)은 최대 연속 출력(maximum continuous rating), \(SM\)은 해상 여유, \(EM\)은 엔진 여유, \(V_s\)는 계약 항해 속력(service speed)이다.</div>
+    </div>
+    <p>여유를 크게 잡을수록 엔진이 커지고 비싸진다. 반대로 너무 작게 잡으면 오손된 선체로 거친 바다를 만났을 때 계약 속력을 낼 수 없다. 조선소가 시운전에서 보장하는 속력은 대개 깨끗한 선체·평수에서 NCR(또는 MCR의 일정 비율)을 냈을 때의 속력이며, 이것이 계약 속력보다 0.5~1 kn 높게 나오는 이유가 해상 여유다.</p>
+
+    <div class="sim" id="sim-mcr">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>NCR·MCR 계산기와 속력–동력 곡선</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-mcr"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>선박(대표값)</span><div class="seg" id="mc-ship"><button data-value="box" class="on">컨테이너</button><button data-value="bulk">벌크</button><button data-value="vlcc">VLCC</button></div></div>
+          <label class="ctrl"><span>계약 항해 속력 <output id="mc-v-out"></output></span><input type="range" id="mc-v" min="10" max="25" step="0.1" value="21"></label>
+          <label class="ctrl"><span>해상 여유 SM <output id="mc-sm-out"></output></span><input type="range" id="mc-sm" min="0" max="35" step="1" value="15"></label>
+          <label class="ctrl"><span>엔진 여유 EM <output id="mc-em-out"></output></span><input type="range" id="mc-em" min="0" max="20" step="1" value="10"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">평수 전달 동력 P_D</span><span class="v" id="mc-o-pd">—</span></div>
+        <div class="stat"><span class="k">NCR</span><span class="v" id="mc-o-ncr">—</span></div>
+        <div class="stat"><span class="k">MCR</span><span class="v" id="mc-o-mcr">—</span></div>
+        <div class="stat"><span class="k">시운전 속력(평수, NCR)</span><span class="v" id="mc-o-vt">—</span></div>
+        <div class="stat"><span class="k">평수 최고 속력(MCR)</span><span class="v" id="mc-o-vm">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 해상 여유를 0으로 하면 시운전 속력과 계약 속력이 같아진다. 계약 속력을 1 kn 올리면 MCR이 얼마나 커지는지 보자. 속력–동력 곡선은 \(P_D\propto V^{3.2}\)로 근사한 대표값이며 축계 효율 0.985를 썼다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 7 -->
+  <section id="fuel">
+    <h2>속력과 연료: 감속 운항의 산수</h2>
+    <p>동력이 대략 속력의 세제곱에 비례하므로, 하루에 쓰는 연료도 \(V^3\)에 비례한다. 그런데 같은 거리를 가는 데 걸리는 날수는 \(1/V\)에 비례하므로, 한 항해에 쓰는 연료는</p>
+    <div class="formula">$$F_{day}\propto P \propto V^3, \qquad F_{voyage} = F_{day}\cdot\frac{d}{24V} \propto V^2$$
+      <div class="where">\(d\)는 항로 길이(해리), \(V\)는 속력(노트)이다. 실제로는 저부하에서 연료 소비율(SFOC)이 다소 오르고 보조 기관 연료가 날수에 비례해 더해지므로 지수는 이보다 조금 작다.</div>
+    </div>
+    <p>속력을 20 % 줄이면 항해 연료는 36 % 줄고, 날수는 25 % 는다. 2008년 유가 급등과 2010년대의 해운 불황 이후 대형 컨테이너선이 24 kn 대신 16~18 kn으로 다니는 <b>감속 운항</b><span class="en">(slow steaming)</span>이 일상이 된 이유다. 다만 배를 빌리는 비용(용선료)과 화물의 시간 가치는 날수에 비례하므로, 비용을 최소로 하는 경제 속력이 존재한다. <a href="green.html">19장</a>의 탄소 규제(CII)도 같은 계산 위에 서 있다.</p>
+
+    <div class="sim" id="sim-fuel">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>항해 속력, 연료, 비용</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-fuel"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>항로 길이 <output id="fu-d-out"></output></span><input type="range" id="fu-d" min="1000" max="12000" step="100" value="10800"></label>
+          <label class="ctrl"><span>속력 <output id="fu-v-out"></output></span><input type="range" id="fu-v" min="10" max="24" step="0.5" value="18"></label>
+          <label class="ctrl"><span>연료 가격 <output id="fu-p-out"></output></span><input type="range" id="fu-p" min="300" max="1000" step="10" value="600"></label>
+          <label class="ctrl"><span>용선료(하루) <output id="fu-h-out"></output></span><input type="range" id="fu-h" min="0" max="120" step="1" value="40"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">항해 일수</span><span class="v" id="fu-o-days">—</span></div>
+        <div class="stat"><span class="k">주기관 출력</span><span class="v" id="fu-o-p">—</span></div>
+        <div class="stat"><span class="k">일일 연료</span><span class="v" id="fu-o-day">—</span></div>
+        <div class="stat"><span class="k">항해 연료 / CO₂</span><span class="v" id="fu-o-tot">—</span></div>
+        <div class="stat"><span class="k">연료비 + 용선료</span><span class="v" id="fu-o-cost">—</span></div>
+        <div class="stat"><span class="k">비용 최소 속력</span><span class="v" id="fu-o-opt">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 용선료를 0으로 하면 최적 속력이 그래프 왼쪽 끝으로 간다(느릴수록 연료가 준다). 용선료가 높거나 유가가 낮으면 최적 속력이 올라간다. 대표 컨테이너선(22 kn에서 40 MW, SFOC 170 g/kWh, \(P\propto V^3\))을 가정했고, CO₂는 HFO 1 t당 3.114 t로 환산했다. 부산–로테르담(수에즈 경유)은 약 10,800 해리다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 8 -->
+  <section id="test">
+    <h2>자항 시험과 해상 시운전</h2>
+    <p>\(w\), \(t\), \(\eta_R\)은 계산으로 정확히 구하기 어려워 모형 시험으로 얻는다. 저항 시험(모형을 끌기만 함)과 단독 시험(프로펠러만 돌림)에 이어, 모형선에 모형 프로펠러를 달고 스스로 나아가게 하는 <b>자항 시험</b><span class="en">(self-propulsion test)</span>을 한다.</p>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 780 230" role="img" aria-label="자항 시험 장치">
+        <rect x="0" y="130" width="780" height="100" class="f-water"/>
+        <line x1="0" y1="130" x2="780" y2="130" class="s-water"/>
+        <rect x="120" y="20" width="560" height="26" rx="4" class="f-surface s-line"/>
+        <text x="400" y="38" text-anchor="middle" class="t" font-weight="700">예인 전차(carriage) → 일정 속력 V_m</text>
+        <path d="M150 110 L620 110 Q680 112 690 130 Q690 156 640 160 L200 160 Q160 160 150 140 Z" class="f-hull" opacity="0.85"/>
+        <path d="M150 110 L620 110 L640 100 L170 100 Z" class="f-elev s-line"/>
+        <rect x="380" y="46" width="40" height="54" class="f-acc-soft"/>
+        <text x="430" y="70" class="t-dim">동력계(force gauge)</text>
+        <line x1="400" y1="76" x2="460" y2="76" stroke="var(--accent-2)" stroke-width="3"/>
+        <text x="470" y="90" class="t-mono">F_D (선박 자항점에서 끌어 주는 힘)</text>
+        <rect x="190" y="112" width="50" height="22" rx="3" class="f-dim-soft"/>
+        <text x="215" y="127" text-anchor="middle" class="t-mono">모터</text>
+        <line x1="190" y1="128" x2="150" y2="146" class="s-line" stroke-width="3"/>
+        <ellipse cx="146" cy="148" rx="4" ry="15" fill="#c9a227"/>
+        <text x="140" y="200" text-anchor="middle" class="t-dim">모형 프로펠러: 추력·토크·회전수 측정</text>
+        <text x="560" y="200" text-anchor="middle" class="t-dim">모형선(축척 1/20~1/40)</text>
+      </svg>
+      <figcaption><b>그림 8-3.</b> 자항 시험. 모형선은 예인 전차와 같은 속력으로 달리고, 프로펠러 회전수를 바꿔 가며 전차가 끌어 주는 힘을 잰다.</figcaption>
+    </figure>
+
+    <p>여기에 한 가지 함정이 있다. <a href="resistance.html">6장</a>에서 보았듯 모형은 레이놀즈 수가 작아 마찰 저항 계수 \(C_F\)가 실선보다 크다. 모형이 스스로 모든 저항을 이기게 하면 프로펠러가 실선보다 무겁게 돈다. 그래서 실선에 해당하는 만큼만 프로펠러가 일하도록, 마찰 차이에 해당하는 힘을 전차가 끌어 준다. 이것이 <b>마찰 수정</b><span class="en">(skin friction correction, SFC)</span>이다.</p>
+    <div class="formula">$$F_D = \tfrac12 \rho_m V_m^2 S_m\left[(1+k)(C_{Fm}-C_{Fs}) - \Delta C_F\right], \qquad C_F = \frac{0.075}{(\log_{10}Re-2)^2}$$
+      <div class="where">\(V_m\), \(S_m\)은 모형의 속력과 침수 표면적, \(k\)는 형상 계수, \(C_{Fm}\), \(C_{Fs}\)는 모형과 실선의 ITTC-1957 마찰 계수, \(\Delta C_F\)는 실선 표면 거칠기 수정이다.</div>
+    </div>
+
+    <div class="sim" id="sim-sp">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>모형 자항 시험: 선박 자항점 찾기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-sp"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>축척 1/λ, λ = <output id="sp-l-out"></output></span><input type="range" id="sp-l" min="16" max="50" step="1" value="30"></label>
+          <label class="ctrl"><span>모형 프로펠러 회전수 <output id="sp-n-out"></output></span><input type="range" id="sp-n" min="0" max="100" step="1" value="40"></label>
+          <div class="ctrl-row"><button class="btn primary" id="sp-meas">이 회전수로 측정</button><button class="btn" id="sp-reset">지우기</button></div>
+          <label class="check"><input type="checkbox" id="sp-true"> 참 곡선 보기</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">모형 속력 V_m</span><span class="v" id="sp-o-vm">—</span></div>
+        <div class="stat"><span class="k">C_Fm / C_Fs</span><span class="v" id="sp-o-cf">—</span></div>
+        <div class="stat"><span class="k">마찰 수정 F_D</span><span class="v" id="sp-o-fd">—</span></div>
+        <div class="stat"><span class="k">선박 자항점 n(추정)</span><span class="v" id="sp-o-ns">—</span></div>
+        <div class="stat"><span class="k">모형 자항점 n(F=0)</span><span class="v" id="sp-o-nm">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 회전수를 바꿔 가며 3~5번 측정하면 측정점을 잇는 직선이 그려지고, 전차 힘이 \(F_D\)가 되는 회전수(선박 자항점)를 내삽한다. 축척을 작게(λ를 크게) 하면 모형 레이놀즈 수가 작아져 \(F_D\)가 저항에서 차지하는 비율이 커진다. 길이 200 m, 15 kn 선박, \(1+k=1.2\), \(\Delta C_F=0.0002\)의 대표값으로 계산했고 측정값에는 작은 잡음을 넣었다.</div>
+    </div>
+
+    <p>자항 시험에서 얻은 추력과 토크를 단독 시험 곡선에 대입하면 \(w\), \(t\), \(\eta_R\)이 나오고, ITTC-1978 방법으로 실선의 동력과 회전수를 추정한다. 그 예측이 맞았는지는 배를 다 지은 뒤 바다에서 확인한다.</p>
+    <p><b>해상 시운전</b><span class="en">(speed trial)</span>은 정해진 해역에서 일정한 엔진 출력으로 직선 구간을 달려 GPS로 대지 속력을 재는 시험이다. 문제는 조류다. 배에 필요한 것은 물에 대한 속력인데 GPS가 재는 것은 땅에 대한 속력이고, 조류는 시간에 따라 바뀐다. 그래서 같은 구간을 반대 방향으로 번갈아 달려(왕복, double run) 조류를 상쇄한다. 조류가 시간에 대해 곡선으로 변하면 단순 평균으로는 다 지워지지 않으므로, 이웃한 값끼리 평균을 거듭 내는 <b>평균의 평균</b><span class="en">(mean of means)</span>을 쓴다. 4회 주행이면 \(\bar V = (V_1+3V_2+3V_3+V_4)/8\)이 되고, 조류가 시간의 2차식이면 정확히 상쇄된다. ISO 15016과 ITTC 지침은 여기에 바람·파도·수온·수심 보정을 더한다.</p>
+
+    <div class="sim" id="sim-trial">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>해상 시운전: 왕복 주행으로 조류 지우기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-trial"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl-row"><button class="btn primary" id="tr-next">다음 주행</button><button class="btn" id="tr-auto">4회 왕복 자동</button></div>
+          <div class="ctrl-row"><button class="btn" id="tr-new">새 시운전(조류 바꿈)</button></div>
+          <label class="ctrl"><span>조류 세기 <output id="tr-c-out"></output></span><input type="range" id="tr-c" min="0" max="2" step="0.1" value="1.2"></label>
+          <label class="check"><input type="checkbox" id="tr-true"> 참값과 조류 곡선 보기</label>
+        </div>
+      </div>
+      <div class="pp-runs" id="tr-list">주행 기록: 아직 없음</div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">주행 횟수</span><span class="v" id="tr-o-n">0</span></div>
+        <div class="stat"><span class="k">첫 주행만 쓰면</span><span class="v" id="tr-o-first">—</span></div>
+        <div class="stat"><span class="k">단순 평균</span><span class="v" id="tr-o-avg">—</span></div>
+        <div class="stat"><span class="k">평균의 평균</span><span class="v" id="tr-o-mom">—</span></div>
+        <div class="stat"><span class="k">참 대수 속력</span><span class="v" id="tr-o-true">?</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 한 번만 달린 값은 조류만큼 틀린다. 2회(1왕복)만 해도 크게 좋아지지만, 조류가 시간에 따라 변하면 단순 평균에는 오차가 남는다. 8회(4왕복)를 채운 뒤 '참값' 상자를 켜 평균의 평균이 얼마나 가까운지 확인하자. 조류는 반일주조(주기 12.42 h)에 상수 성분을 더한 모델이고, 한 번의 주행과 선회에 1시간이 걸린다고 두었다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 9 -->
+  <section id="esd">
+    <h2>에너지 절감 장치</h2>
+    <p>프로펠러 단독 효율이 0.6이라면 프로펠러에 들어간 동력의 40 %가 물속에 버려진다는 뜻이다. 그 손실의 상당 부분은 물을 회전시키는 데 쓴 <b>회전 에너지</b>와 허브 뒤에 생기는 <b>허브 와류</b>, 그리고 고르지 않은 반류에서 오는 손실이다. <b>에너지 절감 장치</b><span class="en">(energy saving device, ESD)</span>는 이 중 일부를 되찾는다. 위치에 따라 세 무리로 나뉜다.</p>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 780 260" role="img" aria-label="에너지 절감 장치의 위치">
+        <rect x="0" y="0" width="780" height="260" class="f-water"/>
+        <path d="M780 30 L470 30 Q400 32 370 90 L340 150 Q330 180 300 190 L300 214 L780 214 Z" class="f-hull" opacity="0.85"/>
+        <line x1="300" y1="160" x2="230" y2="160" class="s-line" stroke-width="5"/>
+        <!-- duct -->
+        <rect x="292" y="122" width="26" height="14" rx="4" fill="none" stroke="var(--accent)" stroke-width="3"/>
+        <rect x="292" y="184" width="26" height="14" rx="4" fill="none" stroke="var(--accent)" stroke-width="3"/>
+        <line x1="300" y1="160" x2="300" y2="132" stroke="var(--accent)" stroke-width="2"/>
+        <text x="330" y="112" class="t-acc">① 덕트 + 스테이터(전방)</text>
+        <!-- propeller -->
+        <ellipse cx="236" cy="160" rx="7" ry="44" fill="#c9a227"/>
+        <ellipse cx="236" cy="160" rx="10" ry="9" class="f-dim-soft"/>
+        <path d="M226 160 L214 160" class="s-line" stroke-width="4"/>
+        <text x="236" y="236" text-anchor="middle" class="t" font-weight="700">프로펠러</text>
+        <!-- rudder + bulb -->
+        <rect x="128" y="88" width="42" height="140" rx="6" class="f-dim-soft"/>
+        <ellipse cx="160" cy="160" rx="38" ry="13" fill="var(--accent-2)" opacity="0.8"/>
+        <line x1="150" y1="160" x2="122" y2="138" stroke="var(--accent-2)" stroke-width="3"/>
+        <line x1="150" y1="160" x2="122" y2="182" stroke="var(--accent-2)" stroke-width="3"/>
+        <text x="20" y="60" class="t" fill="var(--accent-2)" font-weight="700">③ 러더 벌브·코스타 벌브(후방)</text>
+        <text x="20" y="80" class="t-dim">허브 와류를 막고 회전류를 되돌린다</text>
+        <text x="330" y="246" class="t-dim">② 프로펠러 자체: PBCF(허브 캡 핀), 팁 형상 등</text>
+        <text x="330" y="130" class="t-dim">반류를 고르게 하고 역회전 선회류를 미리 준다</text>
+      </svg>
+      <figcaption><b>그림 8-4.</b> 에너지 절감 장치의 위치. 프로펠러 앞(덕트, 프리스월 스테이터), 프로펠러 자체(허브 캡 핀), 프로펠러 뒤(러더 벌브, 코스타 벌브, 비틀린 타).</figcaption>
+    </figure>
+
+    <ul>
+      <li><b>덕트형(멘더스·Mewis형)</b>: 프로펠러 바로 앞의 작은 링 덕트와 그 안의 스테이터 날개. 덕트는 상부의 느린 반류를 고르게 하고 덕트 자체가 작은 추력을 낸다. 스테이터는 프로펠러와 반대 방향으로 물을 미리 돌린다. 프로펠러 하중이 큰 저속 비대선에서 3~8 %의 효과가 보고되며, 고속 컨테이너선에서는 효과가 작다.</li>
+      <li><b>프리스월 스테이터</b><span class="en">(pre-swirl stator, PSS)</span>: 덕트 없이 프로펠러 앞에 비대칭으로 3~4장의 고정 날개를 단다. 프로펠러가 만들 회전류를 미리 반대로 걸어 두어, 프로펠러를 지난 물이 덜 돌게 한다. 대표적으로 3~5 %.</li>
+      <li><b>러더 벌브</b><span class="en">(rudder bulb)</span>와 <b>코스타 벌브</b><span class="en">(Costa bulb)</span>: 프로펠러 허브 바로 뒤, 타에 붙인 유선형 혹이다. 허브 뒤에 생기는 저압 와류(허브 와류)를 메워 그 손실과 캐비테이션을 줄인다. 러더 벌브에 날개(핀)를 더하면 회전 에너지도 일부 되찾는다. 2~4 %.</li>
+    </ul>
+    <p>여러 장치를 함께 단다고 효과가 단순히 더해지지는 않는다. 앞쪽 스테이터와 뒤쪽 러더 핀은 같은 회전 에너지를 나눠 먹고, 코스타 벌브와 러더 벌브는 같은 허브 와류를 노린다. 아래 차트는 이런 겹침을 대략 반영한 비교다.</p>
+
+    <div class="sim" id="sim-esd">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>에너지 절감 장치 효과 비교</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-esd"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>선박</span><div class="seg" id="es-ship"><button data-value="full" class="on">저속 비대선(VLCC·벌크)</button><button data-value="fast">고속 컨테이너선</button></div></div>
+          <label class="check"><input type="checkbox" id="es-duct" checked> 덕트(Mewis형)</label>
+          <label class="check"><input type="checkbox" id="es-pss"> 프리스월 스테이터</label>
+          <label class="check"><input type="checkbox" id="es-rb" checked> 러더 벌브(핀 포함)</label>
+          <label class="check"><input type="checkbox" id="es-cb"> 코스타 벌브</label>
+          <label class="ctrl"><span>연간 연료 사용량 <output id="es-f-out"></output></span><input type="range" id="es-f" min="5000" max="60000" step="1000" value="20000"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">단순 합</span><span class="v" id="es-o-sum">—</span></div>
+        <div class="stat"><span class="k">겹침 고려 합계</span><span class="v" id="es-o-tot">—</span></div>
+        <div class="stat"><span class="k">연간 연료 절감</span><span class="v" id="es-o-f">—</span></div>
+        <div class="stat"><span class="k">연간 CO₂ 절감</span><span class="v" id="es-o-co2">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 덕트와 프리스월 스테이터를 함께 켜면 단순 합과 실제 합계가 벌어진다(둘 다 프로펠러 앞에서 회전류를 거는 장치다). 고속 컨테이너선으로 바꾸면 덕트 효과가 크게 준다. 막대 길이는 공개 문헌에 보고된 범위의 대표값이며, 실제 효과는 선형과 운항 조건에 따라 크게 다르다.</div>
+    </div>
+    <div class="callout tip">
+      <strong>1 %의 값</strong>
+      <p>연료를 연간 2만 t 쓰는 배에서 1 %는 200 t, 연료 가격 600 달러/t이면 12만 달러, CO₂로는 약 620 t이다. 장치 하나의 값이 수십만 달러라도 몇 년이면 회수되는 계산이 나온다. 그래서 신조선과 개조선 모두에서 ESD가 거의 표준이 되었다.</p>
+    </div>
+  </section>
+
+  <!-- =============================================================== summary -->
+  <section class="keypoints" id="summary">
+    <h2>핵심 정리</h2>
+    <ol>
+      <li>동력은 \(P_B\to P_S\to P_D\to P_T\to P_E\)로 전달되고, 준추진 효율은 \(\eta_D=\eta_H\eta_0\eta_R\)로 분해된다.</li>
+      <li>반류 계수 \(w=(V-V_A)/V\)는 선체가 끌고 오는 느린 물의 크기다. 비대선일수록 크고, 원판 위에서 고르지 않아 날개 받음각이 한 바퀴마다 맥동한다.</li>
+      <li>추력 감소 \(t\)는 프로펠러가 선미 압력을 낮춰 생기는 추가 저항이다. \(\eta_H=(1-t)/(1-w)\)는 \(t<w\)이면 1보다 크며, 이는 선체가 버린 에너지를 프로펠러가 되찾기 때문이다.</li>
+      <li>고정 피치 프로펠러는 \(P\propto n^3\)을 따른다. 오손·파랑·만재는 곡선을 무거운 쪽으로 옮기므로 신조 시 라이트 러닝 마진을 둔다.</li>
+      <li>NCR은 평수 동력에 해상 여유(약 15 %)를 더한 값, MCR은 NCR에 엔진 여유(약 10 %)를 더한 값이다.</li>
+      <li>일일 연료는 \(V^3\), 항해 연료는 \(V^2\)에 비례한다. 용선료를 포함한 총비용은 경제 속력에서 최소가 된다.</li>
+      <li>자항 시험은 마찰 수정 \(F_D\)를 걸어 실선의 프로펠러 하중을 재현하고, 해상 시운전은 왕복 주행과 평균의 평균으로 조류를 지운다.</li>
+      <li>에너지 절감 장치는 회전 에너지·허브 와류·반류 불균일 손실을 되찾으며, 같은 손실을 노리는 장치끼리는 효과가 겹친다.</li>
+    </ol>
+  </section>
+
+  <!-- =============================================================== quiz -->
+  <section class="quiz-sec" id="quiz">
+    <h2>확인 퀴즈</h2>
+    <div class="quiz">
+      <div class="quiz-q"><p>1. 배의 속력이 20 kn, 프로펠러 유입 속도가 14 kn이다. 반류 계수 w는?</p><div class="opts">
+        <button class="opt">0.43</button><button class="opt" data-correct>0.30</button><button class="opt">0.70</button><button class="opt">0.14</button>
+      </div><div class="quiz-exp">\(w=(V-V_A)/V=(20-14)/20=0.30\).</div></div>
+
+      <div class="quiz-q"><p>2. w = 0.35, t = 0.20일 때 선체 효율 η_H는?</p><div class="opts">
+        <button class="opt">0.81</button><button class="opt">1.00</button><button class="opt" data-correct>1.23</button><button class="opt">0.52</button>
+      </div><div class="quiz-exp">\(\eta_H=(1-t)/(1-w)=0.80/0.65\approx1.23\). 선체가 만든 느린 물을 프로펠러가 다시 밀기 때문에 1보다 크다.</div></div>
+
+      <div class="quiz-q"><p>3. 추력 감소가 생기는 직접적인 원인은?</p><div class="opts">
+        <button class="opt">프로펠러 날개의 마찰</button><button class="opt" data-correct>프로펠러가 앞의 물을 빨아들여 선미의 압력이 낮아지는 것</button><button class="opt">축 베어링 손실</button><button class="opt">반류가 프로펠러를 느리게 돌리는 것</button>
+      </div><div class="quiz-exp">예인 상태에서 선미를 앞으로 밀던 압력 회복이 프로펠러 흡입으로 줄어 저항이 커진다. 그래서 \(T>R_T\)이다.</div></div>
+
+      <div class="quiz-q"><p>4. 고정 피치 프로펠러를 단 배에서 회전수를 10 % 낮추면 필요한 동력은 대략?</p><div class="opts">
+        <button class="opt">10 % 감소</button><button class="opt">19 % 감소</button><button class="opt" data-correct>27 % 감소</button><button class="opt">변하지 않음</button>
+      </div><div class="quiz-exp">\(P\propto n^3\)이므로 \(0.9^3=0.729\), 약 27 % 감소한다.</div></div>
+
+      <div class="quiz-q"><p>5. 신조선 프로펠러에 라이트 러닝 마진을 두는 이유는?</p><div class="opts">
+        <button class="opt">시운전 속력을 낮게 보이게 하려고</button><button class="opt">캐비테이션을 늘리려고</button><button class="opt" data-correct>오손·파랑으로 프로펠러가 무거워져도 엔진이 토크 한계에 걸리지 않고 정격 회전수를 낼 수 있게</button><button class="opt">감속기 효율을 높이려고</button>
+      </div><div class="quiz-exp">선체가 오손되면 같은 회전수에 더 큰 토크가 필요하다(헤비 러닝). 처음부터 가볍게 돌게 해 두면 시간이 지나도 운전점이 토크 한계 안에 머문다.</div></div>
+
+      <div class="quiz-q"><p>6. 평수 전달 동력 20 MW, 해상 여유 15 %, 축계 효율 1, 엔진 여유 10 %라면 MCR은 대략?</p><div class="opts">
+        <button class="opt">23.0 MW</button><button class="opt" data-correct>25.6 MW</button><button class="opt">22.0 MW</button><button class="opt">20.0 MW</button>
+      </div><div class="quiz-exp">NCR = 20 × 1.15 = 23 MW, MCR = 23 / 0.9 ≈ 25.6 MW.</div></div>
+
+      <div class="quiz-q"><p>7. 같은 항로를 20 kn 대신 16 kn으로 가면 항해 연료는 대략 몇 %가 되는가?</p><div class="opts">
+        <button class="opt">80 %</button><button class="opt" data-correct>64 %</button><button class="opt">51 %</button><button class="opt">125 %</button>
+      </div><div class="quiz-exp">항해 연료 \(\propto V^2\)이므로 \(0.8^2=0.64\). 일일 연료는 \(0.8^3\approx0.51\)이지만 날수가 1.25배로 는다.</div></div>
+
+      <div class="quiz-q"><p>8. 자항 시험에서 전차가 마찰 수정 힘 F_D를 끌어 주는 이유는?</p><div class="opts">
+        <button class="opt">모형선이 너무 무거워서</button><button class="opt" data-correct>모형의 마찰 저항 계수가 실선보다 커서, 그 차이만큼 프로펠러 부담을 덜어 실선의 하중을 재현하려고</button><button class="opt">조파 저항을 없애려고</button><button class="opt">프로펠러 캐비테이션을 재현하려고</button>
+      </div><div class="quiz-exp">모형의 레이놀즈 수가 작아 \(C_{Fm}>C_{Fs}\)이다. 그대로 자항시키면 프로펠러가 실선보다 무겁게 돌므로, 차이만큼의 힘을 외부에서 보태 준다.</div></div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const TAU = Math.PI * 2, D2R = Math.PI / 180;
+  const FONT = getComputedStyle(document.body).getPropertyValue("--font") || "sans-serif";
+  const MONO = getComputedStyle(document.body).getPropertyValue("--mono") || "monospace";
+  const font = (px, bold) => (bold ? "700 " : "") + px + "px " + FONT;
+  const mono = (px) => px + "px " + MONO;
+  const run = (name, fn) => { try { fn(); } catch (e) { console.error("[" + name + "]", e); } };
+  function txt(ctx, s, x, y, o) {
+    o = o || {};
+    ctx.font = o.font || font(o.size || 12, o.bold);
+    ctx.fillStyle = o.color || SB.palette().text;
+    ctx.textAlign = o.align || "left"; ctx.textBaseline = o.base || "middle";
+    ctx.fillText(s, x, y);
+  }
+  function rgba(col, a) {
+    col = (col || "").trim();
+    if (col[0] === "#") {
+      let h = col.slice(1); if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+      const n = parseInt(h.slice(0, 6), 16);
+      return "rgba(" + ((n >> 16) & 255) + "," + ((n >> 8) & 255) + "," + (n & 255) + "," + a + ")";
+    }
+    const m = col.match(/rgba?\(([^)]+)\)/);
+    if (m) { const p = m[1].split(",").map((s) => s.trim()); return "rgba(" + p[0] + "," + p[1] + "," + p[2] + "," + a + ")"; }
+    return col;
+  }
+  function rrect(ctx, x, y, w, h, r) {
+    r = Math.min(r, Math.abs(w) / 2, Math.abs(h) / 2);
+    ctx.beginPath(); ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+  // 반응형 높이: 좁은 화면에서는 세로로 쌓기
+  const respAspect = (el, wide, narrow, bp) => ({ get aspect() { return (el.parentElement.clientWidth < (bp || 560)) ? narrow : wide; } });
+  // viridis 비슷한 순차 색 지도 (데이터 색, 테마 무관)
+  const CMAP = [[68, 1, 84], [59, 82, 139], [33, 145, 140], [94, 201, 98], [253, 231, 37]];
+  function cmap(t) {
+    t = SB.clamp(t, 0, 1) * (CMAP.length - 1);
+    const i = Math.min(CMAP.length - 2, Math.floor(t)), f = t - i, a = CMAP[i], b = CMAP[i + 1];
+    return "rgb(" + Math.round(a[0] + (b[0] - a[0]) * f) + "," + Math.round(a[1] + (b[1] - a[1]) * f) + "," + Math.round(a[2] + (b[2] - a[2]) * f) + ")";
+  }
+
+  /* ============================================================ 1. 반류장 */
+  run("wake", function () {
+    const HULL = {
+      slender: { wb: 0.17, pk: 0.62, sg: 0.32, bt: 0.12, Cb: 0.60 },
+      mid: { wb: 0.21, pk: 0.66, sg: 0.42, bt: 0.16, Cb: 0.72 },
+      full: { wb: 0.23, pk: 0.60, sg: 0.62, bt: 0.20, Cb: 0.84 },
+    };
+    const PD = 0.9;   // 피치비
+    function wakeAt(H, x, th) {   // th: 12시에서 시계 방향(선미에서 볼 때), rad
+      const d = Math.atan2(Math.sin(th), Math.cos(th));
+      const sg = H.sg * (0.7 + 0.6 * x);
+      const top = H.pk * Math.exp(-((d / sg) ** 2)) * (1.15 - 0.35 * x);
+      const db = Math.atan2(Math.sin(th - Math.PI), Math.cos(th - Math.PI));
+      const bot = H.bt * Math.exp(-((db / (sg * 1.3)) ** 2)) * (1 - 0.4 * x);
+      return Math.min(0.92, H.wb * (1.25 - 0.4 * x) + top + bot);
+    }
+    function meanWake(H) {
+      let s = 0, a = 0;
+      for (let i = 0; i < 30; i++) { const x = 0.2 + (0.8 * (i + 0.5)) / 30; for (let j = 0; j < 120; j++) { s += wakeAt(H, x, (TAU * j) / 120) * x; a += x; } }
+      return s / a;
+    }
+    const S = { th: 40, playing: false };
+    const hull = SB.seg("wk-hull", upd);
+    const gx = SB.range("wk-x", (v) => v.toFixed(2), upd);
+    const gth = SB.range("wk-th", (v) => Math.round(v) + "°", (v) => { S.th = v; upd(); });
+    const gj = SB.range("wk-j", (v) => v.toFixed(2), upd);
+    let means = {}; Object.keys(HULL).forEach((k) => (means[k] = meanWake(HULL[k])));
+    function alphaAt(H, x, th, J, wm) {
+      const phi = Math.atan(PD / (Math.PI * x));
+      const beta = Math.atan((J * (1 - wakeAt(H, x, th)) / (1 - wm)) / (Math.PI * x));
+      return (phi - beta) / D2R;
+    }
+    const el = $("cv-wake");
+    const G = { cx: 0, cy: 0, R: 0 };
+    const cv = SB.canvas(el, draw, respAspect(el, 0.5, 1.6));
+    function draw(ctx, w, h) {
+      const P = SB.palette(), H = HULL[hull()], x = gx(), J = gj(), wm = means[hull()];
+      const narrow = w < 560;
+      const R = narrow ? Math.min(w * 0.36, h * 0.24) : Math.min(w * 0.22, h * 0.40);
+      const cx = narrow ? w / 2 : R + 30, cy = narrow ? R + 26 : h / 2 - 4;
+      G.cx = cx; G.cy = cy; G.R = R;
+      // 원판 색 지도
+      const NR = 18, NT = 90, r0 = 0.2;
+      for (let i = 0; i < NR; i++) {
+        const xa = r0 + ((1 - r0) * i) / NR, xb = r0 + ((1 - r0) * (i + 1)) / NR, xm = (xa + xb) / 2;
+        for (let j = 0; j < NT; j++) {
+          const ta = (TAU * j) / NT, tb = (TAU * (j + 1)) / NT, tm = (ta + tb) / 2;
+          const wv = wakeAt(H, xm, tm);
+          ctx.fillStyle = cmap((1 - wv) / 1.0);
+          ctx.beginPath();
+          ctx.arc(cx, cy, xb * R, ta - Math.PI / 2 - 0.005, tb - Math.PI / 2 + 0.005);
+          ctx.arc(cx, cy, xa * R, tb - Math.PI / 2 + 0.005, ta - Math.PI / 2 - 0.005, true);
+          ctx.closePath(); ctx.fill();
+        }
+      }
+      ctx.fillStyle = P.surface; ctx.beginPath(); ctx.arc(cx, cy, r0 * R, 0, TAU); ctx.fill();
+      ctx.strokeStyle = P.axis; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();
+      // 선택 반지름
+      ctx.setLineDash([4, 4]); ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(cx, cy, x * R, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+      // 날개 4장
+      for (let k = 0; k < 4; k++) {
+        const a = S.th * D2R + (k * TAU) / 4 - Math.PI / 2;
+        ctx.save(); ctx.translate(cx, cy); ctx.rotate(a);
+        ctx.beginPath(); ctx.moveTo(r0 * R, -R * 0.06);
+        ctx.quadraticCurveTo(R * 0.7, -R * 0.24, R * 0.98, -R * 0.02);
+        ctx.quadraticCurveTo(R * 0.7, R * 0.14, r0 * R, R * 0.06); ctx.closePath();
+        ctx.fillStyle = k === 0 ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.18)"; ctx.fill();
+        ctx.strokeStyle = k === 0 ? "#fff" : "rgba(255,255,255,0.5)"; ctx.lineWidth = k === 0 ? 2 : 1; ctx.stroke();
+        ctx.restore();
+      }
+      const ba = S.th * D2R - Math.PI / 2;
+      ctx.fillStyle = "#fff"; ctx.strokeStyle = "#000"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(cx + Math.cos(ba) * x * R, cy + Math.sin(ba) * x * R, 5, 0, TAU); ctx.fill(); ctx.stroke();
+      txt(ctx, "12시(0°)", cx, cy - R - 12, { align: "center", color: P.dim, size: 11 });
+      txt(ctx, "선미에서 본 프로펠러 원판", cx, cy + R + 14, { align: "center", color: P.dim, size: 11 });
+      // 색 범례
+      const lgx = narrow ? 16 : cx - R, lgy = narrow ? cy + R + 30 : cy + R + 28, lgw = narrow ? w - 32 : 2 * R;
+      for (let i = 0; i < 40; i++) { ctx.fillStyle = cmap(i / 39); ctx.fillRect(lgx + (lgw * i) / 40, lgy, lgw / 40 + 0.6, 8); }
+      txt(ctx, "u/V = 0 (정지)", lgx, lgy + 18, { color: P.dim, size: 10.5, font: mono(10.5) });
+      txt(ctx, "1 (배 속력)", lgx + lgw, lgy + 18, { align: "right", color: P.dim, size: 10.5, font: mono(10.5) });
+      // 받음각 그래프
+      const box = narrow ? { x: 40, y: lgy + 56, w: w - 56, h: h - lgy - 56 - 46 } : { x: 2 * R + 100, y: 30, w: w - 2 * R - 118, h: h - 30 - 50 };
+      const data = [], wd = [];
+      for (let d = 0; d <= 360; d += 3) { data.push([d, alphaAt(H, x, d * D2R, J, wm)]); }
+      const am = data.reduce((s, p) => s + p[1], 0) / data.length;
+      const cur = alphaAt(H, x, S.th * D2R, J, wm);
+      SB.chart(ctx, box, {
+        x: [0, 360], y: [-4, 26], xTicks: [0, 90, 180, 270, 360], xLabel: narrow ? "" : "날개 위치각 (°, 12시 = 0)",
+        series: [{ data, color: P.accent, width: 2.2 }],
+        hlines: [{ y: am, color: P.dim, label: "평균 " + am.toFixed(1) + "°" }],
+        vlines: [{ x: S.th, color: P.accent2, dash: [3, 3] }],
+        points: [{ x: S.th, y: cur, color: P.accent2, r: 5 }],
+      });
+      txt(ctx, "받음각 α (°)", box.x - 6, box.y - 10, { align: "left", color: P.dim, size: 12 });
+      // readout
+      const amax = Math.max(...data.map((p) => p[1])), amin = Math.min(...data.map((p) => p[1]));
+      SB.stat("wk-o-mean", wm.toFixed(3));
+      SB.stat("wk-o-tay", (0.5 * H.Cb - 0.05).toFixed(3));
+      SB.stat("wk-o-loc", wakeAt(H, x, S.th * D2R).toFixed(2));
+      SB.stat("wk-o-a", cur.toFixed(1) + "°");
+      SB.stat("wk-o-da", (amax - amin).toFixed(1) + "°");
+    }
+    function upd() { cv.redraw(); }
+    const loop = SB.loop(el, (dt) => { if (!S.playing) return; S.th = (S.th + dt * 80) % 360; gth.el.value = Math.round(S.th); gth.el.dispatchEvent(new Event("input")); });
+    $("wk-play").addEventListener("click", () => { S.playing = !S.playing; $("wk-play").textContent = S.playing ? "정지" : "회전"; });
+    SB.drag(el, {
+      down(p) { const dx = p.x - G.cx, dy = p.y - G.cy; if (Math.hypot(dx, dy) > G.R * 1.15) return false; set(p); },
+      move(p) { set(p); },
+    });
+    function set(p) { let a = Math.atan2(p.y - G.cy, p.x - G.cx) / D2R + 90; a = ((a % 360) + 360) % 360; S.th = a; gth.set(Math.round(a)); }
+  });
+
+  /* ============================================================ 2. 추력 감소 */
+  run("thrust", function () {
+    const el = $("cv-td");
+    const gw = SB.range("td-w", (v) => v.toFixed(2), upd), gt = SB.range("td-t", (v) => v.toFixed(2), upd);
+    const prop = $("td-prop"); prop.addEventListener("change", upd);
+    let ph = 0;
+    const cv = SB.canvas(el, draw, respAspect(el, 0.55, 1.3));
+    function draw(ctx, w, h) {
+      const P = SB.palette(), W = gw(), t = gt(), on = prop.checked;
+      const narrow = w < 560;
+      const sh = narrow ? h * 0.52 : h;          // 선미 그림 영역
+      const sw = narrow ? w : w * 0.6;
+      // 물
+      const wl = sh * 0.18;
+      ctx.fillStyle = SB.color("water-soft"); ctx.fillRect(0, wl, sw, sh - wl);
+      ctx.strokeStyle = SB.color("water"); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, wl); ctx.lineTo(sw, wl); ctx.stroke();
+      // 선미 형상(선미가 왼쪽)
+      const s = sw / 70, Tm = sh * 0.58;
+      const hull = (k) => { // k: 0..1 along aft body, returns bottom y
+        return wl + Tm * Math.min(1, Math.pow(k, 0.55));
+      };
+      const x0 = sw * 0.22, x1 = sw;      // 선미 끝, 화면 오른쪽
+      ctx.beginPath(); ctx.moveTo(x0 - 14, wl - sh * 0.12);
+      ctx.lineTo(x1, wl - sh * 0.12); ctx.lineTo(x1, wl + Tm);
+      for (let i = 40; i >= 0; i--) { const k = i / 40, X = x0 + (x1 - x0) * 0.55 * k; ctx.lineTo(X, hull(k)); }
+      ctx.lineTo(x0 - 14, wl - 4);
+      ctx.closePath();
+      ctx.fillStyle = SB.color("hull"); ctx.globalAlpha = 0.85; ctx.fill(); ctx.globalAlpha = 1;
+      // 프로펠러 위치
+      const px = x0 + 2, py = wl + Tm * 0.64, pr = Tm * 0.28;
+      const kS = Math.pow((py - wl) / Tm, 1 / 0.55), xS = x0 + (x1 - x0) * 0.55 * kS;
+      // 저압 영역
+      if (on) {
+        const g = ctx.createRadialGradient(px + pr * 0.6, py, 2, px + pr * 0.6, py, pr * 2.6);
+        g.addColorStop(0, rgba(P.blue, 0.15 + 1.6 * t)); g.addColorStop(1, rgba(P.blue, 0));
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(px + pr * 0.6, py, pr * 2.6, 0, TAU); ctx.fill();
+        txt(ctx, "저압(흡입)", Math.max(36, px + pr * 0.4), py + pr * 1.9, { color: P.blue, size: 12, bold: true, align: "center" });
+      }
+      // 축과 프로펠러
+      ctx.strokeStyle = P.dim; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(xS + 4, py); ctx.stroke();
+      ctx.fillStyle = "#c9a227";
+      const bl = on ? Math.abs(Math.cos(ph)) : 1;
+      ctx.beginPath(); ctx.ellipse(px, py, 5, pr * (0.35 + 0.65 * bl), 0, 0, TAU); ctx.fill();
+      // 선미 표면의 압력 화살표(앞으로 미는 성분)
+      const red = on ? Math.min(0.95, t * 3.2) : 0;
+      for (let i = 1; i <= 6; i++) {
+        const k = 0.12 + i * 0.12, X = x0 + (x1 - x0) * 0.55 * k, Y = hull(k);
+        const dk = 0.01, X2 = x0 + (x1 - x0) * 0.55 * (k + dk), Y2 = hull(k + dk);
+        let nx = -(Y2 - Y), ny = X2 - X; const nl = Math.hypot(nx, ny); nx /= nl; ny /= nl;   // 바깥쪽 법선
+        const near = Math.exp(-(((k - 0.15) / 0.35) ** 2));
+        const L = sh * 0.16 * (1 - red * near) * (1.1 - k * 0.5);
+        if (L > 2) SB.arrow(ctx, X + nx * (L + 4), Y + ny * (L + 4), X + nx * 3, Y + ny * 3, P.ok, 2);
+      }
+      txt(ctx, on ? "선미 압력 회복이 줄어듦" : "선미 압력 회복(예인)", x0 + (x1 - x0) * 0.45, wl + Tm + sh * 0.1, { color: P.ok, size: 12, bold: true, align: "center" });
+      txt(ctx, "선미", x0 - 10, wl - sh * 0.06, { color: "#fff", size: 11, bold: true });
+      // 힘 막대
+      const bx = narrow ? 16 : sw + 24, by = narrow ? sh + 18 : 26, bw = narrow ? w - 32 : w - sw - 40, bh = narrow ? h - sh - 30 : h - 50;
+      const R = 1, T = on ? R / (1 - t) : 0;
+      const maxF = 1 / (1 - 0.35);
+      const rows = [
+        ["저항 R_T(예인)", R, P.dim],
+        ["필요 추력 T", T, P.accent],
+        ["추가 저항 tT", on ? t * T : 0, P.accent2],
+      ];
+      const rh = Math.min(34, bh / 6);
+      txt(ctx, "힘 비교 (R_T = 1)", bx, by, { color: P.text, bold: true, size: 13, base: "top" });
+      rows.forEach((r, i) => {
+        const y = by + 30 + i * (rh * 1.9);
+        txt(ctx, r[0], bx, y, { color: P.dim, size: 12, base: "top" });
+        ctx.fillStyle = r[2]; ctx.fillRect(bx, y + 16, (bw - 50) * (r[1] / maxF), rh * 0.7);
+        txt(ctx, r[1].toFixed(2), bx + (bw - 50) * (r[1] / maxF) + 6, y + 16 + rh * 0.35, { font: mono(12), color: P.text });
+      });
+      const y4 = by + 30 + 3 * (rh * 1.9) + 6;
+      const eh = (1 - t) / (1 - W);
+      txt(ctx, "η_H = (1−t)/(1−w) = " + eh.toFixed(3), bx, y4, { font: mono(13), color: eh >= 1 ? P.ok : P.bad, base: "top" });
+      SB.stat("td-o-tr", on ? (1 / (1 - t)).toFixed(3) : "0 (예인)");
+      SB.stat("td-o-va", (1 - W).toFixed(2));
+      SB.stat("td-o-eh", eh.toFixed(3));
+      SB.stat("td-o-pt", (1 / eh).toFixed(3));
+    }
+    function upd() { cv.redraw(); }
+    SB.loop(el, (dt) => { if (!prop.checked) return; ph += dt * 9; cv.redraw(); });
+  });
+
+  /* ============================================================ 3. Sankey */
+  run("sankey", function () {
+    const el = $("cv-sankey");
+    const gpe = SB.range("sk-pe", (v) => v.toFixed(1) + " MW", upd);
+    const ge0 = SB.range("sk-e0", (v) => v.toFixed(2), upd);
+    const gw = SB.range("sk-w", (v) => v.toFixed(2), upd);
+    const gt = SB.range("sk-t", (v) => v.toFixed(2), upd);
+    const ger = SB.range("sk-er", (v) => v.toFixed(3), upd);
+    const ges = SB.range("sk-es", (v) => v.toFixed(3), upd);
+    const gear = $("sk-gear"); gear.addEventListener("change", upd);
+    const cv = SB.canvas(el, draw, respAspect(el, 0.6, 1.0));
+    function band(ctx, xa, ya0, ya1, xb, yb0, yb1, col) {
+      const xm = (xa + xb) / 2;
+      ctx.beginPath(); ctx.moveTo(xa, ya0);
+      ctx.bezierCurveTo(xm, ya0, xm, yb0, xb, yb0); ctx.lineTo(xb, yb1);
+      ctx.bezierCurveTo(xm, yb1, xm, ya1, xa, ya1); ctx.closePath();
+      ctx.fillStyle = col; ctx.fill();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette();
+      const PE = gpe(), e0 = ge0(), W = gw(), t = gt(), eR = ger(), eS = ges(), eG = gear.checked ? 0.975 : 1;
+      const eH = (1 - t) / (1 - W), eD = eH * e0 * eR;
+      const PT = PE / eH, PD = PT / (e0 * eR), PS = PD / eS, PB = PS / eG;
+      const narrow = w < 560, fs = narrow ? 10.5 : 12;
+      const nodes = [["P_B", "제동", PB], ["P_S", "축", PS], ["P_D", "전달", PD], ["P_T", "추력", PT], ["P_E", "유효", PE]];
+      const left = narrow ? 22 : 40, right = w - (narrow ? 50 : 70);
+      const colX = nodes.map((_, i) => left + ((right - left) * i) / 4);
+      const sc = (h * 0.42) / Math.max(PB, PE);
+      const nodeW = narrow ? 8 : 12;
+      let top = h * 0.24, bot = top + PB * sc;
+      const lossY = h - 34;
+      const flowCol = rgba(P.accent, 0.45), lossCol = rgba(P.accent2, 0.35), gainCol = rgba(P.ok, 0.45);
+      const losses = [];
+      for (let i = 0; i < 4; i++) {
+        const a = nodes[i][2], b = nodes[i + 1][2];
+        const xa = colX[i] + nodeW / 2, xb = colX[i + 1] - nodeW / 2;
+        if (b <= a) {
+          const nbot = bot - (a - b) * sc;
+          // 본류
+          band(ctx, xa, top, nbot, xb, top, nbot, flowCol);
+          // 손실 띠: 아래로 꺾여 내려간다
+          if (a - b > 1e-6) {
+            const lw = (a - b) * sc, lx = xa + Math.max(lw / 2 + 12, (xb - xa) * 0.35);
+            ctx.beginPath(); ctx.moveTo(xa, nbot);
+            ctx.bezierCurveTo(lx + lw / 2, nbot, lx + lw / 2, nbot, lx + lw / 2, lossY - 6);
+            ctx.lineTo(lx - lw / 2, lossY - 6);
+            ctx.bezierCurveTo(lx - lw / 2, bot, lx - lw / 2, bot, xa, bot);
+            ctx.closePath(); ctx.fillStyle = lossCol; ctx.fill();
+            losses.push([lx, a - b, i]);
+          }
+          bot = nbot;
+        } else {
+          const ntop = top - (b - a) * sc;
+          band(ctx, xa, top, bot, xb, top, bot, flowCol);
+          // 이득 띠 (위에서 내려와 합류)
+          const gw2 = (b - a) * sc, gx = xb - Math.max(gw2 / 2 + 12, (xb - xa) * 0.35);
+          ctx.beginPath(); ctx.moveTo(gx - gw2 / 2, 26);
+          ctx.bezierCurveTo(gx - gw2 / 2, ntop, gx - gw2 / 2, ntop, xb, ntop);
+          ctx.lineTo(xb, top);
+          ctx.bezierCurveTo(gx + gw2 / 2, top, gx + gw2 / 2, top, gx + gw2 / 2, 26);
+          ctx.closePath(); ctx.fillStyle = gainCol; ctx.fill();
+          txt(ctx, "반류 회수 +" + (b - a).toFixed(2) + " MW", Math.min(gx, w - 70), 14, { align: "center", color: P.ok, size: fs, bold: true });
+          top = ntop;
+        }
+        // 노드 막대
+      }
+      // 노드 막대 다시 계산해서 그리기
+      top = h * 0.24; bot = top + PB * sc;
+      for (let i = 0; i < 5; i++) {
+        const v = nodes[i][2];
+        if (i > 0) {
+          const a = nodes[i - 1][2];
+          if (v <= a) bot -= (a - v) * sc; else top -= (v - a) * sc;
+        }
+        ctx.fillStyle = i === 4 ? P.accent2 : P.accent;
+        ctx.fillRect(colX[i] - nodeW / 2, top, nodeW, bot - top);
+        const lab = nodes[i][0] + (narrow ? "" : " " + nodes[i][1]);
+        if (i === 4) {
+          txt(ctx, nodes[i][0], colX[i] + nodeW, (top + bot) / 2 - 8, { bold: true, size: fs + 1 });
+          txt(ctx, v.toFixed(narrow ? 1 : 2), colX[i] + nodeW, (top + bot) / 2 + 8, { font: mono(fs), color: P.dim });
+        } else {
+          const yl = i === 3 && PE > PT ? bot + 14 : top - 22;
+          txt(ctx, lab, colX[i], yl, { align: "center", bold: true, size: fs + 1 });
+          txt(ctx, v.toFixed(narrow ? 1 : 2), colX[i], yl + 14, { align: "center", font: mono(fs), color: P.dim });
+        }
+      }
+      losses.forEach(([x, v, i]) => {
+        const names = ["감속기", "축 베어링", "프로펠러", "선체"];
+        txt(ctx, names[i] + " " + v.toFixed(narrow ? 1 : 2), x, lossY + 4, { align: "center", size: fs, color: P.accent2, base: "top" });
+      });
+      txt(ctx, "MW", w - 8, h - 8, { align: "right", color: P.faint, size: 10, base: "bottom" });
+      SB.stat("sk-o-eh", eH.toFixed(3));
+      SB.stat("sk-o-ed", eD.toFixed(3));
+      SB.stat("sk-o-tot", (PE / PB).toFixed(3));
+      SB.stat("sk-o-pb", PB.toFixed(2) + " <small>MW</small>");
+    }
+    function upd() { cv.redraw(); }
+  });
+
+  /* ============================================================ 4. 부하 다이어그램 */
+  run("load", function () {
+    const el = $("cv-load");
+    const k0 = 0.40, k1 = 0.36, q0 = 0.055, q1 = 0.040;
+    const KQ = (J) => q0 - q1 * J;
+    const C0 = (k0 - k1 * 0.7) / (0.7 * 0.7);
+    const solveJ = (C) => (-k1 + Math.sqrt(k1 * k1 + 4 * C * k0)) / (2 * C);
+    const gn = SB.range("ld-n", (v) => v.toFixed(1) + " %", upd);
+    const gf = SB.range("ld-f", (v) => "+" + v + " %", upd);
+    const gsea = SB.seg("ld-sea", upd), gload = SB.seg("ld-load", upd);
+    const glrm = SB.range("ld-lrm", (v) => v.toFixed(1) + " %", upd);
+    const cv = SB.canvas(el, draw, respAspect(el, 0.68, 0.95));
+    function model() {
+      const a = (1 + gf() / 100) * (1 + Number(gsea()) / 100) * (1 + Number(gload()) / 100) - 1;
+      const J0 = 0.7, Ja = solveJ(C0 * (1 + a));
+      const nL = 100 * (1 + glrm() / 100);
+      const kP = (100 / Math.pow(nL, 3)) * (KQ(Ja) / KQ(J0));
+      return { a, J0, Ja, nL, kP, P: (n) => kP * n * n * n, V: (n) => 21.5 * (Ja / J0) * (n / nL) * Math.pow(1 + Number(gload()) / 100, 0) };
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), M = model(), n = gn();
+      const x0 = 55, x1 = 112, y0 = 20, y1 = 125;
+      const narrow = w < 560;
+      const box = { x: 56, y: 16, w: w - 56 - (narrow ? 12 : 20), h: h - 16 - 48 };
+      const lx = (v) => Math.log10(v), X = (v) => box.x + ((lx(v) - lx(x0)) / (lx(x1) - lx(x0))) * box.w, Y = (v) => box.y + box.h - ((lx(v) - lx(y0)) / (lx(y1) - lx(y0))) * box.h;
+      // 연속 운전 영역
+      ctx.beginPath();
+      ctx.moveTo(X(x0), Y(y0)); ctx.lineTo(X(x0), Y(x0)); ctx.lineTo(X(100), Y(100)); ctx.lineTo(X(105), Y(100)); ctx.lineTo(X(105), Y(y0)); ctx.closePath();
+      ctx.fillStyle = rgba(P.ok, 0.10); ctx.fill();
+      // 과부하 영역 (110 %까지, 단시간)
+      ctx.beginPath(); ctx.moveTo(X(100), Y(100)); ctx.lineTo(X(Math.min(110, x1)), Y(110)); ctx.lineTo(X(105), Y(110)); ctx.lineTo(X(105), Y(100)); ctx.closePath();
+      ctx.fillStyle = rgba(P.warn, 0.12); ctx.fill();
+      const pc = (k, nmax) => { const d = []; for (let v = x0; v <= nmax; v += 0.5) d.push([v, k * v * v * v]); return d; };
+      const clean = (100 / Math.pow(M.nL, 3));
+      const series = [
+        { data: [[x0, x0], [100, 100]], color: P.bad, width: 2 },
+        { data: [[100, 100], [110, 110]], color: P.bad, width: 1.2, dash: [4, 3] },
+        { data: pc(clean, x1), color: P.dim, width: 1.5, dash: [6, 4] },
+        { data: pc(M.kP, x1), color: P.accent, width: 2.6 },
+      ];
+      const opP = M.P(n);
+      const status = opP > 100.5 ? "bad" : (opP > n * 1.005 ? "bad" : n > 105 ? "warn" : "ok");
+      SB.chart(ctx, box, {
+        x: [x0, x1], y: [y0, y1], logX: true, logY: true,
+        xTicks: [60, 70, 80, 90, 100, 110], yTicks: [20, 30, 40, 50, 60, 80, 100, 120],
+        xFmt: (v) => v + "", yFmt: (v) => v + "",
+        xLabel: "엔진 회전수 (% MCR rpm, 로그)", yLabel: "엔진 출력 (% MCR, 로그)",
+        series,
+        hlines: [{ y: 100, color: P.bad, dash: [] }],
+        vlines: [{ x: 105, color: P.warn, label: "105 %", dash: [5, 3] }],
+        points: [{ x: 100, y: 100, color: P.text, r: 4, label: "MCR" }, { x: n, y: Math.min(y1, opP), color: status === "ok" ? P.accent2 : P.bad, r: 6 }],
+      });
+      ctx.save(); ctx.font = font(11); ctx.textAlign = "left";
+      ctx.fillStyle = P.bad; ctx.fillText("토크 한계(일정 토크)", X(64), Y(64) - 16);
+      ctx.fillStyle = P.dim; ctx.fillText("깨끗한 선체·평수 곡선", X(66), Y(clean * Math.pow(66, 3)) + 16);
+      ctx.fillStyle = P.accent; ctx.fillText("현재 프로펠러 곡선", X(80) - 120 < box.x ? box.x + 4 : X(80) - 120, Y(M.kP * Math.pow(80, 3)) - 8);
+      ctx.fillStyle = P.ok; ctx.fillText("연속 운전 영역", X(78), Y(28));
+      ctx.restore();
+      const Q = (opP / n) * 100;
+      SB.stat("ld-o-p", opP.toFixed(1) + " %");
+      SB.stat("ld-o-q", Q.toFixed(1) + " %");
+      SB.stat("ld-o-j", M.Ja.toFixed(3));
+      SB.stat("ld-o-v", M.V(n).toFixed(1) + " <small>kn</small>");
+      const msg = opP > 100.5 ? "출력 초과" : Q > 100.5 ? "토크 한계 초과" : n > 105 ? "회전수 한계" : "정상";
+      $("ld-o-st").style.color = msg === "정상" ? "var(--ok)" : "var(--bad)";
+      SB.stat("ld-o-st", msg);
+    }
+    function upd() { cv.redraw(); }
+  });
+
+  /* ============================================================ 5. MCR */
+  run("mcr", function () {
+    const el = $("cv-mcr");
+    const SHIPS = { box: { Vd: 22, Pd: 40, v: 21 }, bulk: { Vd: 14.5, Pd: 10.5, v: 14.5 }, vlcc: { Vd: 15.5, Pd: 21, v: 15.5 } };
+    const EX = 3.2, ES = 0.985;
+    const ship = SB.seg("mc-ship", (v) => { gv.set(SHIPS[v].v); });
+    const gv = SB.range("mc-v", (v) => v.toFixed(1) + " kn", upd);
+    const gsm = SB.range("mc-sm", (v) => v + " %", upd);
+    const gem = SB.range("mc-em", (v) => v + " %", upd);
+    const cv = SB.canvas(el, draw, respAspect(el, 0.62, 0.9));
+    function draw(ctx, w, h) {
+      const P = SB.palette(), S = SHIPS[ship()], Vs = gv(), sm = gsm() / 100, em = gem() / 100;
+      const Pc = (V) => S.Pd * Math.pow(V / S.Vd, EX);
+      const pd = Pc(Vs), ncr = (pd * (1 + sm)) / ES, mcr = ncr / (1 - em);
+      const Vat = (Pw, f) => S.Vd * Math.pow((Pw * ES) / f / S.Pd, 1 / EX);
+      const vt = Vat(ncr, 1), vm = Vat(mcr, 1);
+      const vmin = S.Vd * 0.55, vmax = S.Vd * 1.2;
+      const cal = [], ser = [];
+      for (let v = vmin; v <= vmax + 1e-6; v += (vmax - vmin) / 60) { cal.push([v, Pc(v) / ES]); ser.push([v, (Pc(v) * (1 + sm)) / ES]); }
+      const ymax = Math.max(mcr * 1.15, (Pc(vmax) / ES) * 0.9);
+      const R = SB.chart(ctx, null, {
+        x: [vmin, vmax], y: [0, ymax], xLabel: "선속 (kn)", yLabel: "제동 동력 (MW)",
+        series: [{ data: cal, color: P.accent, width: 2.2 }, { data: ser, color: P.accent2, width: 2.2, dash: [6, 4] }],
+        hlines: [{ y: ncr, color: P.ok, label: "NCR " + ncr.toFixed(1) + " MW" }, { y: mcr, color: P.bad, label: "MCR " + mcr.toFixed(1) + " MW" }],
+        vlines: [{ x: Vs, color: P.dim, label: "계약 " + Vs.toFixed(1) + " kn" }],
+        points: [{ x: Vs, y: ncr, color: P.accent2, r: 5 }, { x: vt, y: ncr, color: P.accent, r: 5 }, { x: vm, y: mcr, color: P.accent, r: 4 }],
+      });
+      ctx.save(); ctx.font = font(11); ctx.textAlign = "left";
+      ctx.fillStyle = P.accent; ctx.fillRect(R.box.x + 8, R.box.y + 8, 16, 3); ctx.fillText("평수·깨끗한 선체", R.box.x + 30, R.box.y + 13);
+      ctx.fillStyle = P.accent2; ctx.fillRect(R.box.x + 8, R.box.y + 26, 16, 3); ctx.fillText("항로 평균(+해상 여유)", R.box.x + 30, R.box.y + 31);
+      // 해상 여유 화살표
+      const xa = R.X(vt);
+      SB.arrow(ctx, R.X(Vs), R.Y(ncr) + 14, xa, R.Y(ncr) + 14, P.text, 1.5);
+      ctx.fillStyle = P.text; ctx.textAlign = "center"; ctx.fillText("+" + (vt - Vs).toFixed(2) + " kn", (R.X(Vs) + xa) / 2, R.Y(ncr) + 28);
+      ctx.restore();
+      SB.stat("mc-o-pd", pd.toFixed(1) + " <small>MW</small>");
+      SB.stat("mc-o-ncr", ncr.toFixed(1) + " <small>MW</small>");
+      SB.stat("mc-o-mcr", mcr.toFixed(1) + " <small>MW</small>");
+      SB.stat("mc-o-vt", vt.toFixed(2) + " <small>kn</small>");
+      SB.stat("mc-o-vm", vm.toFixed(2) + " <small>kn</small>");
+    }
+    function upd() { cv.redraw(); }
+  });
+
+  /* ============================================================ 6. 연료 */
+  run("fuel", function () {
+    const el = $("cv-fuel");
+    const Vd = 22, Pd = 40000, SFOC = 170, CF = 3.114;
+    const gd = SB.range("fu-d", (v) => v.toLocaleString() + " nm", upd);
+    const gv = SB.range("fu-v", (v) => v.toFixed(1) + " kn", upd);
+    const gp = SB.range("fu-p", (v) => "$" + v + "/t", upd);
+    const gh = SB.range("fu-h", (v) => "$" + v + "k", upd);
+    const cv = SB.canvas(el, draw, respAspect(el, 0.62, 0.95));
+    const calc = (V, d, price, hire) => {
+      const Pw = Pd * Math.pow(V / Vd, 3), day = (Pw * 24 * SFOC) / 1e6, days = d / (24 * V), tot = day * days;
+      return { Pw, day, days, tot, fuelCost: tot * price, hireCost: days * hire * 1000 };
+    };
+    function draw(ctx, w, h) {
+      const P = SB.palette(), d = gd(), V = gv(), price = gp(), hire = gh();
+      const fc = [], hc = [], tc = [];
+      let best = 10, bestC = Infinity;
+      for (let v = 10; v <= 24.001; v += 0.1) {
+        const c = calc(v, d, price, hire);
+        fc.push([v, c.fuelCost / 1e6]); hc.push([v, c.hireCost / 1e6]); tc.push([v, (c.fuelCost + c.hireCost) / 1e6]);
+        if (c.fuelCost + c.hireCost < bestC) { bestC = c.fuelCost + c.hireCost; best = v; }
+      }
+      const ymax = Math.max(...tc.map((p) => p[1])) * 1.08;
+      const cur = calc(V, d, price, hire);
+      const narrow = w < 560;
+      SB.chart(ctx, { x: 58, y: 36, w: w - 58 - 18, h: h - 36 - 46 }, {
+        x: [10, 24], y: [0, ymax], xLabel: "항해 속력 (kn)", yLabel: "항해 비용 (백만 달러)",
+        series: [{ data: fc, color: P.accent, width: 2 }, { data: hc, color: P.warn, width: 2, dash: [5, 4] }, { data: tc, color: P.accent2, width: 2.6 }],
+        vlines: [{ x: best, color: P.ok, label: "최소 " + best.toFixed(1) + " kn" }],
+        points: [{ x: V, y: (cur.fuelCost + cur.hireCost) / 1e6, color: P.accent2, r: 6 }, { x: V, y: cur.fuelCost / 1e6, color: P.accent, r: 4 }],
+      });
+      ctx.save(); ctx.font = font(narrow ? 10.5 : 12); ctx.textAlign = "left";
+      const lx = narrow ? 20 : 70;
+      [["연료비 ∝ V²", P.accent], ["용선료 ∝ 1/V", P.warn], ["합계", P.accent2]].forEach((r, i) => {
+        ctx.fillStyle = r[1]; ctx.fillRect(lx + i * (narrow ? 92 : 120), 12, 14, 3);
+        ctx.fillText(r[0], lx + i * (narrow ? 92 : 120) + 18, 17);
+      });
+      ctx.restore();
+      SB.stat("fu-o-days", cur.days.toFixed(1) + " <small>일</small>");
+      SB.stat("fu-o-p", (cur.Pw / 1000).toFixed(1) + " <small>MW</small>");
+      SB.stat("fu-o-day", cur.day.toFixed(0) + " <small>t/일</small>");
+      SB.stat("fu-o-tot", Math.round(cur.tot).toLocaleString() + " t <small>/ CO₂ " + Math.round(cur.tot * CF).toLocaleString() + " t</small>");
+      SB.stat("fu-o-cost", "$" + ((cur.fuelCost + cur.hireCost) / 1e6).toFixed(2) + "M");
+      SB.stat("fu-o-opt", best.toFixed(1) + " <small>kn</small>");
+    }
+    function upd() { cv.redraw(); }
+  });
+
+  /* ============================================================ 7. 자항 시험 */
+  run("selfprop", function () {
+    const el = $("cv-sp");
+    const Ls = 200, Ss = 7500, Vs = SB.ms(15), Ds = 6.5, k = 0.2, CW = 0.0005, dCF = 0.0002, w = 0.30, t = 0.20;
+    const NUF = 1.139e-6, RHOF = 1000;
+    const kt = (J) => 0.40 - 0.36 * J;
+    const CF = (Re) => 0.075 / Math.pow(Math.log10(Re) - 2, 2);
+    let pts = [];
+    const gl = SB.range("sp-l", (v) => v, () => { pts = []; gn.set(gn()); });
+    const gn = SB.range("sp-n", (v) => nOf(v).toFixed(2) + " rps", upd);
+    const tr = $("sp-true"); tr.addEventListener("change", upd);
+    function M() {
+      const lam = gl(), Lm = Ls / lam, Vm = Vs / Math.sqrt(lam), Sm = Ss / (lam * lam), Dm = Ds / lam;
+      const Cfm = CF((Vm * Lm) / NUF), Cfs = CF((Vs * Ls) / SB.NU);
+      const q = 0.5 * RHOF * Vm * Vm * Sm;
+      const Rtm = q * ((1 + k) * Cfm + CW);
+      const FD = q * ((1 + k) * (Cfm - Cfs) - dCF);
+      const Va = Vm * (1 - w);
+      const F = (n) => Rtm - RHOF * n * n * Math.pow(Dm, 4) * kt(Va / (n * Dm)) * (1 - t);
+      // 이분법으로 F(n)=target
+      const solve = (target) => { let a = 1, b = 100; for (let i = 0; i < 60; i++) { const m = (a + b) / 2; if (F(m) > target) a = m; else b = m; } return (a + b) / 2; };
+      const nM = solve(0), nS = solve(FD);
+      return { lam, Lm, Vm, Sm, Dm, Cfm, Cfs, Rtm, FD, F, nM, nS, lo: nS * 0.75, hi: nM * 1.15 };
+    }
+    function nOf(v) { const m = M(); return m.lo + ((m.hi - m.lo) * v) / 100; }
+    const cv = SB.canvas(el, draw, respAspect(el, 0.6, 0.9));
+    function fit() {
+      if (pts.length < 2) return null;
+      const n = pts.length, sx = pts.reduce((s, p) => s + p[0], 0), sy = pts.reduce((s, p) => s + p[1], 0);
+      const sxx = pts.reduce((s, p) => s + p[0] * p[0], 0), sxy = pts.reduce((s, p) => s + p[0] * p[1], 0);
+      const b = (n * sxy - sx * sy) / (n * sxx - sx * sx), a = (sy - b * sx) / n;
+      return isFinite(b) ? { a, b } : null;
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), m = M(), nCur = nOf(gn.el.value * 1);
+      const ytop = m.F(m.lo) * 1.1, ybot = m.F(m.hi) * 1.3;
+      const series = [];
+      if (tr.checked) { const d = []; for (let i = 0; i <= 60; i++) { const n = m.lo + ((m.hi - m.lo) * i) / 60; d.push([n, m.F(n)]); } series.push({ data: d, color: P.dim, width: 1.5, dash: [5, 4] }); }
+      const f = fit();
+      let nEst = null;
+      if (f) { series.push({ data: [[m.lo, f.a + f.b * m.lo], [m.hi, f.a + f.b * m.hi]], color: P.accent, width: 2 }); nEst = (m.FD - f.a) / f.b; }
+      const pnts = pts.map((p) => ({ x: p[0], y: p[1], color: P.accent, r: 4.5 }));
+      pnts.push({ x: nCur, y: Math.max(ybot, Math.min(ytop, m.F(nCur))), color: rgba(P.accent2, 0.35), r: 8 });
+      if (nEst && nEst > m.lo && nEst < m.hi) pnts.push({ x: nEst, y: m.FD, color: P.accent2, r: 6, label: "선박 자항점" });
+      SB.chart(ctx, null, {
+        x: [m.lo, m.hi], y: [ybot, ytop], xLabel: "모형 프로펠러 회전수 n (rps)", yLabel: "전차가 끄는 힘 F (N)",
+        series, points: pnts,
+        hlines: [{ y: m.FD, color: P.accent2, label: "F_D = " + m.FD.toFixed(1) + " N" }, { y: 0, color: P.dim, label: "F = 0 (모형 자항점)" }],
+        vlines: tr.checked ? [{ x: m.nS, color: P.faint }, { x: m.nM, color: P.faint }] : [],
+      });
+      SB.stat("sp-o-vm", m.Vm.toFixed(3) + " <small>m/s</small>");
+      SB.stat("sp-o-cf", (m.Cfm * 1000).toFixed(2) + " / " + (m.Cfs * 1000).toFixed(2) + " <small>×10⁻³</small>");
+      SB.stat("sp-o-fd", m.FD.toFixed(1) + " N <small>(" + ((100 * m.FD) / m.Rtm).toFixed(0) + " % R_tm)</small>");
+      SB.stat("sp-o-ns", nEst ? nEst.toFixed(2) + " <small>rps</small>" : "측정 2점 이상");
+      SB.stat("sp-o-nm", tr.checked || pts.length >= 2 ? (tr.checked ? m.nM : f ? (-f.a / f.b) : m.nM).toFixed(2) + " <small>rps</small>" : "—");
+    }
+    function upd() { cv.redraw(); }
+    $("sp-meas").addEventListener("click", () => { const m = M(), n = nOf(Number(gn.el.value)); pts.push([n, m.F(n) + SB.randn() * 0.012 * m.Rtm]); upd(); });
+    $("sp-reset").addEventListener("click", () => { pts = []; upd(); });
+  });
+
+  /* ============================================================ 8. 해상 시운전 */
+  run("trial", function () {
+    const el = $("cv-trial");
+    const VTRUE = 16.0, TID = 12.42, RUN_H = 1.0;
+    const S = { runs: [], anim: null, phase: 0, B: 0.2, auto: false };
+    const gc = SB.range("tr-c", (v) => v.toFixed(1) + " kn", () => { newTrial(); });
+    const tru = $("tr-true"); tru.addEventListener("change", () => { stats(); cv.redraw(); });
+    function cur(tH) { const A = gc(); return S.B * A / 1.2 + A * Math.sin((TAU * (tH + S.phase)) / TID); }
+    function newTrial() { S.runs = []; S.anim = null; S.auto = false; S.phase = Math.random() * TID; S.B = (Math.random() - 0.5) * 0.6; stats(); cv.redraw(); }
+    S.phase = 3.1;
+    const cv = SB.canvas(el, draw, respAspect(el, 0.62, 1.05));
+    function mom(a) { a = a.slice(); while (a.length > 1) { const b = []; for (let i = 0; i < a.length - 1; i++) b.push((a[i] + a[i + 1]) / 2); a = b; } return a[0]; }
+    function stats() {
+      const v = S.runs.map((r) => r.sog);
+      SB.stat("tr-o-n", String(v.length));
+      SB.stat("tr-o-first", v.length ? v[0].toFixed(2) + " <small>kn</small>" : "—");
+      SB.stat("tr-o-avg", v.length ? (v.reduce((s, x) => s + x, 0) / v.length).toFixed(2) + " <small>kn</small>" : "—");
+      SB.stat("tr-o-mom", v.length >= 2 ? mom(v).toFixed(2) + " <small>kn</small>" : "—");
+      SB.stat("tr-o-true", tru.checked ? VTRUE.toFixed(2) + " <small>kn</small>" : "?");
+      $("tr-list").innerHTML = v.length ? "주행 기록: " + S.runs.map((r, i) => "<b>#" + (i + 1) + (r.dir > 0 ? " →" : " ←") + "</b> " + r.sog.toFixed(2)).join(" · ") : "주행 기록: 아직 없음";
+    }
+    function nextRun() {
+      if (S.anim || S.runs.length >= 8) return false;
+      const i = S.runs.length, dir = i % 2 === 0 ? 1 : -1, tH = 0.5 + i * RUN_H;
+      S.anim = { i, dir, tH, p: 0 };
+      return true;
+    }
+    $("tr-next").addEventListener("click", () => { S.auto = false; nextRun(); });
+    $("tr-auto").addEventListener("click", () => { if (S.runs.length >= 8) newTrial(); S.auto = true; nextRun(); });
+    $("tr-new").addEventListener("click", newTrial);
+    SB.loop(el, (dt) => {
+      if (!S.anim) return;
+      S.anim.p += dt / (S.auto ? 0.9 : 1.8);
+      if (S.anim.p >= 1) {
+        const a = S.anim; S.anim = null;
+        S.runs.push({ dir: a.dir, tH: a.tH, sog: VTRUE + a.dir * cur(a.tH) + SB.randn() * 0.03 });
+        stats();
+        if (S.auto && S.runs.length < 8) nextRun(); else S.auto = false;
+      }
+      cv.redraw();
+    });
+    function draw(ctx, w, h) {
+      const P = SB.palette(), narrow = w < 560;
+      const mh = h * (narrow ? 0.36 : 0.40);
+      // 시운전 해역
+      ctx.fillStyle = SB.color("water-soft"); ctx.fillRect(10, 10, w - 20, mh - 10);
+      const tNow = S.anim ? S.anim.tH : S.runs.length ? S.runs[S.runs.length - 1].tH : 0.5;
+      const c = cur(tNow);
+      for (let gx = 0; gx < 6; gx++) for (let gy = 0; gy < 2; gy++) {
+        const x = 30 + ((w - 60) * (gx + 0.5)) / 6, y = 28 + ((mh - 40) * (gy + 0.5)) / 2;
+        const L = c * 22;
+        if (Math.abs(L) > 2) SB.arrow(ctx, x - L / 2, y, x + L / 2, y, rgba(SB.color("water"), 0.9), 1.6);
+      }
+      txt(ctx, "조류 " + (c >= 0 ? "동쪽 " : "서쪽 ") + Math.abs(c).toFixed(2) + " kn", 18, 22, { color: P.dim, size: 11, font: mono(11) });
+      // 측정 구간 표시
+      const xa = w * 0.15, xb = w * 0.85, yl = mh * 0.62;
+      ctx.strokeStyle = P.faint; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(xa, yl); ctx.lineTo(xb, yl); ctx.stroke(); ctx.setLineDash([]);
+      [xa, xb].forEach((x) => { ctx.strokeStyle = P.dim; ctx.beginPath(); ctx.moveTo(x, yl - 14); ctx.lineTo(x, yl + 14); ctx.stroke(); });
+      txt(ctx, "측정 구간", (xa + xb) / 2, yl + 22, { align: "center", color: P.dim, size: 11 });
+      let sx = (xa + xb) / 2, hd = 0;
+      if (S.anim) { const p = S.anim.p; sx = S.anim.dir > 0 ? xa + (xb - xa) * p : xb - (xb - xa) * p; hd = S.anim.dir > 0 ? 0 : Math.PI; }
+      else if (S.runs.length) { const last = S.runs[S.runs.length - 1]; sx = last.dir > 0 ? xb : xa; hd = last.dir > 0 ? 0 : Math.PI; }
+      SB.shipTop(ctx, sx, yl, hd, { len: Math.min(80, w * 0.14) });
+      // 아래: 속력 그래프
+      const box = { x: 54, y: mh + 18, w: w - 54 - 16, h: h - mh - 18 - 46 };
+      const tmax = 0.5 + 8 * RUN_H;
+      const series = [];
+      if (tru.checked) {
+        const up = [], dn = [];
+        for (let tt = 0; tt <= tmax; tt += 0.1) { up.push([tt, VTRUE + cur(tt)]); dn.push([tt, VTRUE - cur(tt)]); }
+        series.push({ data: up, color: rgba(P.accent, 0.6), width: 1.2, dash: [4, 3] }, { data: dn, color: rgba(P.accent2, 0.6), width: 1.2, dash: [4, 3] });
+      }
+      const vs = S.runs.map((r) => r.sog);
+      const pts = S.runs.map((r) => ({ x: r.tH, y: r.sog, color: r.dir > 0 ? P.accent : P.accent2, r: 5 }));
+      const hl = [];
+      if (tru.checked) hl.push({ y: VTRUE, color: P.ok, dash: [] });
+      if (vs.length >= 2) hl.push({ y: mom(vs), color: P.text, label: "평균의 평균", dash: [6, 3] });
+      const CR = SB.chart(ctx, box, {
+        x: [0, tmax], y: [VTRUE - 2.6, VTRUE + 2.6], xLabel: "시각 (h)", yLabel: "GPS 대지 속력 (kn)",
+        series, points: pts, hlines: hl,
+      });
+      if (tru.checked) txt(ctx, "참값 " + VTRUE.toFixed(1), box.x + 6, CR.Y(VTRUE) + 9, { color: P.ok, size: 11 });
+      txt(ctx, "● 동쪽 주행", box.x + 8, box.y + 10, { color: P.accent, size: 11 });
+      txt(ctx, "● 서쪽 주행", box.x + 92, box.y + 10, { color: P.accent2, size: 11 });
+    }
+    stats();
+  });
+
+  /* ============================================================ 9. ESD */
+  run("esd", function () {
+    const el = $("cv-esd");
+    const DEV = [
+      { id: "es-duct", name: "덕트(Mewis형)", grp: "pre", full: 6.0, fast: 1.0 },
+      { id: "es-pss", name: "프리스월 스테이터", grp: "pre", full: 4.0, fast: 2.5 },
+      { id: "es-rb", name: "러더 벌브(핀)", grp: "post", full: 3.0, fast: 2.5 },
+      { id: "es-cb", name: "코스타 벌브", grp: "hub", full: 2.0, fast: 1.5 },
+    ];
+    const ship = SB.seg("es-ship", upd);
+    const gf = SB.range("es-f", (v) => v.toLocaleString() + " t", upd);
+    DEV.forEach((d) => $(d.id).addEventListener("change", upd));
+    const cv = SB.canvas(el, draw, respAspect(el, 0.6, 1.4));
+    function combine(sel, key) {
+      // 같은 손실을 노리는 장치: 가장 큰 것 + 나머지의 40 %
+      const groups = { pre: [], post: [], hub: [] };
+      sel.forEach((d) => groups[d.grp].push(d[key]));
+      // 러더 벌브는 허브 와류도 일부 메운다 → 코스타 벌브와 겹침
+      if (sel.some((d) => d.id === "es-rb")) groups.hub = groups.hub.map((v) => v * 0.4);
+      // 프로펠러 앞뒤에서 회전 에너지를 나눠 먹는다
+      let pre = 0, post = 0, hub = 0;
+      const g = (arr) => { if (!arr.length) return 0; arr.sort((a, b) => b - a); return arr[0] + arr.slice(1).reduce((s, v) => s + 0.4 * v, 0); };
+      pre = g(groups.pre); post = g(groups.post); hub = g(groups.hub);
+      if (pre && post) post *= 0.7;
+      return 100 * (1 - (1 - pre / 100) * (1 - post / 100) * (1 - hub / 100));
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), key = ship(), narrow = w < 560;
+      const sel = DEV.filter((d) => $(d.id).checked);
+      // 선미 그림
+      const sw = narrow ? w : w * 0.48, sh = narrow ? h * 0.45 : h;
+      const s = Math.min(sw / 300, sh / 220), ox = narrow ? (w - 300 * s) / 2 : 6, oy = (sh - 220 * s) / 2 + 4;
+      ctx.save(); ctx.translate(ox, oy); ctx.scale(s, s);
+      ctx.fillStyle = SB.color("water-soft"); ctx.fillRect(0, 0, 300, 220);
+      ctx.fillStyle = SB.color("hull"); ctx.globalAlpha = 0.85;
+      ctx.beginPath(); ctx.moveTo(300, 10); ctx.lineTo(220, 10); ctx.quadraticCurveTo(190, 20, 175, 70); ctx.lineTo(160, 150); ctx.quadraticCurveTo(155, 175, 140, 180); ctx.lineTo(140, 205); ctx.lineTo(300, 205); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = P.dim; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(150, 140); ctx.lineTo(100, 140); ctx.stroke();
+      const on = (id) => $(id).checked;
+      if (on("es-duct")) { ctx.strokeStyle = P.accent; ctx.lineWidth = 4; ctx.strokeRect(128, 104, 20, 8); ctx.strokeRect(128, 168, 20, 8); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(138, 112); ctx.lineTo(138, 140); ctx.moveTo(138, 140); ctx.lineTo(132, 168); ctx.stroke(); }
+      if (on("es-pss")) { ctx.strokeStyle = P.ok; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(122, 140); ctx.lineTo(116, 100); ctx.moveTo(122, 140); ctx.lineTo(112, 112); ctx.moveTo(122, 140); ctx.lineTo(118, 172); ctx.stroke(); }
+      ctx.fillStyle = "#c9a227"; ctx.beginPath(); ctx.ellipse(104, 140, 5, 38, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = P.dim; ctx.beginPath(); ctx.ellipse(98, 140, 8, 7, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = P.surface; ctx.strokeStyle = P.axis; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.rect(36, 80, 34, 125); ctx.fill(); ctx.stroke();
+      if (on("es-cb") || on("es-rb")) { ctx.fillStyle = P.accent2; ctx.beginPath(); ctx.ellipse(66, 140, on("es-rb") ? 30 : 24, on("es-rb") ? 11 : 9, 0, 0, TAU); ctx.fill(); }
+      if (on("es-rb")) { ctx.strokeStyle = P.accent2; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(60, 140); ctx.lineTo(40, 124); ctx.moveTo(60, 140); ctx.lineTo(40, 156); ctx.stroke(); }
+      ctx.restore();
+      // 막대
+      const bx = narrow ? 16 : sw + 20, by = narrow ? sh + 14 : 20, bw = narrow ? w - 32 : w - sw - 36, bh = narrow ? h - sh - 20 : h - 30;
+      const labW = narrow ? 112 : 120, maxv = Math.max(7, DEV.reduce((s, d) => s + d[key], 0) * 0.75);
+      const rows = DEV.map((d) => ({ name: d.name, v: d[key], on: $(d.id).checked, col: P.accent }));
+      const sum = sel.reduce((s, d) => s + d[key], 0), tot = combine(sel, key);
+      rows.push({ name: "단순 합", v: sum, on: true, col: P.faint }, { name: "겹침 고려 합계", v: tot, on: true, col: P.accent2 });
+      const rh = Math.min(30, bh / (rows.length + 1));
+      txt(ctx, "동력 절감 (%)", bx, by, { bold: true, size: 13, base: "top" });
+      rows.forEach((r, i) => {
+        const y = by + 24 + i * rh * 1.15;
+        txt(ctx, r.name, bx, y + rh / 2, { size: narrow ? 11 : 12, color: r.on ? P.text : P.faint });
+        const L = ((bw - labW - 40) * Math.min(r.v, maxv)) / maxv;
+        ctx.fillStyle = r.on ? r.col : rgba(P.faint, 0.35);
+        ctx.fillRect(bx + labW, y + rh * 0.18, Math.max(1, L), rh * 0.64);
+        txt(ctx, r.v.toFixed(1), bx + labW + L + 5, y + rh / 2, { font: mono(11.5), color: r.on ? P.text : P.faint });
+      });
+      const f = gf();
+      SB.stat("es-o-sum", sum.toFixed(1) + " %");
+      SB.stat("es-o-tot", tot.toFixed(1) + " %");
+      SB.stat("es-o-f", Math.round((f * tot) / 100).toLocaleString() + " <small>t</small>");
+      SB.stat("es-o-co2", Math.round((f * tot * 3.114) / 100).toLocaleString() + " <small>t</small>");
+    }
+    function upd() { cv.redraw(); }
+  });
+})();
+</script>
+</body>
+</html>

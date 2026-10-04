@@ -1,0 +1,1467 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<title>바다의 파도 · ShipBook</title>
+<meta name="description" content="바람이 파도를 키우는 과정, 에어리 선형 파와 물 입자의 궤도 운동, 분산 관계와 군속도, 불규칙 파와 파 스펙트럼, 유의파고와 이상파, 보퍼트 계급, 천수 변형·쇄파·굴절·쓰나미를 시뮬레이터로 배운다.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../css/style.css">
+<script src="../js/common.js"></script>
+<style>
+  .legend { padding-bottom: 10px; }
+  .sea-desc { padding: 10px 18px; font-size: 14px; line-height: 1.6; border-top: 1px solid var(--border); color: var(--text-dim); }
+  .sea-desc b { color: var(--text); }
+</style>
+</head>
+<body data-chapter="waves">
+<main class="chapter">
+  <header class="chapter-hero">
+    <div class="eyebrow">Chapter 10</div>
+    <h1>바다의 파도</h1>
+    <p class="lead">배가 만나는 가장 큰 적은 바다 그 자체다. 바다의 파도는 제멋대로 일렁이는 것처럼 보이지만, 한 겹씩 벗겨 보면 놀랄 만큼 단순한 규칙을 따른다. 사인파 하나의 물리(선형 파 이론)에서 출발해, 수많은 사인파를 겹친 불규칙한 바다(파 스펙트럼)와 그 파고의 통계, 그리고 해안에 다가가며 모습을 바꾸는 파도까지 차례로 만져 본다. 이 장의 언어는 <a href="seakeeping.html">11장</a>에서 파도 속 배의 운동을 다룰 때 그대로 쓰인다.</p>
+    <ul class="objectives">
+      <li>풍속·취송 거리·지속 시간이 파고와 주기를 어떻게 정하는지 설명한다.</li>
+      <li>에어리 선형 파의 물 입자가 원(심해)이나 타원(천해) 궤도를 그리며, 운동이 깊이에 따라 \(e^{kz}\)로 줄어드는 이유를 이해한다.</li>
+      <li>분산 관계 \(\omega^2 = gk\tanh kh\)로 파장과 파속을 계산하고, 심해 근사 \(\lambda \approx 1.56T^2\)를 쓴다.</li>
+      <li>위상 속도와 군속도를 구분하고, 파 에너지 \(E=\rho g H^2/8\)와 에너지 수송을 계산한다.</li>
+      <li>파 스펙트럼(PM, JONSWAP)에서 유의파고 \(H_s = 4\sqrt{m_0}\)를 구하고, 레일리 분포로 최대 파고를 추정한다.</li>
+      <li>천수 변형, 쇄파, 굴절, 쓰나미의 속도를 설명하고, 너울과 풍랑을 구분한다.</li>
+    </ul>
+  </header>
+
+  <!-- =============================================================== 1 -->
+  <section id="anatomy">
+    <h2>파도의 얼굴과 탄생</h2>
+    <p>바다의 파도 대부분은 바람이 만든 <span class="term">풍파</span><span class="en">(Wind Wave)</span>다. 수면 위를 부는 바람이 물을 밀고 누르는 압력 차이로 잔물결이 생기고, 잔물결은 바람의 에너지를 더 잘 받아 점점 커진다. 파도 하나를 묘사하는 말부터 정리해 두자.</p>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 300" role="img" aria-label="규칙파의 용어: 마루, 골, 파고, 파장, 진폭, 수심">
+        <rect x="20" y="150" width="720" height="130" class="f-water"/>
+        <path d="M20 150 C 70 90, 120 90, 170 150 S 270 210, 320 150 S 420 90, 470 150 S 570 210, 620 150 S 720 90, 740 120" class="s-water" stroke-width="2.6"/>
+        <line x1="20" y1="150" x2="740" y2="150" class="s-line" stroke-dasharray="5 5"/>
+        <text x="736" y="166" class="t-dim" text-anchor="end">정수면 (z = 0)</text>
+        <!-- crest/trough -->
+        <circle cx="95" cy="105" r="4" class="f-acc"/><text x="95" y="92" class="t" text-anchor="middle">마루 (crest)</text>
+        <circle cx="245" cy="195" r="4" fill="var(--accent-2)"/><text x="245" y="222" class="t" text-anchor="middle">골 (trough)</text>
+        <!-- H -->
+        <line x1="300" y1="105" x2="300" y2="195" class="s-acc"/>
+        <line x1="292" y1="105" x2="308" y2="105" class="s-acc"/><line x1="292" y1="195" x2="308" y2="195" class="s-acc"/>
+        <line x1="95" y1="105" x2="420" y2="105" class="s-line" stroke-dasharray="2 4"/>
+        <line x1="245" y1="195" x2="320" y2="195" class="s-line" stroke-dasharray="2 4"/>
+        <text x="312" y="140" class="t-acc">H 파고</text>
+        <!-- a -->
+        <line x1="420" y1="105" x2="420" y2="150" stroke="var(--accent-2)" stroke-width="2"/>
+        <text x="428" y="132" class="t" fill="var(--accent-2)">a = H/2</text>
+        <!-- lambda -->
+        <line x1="95" y1="58" x2="395" y2="58" class="s-line"/>
+        <line x1="95" y1="50" x2="95" y2="66" class="s-line"/><line x1="395" y1="50" x2="395" y2="66" class="s-line"/>
+        <text x="245" y="50" class="t" text-anchor="middle">파장 λ (마루에서 다음 마루까지)</text>
+        <!-- c -->
+        <line x1="540" y1="80" x2="620" y2="80" class="s-acc"/><path d="M620 80 l-10 -5 v10z" class="f-acc"/>
+        <text x="580" y="70" class="t-acc" text-anchor="middle">위상 속도 c = λ/T</text>
+        <!-- depth -->
+        <line x1="20" y1="280" x2="740" y2="280" class="s-axis" stroke-width="3"/>
+        <line x1="680" y1="150" x2="680" y2="280" class="s-line"/><path d="M680 280 l-4 -8 h8z" fill="var(--text-dim)"/>
+        <text x="672" y="226" class="t-dim" text-anchor="end">수심 h</text>
+        <text x="30" y="296" class="t-dim">해저</text>
+        <text x="540" y="200" class="t-mono">η(x,t) = a cos(kx − ωt)</text>
+        <text x="540" y="218" class="t-mono">k = 2π/λ,  ω = 2π/T</text>
+      </svg>
+      <figcaption><b>그림 10-1.</b> 규칙파의 용어. 파고 \(H\)는 마루와 골의 높이 차, 진폭 \(a\)는 그 절반이다. 한 점에서 마루가 다시 올 때까지의 시간이 주기 \(T\), 공간에서 반복되는 길이가 파장 \(\lambda\)다.</figcaption>
+    </figure>
+
+    <p>파도가 얼마나 커지는지는 세 가지가 정한다. <b>풍속</b> \(U\)이 셀수록, 바람이 같은 방향으로 부는 바다의 길이인 <span class="term">취송 거리</span><span class="en">(Fetch)</span> \(F\)가 길수록, 바람이 부는 <b>지속 시간</b> \(t\)이 길수록 파도는 높고 길어진다. 셋 중 가장 부족한 것이 성장을 막는다. 취송 거리가 짧으면 <b>취송 제한</b>, 시간이 짧으면 <b>지속 시간 제한</b>이다. 둘 다 충분하면 바람이 주는 에너지와 쇄파로 잃는 에너지가 균형을 이뤄 더는 자라지 않는 <span class="term">완전 발달 해상</span><span class="en">(Fully Developed Sea)</span>에 이른다.</p>
+    <p>북해 관측 프로젝트 JONSWAP(1973)에서 얻은 경험식을 무차원으로 쓰면 다음과 같다(심해, 일정한 바람 가정).</p>
+    <div class="formula">
+      $$\frac{gH_s}{U^2} = 1.6\times10^{-3}\left(\frac{gF}{U^2}\right)^{1/2},\qquad \frac{gT_p}{U} = 0.286\left(\frac{gF}{U^2}\right)^{1/3}$$
+      $$\frac{gt}{U} = 68.8\left(\frac{gF}{U^2}\right)^{2/3},\qquad \text{fully developed: } \frac{gH_s}{U^2}\approx 0.243,\ \ \frac{gT_p}{U}\approx 8.1$$
+      <div class="where">여기서 \(H_s\)는 유의파고, \(T_p\)는 스펙트럼 첨두 주기, \(U\)는 해면 10 m 높이의 풍속이다. 세 번째 식은 지속 시간 \(t\) 동안 파도가 "느끼는" 유효 취송 거리를 준다. 모두 관측 자료에 맞춘 근사식이며 실제 바다는 바람이 변하고 방향이 섞여 흩어짐이 크다.</div>
+    </div>
+
+    <div class="sim" id="sim-gen">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>바람이 파도를 키운다: 풍속·취송 거리·지속 시간</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-gen"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span><span>풍속 U<sub>10</sub></span> <output id="gen-u-out"></output></span><input type="range" id="gen-u" min="3" max="30" step="0.5" value="15"></label>
+          <label class="ctrl"><span>취송 거리 F <output id="gen-f-out"></output></span><input type="range" id="gen-f" min="0" max="300" step="1" value="200"></label>
+          <label class="ctrl"><span>지속 시간 t <output id="gen-t-out"></output></span><input type="range" id="gen-t" min="1" max="72" step="1" value="12"></label>
+          <div class="ctrl"><span>예시</span><div class="seg" id="gen-pre"><button data-value="lake">호수</button><button data-value="sea" class="on">연안 폭풍</button><button data-value="ocean">대양 폭풍</button></div></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">유의파고 H<sub>s</sub></span><span class="v" id="gen-hs">—</span></div>
+        <div class="stat"><span class="k">첨두 주기 T<sub>p</sub></span><span class="v" id="gen-tp">—</span></div>
+        <div class="stat"><span class="k">심해 파장 λ<sub>p</sub></span><span class="v" id="gen-lp">—</span></div>
+        <div class="stat"><span class="k">제한 요인</span><span class="v" id="gen-lim" style="font-size:15px">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 풍속 20 m/s에서 지속 시간을 3시간으로 두고 취송 거리를 늘려 보자. 어느 순간부터 곡선이 수평(지속 시간 제한)이 된다. 지속 시간을 늘리면 다시 자라다가 결국 완전 발달 한계(점선)에 막힌다. 풍속을 두 배로 하면 완전 발달 파고는 네 배(\(H_s\propto U^2\))가 된다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 2 -->
+  <section id="linear">
+    <h2>선형 파 이론과 물 입자의 궤도</h2>
+    <p>파도가 지나갈 때 물은 파도와 함께 흘러가지 않는다. 바다에 뜬 갈매기는 파도가 지나가도 제자리에서 오르내리며 앞뒤로 조금 흔들릴 뿐이다. 움직이는 것은 <b>물</b>이 아니라 <b>모양과 에너지</b>다. 이를 수학으로 쓴 것이 <span class="term">선형(에어리) 파 이론</span><span class="en">(Linear / Airy Wave Theory)</span>이다. 물을 비압축·비점성·비회전 유동으로 보고, 파고가 파장과 수심에 비해 작다고 가정해 경계 조건을 선형화하면 다음 해를 얻는다.</p>
+    <div class="formula">
+      $$\eta = a\cos(kx-\omega t),\qquad \phi = \frac{a g}{\omega}\,\frac{\cosh k(z+h)}{\cosh kh}\,\sin(kx-\omega t)$$
+      $$u = a\omega\,\frac{\cosh k(z+h)}{\sinh kh}\cos(kx-\omega t),\qquad w = a\omega\,\frac{\sinh k(z+h)}{\sinh kh}\sin(kx-\omega t)$$
+      <div class="where">여기서 \(\eta\)는 수면 높이, \(\phi\)는 속도 퍼텐셜, \(u, w\)는 수평·수직 유속, \(z\)는 정수면에서 위로 잰 높이(물속은 음수), \(h\)는 수심이다. 심해(\(kh \gg 1\))에서는 두 비율이 모두 \(e^{kz}\)가 되어 궤도는 원이 되고 반지름이 \(a\,e^{kz}\)로 줄어든다.</div>
+    </div>
+    <p>심해에서 반파장 깊이(\(z=-\lambda/2\))의 궤도 반지름은 수면의 \(e^{-\pi}\approx 4\%\)에 불과하다. 잠수함이 폭풍 속에서도 수십 m만 내려가면 고요한 이유다. 반대로 수심이 얕으면 해저가 수직 운동을 막아 궤도가 납작한 타원이 되고, 해저에서는 앞뒤로만 오가는 왕복 운동이 남는다. 해저의 모래가 파도에 쓸려 다니는 것이 이 운동 때문이다.</p>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 270" role="img" aria-label="심해, 중간 수심, 천해에서의 물 입자 궤도">
+        <g transform="translate(20,20)">
+          <text x="110" y="10" class="t-acc" text-anchor="middle">심해  h &gt; λ/2</text>
+          <path d="M0 40 q55 -22 110 0 t110 0" class="s-water"/>
+          <circle cx="110" cy="62" r="20" class="s-acc"/><circle cx="110" cy="114" r="11" class="s-acc"/><circle cx="110" cy="152" r="6" class="s-acc"/><circle cx="110" cy="180" r="3" class="s-acc"/>
+          <text x="110" y="222" class="t-dim" text-anchor="middle">원, e^(kz)로 감소</text>
+          <text x="110" y="240" class="t-dim" text-anchor="middle">해저를 느끼지 못함</text>
+        </g>
+        <g transform="translate(270,20)">
+          <text x="110" y="10" class="t-acc" text-anchor="middle">중간 수심</text>
+          <path d="M0 40 q55 -22 110 0 t110 0" class="s-water"/>
+          <ellipse cx="110" cy="62" rx="24" ry="19" class="s-acc"/><ellipse cx="110" cy="112" rx="17" ry="10" class="s-acc"/><ellipse cx="110" cy="150" rx="14" ry="4" class="s-acc"/>
+          <line x1="0" y1="176" x2="220" y2="176" class="s-axis" stroke-width="3"/>
+          <text x="110" y="222" class="t-dim" text-anchor="middle">타원, 아래로 갈수록 납작</text>
+        </g>
+        <g transform="translate(520,20)">
+          <text x="110" y="10" class="t-acc" text-anchor="middle">천해  h &lt; λ/20</text>
+          <path d="M0 40 q55 -22 110 0 t110 0" class="s-water"/>
+          <ellipse cx="110" cy="62" rx="34" ry="18" class="s-acc"/><ellipse cx="110" cy="86" rx="34" ry="9" class="s-acc"/>
+          <line x1="76" y1="108" x2="144" y2="108" class="s-acc"/>
+          <line x1="0" y1="112" x2="220" y2="112" class="s-axis" stroke-width="3"/>
+          <text x="110" y="222" class="t-dim" text-anchor="middle">수평 운동은 깊이에 거의 무관</text>
+          <text x="110" y="240" class="t-dim" text-anchor="middle">해저에서는 앞뒤 왕복</text>
+        </g>
+      </svg>
+      <figcaption><b>그림 10-2.</b> 수심에 따른 물 입자 궤도. 심해 원 궤도는 깊이에 따라 빠르게 줄고, 천해에서는 해저가 수직 운동을 막아 타원(해저에서는 직선)이 된다.</figcaption>
+    </figure>
+
+    <div class="sim" id="sim-orbit">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>물 입자 궤도 운동 애니메이션</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-orbit"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>파고 H <output id="orb-h-out"></output></span><input type="range" id="orb-h" min="0.5" max="6" step="0.1" value="3"></label>
+          <label class="ctrl"><span>주기 T <output id="orb-t-out"></output></span><input type="range" id="orb-t" min="3" max="16" step="0.5" value="8"></label>
+          <label class="ctrl"><span>수심 h <output id="orb-d-out"></output></span><input type="range" id="orb-d" min="0" max="300" step="1" value="230"></label>
+          <label class="check"><input type="checkbox" id="orb-vel"> 속도 벡터 표시</label>
+          <label class="check"><input type="checkbox" id="orb-path" checked> 궤도(점선) 표시</label>
+          <button class="btn" id="orb-run">일시정지</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">파장 λ</span><span class="v" id="orb-lam">—</span></div>
+        <div class="stat"><span class="k">kh · 구분</span><span class="v" id="orb-kh">—</span></div>
+        <div class="stat"><span class="k">해저 수평 진폭 / 수면</span><span class="v" id="orb-bot">—</span></div>
+        <div class="stat"><span class="k">파형 경사 H/λ</span><span class="v" id="orb-st">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 수심을 크게 두고 빨간 입자를 보면 원을 그리며 깊을수록 원이 작아진다. 수심을 줄이면 해저가 화면에 나타나며 궤도가 납작해지고, 해저의 입자는 앞뒤로만 움직인다. 마루 아래에서 입자는 파의 진행 방향(오른쪽)으로, 골 아래에서는 반대로 움직인다는 것을 속도 벡터로 확인하자. 세로 방향은 보기 좋게 과장했다.</div>
+    </div>
+    <div class="callout warn"><strong>선형 이론의 한계</strong>파형 경사 \(H/\lambda\)가 커지면 마루는 뾰족하고 골은 평평해지며(스토크스 파), 입자가 한 바퀴 돈 뒤 조금 앞으로 나아가는 <b>스토크스 표류</b>가 생긴다. 심해에서 \(H/\lambda \approx 1/7\)을 넘으면 파는 스스로 부서진다. 그래도 실무의 대부분은 선형 이론과 그 중첩으로 충분히 설명된다.</div>
+  </section>
+
+  <!-- =============================================================== 3 -->
+  <section id="dispersion">
+    <h2>분산 관계: 긴 파도가 빠르다</h2>
+    <p>주기와 파장은 아무렇게나 짝지어지지 않는다. 선형 파의 수면 경계 조건은 파수 \(k\)와 각주파수 \(\omega\) 사이에 하나의 관계를 강제한다. 이것이 <span class="term">분산 관계</span><span class="en">(Dispersion Relation)</span>다.</p>
+    <div class="formula">
+      $$\omega^2 = g k \tanh(kh),\qquad c = \frac{\omega}{k} = \sqrt{\frac{g}{k}\tanh kh}$$
+      $$\text{deep } (h>\lambda/2):\ \ \lambda_0 = \frac{gT^2}{2\pi}\approx 1.56\,T^2,\ \ c_0 = \frac{gT}{2\pi}\approx 1.56\,T \qquad \text{shallow } (h<\lambda/20):\ \ c = \sqrt{gh}$$
+      <div class="where">\(\lambda_0\)는 m, \(T\)는 s, \(c_0\)는 m/s. 주기 10 s 심해파는 파장 156 m, 파속 15.6 m/s(약 30 kn)다. \(\tanh\)를 포함한 원식은 반복 계산(뉴턴법)으로 푼다.</div>
+    </div>
+    <p>심해에서 파속이 주기에 비례한다는 것은, 서로 다른 주기의 파가 섞여 있으면 <b>긴 파가 먼저 도착한다</b>는 뜻이다. 주기에 따라 속도가 달라 파들이 흩어지는 이 성질을 <b>분산</b>이라 부른다. 반면 천해에서는 모든 파가 \(\sqrt{gh}\)로 같이 달린다(비분산). 그 사이에서는 원식을 풀어야 한다.</p>
+
+    <div class="sim" id="sim-disp">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>주기·수심 → 파장·파속 계산기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-disp"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>주기 T <output id="dsp-t-out"></output></span><input type="range" id="dsp-t" min="2" max="20" step="0.5" value="10"></label>
+          <label class="ctrl"><span>수심 h <output id="dsp-h-out"></output></span><input type="range" id="dsp-h" min="0" max="300" step="1" value="120"></label>
+          <label class="check"><input type="checkbox" id="dsp-approx" checked> 심해·천해 근사 곡선</label>
+        </div>
+      </div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>정확해(분산 관계)</span><span><i style="background:var(--accent-2)"></i>심해 근사 1.56T²</span><span><i style="background:var(--ok)"></i>천해 근사 T√(gh)</span></div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">파장 λ</span><span class="v" id="dsp-lam">—</span></div>
+        <div class="stat"><span class="k">위상 속도 c</span><span class="v" id="dsp-c">—</span></div>
+        <div class="stat"><span class="k">군속도 c<sub>g</sub></span><span class="v" id="dsp-cg">—</span></div>
+        <div class="stat"><span class="k">h/λ · 구분</span><span class="v" id="dsp-reg">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 주기 10 s에서 수심을 1000 m부터 줄여 보자. 수심이 약 80 m(λ<sub>0</sub>/2)보다 깊으면 파장은 심해값 156 m에서 거의 변하지 않는다. 수심이 λ/20보다 얕아지면 정확해가 천해 근사(초록)에 붙는다. 아래 그래프에서 c<sub>g</sub>/c가 심해 0.5에서 천해 1로 바뀌는 것도 보자.</div>
+    </div>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>주기 T</th><th class="num">심해 파장 λ<sub>0</sub></th><th class="num">심해 파속 c<sub>0</sub></th><th class="num">군속도 c<sub>g</sub></th><th>흔히 만나는 곳</th></tr></thead>
+      <tbody>
+        <tr><td>4 s</td><td class="num">25 m</td><td class="num">6.2 m/s (12 kn)</td><td class="num">3.1 m/s</td><td>호수·연안의 잔파도</td></tr>
+        <tr><td>8 s</td><td class="num">100 m</td><td class="num">12.5 m/s (24 kn)</td><td class="num">6.2 m/s</td><td>연근해 풍랑</td></tr>
+        <tr><td>12 s</td><td class="num">225 m</td><td class="num">18.7 m/s (36 kn)</td><td class="num">9.4 m/s</td><td>대양 폭풍파, 너울</td></tr>
+        <tr><td>16 s</td><td class="num">400 m</td><td class="num">25.0 m/s (49 kn)</td><td class="num">12.5 m/s</td><td>먼 폭풍에서 온 긴 너울</td></tr>
+      </tbody>
+    </table></div>
+    <div class="callout tip"><strong>배 길이와 파장</strong>배가 가장 크게 종동요(피치)하는 것은 파장이 배 길이와 비슷할 때다. 길이 200 m 배에게는 주기 약 11 s(\(\lambda\approx 190\) m)의 파가 가장 까다롭다. 이 연결은 <a href="seakeeping.html">11장</a>에서 다시 만난다.</div>
+  </section>
+
+  <!-- =============================================================== 4 -->
+  <section id="group">
+    <h2>위상 속도와 군속도, 파의 에너지</h2>
+    <p>주기가 조금 다른 두 파를 겹치면 맥놀이(비트)가 생겨 파도가 <b>무리</b>(그룹)를 짓는다. 바닷가에서 "큰 파도가 몇 개씩 몰려온다"고 느끼는 것이 이것이다. 이때 개별 마루는 위상 속도 \(c=\omega/k\)로 달리지만 무리, 즉 포락선은 <span class="term">군속도</span><span class="en">(Group Velocity)</span>로 움직인다.</p>
+    <div class="formula">
+      $$c_g = \frac{d\omega}{dk} = n\,c,\qquad n = \frac12\left(1+\frac{2kh}{\sinh 2kh}\right)\ \ \Rightarrow\ \ n=\tfrac12\ (\text{deep}),\ \ n=1\ (\text{shallow})$$
+      <div class="where">심해에서 군속도는 위상 속도의 절반이다. 무리 안에서 마루는 뒤에서 생겨 앞으로 달려 나가다가 무리의 앞쪽에서 사라진다.</div>
+    </div>
+    <p>파 에너지는 바로 이 군속도로 전달된다. 단위 수면적당 평균 에너지(운동+위치 에너지 반반)와 파봉 단위 폭당 에너지 수송률(파력)은 다음과 같다.</p>
+    <div class="formula">
+      $$E = \frac{1}{8}\rho g H^2,\qquad P = E\,c_g$$
+      <div class="where">\(E\)는 J/m², \(P\)는 W/m(파봉 1 m 폭당). 파고 2 m, 주기 8 s 심해파는 \(E\approx 5.0\) kJ/m², \(P \approx 31\) kW/m다. 에너지가 파고의 제곱에 비례하므로 파고가 두 배면 에너지는 네 배다.</div>
+    </div>
+
+    <div class="sim" id="sim-group">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>두 파의 합성: 마루는 c로, 무리는 c<sub>g</sub>로</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-group"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>무리 하나의 파 개수 <output id="grp-n-out"></output></span><input type="range" id="grp-n" min="3" max="10" step="1" value="5"></label>
+          <label class="ctrl"><span>수심 h <output id="grp-h-out"></output></span><input type="range" id="grp-h" min="0" max="300" step="1" value="300"></label>
+          <label class="ctrl"><span>재생 속도 <output id="grp-s-out"></output></span><input type="range" id="grp-s" min="0.25" max="3" step="0.25" value="1"></label>
+          <label class="ctrl"><span>에너지 계산용 파고 H <output id="grp-H-out"></output></span><input type="range" id="grp-H" min="0.5" max="12" step="0.5" value="2"></label>
+          <button class="btn" id="grp-run">일시정지</button>
+        </div>
+      </div>
+      <div class="legend"><span><i style="background:var(--red)"></i>마루 하나를 따라가는 점 (c)</span><span><i style="background:var(--blue)"></i>포락선 꼭대기 (c<sub>g</sub>)</span></div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">위상 속도 c</span><span class="v" id="grp-c">—</span></div>
+        <div class="stat"><span class="k">군속도 c<sub>g</sub></span><span class="v" id="grp-cg">—</span></div>
+        <div class="stat"><span class="k">c<sub>g</sub>/c</span><span class="v" id="grp-ratio">—</span></div>
+        <div class="stat"><span class="k">에너지 E</span><span class="v" id="grp-e">—</span></div>
+        <div class="stat"><span class="k">파력 P = E·c<sub>g</sub></span><span class="v" id="grp-p">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 빨간 점(마루)이 파란 점(무리)보다 두 배 빨리 달려, 무리 뒤에서 나타나 앞에서 사라지는 것을 보자. 수심을 5 m 이하로 줄이면 c<sub>g</sub>/c가 1에 가까워져 두 점이 함께 달린다. 주기는 평균 8 s로 고정했다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 5 -->
+  <section id="irregular">
+    <h2>불규칙 파: 성분파의 합</h2>
+    <p>실제 바다를 사진으로 찍어 보면 같은 모양의 파도가 둘도 없다. 그러나 선형 이론이 성립하면 해의 합도 해이므로, 불규칙한 바다는 <b>주기·진폭·방향·위상이 다른 무수한 사인파의 합</b>으로 볼 수 있다. 한 점에서 잰 수면 높이는 다음과 같다.</p>
+    <div class="formula">
+      $$\eta(t) = \sum_{i=1}^{N} a_i \cos(\omega_i t + \varepsilon_i),\qquad \varepsilon_i \sim U[0,2\pi)$$
+      <div class="where">각 성분파의 진폭 \(a_i\)는 아래에서 볼 파 스펙트럼이 정하고, 위상 \(\varepsilon_i\)는 무작위다. 성분이 많아지면 중심 극한 정리에 따라 \(\eta\)는 정규 분포를 따른다.</div>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 280" role="img" aria-label="여러 사인파를 더하면 불규칙한 파형이 된다">
+        <g fill="none" stroke-width="1.6">
+          <path d="M40 40 q20 -16 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" stroke="var(--accent)"/>
+          <path d="M40 90 q35 -12 70 0 t70 0 t70 0 t70 0 t39 0" stroke="var(--accent-2)"/>
+          <path d="M40 140 q12 -8 24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0" stroke="var(--ok)"/>
+        </g>
+        <text x="380" y="44" class="t-dim">T₁, a₁</text><text x="380" y="94" class="t-dim">T₂, a₂</text><text x="380" y="144" class="t-dim">T₃, a₃ ...</text>
+        <text x="200" y="180" class="t" text-anchor="middle">+  +  ⋯  =</text>
+        <path d="M40 230 C55 205 70 200 82 222 S100 252 118 236 S140 196 160 214 S178 246 196 230 S214 212 228 222 S246 256 266 238 S290 190 310 206 S330 250 350 240 S370 220 380 226" fill="none" stroke="var(--water)" stroke-width="2.4"/>
+        <line x1="40" y1="228" x2="380" y2="228" class="s-line" stroke-dasharray="4 4"/>
+        <text x="210" y="272" class="t-dim" text-anchor="middle">한 점에서 본 불규칙한 수면 η(t)</text>
+        <!-- spectrum bars -->
+        <g transform="translate(450,30)">
+          <line x1="0" y1="200" x2="280" y2="200" class="s-axis"/><line x1="0" y1="200" x2="0" y2="0" class="s-axis"/>
+          <rect x="30" y="170" width="14" height="30" class="f-acc-soft"/>
+          <rect x="54" y="120" width="14" height="80" class="f-acc-soft"/>
+          <rect x="78" y="60" width="14" height="140" class="f-acc-soft"/>
+          <rect x="102" y="40" width="14" height="160" class="f-acc-soft"/>
+          <rect x="126" y="80" width="14" height="120" class="f-acc-soft"/>
+          <rect x="150" y="115" width="14" height="85" class="f-acc-soft"/>
+          <rect x="174" y="140" width="14" height="60" class="f-acc-soft"/>
+          <rect x="198" y="158" width="14" height="42" class="f-acc-soft"/>
+          <rect x="222" y="172" width="14" height="28" class="f-acc-soft"/>
+          <rect x="246" y="182" width="14" height="18" class="f-acc-soft"/>
+          <path d="M20 200 C60 200 70 40 108 38 S180 150 270 190" class="s-acc"/>
+          <text x="140" y="228" class="t-dim" text-anchor="middle">주파수 ω →</text>
+          <text x="10" y="-6" class="t-dim">S(ω): 각 막대 넓이 = a²/2</text>
+        </g>
+      </svg>
+      <figcaption><b>그림 10-3.</b> 불규칙 파는 주기와 진폭이 다른 성분파의 합이다(왼쪽). 각 성분의 에너지를 주파수별로 늘어놓은 것이 파 스펙트럼(오른쪽)이다.</figcaption>
+    </figure>
+
+    <div class="sim" id="sim-irr">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>성분파를 하나씩 더해 불규칙 파 만들기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-irr"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>성분파 수 N <output id="irr-n-out"></output></span><input type="range" id="irr-n" min="1" max="60" step="1" value="3"></label>
+          <button class="btn primary" id="irr-new">랜덤 위상 다시 뽑기</button>
+          <button class="btn" id="irr-run">일시정지</button>
+          <label class="check"><input type="checkbox" id="irr-comp" checked> 성분파 보기(최대 6개)</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">표준 편차 σ<sub>η</sub></span><span class="v" id="irr-sd">—</span></div>
+        <div class="stat"><span class="k">4σ (= H<sub>s</sub> 추정)</span><span class="v" id="irr-hs">—</span></div>
+        <div class="stat"><span class="k">창 안 최고 마루</span><span class="v" id="irr-max">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: N = 1이면 깨끗한 사인파, 2이면 규칙적인 맥놀이다. N을 10, 30, 60으로 늘리면 반복이 사라지고 "진짜 바다 같은" 기록이 된다. 모든 경우에 전체 에너지(분산)는 유의파고 4 m에 맞춰 두었으므로 σ는 거의 그대로인데, 위상을 다시 뽑을 때마다 최고 마루는 달라진다. 그것이 바로 다음 절의 통계 문제다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 6 -->
+  <section id="spectrum">
+    <h2>파 스펙트럼</h2>
+    <p>불규칙한 바다를 매번 시계열로 기술할 수는 없다. 대신 "어느 주파수에 에너지가 얼마나 있는가"를 나타내는 <span class="term">파 스펙트럼</span><span class="en">(Wave Spectrum)</span> \(S(\omega)\)로 요약한다. 성분파 하나의 분산이 \(a_i^2/2\)이므로 \(S(\omega_i)\,\Delta\omega = a_i^2/2\)이다. 스펙트럼의 모멘트는 해상 상태의 대표값들을 준다.</p>
+    <div class="formula">
+      $$m_n = \int_0^\infty \omega^n S(\omega)\,d\omega,\qquad H_{s} = 4\sqrt{m_0},\qquad T_z = 2\pi\sqrt{\frac{m_0}{m_2}},\qquad T_1 = 2\pi\frac{m_0}{m_1}$$
+      <div class="where">\(m_0\)는 수면 높이의 분산 \(\sigma_\eta^2\)이다. \(T_z\)는 평균 영점 상향 교차 주기, \(T_1\)은 평균 주기다. 유의파고 \(H_s\)(또는 \(H_{m0}\))는 관측자가 눈으로 어림한 "파고"와 잘 맞는다.</div>
+    </div>
+    <p>대양에서 오래 분 바람이 만든 완전 발달 해상은 <span class="term">피어슨–모스코위츠</span><span class="en">(Pierson–Moskowitz, PM)</span> 스펙트럼으로 잘 맞는다. 취송 거리가 제한된 성장 중의 바다는 첨두가 더 뾰족한 <span class="term">JONSWAP</span> 스펙트럼을 쓴다. 뾰족함은 첨두 증폭 계수 \(\gamma\)(평균 3.3)가 정한다. \(\gamma=1\)이면 PM과 같다.</p>
+    <div class="formula">
+      $$S_{PM}(\omega) = \frac{5}{16}H_s^2\,\omega_p^4\,\omega^{-5}\exp\!\left[-\frac54\left(\frac{\omega_p}{\omega}\right)^4\right]$$
+      $$S_{J}(\omega) = A_\gamma\,S_{PM}(\omega)\,\gamma^{\exp\left[-\frac{(\omega-\omega_p)^2}{2\sigma^2\omega_p^2}\right]},\qquad A_\gamma = 1-0.287\ln\gamma$$
+      <div class="where">\(\omega_p = 2\pi/T_p\)는 첨두 주파수, \(\sigma = 0.07\ (\omega\le\omega_p)\), \(0.09\ (\omega>\omega_p)\). \(A_\gamma\)는 \(\gamma\)가 바뀌어도 \(H_s\)가 유지되도록 하는 정규화 계수다(DNV 권고식).</div>
+    </div>
+
+    <div class="sim" id="sim-spec">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>PM·JONSWAP 스펙트럼과 합성 시계열</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-spec"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span><span>유의파고 H<sub>s</sub></span> <output id="sp-hs-out"></output></span><input type="range" id="sp-hs" min="0.5" max="15" step="0.5" value="5"></label>
+          <label class="ctrl"><span><span>첨두 주기 T<sub>p</sub></span> <output id="sp-tp-out"></output></span><input type="range" id="sp-tp" min="4" max="20" step="0.5" value="10"></label>
+          <label class="ctrl"><span>첨두 증폭 γ <output id="sp-g-out"></output></span><input type="range" id="sp-g" min="1" max="7" step="0.1" value="3.3"></label>
+          <div class="ctrl"><span>프리셋</span><div class="seg" id="sp-pre"><button data-value="pm">PM (γ=1)</button><button data-value="js" class="on">JONSWAP 3.3</button><button data-value="swell">너울 (γ=6)</button></div></div>
+          <button class="btn primary" id="sp-new">새 위상으로 합성</button>
+        </div>
+      </div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>JONSWAP</span><span><i style="background:var(--text-dim)"></i>같은 H<sub>s</sub>·T<sub>p</sub>의 PM</span><span><i style="background:var(--water)"></i>합성한 수면 η(t)</span></div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">m<sub>0</sub></span><span class="v" id="sp-m0">—</span></div>
+        <div class="stat"><span class="k">4√m<sub>0</sub></span><span class="v" id="sp-hm0">—</span></div>
+        <div class="stat"><span class="k">T<sub>z</sub> · T<sub>1</sub></span><span class="v" id="sp-tz">—</span></div>
+        <div class="stat"><span class="k">창 안 최대 파고</span><span class="v" id="sp-hmax">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: γ를 1에서 7로 올리면 첨두가 솟고 양옆이 깎이지만 넓이(m<sub>0</sub>)와 4√m<sub>0</sub>는 그대로다. 아래 시계열은 γ가 클수록 비슷한 주기의 파가 무리를 지어 오는 "그룹성"이 강해진다. 같은 스펙트럼이라도 위상을 새로 뽑으면 시계열 모양은 매번 다르다.</div>
+    </div>
+
+    <h3>너울과 풍랑</h3>
+    <p>바람이 지금 불고 있는 곳의 파도를 <span class="term">풍랑</span><span class="en">(Wind Sea)</span>, 바람이 부는 해역을 떠나 멀리 퍼져 온 파도를 <span class="term">너울</span><span class="en">(Swell)</span>이라 한다. 풍랑은 주기가 짧고 마루가 뾰족하며 방향이 흩어져 있고 흰 파두가 섞인다. 너울은 분산 덕분에 긴 주기 성분만 골라져 와서 주기가 길고(10~20 s) 마루가 둥글고 고르다. 실제 바다는 흔히 둘이 겹쳐 스펙트럼에 봉우리가 두 개 생긴다.</p>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 260" role="img" aria-label="너울과 풍랑이 겹친 이중 봉우리 스펙트럼">
+        <line x1="60" y1="210" x2="720" y2="210" class="s-axis"/><line x1="60" y1="210" x2="60" y2="20" class="s-axis"/>
+        <path d="M80 210 C120 210 140 40 170 40 S210 200 260 208 L700 210" fill="none" stroke="var(--accent-2)" stroke-width="2" stroke-dasharray="5 4"/>
+        <path d="M200 210 C260 210 300 110 340 104 S440 160 520 190 S660 208 700 209" fill="none" stroke="var(--ok)" stroke-width="2" stroke-dasharray="5 4"/>
+        <path d="M80 210 C120 210 140 40 170 40 S200 150 240 160 S290 112 340 106 S440 160 520 190 S660 208 700 209" class="s-acc" stroke-width="2.6"/>
+        <text x="170" y="30" class="t" text-anchor="middle" fill="var(--accent-2)">너울 (T ≈ 14 s)</text>
+        <text x="345" y="94" class="t" text-anchor="middle" fill="var(--ok)">풍랑 (T ≈ 6 s)</text>
+        <text x="390" y="240" class="t-dim" text-anchor="middle">주파수 ω (rad/s) →</text>
+        <text x="40" y="115" class="t-dim" text-anchor="middle" transform="rotate(-90 40 115)">S(ω)</text>
+        <text x="560" y="60" class="t-dim">합쳐진 스펙트럼(파랑)은</text>
+        <text x="560" y="78" class="t-dim">봉우리가 둘이다</text>
+      </svg>
+      <figcaption><b>그림 10-4.</b> 너울과 풍랑이 겹친 이중 봉우리 스펙트럼. 배의 운동은 두 봉우리 중 자기 고유 주기와 가까운 쪽에 크게 반응한다.</figcaption>
+    </figure>
+
+    <p>너울이 멀리서 왔다는 증거는 도착 순서에 있다. 거리 \(D\) 떨어진 폭풍에서 출발한 성분은 군속도 \(c_g = gT/4\pi\)로 이동하므로 도착 시각이 \(t = 4\pi D/(gT)\)이다. 해변에서는 <b>긴 주기가 먼저</b> 오고 시간이 지나며 주기가 점점 짧아진다. 거꾸로, 도착하는 주기의 변화율로 폭풍까지의 거리를 계산할 수 있다(Munk, 1947).</p>
+
+    <div class="sim" id="sim-swell">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>먼 폭풍에서 온 너울의 도착 순서</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-swell"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>폭풍까지 거리 D <output id="sw-d-out"></output></span><input type="range" id="sw-d" min="500" max="8000" step="100" value="3000"></label>
+          <label class="ctrl"><span>경과 시간 <output id="sw-t-out"></output></span><input type="range" id="sw-t" min="0" max="400" step="1" value="0"></label>
+          <button class="btn primary" id="sw-run">재생</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">지금 도착하는 주기</span><span class="v" id="sw-now">—</span></div>
+        <div class="stat"><span class="k">20 s 성분 도착</span><span class="v" id="sw-first">—</span></div>
+        <div class="stat"><span class="k">8 s 성분 도착</span><span class="v" id="sw-last">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 재생을 누르면 폭풍(왼쪽)에서 동시에 출발한 성분들이 주기별로 흩어진다. 20 s 성분은 8 s 성분보다 2.5배 빠르다. 거리를 늘리면 도착 시각 차이도 비례해 커진다. 아래 그래프에서 도착 주기가 경과 시간에 반비례(\(T = 4\pi D/gt\))하는 것을 보자.</div>
+    </div>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>구분</th><th>풍랑 (Wind Sea)</th><th>너울 (Swell)</th></tr></thead>
+      <tbody>
+        <tr><td>발생</td><td>지금 부는 바람</td><td>먼 곳의 폭풍, 바람이 그친 뒤</td></tr>
+        <tr><td>주기</td><td>짧음 (3~10 s)</td><td>김 (10~20 s 이상)</td></tr>
+        <tr><td>파형</td><td>뾰족하고 불규칙, 흰 파두</td><td>둥글고 고르며 길게 이어짐</td></tr>
+        <tr><td>방향</td><td>바람 방향 주변으로 넓게 퍼짐</td><td>좁은 방향 범위</td></tr>
+        <tr><td>스펙트럼</td><td>넓은 봉우리 (γ ≈ 1~3.3)</td><td>좁고 뾰족 (γ ≈ 5~10)</td></tr>
+        <tr><td>배에 미치는 영향</td><td>슬래밍, 갑판 침수</td><td>큰 배의 공진 횡동요, 계류선의 장주기 운동</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- =============================================================== 7 -->
+  <section id="stats">
+    <h2>파고의 통계와 이상파</h2>
+    <p>스펙트럼이 좁다면(주파수가 한 봉우리에 모여 있다면) 개별 파고 \(H\)는 <span class="term">레일리 분포</span><span class="en">(Rayleigh Distribution)</span>를 따른다. 이 분포 하나로 여러 대표 파고 사이의 비가 정해진다.</p>
+    <div class="formula">
+      $$p(H) = \frac{2H}{H_{rms}^2}\exp\!\left[-\left(\frac{H}{H_{rms}}\right)^2\right],\qquad P(H>H_1) = \exp\!\left[-2\left(\frac{H_1}{H_s}\right)^2\right]$$
+      $$\bar H \approx 0.63\,H_s,\qquad H_{1/3}\approx H_s,\qquad H_{1/10}\approx 1.27\,H_s,\qquad H_{max}\approx H_s\sqrt{\frac{\ln N}{2}}$$
+      <div class="where">\(H_{rms}=H_s/\sqrt2\), \(H_{1/3}\)은 가장 높은 1/3 파고의 평균(원래의 유의파고 정의), \(N\)은 폭풍 동안 지나간 파의 개수(\(N\approx\) 지속 시간/\(T_z\))다. \(H_{max}\)는 최빈값 근사이며 실제 최대 파고는 그 주변에 흩어진다.</div>
+    </div>
+    <p>3시간 폭풍에서 \(T_z = 9\) s면 약 1,200개의 파가 지나가고 \(H_{max}\approx 1.88\,H_s\)이다. 설계에서 흔히 "최대 파고 ≈ 유의파고의 1.86~2배"라고 하는 근거다. 유의파고의 두 배를 넘는 파를 <span class="term">이상파</span><span class="en">(Rogue / Freak Wave)</span>라 부른다. 레일리 분포로는 약 3,000개 중 1개(\(e^{-8}\approx 3.4\times10^{-4}\))꼴이니 아주 드문 것만은 아니며, 실제 관측에서는 비선형 효과로 이보다 조금 더 잦다. 1995년 북해 드라우프너 플랫폼은 \(H_s\approx 12\) m 해상에서 파고 25.6 m의 파를 기록했다.</p>
+
+    <div class="sim" id="sim-stat">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>레일리 분포와 폭풍 속 최대 파고</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-stat"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span><span>유의파고 H<sub>s</sub></span> <output id="st-hs-out"></output></span><input type="range" id="st-hs" min="1" max="15" step="0.5" value="8"></label>
+          <label class="ctrl"><span><span>영점 교차 주기 T<sub>z</sub></span> <output id="st-tz-out"></output></span><input type="range" id="st-tz" min="4" max="14" step="0.5" value="9"></label>
+          <label class="ctrl"><span>폭풍 지속 시간 <output id="st-d-out"></output></span><input type="range" id="st-d" min="0.5" max="48" step="0.5" value="3"></label>
+          <button class="btn primary" id="st-run">폭풍 한 번 겪어 보기</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">파의 개수 N</span><span class="v" id="st-n">—</span></div>
+        <div class="stat"><span class="k">평균 파고 H̄</span><span class="v" id="st-mean">—</span></div>
+        <div class="stat"><span class="k">H<sub>1/10</sub></span><span class="v" id="st-h10">—</span></div>
+        <div class="stat"><span class="k">기대 최대 파고</span><span class="v" id="st-hmax">—</span></div>
+        <div class="stat"><span class="k">이번 폭풍 최대 · 이상파</span><span class="v" id="st-samp">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: "폭풍 한 번 겪어 보기"를 여러 번 눌러 보자. 위 그래프의 막대(표본 히스토그램)는 곡선을 잘 따르지만, 아래의 파고 기록에서 가장 큰 파는 매번 다르다. 지속 시간을 3시간에서 48시간으로 늘리면 기대 최대 파고는 √(ln N)로 천천히 늘고, 2H<sub>s</sub>(빨간 선)를 넘는 이상파를 만날 가능성이 커진다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 8 -->
+  <section id="beaufort">
+    <h2>보퍼트 풍력 계급과 해상 상태</h2>
+    <p>계측기가 없던 시절, 1805년 영국 해군의 프랜시스 보퍼트는 바다의 모습으로 바람의 세기를 0~12의 13단계로 나누었다. 지금도 선박 기상 보고와 항해 일지에 쓰이는 <span class="term">보퍼트 풍력 계급</span><span class="en">(Beaufort Scale)</span>이다. 파고로 바다를 나누는 WMO <span class="term">해상 상태</span><span class="en">(Sea State Code)</span> 0~9도 함께 쓴다. 표의 파고는 대양에서 바람이 충분히 분 뒤의 대략적인 값이다.</p>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th class="num">계급</th><th>이름</th><th class="num">풍속 (kn)</th><th class="num">풍속 (m/s)</th><th class="num">대략 파고</th><th>바다의 모습</th></tr></thead>
+      <tbody>
+        <tr><td class="num">0</td><td>고요</td><td class="num">&lt;1</td><td class="num">0~0.2</td><td class="num">0 m</td><td>거울 같은 수면</td></tr>
+        <tr><td class="num">1</td><td>실바람</td><td class="num">1~3</td><td class="num">0.3~1.5</td><td class="num">0.1 m</td><td>비늘 같은 잔물결</td></tr>
+        <tr><td class="num">2</td><td>남실바람</td><td class="num">4~6</td><td class="num">1.6~3.3</td><td class="num">0.2 m</td><td>작은 물결, 마루가 유리처럼 매끈</td></tr>
+        <tr><td class="num">3</td><td>산들바람</td><td class="num">7~10</td><td class="num">3.4~5.4</td><td class="num">0.6 m</td><td>마루가 부서지기 시작, 흰 파두 드문드문</td></tr>
+        <tr><td class="num">4</td><td>건들바람</td><td class="num">11~16</td><td class="num">5.5~7.9</td><td class="num">1 m</td><td>파도가 길어지고 흰 파두가 잦음</td></tr>
+        <tr><td class="num">5</td><td>흔들바람</td><td class="num">17~21</td><td class="num">8.0~10.7</td><td class="num">2 m</td><td>뚜렷한 긴 파도, 흰 파두가 많고 물보라</td></tr>
+        <tr><td class="num">6</td><td>된바람</td><td class="num">22~27</td><td class="num">10.8~13.8</td><td class="num">3 m</td><td>큰 파도, 흰 거품 마루가 넓게 퍼짐</td></tr>
+        <tr><td class="num">7</td><td>센바람</td><td class="num">28~33</td><td class="num">13.9~17.1</td><td class="num">4 m</td><td>바다가 부풀고 거품이 바람 방향으로 줄무늬</td></tr>
+        <tr><td class="num">8</td><td>큰바람</td><td class="num">34~40</td><td class="num">17.2~20.7</td><td class="num">5.5 m</td><td>마루 끝이 날려 물보라, 거품 줄무늬 뚜렷</td></tr>
+        <tr><td class="num">9</td><td>큰센바람</td><td class="num">41~47</td><td class="num">20.8~24.4</td><td class="num">7 m</td><td>높은 파도, 마루가 넘어지며 굴러떨어짐</td></tr>
+        <tr><td class="num">10</td><td>노대바람</td><td class="num">48~55</td><td class="num">24.5~28.4</td><td class="num">9 m</td><td>매우 높은 파도, 바다가 하얗게 보임</td></tr>
+        <tr><td class="num">11</td><td>왕바람</td><td class="num">56~63</td><td class="num">28.5~32.6</td><td class="num">11.5 m</td><td>배가 파도 뒤에 가려질 만큼 높음, 시정 불량</td></tr>
+        <tr><td class="num">12</td><td>싹쓸바람</td><td class="num">64 이상</td><td class="num">32.7 이상</td><td class="num">14 m 이상</td><td>공기가 거품과 물보라로 가득, 바다 전체가 흰색</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="sim" id="sim-bf">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>보퍼트 계급에 따라 바뀌는 바다</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-bf"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>보퍼트 계급 <output id="bf-b-out"></output></span><input type="range" id="bf-b" min="0" max="12" step="1" value="5"></label>
+          <label class="check"><input type="checkbox" id="bf-ship" checked> 길이 120 m 배 함께 보기</label>
+        </div>
+      </div>
+      <div class="sea-desc" id="bf-desc">—</div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">풍속</span><span class="v" id="bf-u">—</span></div>
+        <div class="stat"><span class="k">대략 파고</span><span class="v" id="bf-h">—</span></div>
+        <div class="stat"><span class="k">해상 상태 (WMO)</span><span class="v" id="bf-ss">—</span></div>
+        <div class="stat"><span class="k">대략 주기 T ≈ 4√H</span><span class="v" id="bf-tp">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 계급 3에서 흰 파두가 나타나고, 7부터 거품이 바람 방향으로 줄무늬를 이루며, 10 이상에서는 바다가 하얗게 변한다. 풍속은 \(U\approx 0.836\,B^{3/2}\) m/s로 계급과 연결된다. 주기 \(T\approx4\sqrt{H}\)(T는 s, H는 m)는 풍랑의 대략적인 경험 관계다. 그림의 세로 방향은 4배 과장했다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 9 -->
+  <section id="shallow">
+    <h2>천수 변형: 해안에 다가가는 파도</h2>
+    <p>파도가 수심 \(\lambda_0/2\)보다 얕은 곳으로 들어오면 해저를 "느끼기" 시작한다. 주기는 끝까지 변하지 않지만 분산 관계에 따라 파장과 파속이 줄어든다. 에너지 수송률 \(P=E c_g\)는 (마찰과 쇄파 전까지) 보존되므로, 군속도가 줄면 에너지가 쌓여 파고가 커진다. 이것이 <span class="term">천수 변형</span><span class="en">(Shoaling)</span>이다.</p>
+    <div class="formula">
+      $$E_0 c_{g0} = E\,c_g\ \ \Rightarrow\ \ \frac{H}{H_0} = K_s = \sqrt{\frac{c_{g0}}{c_g}},\qquad \text{breaking: } \frac{H_b}{h_b}\approx 0.78$$
+      <div class="where">\(K_s\)는 천수 계수. 중간 수심에서는 \(K_s\)가 잠시 0.91까지 줄었다가 얕아질수록 1을 넘어 커진다. 파고가 수심의 약 0.78배(맥코완 기준)에 이르면 파는 부서진다.</div>
+    </div>
+
+    <div class="sim" id="sim-shoal">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>해안으로: 파장은 짧게, 파고는 높게, 그리고 쇄파</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-shoal"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span><span>심해 파고 H<sub>0</sub></span> <output id="sh-h-out"></output></span><input type="range" id="sh-h" min="0.3" max="5" step="0.1" value="1.5"></label>
+          <label class="ctrl"><span>주기 T <output id="sh-t-out"></output></span><input type="range" id="sh-t" min="4" max="16" step="0.5" value="10"></label>
+          <div class="ctrl"><span>해저 경사</span><div class="seg" id="sh-sl"><button data-value="10">1/10</button><button data-value="30" class="on">1/30</button><button data-value="100">1/100</button></div></div>
+          <button class="btn" id="sh-run">일시정지</button>
+        </div>
+      </div>
+      <div class="legend"><span><i style="background:var(--accent-2)"></i>파고 H(x)</span><span><i style="background:var(--text-dim)"></i>쇄파 한계 0.78h</span><span><i style="background:var(--accent)"></i>파장 비 λ(x)/λ<sub>0</sub> (상대 눈금, 값은 곡선 옆 표기)</span></div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">쇄파 수심 h<sub>b</sub></span><span class="v" id="sh-hb">—</span></div>
+        <div class="stat"><span class="k">쇄파고 H<sub>b</sub> · K<sub>s</sub></span><span class="v" id="sh-Hb">—</span></div>
+        <div class="stat"><span class="k">쇄파점 파장 / λ<sub>0</sub></span><span class="v" id="sh-lb">—</span></div>
+        <div class="stat"><span class="k">쇄파 형태 (ξ)</span><span class="v" id="sh-type" style="font-size:15px">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 주기를 늘리면 같은 H<sub>0</sub>라도 더 깊은 곳에서 해저를 느끼고 쇄파고가 커진다. 긴 너울이 해변에서 유난히 크게 부서지는 이유다. 경사를 1/10로 가파르게 하면 이리바렌 수 ξ가 커져 말려 떨어지는(plunging) 쇄파가 된다. 가로 거리는 축소해 그렸다.</div>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 210" role="img" aria-label="쇄파의 세 가지 형태">
+        <g transform="translate(15,20)">
+          <text x="110" y="10" class="t-acc" text-anchor="middle">붕괴형 (spilling) ξ &lt; 0.5</text>
+          <path d="M0 140 L40 132 C90 120 120 80 150 76 C170 74 185 90 220 110" class="s-water" stroke-width="2.4"/>
+          <path d="M120 82 q14 -12 30 -6 q10 4 18 0" fill="none" stroke="var(--text-dim)" stroke-width="2" stroke-dasharray="2 3"/>
+          <line x1="0" y1="170" x2="230" y2="150" class="s-axis" stroke-width="3"/>
+          <text x="110" y="190" class="t-dim" text-anchor="middle">완만한 해변, 마루가 거품으로 흘러내림</text>
+        </g>
+        <g transform="translate(265,20)">
+          <text x="110" y="10" class="t-acc" text-anchor="middle">권파형 (plunging)</text>
+          <path d="M0 140 L50 134 C90 124 110 60 140 46 C170 34 186 56 176 74 C170 84 160 86 156 100 L220 116" class="s-water" stroke-width="2.4"/>
+          <line x1="0" y1="170" x2="230" y2="134" class="s-axis" stroke-width="3"/>
+          <text x="110" y="190" class="t-dim" text-anchor="middle">마루가 말려 앞으로 떨어짐(서핑 파)</text>
+        </g>
+        <g transform="translate(515,20)">
+          <text x="110" y="10" class="t-acc" text-anchor="middle">쇄기형 (surging) ξ &gt; 3.3</text>
+          <path d="M0 140 L60 136 C100 128 130 100 160 96 C190 92 200 70 220 52" class="s-water" stroke-width="2.4"/>
+          <line x1="0" y1="170" x2="230" y2="60" class="s-axis" stroke-width="3"/>
+          <text x="110" y="190" class="t-dim" text-anchor="middle">가파른 해안, 거의 부서지지 않고 밀려 오름</text>
+        </g>
+      </svg>
+      <figcaption><b>그림 10-5.</b> 쇄파의 형태는 이리바렌 수 \(\xi = \tan\beta/\sqrt{H_0/\lambda_0}\)(\(\beta\): 해저 경사각)로 구분된다. 완만한 해변과 가파른 파는 붕괴형, 가파른 해안과 긴 너울은 권파형·쇄기형이 된다.</figcaption>
+    </figure>
+
+    <h3>굴절: 파도는 해안선과 나란해진다</h3>
+    <p>파봉이 해안에 비스듬히 들어오면, 얕은 쪽 끝은 느려지고 깊은 쪽 끝은 여전히 빠르다. 그래서 파봉이 돌아 등심선과 나란해지려 한다. 빛의 굴절과 똑같은 <span class="term">스넬 법칙</span><span class="en">(Snell's Law)</span>이 성립한다. 곶(headland)에서는 파 진행선(파향선)이 모여 에너지가 집중되고, 만(bay)에서는 퍼져 잔잔해진다. 해수욕장이 만 안쪽에, 등대가 곶 끝에 있는 이유다.</p>
+    <div class="formula">
+      $$\frac{\sin\theta}{c} = \frac{\sin\theta_0}{c_0} = \text{const},\qquad K_r = \sqrt{\frac{b_0}{b}}$$
+      <div class="where">\(\theta\)는 파향선과 등심선 법선 사이의 각, \(K_r\)은 굴절 계수, \(b\)는 이웃한 파향선 사이의 간격이다. 파고는 \(H = K_s K_r H_0\)로 변한다.</div>
+    </div>
+
+    <div class="sim" id="sim-refr">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>굴절 평면도: 파향선 추적</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-refr"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>해안 모양</span><div class="seg" id="rf-mode"><button data-value="straight" class="on">직선 해안</button><button data-value="head">곶</button><button data-value="bay">만</button></div></div>
+          <label class="ctrl"><span><span>심해 입사각 θ<sub>0</sub></span> <output id="rf-a-out"></output></span><input type="range" id="rf-a" min="-60" max="60" step="1" value="35"></label>
+          <label class="ctrl"><span>주기 T <output id="rf-t-out"></output></span><input type="range" id="rf-t" min="6" max="16" step="1" value="10"></label>
+          <label class="check"><input type="checkbox" id="rf-rays" checked> 파향선 표시</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">심해 파속 c<sub>0</sub></span><span class="v" id="rf-c0">—</span></div>
+        <div class="stat"><span class="k">수심 5 m에서 c</span><span class="v" id="rf-c5">—</span></div>
+        <div class="stat"><span class="k">수심 5 m 입사각 (직선 해안)</span><span class="v" id="rf-th">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 직선 해안에서 입사각을 60°까지 키워도 해안 근처의 파봉은 해안선과 거의 나란해진다. "곶"을 고르면 파향선이 곶 끝으로 모여드는 것(에너지 집중), "만"에서는 파향선이 벌어지는 것을 보자. 파란 색이 진할수록 깊다. 등심선은 5 m 간격.</div>
+    </div>
+
+    <h3>쓰나미: 대양을 가로지르는 천해파</h3>
+    <p>해저 지진이 만드는 <span class="term">쓰나미</span><span class="en">(Tsunami)</span>는 파장이 수십~수백 km에 이른다. 수심 4,000 m 대양도 이 파에게는 "얕은 물"(\(h<\lambda/20\))이므로 속도는 \(c=\sqrt{gh}\)다. 대양에서 약 200 m/s(제트기 속도)로 달리면서 파고는 1 m도 되지 않아 배 위에서는 느끼지 못한다. 해안에 다가오면 속도가 줄고 에너지가 압축되어 파고가 그린의 법칙 \(H\propto h^{-1/4}\)으로 커진다. 대양의 배가 쓰나미 경보에 오히려 먼 바다로 나가는 이유다.</p>
+
+    <div class="sim" id="sim-tsu">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>쓰나미의 속도와 해안 증폭</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-tsu"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>대양 수심 h <output id="ts-h-out"></output></span><input type="range" id="ts-h" min="500" max="7000" step="100" value="4000"></label>
+          <label class="ctrl"><span>대양 횡단 거리 <output id="ts-d-out"></output></span><input type="range" id="ts-d" min="500" max="15000" step="100" value="8000"></label>
+          <label class="ctrl"><span>대양 파고 <output id="ts-a-out"></output></span><input type="range" id="ts-a" min="0.2" max="2" step="0.1" value="0.6"></label>
+          <button class="btn primary" id="ts-run">쓰나미 발생</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">대양 속도 √(gh)</span><span class="v" id="ts-c">—</span></div>
+        <div class="stat"><span class="k">대양 횡단 시간</span><span class="v" id="ts-time">—</span></div>
+        <div class="stat"><span class="k">현재 위치 속도</span><span class="v" id="ts-cl">—</span></div>
+        <div class="stat"><span class="k">현재 파고 (그린 법칙)</span><span class="v" id="ts-hl">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: "쓰나미 발생"을 누르고 파가 대륙붕에 올라서는 순간을 보자. 속도는 급격히 줄고 파의 길이는 짧아지며 높이는 커진다. 대양 수심 4,000 m에서 태평양 8,000 km를 건너는 데는 약 11시간이 걸린다(1960년 칠레 지진 쓰나미가 약 22시간 뒤 일본에 닿았다). 그림은 세로를 크게 과장했다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== summary -->
+  <section class="keypoints" id="summary">
+    <h2>핵심 정리</h2>
+    <ol>
+      <li>풍파의 크기는 풍속·취송 거리·지속 시간 중 가장 부족한 것이 정한다. 완전 발달하면 \(H_s \approx 0.24\,U^2/g\), \(T_p\approx 8\,U/g\)이다.</li>
+      <li>선형 파에서 물은 흘러가지 않고 궤도 운동을 한다. 심해에서는 원 궤도가 \(e^{kz}\)로 줄어 반파장 깊이에서 4%가 되고, 천해에서는 납작한 타원이 된다.</li>
+      <li>분산 관계 \(\omega^2 = gk\tanh kh\). 심해 \(\lambda_0 = 1.56T^2\), \(c_0 = 1.56T\); 천해 \(c=\sqrt{gh}\). 긴 파가 빠르다.</li>
+      <li>군속도는 심해에서 \(c/2\), 천해에서 \(c\)다. 에너지 \(E=\rho gH^2/8\)는 군속도로 전달되며 파력은 \(P=Ec_g\)다.</li>
+      <li>불규칙 파는 무작위 위상을 가진 성분파의 합이고, 파 스펙트럼 \(S(\omega)\)로 요약한다. \(H_s = 4\sqrt{m_0}\), \(T_z=2\pi\sqrt{m_0/m_2}\).</li>
+      <li>PM은 완전 발달 해상, JONSWAP은 첨두가 뾰족한 성장 중의 해상(\(\gamma\approx3.3\))을 나타낸다. 너울은 분산으로 긴 주기만 남은 좁은 스펙트럼이며 긴 주기가 먼저 도착한다.</li>
+      <li>개별 파고는 레일리 분포를 따른다. \(\bar H\approx0.63H_s\), \(H_{1/10}\approx1.27H_s\), \(H_{max}\approx H_s\sqrt{\ln N/2}\)(3시간 폭풍에서 약 1.9배). \(H>2H_s\)인 이상파도 수천 파에 하나꼴로 나온다.</li>
+      <li>해안에 다가오면 파장은 짧아지고 파고는 \(K_s=\sqrt{c_{g0}/c_g}\)로 커지다가 \(H\approx0.78h\)에서 부서진다. 굴절로 파봉은 등심선과 나란해지고 곶에 에너지가 모인다. 쓰나미는 대양에서도 천해파로 \(\sqrt{gh}\)로 달린다.</li>
+    </ol>
+  </section>
+
+  <!-- =============================================================== quiz -->
+  <section class="quiz-sec" id="quiz">
+    <h2>확인 퀴즈</h2>
+    <div class="quiz">
+      <div class="quiz-q"><p>Q1. 주기 12 s 파의 심해 파장과 파속은 대략 얼마인가?</p><div class="opts">
+        <button class="opt">파장 19 m, 파속 1.6 m/s</button>
+        <button class="opt" data-correct>파장 225 m, 파속 18.7 m/s</button>
+        <button class="opt">파장 144 m, 파속 12 m/s</button>
+        <button class="opt">파장 450 m, 파속 37 m/s</button>
+      </div><div class="quiz-exp">\(\lambda_0 = 1.56\times12^2 \approx 225\) m, \(c_0 = 1.56\times12 \approx 18.7\) m/s(약 36 kn). 파장은 주기의 제곱에, 파속은 주기에 비례한다.</div></div>
+
+      <div class="quiz-q"><p>Q2. 심해에서 파장 100 m 파가 지나갈 때, 수심 50 m 지점 물 입자의 궤도 반지름은 수면의 몇 %인가?</p><div class="opts">
+        <button class="opt">50%</button><button class="opt">약 20%</button><button class="opt" data-correct>약 4%</button><button class="opt">0% (전혀 움직이지 않는다)</button>
+      </div><div class="quiz-exp">궤도 반지름은 \(e^{kz}\)로 준다. \(z=-\lambda/2\)이면 \(kz = -\pi\), \(e^{-\pi}\approx 0.043\). 반파장 깊이를 흔히 "파의 영향이 사라지는 깊이"로 보는 근거다.</div></div>
+
+      <div class="quiz-q"><p>Q3. 심해에서 무리 지어 오는 파도를 관찰하면 개별 마루는 어떻게 보이는가?</p><div class="opts">
+        <button class="opt">무리와 같은 속도로 함께 움직인다</button>
+        <button class="opt">무리보다 느려 무리의 뒤쪽으로 빠져나간다</button>
+        <button class="opt" data-correct>무리보다 두 배 빨라 뒤에서 생겨 앞에서 사라진다</button>
+        <button class="opt">제자리에 서 있다</button>
+      </div><div class="quiz-exp">심해에서 \(c_g = c/2\)이므로 마루는 무리보다 두 배 빠르다. 에너지는 무리, 즉 군속도로 이동한다. 천해에서는 \(c_g\approx c\)라 함께 움직인다.</div></div>
+
+      <div class="quiz-q"><p>Q4. 파고가 2 m에서 4 m로 두 배가 되면, 같은 주기의 심해파가 전달하는 파력(P = E·c<sub>g</sub>)은?</p><div class="opts">
+        <button class="opt">2배</button><button class="opt" data-correct>4배</button><button class="opt">8배</button><button class="opt">변하지 않는다</button>
+      </div><div class="quiz-exp">\(E=\rho gH^2/8\)이므로 에너지는 \(H^2\)에 비례하고, 같은 주기면 \(c_g\)도 같으니 파력도 4배다.</div></div>
+
+      <div class="quiz-q"><p>Q5. 어떤 파 스펙트럼의 0차 모멘트가 \(m_0 = 2.25\ \text{m}^2\)이다. 유의파고는?</p><div class="opts">
+        <button class="opt">2.25 m</button><button class="opt">1.5 m</button><button class="opt" data-correct>6 m</button><button class="opt">9 m</button>
+      </div><div class="quiz-exp">\(H_s = 4\sqrt{m_0} = 4\times1.5 = 6\) m. \(m_0\)는 수면 높이의 분산이므로 표준 편차는 1.5 m다.</div></div>
+
+      <div class="quiz-q"><p>Q6. 유의파고 6 m, \(T_z=10\) s인 폭풍이 약 3시간(N ≈ 1,000) 지속될 때 예상 최대 파고에 가장 가까운 것은?</p><div class="opts">
+        <button class="opt">6 m</button><button class="opt">8 m</button><button class="opt" data-correct>11 m</button><button class="opt">24 m</button>
+      </div><div class="quiz-exp">\(H_{max}\approx H_s\sqrt{\ln N/2} = 6\sqrt{6.91/2}\approx 6\times1.86 \approx 11\) m. 12 m(2H<sub>s</sub>)를 넘으면 이상파라 부른다.</div></div>
+
+      <div class="quiz-q"><p>Q7. 해변에 너울이 도착하기 시작했다. 시간이 지나며 관측되는 주기는 어떻게 변하는가?</p><div class="opts">
+        <button class="opt" data-correct>처음에는 길고 점점 짧아진다</button>
+        <button class="opt">처음에는 짧고 점점 길어진다</button>
+        <button class="opt">변하지 않는다</button>
+        <button class="opt">무작위로 바뀐다</button>
+      </div><div class="quiz-exp">심해 군속도 \(c_g = gT/4\pi\)는 주기에 비례하므로 긴 주기 성분이 먼저 도착한다. 도착 주기는 \(T=4\pi D/(gt)\)로 시간에 반비례해 줄어든다.</div></div>
+
+      <div class="quiz-q"><p>Q8. 수심 4,000 m 대양에서 쓰나미의 속도는 대략 얼마이며, 그 이유는?</p><div class="opts">
+        <button class="opt">약 20 m/s, 심해파이므로 \(1.56T\)</button>
+        <button class="opt" data-correct>약 200 m/s, 파장이 수심보다 훨씬 길어 천해파 \(\sqrt{gh}\)를 따르므로</button>
+        <button class="opt">약 2,000 m/s, 지진파와 같은 속도이므로</button>
+        <button class="opt">수심과 무관하게 약 100 m/s</button>
+      </div><div class="quiz-exp">\(\sqrt{9.81\times4000}\approx198\) m/s(약 710 km/h). 쓰나미의 파장은 수백 km이므로 \(h<\lambda/20\)인 천해 조건이 대양에서도 성립한다.</div></div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ===================== 1. 바람 → 파도 생성 ===================== */
+(function () {
+  const g = SB.G;
+  const cvEl = document.getElementById("cv-gen");
+  let U = 15, F = 200, D = 12, t = 0, R = null;
+  const fetchKm = (v) => Math.round(Math.pow(10, v / 100));   // 0..300 → 1..1000 km
+  function grow(U, Fkm, Dh) {
+    const Fh = (g * Fkm * 1000) / (U * U);
+    const Fd = Math.pow((g * Dh * 3600) / U / 68.8, 1.5);
+    const Fe = Math.min(Fh, Fd);
+    let Hh = 1.6e-3 * Math.sqrt(Fe), Th = 0.286 * Math.cbrt(Fe), lim = Fh <= Fd ? "fetch" : "dur";
+    if (Hh >= 0.243) { Hh = 0.243; Th = 8.13; lim = "fd"; }
+    return { Hs: (Hh * U * U) / g, Tp: (Th * U) / g, lim, FdKm: (Fd * U * U) / g / 1000 };
+  }
+  const gu = SB.range("gen-u", (v) => v + " m/s (" + SB.fmt(SB.kn(v), 3) + " kn)", (v) => { U = v; upd(); });
+  const gf = SB.range("gen-f", (v) => fetchKm(v) + " km", (v) => { F = fetchKm(v); upd(); });
+  const gt = SB.range("gen-t", (v) => v + " h", (v) => { D = v; upd(); });
+  U = gu(); F = fetchKm(gf()); D = gt();
+  SB.seg("gen-pre", (v) => {
+    const p = { lake: [10, 20, 6], sea: [18, 300, 12], ocean: [25, 1000, 48] }[v];
+    gu.set(p[0]); gf.set(Math.round(100 * Math.log10(p[1]))); gt.set(p[2]);
+  });
+  // 장식용 성분(첨두 주기 주변 3개)
+  const comps = [[1, 0.62, 0.3], [0.78, 0.33, 2.1], [1.3, 0.26, 4.0]];
+  function draw(ctx, w, h) {
+    if (!R) return;
+    const P = SB.palette();
+    const top = Math.round(h * 0.42);
+    // 상단: 파도 단면
+    const span = 600, sx = w / span, maxA = 10, sy = (top * 0.36) / maxA;
+    const y0 = top * 0.6;
+    ctx.fillStyle = P.dim; ctx.font = "12px sans-serif"; ctx.textAlign = "left";
+    // 바람 화살표
+    const al = 20 + U * 3;
+    for (let i = 0; i < 4; i++) { const xx = ((i * w) / 4 + t * U * 6) % (w + al) - al; SB.arrow(ctx, xx, 16 + (i % 2) * 10, xx + al, 16 + (i % 2) * 10, P.faint, 1.6); }
+    const wave = (px) => {
+      const x = px / sx; let e = 0;
+      comps.forEach(([tf, af, ph]) => { const T = R.Tp * tf, om = (2 * Math.PI) / T, k = (om * om) / g; e += af * (R.Hs / 2) * Math.cos(k * x - om * t + ph); });
+      return -e * sy;
+    };
+    SB.water(ctx, w, top, y0, { wave });
+    // 높이 자
+    ctx.strokeStyle = P.dim; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(w - 14, y0); ctx.lineTo(w - 14, y0 - 5 * sy); ctx.stroke();
+    ctx.textAlign = "right"; ctx.fillText("5 m", w - 18, y0 - 2.5 * sy + 4);
+    ctx.textAlign = "left"; ctx.fillText("수면 단면 (세로 과장, 폭 600 m)", 8, top - 8);
+    ctx.strokeStyle = P.border; ctx.beginPath(); ctx.moveTo(0, top + 0.5); ctx.lineTo(w, top + 0.5); ctx.stroke();
+    // 하단: Hs vs 취송 거리
+    const data = [], dataF = [];
+    for (let i = 0; i <= 120; i++) { const f = Math.pow(10, (i / 120) * 3); data.push([f, grow(U, f, D).Hs]); const Fh = (g * f * 1000) / (U * U); dataF.push([f, (1.6e-3 * Math.sqrt(Fh) * U * U) / g]); }
+    const Hfd = (0.243 * U * U) / g;
+    const C = SB.chart(ctx, { x: 52, y: top + 14, w: w - 70, h: h - top - 58 }, {
+      x: [1, 1000], y: [0, Math.max(1, Hfd * 1.15)], logX: true, xLabel: "취송 거리 F (km)", yLabel: "Hs (m)",
+      series: [{ data: dataF, color: P.faint, width: 1.4, dash: [3, 4] }, { data, color: P.accent, width: 2.4 }],
+      hlines: [{ y: Hfd, color: P.accent2 }],
+      vlines: R.FdKm < 1000 ? [{ x: Math.max(1, R.FdKm), color: P.warn }] : [],
+      points: [{ x: F, y: R.Hs, color: P.accent2, r: 5 }],
+    });
+    ctx.font = "11px sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = P.accent2; ctx.fillText("완전 발달 한계", C.box.x + 6, C.Y(Hfd) - 4);
+    if (R.FdKm < 1000) { const vx = C.X(Math.max(1, R.FdKm)); ctx.fillStyle = P.warn; ctx.textAlign = vx > C.box.x + C.box.w * 0.6 ? "right" : "left"; ctx.fillText("지속 " + D + " h로 닿는 거리", vx + (ctx.textAlign === "right" ? -4 : 4), C.box.y + C.box.h - 8); }
+  }
+  const cv = SB.canvas(cvEl, draw, { aspect: 0.82, maxHeight: 560, minHeight: 360 });
+  function upd() {
+    R = grow(U, F, D);
+    SB.stat("gen-hs", SB.fmt(R.Hs, 3) + "<small>m</small>");
+    SB.stat("gen-tp", SB.fmt(R.Tp, 3) + "<small>s</small>");
+    SB.stat("gen-lp", SB.fmt(1.56 * R.Tp * R.Tp, 3) + "<small>m</small>");
+    SB.stat("gen-lim", { fetch: "취송 거리 제한", dur: "지속 시간 제한", fd: "완전 발달" }[R.lim]);
+    cv.redraw();
+  }
+  upd();
+  SB.loop(cvEl, (dt) => { t += dt; cv.redraw(); });
+})();
+
+/* ===================== 2. 물 입자 궤도 ===================== */
+(function () {
+  const g = SB.G, cvEl = document.getElementById("cv-orbit");
+  const depthOf = (v) => Math.round(Math.pow(10, 0.5 + (v / 300) * 2.5) * 10) / 10;   // 3..1000 m
+  let H = 3, T = 8, h = 200, t = 0, run = true, k = 0.06, om = 0.78;
+  const trail = [];
+  const rH = SB.range("orb-h", (v) => v.toFixed(1) + " m", (v) => { H = v; upd(); });
+  const rT = SB.range("orb-t", (v) => v + " s", (v) => { T = v; upd(); });
+  const rD = SB.range("orb-d", (v) => depthOf(v) + " m", (v) => { h = depthOf(v); upd(); });
+  H = rH(); T = rT(); h = depthOf(rD());
+  const vel = document.getElementById("orb-vel"), path = document.getElementById("orb-path");
+  vel.onchange = path.onchange = () => cv.redraw();
+  document.getElementById("orb-run").onclick = (e) => { run = !run; e.target.textContent = run ? "일시정지" : "재생"; };
+  // cosh k(z+h)/sinh kh, sinh k(z+h)/sinh kh (큰 kh에서는 e^{kz})
+  const ratio = (z) => {
+    const kh = k * h;
+    if (kh > 18) return [Math.exp(k * z), Math.exp(k * z)];
+    return [Math.cosh(k * (z + h)) / Math.sinh(kh), Math.sinh(k * (z + h)) / Math.sinh(kh)];
+  };
+  function draw(ctx, w, hh) {
+    const P = SB.palette();
+    const lam = (2 * Math.PI) / k, a = H / 2;
+    const span = 1.25 * lam, sx = w / span;
+    const y0 = 46, zShow = Math.min(h, lam * 0.6), sz = (hh - y0 - 26) / zShow;
+    const f = 26 / 3; // px per m (변위 과장)
+    const ph = (x) => k * x - om * t;
+    SB.water(ctx, w, hh, y0, { wave: (px) => -a * f * Math.cos(ph(px / sx)) });
+    if (h <= zShow + 1e-6) { // 해저
+      const yb = y0 + h * sz;
+      ctx.fillStyle = P.surface; ctx.fillRect(0, yb, w, hh - yb);
+      ctx.strokeStyle = P.axis; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, yb); ctx.lineTo(w, yb); ctx.stroke();
+      ctx.fillStyle = P.dim; ctx.font = "12px sans-serif"; ctx.textAlign = "left"; ctx.fillText("해저 (h = " + h + " m)", 8, yb + 14);
+    }
+    const nx = 12, nz = 6;
+    for (let i = 0; i <= nz; i++) {
+      const z = -(i / nz) * zShow * (h <= zShow ? 1 : 0.98);
+      const [rc, rs] = ratio(z), A = a * rc * f, B = a * rs * f;
+      for (let j = 0; j <= nx; j++) {
+        const x = ((j + 0.5) / (nx + 1)) * span, px = x * sx, pz = y0 - z * sz;
+        const p = ph(x);
+        if (path.checked) { ctx.strokeStyle = P.faint; ctx.lineWidth = 1; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.ellipse(px, pz, Math.max(A, 0.3), Math.max(B, 0.3), 0, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); }
+        const dx = -A * Math.sin(p), dz = B * Math.cos(p);   // dz 양수 = 위
+        const qx = px + dx, qy = pz - dz;
+        const hi = j === Math.round(nx / 2);
+        if (vel.checked) { const u = A * Math.cos(p), ww = B * Math.sin(p), s = 1.2; SB.arrow(ctx, qx, qy, qx - u * s * -1, qy - ww * s, P.accent, 1.4); }
+        ctx.fillStyle = hi ? P.red : P.text; ctx.beginPath(); ctx.arc(qx, qy, hi ? 4.5 : 3, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    ctx.fillStyle = P.dim; ctx.font = "12px sans-serif"; ctx.textAlign = "left";
+    ctx.fillText("→ 파 진행 방향", 8, 16);
+    ctx.textAlign = "right"; ctx.fillText("화면 폭 = 1.25 λ = " + SB.fmt(span, 3) + " m", w - 8, 16);
+  }
+  const cv = SB.canvas(cvEl, draw, { aspect: 0.62, maxHeight: 480, minHeight: 300 });
+  function upd() {
+    om = (2 * Math.PI) / T; k = SB.waveK(om, h);
+    const lam = (2 * Math.PI) / k, kh = k * h;
+    const reg = h > lam / 2 ? "심해" : h < lam / 20 ? "천해" : "중간";
+    SB.stat("orb-lam", SB.fmt(lam, 3) + "<small>m</small>");
+    SB.stat("orb-kh", SB.fmt(kh, 3) + " <small>" + reg + "</small>");
+    const bot = kh > 18 ? 0 : 1 / Math.cosh(kh);
+    SB.stat("orb-bot", (bot * 100).toFixed(1) + "<small>%</small>");
+    const st = H / lam;
+    SB.stat("orb-st", "1/" + SB.fmt(1 / st, 3) + (st > 1 / 7 ? " <small style='color:var(--bad)'>쇄파</small>" : ""));
+    cv.redraw();
+  }
+  upd();
+  SB.loop(cvEl, (dt) => { if (run) { t += dt; cv.redraw(); } });
+})();
+
+/* ===================== 3. 분산 관계 계산기 ===================== */
+(function () {
+  const g = SB.G, cvEl = document.getElementById("cv-disp");
+  const depthOf = (v) => { const d = Math.pow(10, (v / 300) * 3); return d < 10 ? Math.round(d * 10) / 10 : Math.round(d); };
+  let T = 10, h = 10;
+  const rT = SB.range("dsp-t", (v) => v + " s", (v) => { T = v; upd(); });
+  const rH = SB.range("dsp-h", (v) => depthOf(v) + " m", (v) => { h = depthOf(v); upd(); });
+  T = rT(); h = depthOf(rH());
+  const ap = document.getElementById("dsp-approx"); ap.onchange = () => cv.redraw();
+  const calc = (T, h) => { const om = (2 * Math.PI) / T, k = SB.waveK(om, h), c = om / k, n = 0.5 * (1 + (2 * k * h > 600 ? 0 : (2 * k * h) / Math.sinh(2 * k * h))); return { k, lam: (2 * Math.PI) / k, c, cg: n * c, n }; };
+  function draw(ctx, w, hh) {
+    const P = SB.palette();
+    const lam0 = (g * T * T) / (2 * Math.PI), c0 = (g * T) / (2 * Math.PI);
+    const ex = [], dp = [], sh = [], cc = [], cg = [];
+    for (let i = 0; i <= 150; i++) {
+      const d = Math.pow(10, (i / 150) * 3), r = calc(T, d);
+      ex.push([d, r.lam]); dp.push([d, lam0]); sh.push([d, T * Math.sqrt(g * d)]); cc.push([d, r.c]); cg.push([d, r.cg]);
+    }
+    const r = calc(T, h), mid = Math.round(hh * 0.54);
+    const ser = [{ data: ex, color: P.accent, width: 2.4 }];
+    if (ap.checked) { ser.unshift({ data: dp, color: P.accent2, width: 1.5, dash: [6, 4] }, { data: sh, color: P.ok, width: 1.5, dash: [6, 4] }); }
+    SB.chart(ctx, { x: 58, y: 14, w: w - 76, h: mid - 58 }, {
+      x: [1, 1000], y: [0, lam0 * 1.25], logX: true, xLabel: "수심 h (m)", yLabel: "파장 λ (m)", series: ser,
+      vlines: [{ x: lam0 / 2, color: P.faint, label: "λ0/2" }, { x: lam0 / 20, color: P.faint, label: "λ0/20" }].filter((l) => l.x >= 1 && l.x <= 1000),
+      points: [{ x: h, y: r.lam, color: P.accent2, r: 5 }],
+    });
+    SB.chart(ctx, { x: 58, y: mid + 8, w: w - 76, h: hh - mid - 52 }, {
+      x: [1, 1000], y: [0, c0 * 1.15], logX: true, xLabel: "수심 h (m)", yLabel: "속도 (m/s)",
+      series: [{ data: cc, color: P.accent, width: 2.2 }, { data: cg, color: P.warn, width: 2.2 }],
+      points: [{ x: h, y: r.c, color: P.accent, r: 4, label: "c" }, { x: h, y: r.cg, color: P.warn, r: 4, label: "cg" }],
+    });
+  }
+  const cv = SB.canvas(cvEl, draw, { aspect: 0.95, maxHeight: 620, minHeight: 440 });
+  function upd() {
+    const r = calc(T, h);
+    SB.stat("dsp-lam", SB.fmt(r.lam, 3) + "<small>m</small>");
+    SB.stat("dsp-c", SB.fmt(r.c, 3) + "<small>m/s · " + SB.fmt(SB.kn(r.c), 3) + " kn</small>");
+    SB.stat("dsp-cg", SB.fmt(r.cg, 3) + "<small>m/s</small>");
+    const q = h / r.lam;
+    SB.stat("dsp-reg", SB.fmt(q, 2) + " <small>" + (q > 0.5 ? "심해" : q < 0.05 ? "천해" : "중간 수심") + "</small>");
+    cv.redraw();
+  }
+  upd();
+})();
+
+/* ===================== 4. 위상 속도 vs 군속도 ===================== */
+(function () {
+  const g = SB.G, cvEl = document.getElementById("cv-group");
+  const depthOf = (v) => Math.round(Math.pow(10, 0.3 + (v / 300) * 2.7) * 10) / 10;  // 2..1000 m
+  let N = 5, h = 1000, sp = 1, Hm = 2, t = 0, run = true, S = null;
+  const rN = SB.range("grp-n", (v) => v + "개", (v) => { N = v; setup(); });
+  const rh = SB.range("grp-h", (v) => depthOf(v) + " m", (v) => { h = depthOf(v); setup(); });
+  const rs = SB.range("grp-s", (v) => "×" + v, (v) => { sp = v; });
+  const rH = SB.range("grp-H", (v) => v + " m", (v) => { Hm = v; setup(); });
+  N = rN(); h = depthOf(rh()); sp = rs(); Hm = rH();
+  document.getElementById("grp-run").onclick = (e) => { run = !run; e.target.textContent = run ? "일시정지" : "재생"; };
+  const omOf = (k) => Math.sqrt(g * k * Math.tanh(k * h));
+  function setup() {
+    const kb = SB.waveK((2 * Math.PI) / 8, h), dk = kb / N, k1 = kb - dk / 2, k2 = kb + dk / 2;
+    const w1 = omOf(k1), w2 = omOf(k2), wb = (w1 + w2) / 2;
+    const Lg = (2 * Math.PI) / dk;
+    S = { k1, k2, w1, w2, kb, wb, dk, dw: w2 - w1, c: wb / kb, cg: (w2 - w1) / dk, W: 2 * Lg, Lg };
+    SB.stat("grp-c", SB.fmt(S.c, 3) + "<small>m/s</small>");
+    SB.stat("grp-cg", SB.fmt(S.cg, 3) + "<small>m/s</small>");
+    SB.stat("grp-ratio", SB.fmt(S.cg / S.c, 3));
+    const E = (SB.RHO * g * Hm * Hm) / 8;
+    SB.stat("grp-e", SB.fmt(E / 1000, 3) + "<small>kJ/m²</small>");
+    SB.stat("grp-p", SB.fmt((E * S.cg) / 1000, 3) + "<small>kW/m</small>");
+  }
+  setup();
+  function draw(ctx, w, hh) {
+    if (!S) return;
+    const P = SB.palette();
+    const y0 = hh * 0.5, A = hh * 0.17, sx = w / S.W;
+    const eta = (x) => 0.5 * (Math.cos(S.k1 * x - S.w1 * t) + Math.cos(S.k2 * x - S.w2 * t));
+    const env = (x) => Math.cos(0.5 * (S.dk * x - S.dw * t));
+    SB.water(ctx, w, hh, y0, { wave: (px) => -A * eta(px / sx) });
+    ctx.strokeStyle = P.blue; ctx.lineWidth = 1.3; ctx.setLineDash([5, 4]);
+    [1, -1].forEach((sg) => { ctx.beginPath(); for (let px = 0; px <= w; px += 3) { const yy = y0 - sg * A * Math.abs(env(px / sx)); px ? ctx.lineTo(px, yy) : ctx.moveTo(px, yy); } ctx.stroke(); });
+    ctx.setLineDash([]);
+    // 마루 추적점
+    const lb = (2 * Math.PI) / S.kb;
+    // 반송파 마루를 따라간다. 포락선 부호가 음이면 반송파의 골이 합성파의 마루이므로 반 파장 옮긴다.
+    for (let n = 0; n < 2; n++) {
+      let xr = (((S.c * t + n * S.W / 2) % S.W) + S.W) % S.W;
+      if (env(xr) < 0) xr = (xr + lb / 2) % S.W;
+      const yr = y0 - A * eta(xr);
+      ctx.globalAlpha = SB.clamp(Math.abs(env(xr)) * 1.6, 0, 1);
+      ctx.fillStyle = P.red; ctx.beginPath(); ctx.arc(xr * sx, yr, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    for (let n = 0; n < 2; n++) {
+      const xb = (((S.cg * t) % S.Lg) + S.Lg) % S.Lg + n * S.Lg;
+      ctx.fillStyle = P.blue; ctx.beginPath(); ctx.arc(xb * sx, y0 - A - 12, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = P.blue; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(xb * sx, y0 - A - 6); ctx.lineTo(xb * sx, y0 - A * Math.abs(env(xb))); ctx.stroke();
+    }
+    ctx.fillStyle = P.dim; ctx.font = "12px sans-serif"; ctx.textAlign = "left";
+    ctx.fillText("화면 폭 " + SB.fmt(S.W, 3) + " m · 평균 파장 " + SB.fmt(lb, 3) + " m · 경과 " + t.toFixed(0) + " s", 8, hh - 10);
+  }
+  const cv = SB.canvas(cvEl, draw, { aspect: 0.5, maxHeight: 360, minHeight: 240 });
+  SB.loop(cvEl, (dt) => { if (run) { t += dt * sp; cv.redraw(); } });
+})();
+
+/* ===================== 5. 불규칙 파 합성 ===================== */
+(function () {
+  const cvEl = document.getElementById("cv-irr");
+  const Hs = 4, sig = Hs / 4;
+  let N = 3, t = 0, run = true, comps = [];
+  const rN = SB.range("irr-n", (v) => v + "개", (v) => { N = v; build(false); });
+  N = rN();
+  const compChk = document.getElementById("irr-comp"); compChk.onchange = () => cv.redraw();
+  document.getElementById("irr-new").onclick = () => build(true);
+  document.getElementById("irr-run").onclick = (e) => { run = !run; e.target.textContent = run ? "일시정지" : "재생"; };
+  let seedPh = [], seedJ = [];
+  function build(newPhase) {
+    if (newPhase || seedPh.length < 60) { seedPh = Array.from({ length: 60 }, () => Math.random() * 2 * Math.PI); seedJ = Array.from({ length: 60 }, () => Math.random() - 0.5); }
+    const wp = (2 * Math.PI) / 10, lo = 0.35, hi = 1.6;
+    comps = [];
+    for (let i = 0; i < N; i++) {
+      const w = N === 1 ? wp : lo + ((i + 0.5 + (N > 2 ? seedJ[i] * 0.8 : 0)) / N) * (hi - lo);
+      const S = Math.pow(w, -5) * Math.exp(-1.25 * Math.pow(wp / w, 4));
+      comps.push({ w, S, ph: seedPh[i] });
+    }
+    if (N === 2) { comps[0].w = wp * 0.92; comps[1].w = wp * 1.08; comps[0].S = comps[1].S = 1; }
+    const tot = comps.reduce((s, c) => s + c.S, 0);
+    comps.forEach((c) => { c.a = Math.sqrt(2 * sig * sig * (c.S / tot)); });
+    SB.stat("irr-sd", SB.fmt(Math.sqrt(comps.reduce((s, c) => s + c.a * c.a / 2, 0)), 3) + "<small>m</small>");
+    SB.stat("irr-hs", SB.fmt(4 * Math.sqrt(comps.reduce((s, c) => s + c.a * c.a / 2, 0)), 3) + "<small>m</small>");
+    cv && cv.redraw();
+  }
+  let cv = null;
+  build(true);
+  function draw(ctx, w, h) {
+    const P = SB.palette(), win = 120;
+    const showC = compChk.checked ? Math.min(6, N) : 0;
+    const top = showC ? h * 0.42 : 0;
+    const rowH = showC ? top / showC : 0;
+    ctx.font = "11px sans-serif"; ctx.textAlign = "left";
+    for (let i = 0; i < showC; i++) {
+      const c = comps[i], yc = rowH * (i + 0.5), A = rowH * 0.35 / (Math.max(...comps.slice(0, showC).map((q) => q.a)) || 1);
+      ctx.strokeStyle = P.series[i % P.series.length]; ctx.lineWidth = 1.3; ctx.beginPath();
+      for (let px = 50; px <= w - 8; px += 2) { const tt = t + ((px - 50) / (w - 58)) * win; const y = yc - A * c.a * Math.cos(c.w * tt + c.ph); px > 50 ? ctx.lineTo(px, y) : ctx.moveTo(px, y); }
+      ctx.stroke();
+      ctx.fillStyle = P.dim; ctx.fillText("T=" + SB.fmt((2 * Math.PI) / c.w, 2) + "s", 4, yc + 4);
+    }
+    if (showC && N > showC) { ctx.fillStyle = P.faint; ctx.textAlign = "right"; ctx.fillText("… 외 " + (N - showC) + "개", w - 8, top - 4); }
+    const data = []; let mx = 0;
+    for (let i = 0; i <= 400; i++) { const tt = (i / 400) * win; let e = 0; comps.forEach((c) => (e += c.a * Math.cos(c.w * (tt + t) + c.ph))); data.push([tt, e]); mx = Math.max(mx, e); }
+    SB.chart(ctx, { x: 50, y: top + 10, w: w - 66, h: h - top - 52 }, {
+      x: [0, win], y: [-3.5, 3.5], xLabel: "시간 (s, 120 s 창이 흘러감)", yLabel: "η (m)",
+      series: [{ data, color: SB.color("water"), width: 2 }], hlines: [{ y: 0, color: P.faint }],
+    });
+    SB.stat("irr-max", SB.fmt(mx, 3) + "<small>m</small>");
+  }
+  cv = SB.canvas(cvEl, draw, { aspect: 0.62, maxHeight: 460, minHeight: 320 });
+  SB.loop(cvEl, (dt) => { if (run) { t += dt; cv.redraw(); } });
+})();
+
+/* ===================== 6. 파 스펙트럼 ===================== */
+(function () {
+  const cvEl = document.getElementById("cv-spec");
+  let Hs = 5, Tp = 10, gam = 3.3, t = 0, comps = [];
+  const rH = SB.range("sp-hs", (v) => v + " m", (v) => { Hs = v; build(false); });
+  const rT = SB.range("sp-tp", (v) => v + " s", (v) => { Tp = v; build(false); });
+  const rG = SB.range("sp-g", (v) => v.toFixed(1), (v) => { gam = v; build(false); });
+  Hs = rH(); Tp = rT(); gam = rG();
+  SB.seg("sp-pre", (v) => { const p = { pm: [5, 10, 1], js: [5, 10, 3.3], swell: [2.5, 15, 6] }[v]; rH.set(p[0]); rT.set(p[1]); rG.set(p[2]); });
+  document.getElementById("sp-new").onclick = () => build(true);
+  const Spm = (w, Hs, wp) => (5 / 16) * Hs * Hs * Math.pow(wp, 4) * Math.pow(w, -5) * Math.exp(-1.25 * Math.pow(wp / w, 4));
+  const Sj = (w, Hs, wp, g) => { const s = w <= wp ? 0.07 : 0.09; return (1 - 0.287 * Math.log(g)) * Spm(w, Hs, wp) * Math.pow(g, Math.exp(-((w - wp) ** 2) / (2 * s * s * wp * wp))); };
+  const NC = 160, W0 = 0.15, W1 = 3.2;
+  let ph = [], jit = [], mom = {};
+  function build(newPh) {
+    if (newPh || !ph.length) { ph = Array.from({ length: NC }, () => Math.random() * 2 * Math.PI); jit = Array.from({ length: NC }, () => Math.random() - 0.5); }
+    const wp = (2 * Math.PI) / Tp, dw = (W1 - W0) / NC;
+    comps = []; let m0 = 0, m1 = 0, m2 = 0;
+    for (let i = 0; i < NC; i++) {
+      const w = W0 + (i + 0.5 + jit[i] * 0.9) * dw, S = Sj(w, Hs, wp, gam);
+      comps.push({ w, a: Math.sqrt(2 * S * dw), ph: ph[i] });
+      m0 += S * dw; m1 += w * S * dw; m2 += w * w * S * dw;
+    }
+    mom = { m0, m1, m2 };
+    SB.stat("sp-m0", SB.fmt(m0, 3) + "<small>m²</small>");
+    SB.stat("sp-hm0", SB.fmt(4 * Math.sqrt(m0), 3) + "<small>m</small>");
+    SB.stat("sp-tz", SB.fmt(2 * Math.PI * Math.sqrt(m0 / m2), 3) + " · " + SB.fmt((2 * Math.PI * m0) / m1, 3) + "<small>s</small>");
+    cv && cv.redraw();
+  }
+  let cv = null;
+  build(true);
+  function draw(ctx, w, h) {
+    const P = SB.palette(), wp = (2 * Math.PI) / Tp, mid = Math.round(h * 0.5);
+    const sj = [], sp = []; let ymax = 0;
+    for (let i = 0; i <= 300; i++) { const ww = 0.05 + (i / 300) * 2.45; const a = Sj(ww, Hs, wp, gam), b = Spm(ww, Hs, wp); sj.push([ww, a]); sp.push([ww, b]); ymax = Math.max(ymax, a, b); }
+    SB.chart(ctx, { x: 58, y: 12, w: w - 74, h: mid - 54 }, {
+      x: [0, 2.5], y: [0, ymax * 1.15], xLabel: "ω (rad/s)", yLabel: "S(ω) (m²·s)",
+      series: [{ data: sp, color: P.dim, width: 1.4, dash: [5, 4] }, { data: sj, color: P.accent, width: 2.4, fill: SB.color("accent-soft") }],
+      vlines: [{ x: wp, color: P.faint, label: "ωp" }],
+    });
+    // 시계열 (파고: 영점 상향 교차 사이 최고-최저)
+    const win = 200, data = []; let hmax = 0, cmax = -1e9, cmin = 1e9, prev = 0;
+    for (let i = 0; i <= 800; i++) {
+      const tt = (i / 800) * win; let e = 0;
+      for (const c of comps) e += c.a * Math.cos(c.w * (tt + t) + c.ph);
+      data.push([tt, e]);
+      if (i > 0 && prev < 0 && e >= 0) { if (cmax > -1e9) hmax = Math.max(hmax, cmax - cmin); cmax = -1e9; cmin = 1e9; }
+      cmax = Math.max(cmax, e); cmin = Math.min(cmin, e); prev = e;
+    }
+    const yl = Math.max(2, Hs * 0.95);
+    SB.chart(ctx, { x: 58, y: mid + 8, w: w - 74, h: h - mid - 50 }, {
+      x: [0, win], y: [-yl, yl], xLabel: "시간 (s)", yLabel: "η (m)",
+      series: [{ data, color: SB.color("water"), width: 1.6 }],
+      hlines: [{ y: Hs / 2, color: P.accent2, label: "Hs/2" }, { y: -Hs / 2, color: P.accent2 }],
+    });
+    SB.stat("sp-hmax", SB.fmt(hmax, 3) + "<small>m (" + SB.fmt(hmax / Hs, 2) + " Hs)</small>");
+  }
+  cv = SB.canvas(cvEl, draw, { aspect: 0.95, maxHeight: 620, minHeight: 440 });
+  SB.loop(cvEl, (dt) => { t += dt * 2; cv.redraw(); });
+})();
+
+/* ===================== 6b. 너울 도착 ===================== */
+(function () {
+  const g = SB.G, cvEl = document.getElementById("cv-swell");
+  const periods = [20, 18, 16, 14, 12, 10, 8];
+  let D = 3000, th = 0, run = false;
+  const tArr = (T) => (D * 1000) / ((g * T) / (4 * Math.PI)) / 3600;    // 시간(h)
+  const rD = SB.range("sw-d", (v) => v.toLocaleString() + " km", (v) => { D = v; setMax(); upd(); });
+  const rT = SB.range("sw-t", (v) => v + " h", (v) => { th = v; upd(); });
+  D = rD();
+  const btn = document.getElementById("sw-run");
+  btn.onclick = () => { run = !run; if (run && th >= Number(rT.el.max) - 1) rT.set(0); btn.textContent = run ? "일시정지" : "재생"; };
+  function setMax() { const m = Math.ceil(tArr(8) * 1.15); rT.el.max = m; if (th > m) rT.set(m); else rT.set(th); }
+  function draw(ctx, w, h) {
+    const P = SB.palette(), mid = Math.round(h * 0.42);
+    const x0 = 40, x1 = w - 30;
+    ctx.strokeStyle = P.border; ctx.lineWidth = 1;
+    // 바다 띠
+    ctx.fillStyle = SB.color("water-soft"); ctx.fillRect(x0, 34, x1 - x0, mid - 60);
+    ctx.fillStyle = P.dim; ctx.font = "12px sans-serif"; ctx.textAlign = "center";
+    ctx.fillText("폭풍", x0, 24); ctx.fillText("해안", x1, 24);
+    ctx.fillStyle = P.accent2; ctx.beginPath(); ctx.arc(x0, 34 + (mid - 60) / 2, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = P.surface; ctx.fillRect(x1, 30, 24, mid - 52);
+    const rows = periods.length, rh = (mid - 64) / rows;
+    periods.forEach((T, i) => {
+      const cg = (g * T) / (4 * Math.PI), dist = Math.min(D, (cg * th * 3600) / 1000), px = x0 + (dist / D) * (x1 - x0), y = 36 + rh * (i + 0.5);
+      const col = SB.lerp(0, 1, i / (rows - 1));
+      ctx.strokeStyle = P.series[i % 4]; ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      for (let q = -30; q <= 0; q += 2) { const xx = px + q; if (xx < x0) continue; const yy = y + Math.sin(((q + th * 3) / (T * 0.8)) * 2) * rh * 0.3 * (1 + q / 30); q > -30 && xx > x0 ? ctx.lineTo(xx, yy) : ctx.moveTo(xx, yy); }
+      ctx.stroke();
+      ctx.fillStyle = dist >= D ? P.ok : P.series[i % 4]; ctx.beginPath(); ctx.arc(px, y, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = P.dim; ctx.textAlign = "right"; ctx.font = "10px sans-serif"; ctx.fillText(T + "s", x0 - 14, y + 3);
+      void col;
+    });
+    ctx.fillStyle = P.faint; ctx.textAlign = "left"; ctx.font = "11px sans-serif";
+    ctx.fillText(D.toLocaleString() + " km", x0 + 4, mid - 12);
+    // 도착 시각 그래프
+    const data = []; for (let T = 6; T <= 22; T += 0.2) data.push([T, tArr(T)]);
+    const arrived = periods.filter((T) => tArr(T) <= th);
+    SB.chart(ctx, { x: 58, y: mid + 10, w: w - 76, h: h - mid - 54 }, {
+      x: [6, 22], y: [0, tArr(6)], xLabel: "주기 T (s)", yLabel: "도착 시각 (h)",
+      series: [{ data, color: P.accent, width: 2.2 }],
+      hlines: [{ y: th, color: P.accent2, label: "지금 " + th + " h" }],
+      points: periods.map((T) => ({ x: T, y: tArr(T), color: tArr(T) <= th ? P.ok : P.faint, r: 4 })),
+    });
+    void arrived;
+  }
+  const cv = SB.canvas(cvEl, draw, { aspect: 0.75, maxHeight: 520, minHeight: 380 });
+  function upd() {
+    const Tnow = th > 0 ? (4 * Math.PI * D * 1000) / (g * th * 3600) : Infinity;
+    SB.stat("sw-now", th > 0 && Tnow < 40 ? SB.fmt(Tnow, 3) + "<small>s</small>" : "아직 없음");
+    SB.stat("sw-first", SB.fmt(tArr(20), 3) + "<small>h 후</small>");
+    SB.stat("sw-last", SB.fmt(tArr(8), 3) + "<small>h 후</small>");
+    cv.redraw();
+  }
+  setMax(); upd();
+  let acc = 0;
+  SB.loop(cvEl, (dt) => {
+    if (!run) return;
+    acc += dt * (Number(rT.el.max) / 14);
+    if (acc >= 1) { const n = Math.floor(acc); acc -= n; const nv = Math.min(Number(rT.el.max), th + n); rT.set(nv); if (nv >= Number(rT.el.max)) { run = false; btn.textContent = "재생"; } }
+  });
+})();
+
+/* ===================== 7. 파고 통계 ===================== */
+(function () {
+  const cvEl = document.getElementById("cv-stat");
+  let Hs = 8, Tz = 9, Dh = 3, sample = null;
+  const rH = SB.range("st-hs", (v) => v + " m", (v) => { Hs = v; sample = null; upd(); });
+  const rT = SB.range("st-tz", (v) => v + " s", (v) => { Tz = v; sample = null; upd(); });
+  const rD = SB.range("st-d", (v) => v + " h", (v) => { Dh = v; sample = null; upd(); });
+  Hs = rH(); Tz = rT(); Dh = rD();
+  const Nw = () => Math.round((Dh * 3600) / Tz);
+  document.getElementById("st-run").onclick = () => {
+    const N = Nw(), Hrms = Hs / Math.SQRT2, arr = new Float32Array(N);
+    for (let i = 0; i < N; i++) arr[i] = Hrms * Math.sqrt(-Math.log(1 - Math.random()));
+    sample = arr; upd();
+  };
+  function draw(ctx, w, h) {
+    const P = SB.palette(), Hrms = Hs / Math.SQRT2, mid = Math.round(h * 0.58);
+    const N = Nw(), Hmax = Hs * Math.sqrt(Math.log(N) / 2);
+    const pdf = []; let pm = 0;
+    for (let i = 0; i <= 200; i++) { const H = (i / 200) * 2.6 * Hs, p = ((2 * H) / (Hrms * Hrms)) * Math.exp(-((H / Hrms) ** 2)); pdf.push([H, p]); pm = Math.max(pm, p); }
+    const box = { x: 58, y: 14, w: w - 76, h: mid - 58 };
+    const C = SB.chart(ctx, box, {
+      x: [0, 2.6 * Hs], y: [0, pm * 1.25], xLabel: "파고 H (m)", yLabel: "확률 밀도",
+      series: [{ data: pdf, color: P.accent, width: 2.4 }],
+      vlines: [{ x: 0.626 * Hs, color: P.dim, label: "H̄" }, { x: Hs, color: P.accent, label: "Hs" }, { x: 1.27 * Hs, color: P.warn, label: "H1/10" }, { x: Hmax, color: P.accent2, label: "Hmax" }, { x: 2 * Hs, color: P.red }],
+    });
+    if (sample) {
+      const nb = 40, bw = (2.6 * Hs) / nb, cnt = new Array(nb).fill(0);
+      for (const H of sample) { const b = Math.floor(H / bw); if (b < nb) cnt[b]++; }
+      ctx.fillStyle = SB.color("accent-soft");
+      cnt.forEach((c, i) => { const d = c / (sample.length * bw); const x = C.X(i * bw), y = C.Y(Math.min(d, pm * 1.25)); ctx.fillRect(x + 0.5, y, C.X(bw) - C.X(0) - 1, C.Y(0) - y); });
+    }
+    // 파고 기록
+    const by = mid + 18, bh = h - by - 26;
+    ctx.fillStyle = P.dim; ctx.font = "12px sans-serif"; ctx.textAlign = "left";
+    ctx.fillText(sample ? "이번 폭풍의 파고 기록 (" + sample.length.toLocaleString() + "개 파, 시간 순)" : "버튼을 눌러 폭풍 하나를 겪어 보자", 58, by - 4);
+    const scale = bh / (2.6 * Hs);
+    ctx.strokeStyle = P.axis; ctx.beginPath(); ctx.moveTo(58, by + bh); ctx.lineTo(w - 18, by + bh); ctx.stroke();
+    if (sample) {
+      const W = w - 76, n = sample.length;
+      for (let px = 0; px < W; px++) {
+        const i0 = Math.floor((px / W) * n), i1 = Math.max(i0 + 1, Math.floor(((px + 1) / W) * n));
+        let m = 0; for (let i = i0; i < i1 && i < n; i++) m = Math.max(m, sample[i]);
+        ctx.fillStyle = m > 2 * Hs ? P.red : SB.color("water");
+        ctx.fillRect(58 + px, by + bh - m * scale, 1, m * scale);
+      }
+    }
+    ctx.strokeStyle = P.red; ctx.setLineDash([5, 4]); ctx.beginPath(); ctx.moveTo(58, by + bh - 2 * Hs * scale); ctx.lineTo(w - 18, by + bh - 2 * Hs * scale); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = P.red; ctx.textAlign = "right"; ctx.fillText("2Hs = " + 2 * Hs + " m", w - 20, by + bh - 2 * Hs * scale - 4);
+  }
+  const cv = SB.canvas(cvEl, draw, { aspect: 0.8, maxHeight: 560, minHeight: 400 });
+  function upd() {
+    const N = Nw();
+    SB.stat("st-n", N.toLocaleString());
+    SB.stat("st-mean", SB.fmt(0.626 * Hs, 3) + "<small>m</small>");
+    SB.stat("st-h10", SB.fmt(1.27 * Hs, 3) + "<small>m</small>");
+    SB.stat("st-hmax", SB.fmt(Hs * Math.sqrt(Math.log(N) / 2), 3) + "<small>m</small>");
+    if (sample) { let m = 0, r = 0; for (const H of sample) { m = Math.max(m, H); if (H > 2 * Hs) r++; } SB.stat("st-samp", SB.fmt(m, 3) + "<small>m · " + r + "개</small>"); }
+    else SB.stat("st-samp", "—");
+    cv.redraw();
+  }
+  upd();
+})();
+
+/* ===================== 8. 보퍼트 계급 ===================== */
+(function () {
+  const g = SB.G, cvEl = document.getElementById("cv-bf");
+  const B = [
+    ["고요", "<1", 0, 0, "수면이 거울 같다."],
+    ["실바람", "1~3", 0.1, 1, "비늘 모양 잔물결이 생기지만 거품 마루는 없다."],
+    ["남실바람", "4~6", 0.2, 2, "작은 물결이 뚜렷하다. 마루는 유리처럼 매끈하고 부서지지 않는다."],
+    ["산들바람", "7~10", 0.6, 3, "물결이 커지고 마루가 부서지기 시작한다. 흰 파두가 드문드문 보인다."],
+    ["건들바람", "11~16", 1, 3, "작은 파도가 길어지고 흰 파두가 꽤 잦다."],
+    ["흔들바람", "17~21", 2, 4, "뚜렷하게 긴 파도가 생기고 흰 파두가 많다. 물보라가 날리기도 한다."],
+    ["된바람", "22~27", 3, 5, "큰 파도가 생기기 시작하고 흰 거품 마루가 넓게 퍼진다."],
+    ["센바람", "28~33", 4, 5, "바다가 부풀어 오르고 부서진 파도의 흰 거품이 바람 방향으로 줄무늬를 이룬다."],
+    ["큰바람", "34~40", 5.5, 6, "꽤 높고 긴 파도. 마루 끝이 부서져 물보라로 날리고 거품 줄무늬가 뚜렷하다."],
+    ["큰센바람", "41~47", 7, 6, "높은 파도. 마루가 넘어지며 굴러떨어지고 물보라로 시정이 나빠진다."],
+    ["노대바람", "48~55", 9, 7, "긴 마루가 걸린 매우 높은 파도. 거품 때문에 바다 전체가 하얗게 보인다."],
+    ["왕바람", "56~63", 11.5, 8, "중소형 선박이 파도 뒤에 가려질 만큼 높다. 바다가 흰 거품으로 덮인다."],
+    ["싹쓸바람", "64+", 14, 9, "공기가 거품과 물보라로 가득 차고 바다는 완전히 하얗다. 시정이 매우 나쁘다."],
+  ];
+  const SS = ["0 잔잔(유리)", "1 잔잔(잔물결)", "2 약간", "3 조금 거침", "4 보통", "5 거침", "6 매우 거침", "7 높음", "8 매우 높음", "9 대단히 높음"];
+  let b = 5, t = 0;
+  const rB = SB.range("bf-b", (v) => v + " (" + B[v][0] + ")", (v) => { b = v; upd(); });
+  b = rB();
+  const shipChk = document.getElementById("bf-ship"); shipChk.onchange = () => cv.redraw();
+  const Uof = (b) => 0.836 * Math.pow(b, 1.5);
+  const ph = [0, 1.7, 4.1, 2.6];
+  function draw(ctx, w, h) {
+    const P = SB.palette();
+    const H = B[b][2], U = Uof(b), Tp = Math.max(1.5, 4 * Math.sqrt(H));
+    const span = 300, sx = w / span, ex = 4, sy = sx * ex, y0 = h * 0.52;
+    // 하늘 (물리적 색)
+    const d = b / 12;
+    const sky = ctx.createLinearGradient(0, 0, 0, y0);
+    sky.addColorStop(0, `rgb(${Math.round(150 - 80 * d)},${Math.round(196 - 100 * d)},${Math.round(236 - 120 * d)})`);
+    sky.addColorStop(1, `rgb(${Math.round(214 - 90 * d)},${Math.round(232 - 100 * d)},${Math.round(246 - 110 * d)})`);
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, w, y0 + 30);
+    // 구름
+    ctx.fillStyle = `rgba(${Math.round(250 - 120 * d)},${Math.round(250 - 120 * d)},${Math.round(252 - 110 * d)},${0.35 + 0.5 * d})`;
+    for (let i = 0; i < 3 + b; i++) { const cx = ((i * 137 + t * U * 2) % (w + 160)) - 80, cy = 20 + ((i * 53) % 50); ctx.beginPath(); ctx.ellipse(cx, cy, 50 + (i % 3) * 18, 12 + (i % 2) * 6, 0, 0, Math.PI * 2); ctx.fill(); }
+    // 파형: 주성분 + 보조
+    const cmp = [[1, 0.6], [0.72, 0.25], [1.35, 0.2], [0.45, 0.1]].map(([f, a], i) => { const T = Tp * f, om = (2 * Math.PI) / T, k = (om * om) / g; return { om, k, a: a * (H / 2) * 1.05, ph: ph[i] }; });
+    const eta = (x) => cmp.reduce((s, c) => s + c.a * Math.cos(c.k * x - c.om * t + c.ph), 0);
+    const ripple = (x) => (b >= 1 && b <= 3 ? 0.6 * Math.sin(x * 1.8 - t * 6) * (b / 3) : 0);
+    const ys = (px) => y0 - (eta(px / sx) * sy + ripple(px));
+    // 배
+    if (shipChk.checked) {
+      const L = 120, xc = w * 0.45, xs = xc / sx;
+      const yb = ys(xc + (L / 2) * sx * 0.8), ya = ys(xc - (L / 2) * sx * 0.8), ym = (ys(xc) + yb + ya) / 3;
+      const pitch = Math.atan2(yb - ya, L * sx * 0.8);
+      SB.shipSide(ctx, xc, ym, sx, { L, D: 12, T: 7, cargo: "container", pitch, color: "#2b3445" });
+      void xs;
+    }
+    // 바다
+    ctx.beginPath(); ctx.moveTo(0, h);
+    for (let px = 0; px <= w; px += 3) ctx.lineTo(px, ys(px));
+    ctx.lineTo(w, h); ctx.closePath();
+    const sea = ctx.createLinearGradient(0, y0 - 40, 0, h);
+    sea.addColorStop(0, `rgba(${Math.round(40 + 40 * d)},${Math.round(120 - 30 * d)},${Math.round(180 - 50 * d)},0.92)`);
+    sea.addColorStop(1, `rgba(${Math.round(20 + 20 * d)},${Math.round(60 - 10 * d)},${Math.round(100 - 20 * d)},0.98)`);
+    ctx.fillStyle = sea; ctx.fill();
+    // 흰 파두 / 거품
+    if (b >= 3) {
+      const n = Math.round((b - 2) * 6);
+      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      for (let px = 4; px < w; px += 3) {
+        const e = eta(px / sx), e2 = eta((px + 3) / sx), e0 = eta((px - 3) / sx);
+        if (e > e0 && e >= e2 && e > (H / 2) * (1 - 0.06 * b)) { const y = ys(px); ctx.beginPath(); ctx.ellipse(px + 3, y + 1, 4 + b * 1.2, 2 + b * 0.25, 0, 0, Math.PI * 2); ctx.fill(); }
+      }
+      ctx.fillStyle = `rgba(255,255,255,${0.15 + 0.05 * b})`;
+      for (let i = 0; i < n; i++) { const px = ((i * 97.3 + t * 8) % w), y = ys(px) + 8 + ((i * 31) % Math.max(10, h - y0 - 20)); ctx.fillRect(px, y, 6 + b, 1.5); }
+    }
+    if (b >= 7) { // 거품 줄무늬
+      ctx.strokeStyle = `rgba(255,255,255,${0.12 + 0.05 * (b - 7)})`; ctx.lineWidth = 2;
+      for (let i = 0; i < (b - 6) * 6; i++) { const px = (i * 61.7 + t * 20) % (w + 80) - 40, py = y0 + 10 + ((i * 47) % Math.max(10, h - y0 - 10)); ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + 40 + b * 3, py + 2); ctx.stroke(); }
+    }
+    if (b >= 8) { // 물보라
+      ctx.fillStyle = `rgba(255,255,255,${0.1 + 0.06 * (b - 8)})`;
+      for (let i = 0; i < (b - 7) * 30; i++) { const px = (i * 23.1 + t * U * 6) % w, base = ys(px); ctx.fillRect(px, base - ((i * 13) % (12 + b * 3)), 2, 1); }
+    }
+    if (b >= 10) { ctx.fillStyle = `rgba(230,236,242,${0.08 * (b - 9)})`; ctx.fillRect(0, 0, w, h); }
+    // 바람 화살표
+    ctx.fillStyle = "rgba(20,30,45,0.75)"; ctx.font = "12px sans-serif"; ctx.textAlign = "left";
+    if (b > 0) SB.arrow(ctx, 12, 18, 12 + 14 + b * 6, 18, "rgba(20,30,45,0.75)", 2);
+    ctx.fillText("바람 " + SB.fmt(U, 2) + " m/s", 18 + 14 + b * 6, 22);
+  }
+  const cv = SB.canvas(cvEl, draw, { aspect: 0.52, maxHeight: 400, minHeight: 240 });
+  function upd() {
+    const r = B[b], U = Uof(b);
+    SB.stat("bf-u", r[1] + "<small>kn</small>");
+    SB.stat("bf-h", (b === 12 ? "≥ " : "") + r[2] + "<small>m</small>");
+    SB.stat("bf-ss", SS[r[3]]);
+    SB.stat("bf-tp", b === 0 ? "—" : SB.fmt(4 * Math.sqrt(r[2]), 2) + "<small>s</small>");
+    document.getElementById("bf-desc").innerHTML = "<b>계급 " + b + " · " + r[0] + "</b> — " + r[4];
+    cv.redraw();
+  }
+  upd();
+  SB.loop(cvEl, (dt) => { t += dt; cv.redraw(); });
+})();
+
+/* ===================== 9. 천수 변형과 쇄파 ===================== */
+(function () {
+  const g = SB.G, cvEl = document.getElementById("cv-shoal");
+  let H0 = 1.5, T = 10, slope = 1 / 30, t = 0, run = true, prof = null;
+  const rH = SB.range("sh-h", (v) => v.toFixed(1) + " m", (v) => { H0 = v; build(); });
+  const rT = SB.range("sh-t", (v) => v + " s", (v) => { T = v; build(); });
+  H0 = rH(); T = rT();
+  SB.seg("sh-sl", (v) => { slope = 1 / Number(v); build(); });
+  document.getElementById("sh-run").onclick = (e) => { run = !run; e.target.textContent = run ? "일시정지" : "재생"; };
+  const hMax = 30;
+  function build() {
+    const om = (2 * Math.PI) / T, cg0 = (g * T) / (4 * Math.PI), lam0 = (g * T * T) / (2 * Math.PI);
+    const X = hMax / slope, N = 700, dx = X / N, pts = [];
+    let phase = 0, broke = -1;
+    for (let i = 0; i <= N; i++) {
+      const x = i * dx, h = Math.max(0.02, hMax - slope * x);
+      const k = SB.waveK(om, h), c = om / k, n = 0.5 * (1 + (2 * k * h > 600 ? 0 : (2 * k * h) / Math.sinh(2 * k * h))), cg = n * c;
+      const Ks = Math.sqrt(cg0 / cg);
+      let H = H0 * Ks;
+      if (broke < 0 && H >= 0.78 * h) broke = i;
+      if (broke >= 0) H = 0.78 * h;
+      if (i > 0) phase += k * dx;
+      pts.push({ x, h, k, H, Ks, lam: (2 * Math.PI) / k, phase });
+    }
+    prof = { X, pts, broke, lam0, om };
+    const b = broke >= 0 ? pts[broke] : null;
+    SB.stat("sh-hb", b ? SB.fmt(b.h, 3) + "<small>m</small>" : "—");
+    SB.stat("sh-Hb", b ? SB.fmt(b.H, 3) + "<small>m · Ks " + SB.fmt(b.Ks, 3) + "</small>" : "—");
+    SB.stat("sh-lb", b ? SB.fmt(b.lam / lam0, 2) + "<small>(" + SB.fmt(b.lam, 3) + " m)</small>" : "—");
+    const xi = slope / Math.sqrt(H0 / lam0);
+    SB.stat("sh-type", (xi < 0.5 ? "붕괴형" : xi < 3.3 ? "권파형" : "쇄기형") + " <small>ξ=" + SB.fmt(xi, 2) + "</small>");
+    cv && cv.redraw();
+  }
+  let cv = null;
+  build();
+  function draw(ctx, w, h) {
+    if (!prof) return;
+    const P = SB.palette(), mid = Math.round(h * 0.56);
+    const xL = 10, xR = w - 10, sx = (xR - xL) / prof.X;
+    const yS = 60, sz = (mid - yS - 16) / hMax;
+    // 수면
+    const surf = (p) => yS - (p.H / 2) * Math.cos(p.phase - prof.om * t) * sz;
+    ctx.beginPath(); ctx.moveTo(xL, mid);
+    prof.pts.forEach((p, i) => { if (i % 2) return; ctx.lineTo(xL + p.x * sx, surf(p)); });
+    ctx.lineTo(xR, mid); ctx.closePath();
+    ctx.fillStyle = SB.color("water-soft"); ctx.fill();
+    ctx.beginPath(); prof.pts.forEach((p, i) => { const X = xL + p.x * sx, Y = surf(p); i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
+    ctx.strokeStyle = SB.color("water"); ctx.lineWidth = 1.8; ctx.stroke();
+    // 해저
+    ctx.beginPath(); ctx.moveTo(xL, yS + hMax * sz); ctx.lineTo(xR, yS); ctx.lineTo(xR, mid); ctx.lineTo(xL, mid); ctx.closePath();
+    ctx.fillStyle = P.surface; ctx.fill(); ctx.strokeStyle = P.axis; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(xL, yS + hMax * sz); ctx.lineTo(xR, yS); ctx.stroke();
+    // 쇄파대
+    if (prof.broke >= 0) {
+      const bx = xL + prof.pts[prof.broke].x * sx;
+      ctx.fillStyle = "rgba(255,255,255,0.55)";
+      for (let i = prof.broke; i < prof.pts.length; i += 6) { const p = prof.pts[i]; const X = xL + p.x * sx, Y = surf(p); if (Math.cos(p.phase - prof.om * t) > 0.6) { ctx.beginPath(); ctx.arc(X, Y - 1, 2.5, 0, Math.PI * 2); ctx.fill(); } }
+      ctx.strokeStyle = P.accent2; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(bx, 24); ctx.lineTo(bx, mid); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = P.accent2; ctx.font = "12px sans-serif"; ctx.textAlign = "right"; ctx.fillText("쇄파점", bx - 4, 34);
+    }
+    ctx.fillStyle = P.dim; ctx.font = "12px sans-serif"; ctx.textAlign = "left";
+    ctx.fillText("수심 30 m", xL + 2, yS + hMax * sz - 6);
+    ctx.textAlign = "right"; ctx.fillText("해안 · 가로 " + SB.fmt(prof.X / 1000, 3) + " km", xR, 16);
+    // 아래 그래프
+    const dH = [], dB = [], dL = []; let ymax = 0;
+    prof.pts.forEach((p, i) => { if (i % 3) return; dH.push([p.x, p.H]); dB.push([p.x, 0.78 * p.h]); ymax = Math.max(ymax, p.H); });
+    ymax = Math.max(ymax * 1.3, H0 * 1.5);
+    prof.pts.forEach((p, i) => { if (i % 3) return; dL.push([p.x, (p.lam / prof.lam0) * ymax * 0.9]); });
+    SB.chart(ctx, { x: 50, y: mid + 14, w: w - 66, h: h - mid - 56 }, {
+      x: [0, prof.X], y: [0, ymax], xLabel: "해안 쪽 거리 (m)", yLabel: "H (m)", xFmt: (v) => SB.fmt(v, 3),
+      series: [{ data: dB, color: P.dim, width: 1.4, dash: [5, 4] }, { data: dL, color: P.accent, width: 1.6 }, { data: dH, color: P.accent2, width: 2.4 }],
+      vlines: prof.broke >= 0 ? [{ x: prof.pts[prof.broke].x, color: P.accent2 }] : [],
+    });
+    ctx.font = "11px sans-serif"; ctx.fillStyle = P.accent; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    ctx.fillText("λ/λ0 = " + SB.fmt(prof.pts[0].lam / prof.lam0, 2), 56, mid + 14 + (1 - (prof.pts[0].lam / prof.lam0) * 0.9) * (h - mid - 56) - 6);
+  }
+  cv = SB.canvas(cvEl, draw, { aspect: 0.8, maxHeight: 560, minHeight: 400 });
+  SB.loop(cvEl, (dt) => { if (run) { t += dt; cv.redraw(); } });
+})();
+
+/* ===================== 10. 굴절 평면도 ===================== */
+(function () {
+  const g = SB.G, cvEl = document.getElementById("cv-refr");
+  const WX = 2400, WY = 1500, SLOPE = 0.04, HMAX = 60;
+  let mode = "straight", th0 = 35, T = 10, t = 0, rays = [], ctab = null, tauLo = 0, tauHi = 0;
+  const rA = SB.range("rf-a", (v) => v + "°", (v) => { th0 = v; trace(); });
+  const rT = SB.range("rf-t", (v) => v + " s", (v) => { T = v; trace(); });
+  th0 = rA(); T = rT();
+  SB.seg("rf-mode", (v) => { mode = v; trace(); });
+  const raysChk = document.getElementById("rf-rays"); raysChk.onchange = () => cv.redraw();
+  const shore = (x) => mode === "head" ? 520 * Math.exp(-(((x - 1200) / 330) ** 2)) : mode === "bay" ? 480 * (1 - Math.exp(-(((x - 1200) / 420) ** 2))) : 0;
+  const depth = (x, y) => Math.min(HMAX, (y - shore(x)) * SLOPE);
+  function makeTab() { const om = (2 * Math.PI) / T, arr = []; for (let i = 0; i <= 600; i++) { const h = Math.max(0.05, i * 0.1); arr.push(om / SB.waveK(om, h)); } ctab = arr; }
+  const cOf = (h) => { const f = SB.clamp(h, 0.05, HMAX) * 10, i = Math.floor(f), r = f - i; return i >= 600 ? ctab[600] : ctab[i] * (1 - r) + ctab[i + 1] * r; };
+  const cAt = (x, y) => cOf(depth(x, y));
+  function trace() {
+    makeTab();
+    const a = SB.rad(th0), ds = 6;
+    rays = [];
+    const span = Math.tan(Math.abs(a)) * WY;
+    for (let x0 = -span - 200; x0 <= WX + span + 200; x0 += 50) {
+      // 심해 경계에서 출발: 방향 (sin a, -cos a), y 감소 = 해안 쪽
+      let x = x0, y = WY - 1, tx = Math.sin(a), ty = -Math.cos(a), tau = (x0 * Math.sin(a)) / cOf(depth(x0, WY - 1));
+      const pts = [];
+      for (let s = 0; s < 1200; s++) {
+        const h = depth(x, y);
+        if (h < 0.6 || y < -10) break;
+        if (x >= -400 && x <= WX + 400) pts.push([x, y, tau]);
+        const c = cOf(h), e = 4;
+        const cx = (cAt(x + e, y) - cAt(x - e, y)) / (2 * e), cy = (cAt(x, y + e) - cAt(x, y - e)) / (2 * e);
+        const dot = cx * tx + cy * ty;
+        tx += (-(cx - dot * tx) / c) * ds; ty += (-(cy - dot * ty) / c) * ds;
+        const n = Math.hypot(tx, ty); tx /= n; ty /= n;
+        x += tx * ds; y += ty * ds; tau += ds / c;
+        if (x < -1500 || x > WX + 1500) break;
+      }
+      rays.push(pts);
+    }
+    tauLo = Infinity; tauHi = -Infinity;
+    rays.forEach((r) => r.forEach((p) => { if (p[2] < tauLo) tauLo = p[2]; if (p[2] > tauHi) tauHi = p[2]; }));
+    const om = (2 * Math.PI) / T, c0 = om / SB.waveK(om, 1e9), c5 = cOf(5);
+    SB.stat("rf-c0", SB.fmt(c0, 3) + "<small>m/s</small>");
+    SB.stat("rf-c5", SB.fmt(c5, 3) + "<small>m/s</small>");
+    const cDeep = cOf(HMAX); // 영역 바깥 경계 기준
+    const s5 = (Math.sin(a) * c5) / cDeep;
+    SB.stat("rf-th", SB.fmt(SB.deg(Math.asin(SB.clamp(s5, -1, 1))), 3) + "°");
+    cv && cv.redraw();
+  }
+  let cv = null;
+  trace();
+  function draw(ctx, w, h) {
+    const P = SB.palette(), s = w / WX, dark = SB.isDark();
+    const Y = (y) => y * s, X = (x) => x * s;
+    // 수심 배경
+    const cell = 6;
+    for (let py = 0; py < h; py += cell) for (let px = 0; px < w; px += cell) {
+      const d = depth((px + cell / 2) / s, (py + cell / 2) / s);
+      if (d <= 0) ctx.fillStyle = dark ? "#5a5038" : "#e3d3a6";
+      else { const band = Math.floor(d / 5) * 5; const al = 0.12 + 0.55 * (band / HMAX); ctx.fillStyle = `rgba(30,110,180,${al.toFixed(3)})`; }
+      ctx.fillRect(px, py, cell + 0.5, cell + 0.5);
+    }
+    // 파향선
+    if (raysChk.checked) {
+      ctx.strokeStyle = dark ? "rgba(255,255,255,0.25)" : "rgba(20,40,70,0.25)"; ctx.lineWidth = 1;
+      rays.forEach((r) => { ctx.beginPath(); r.forEach((p, i) => (i ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1])))); ctx.stroke(); });
+    }
+    // 파봉: tau = phase + n T
+    const ph = t % T;
+    ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2;
+    const find = (r, tau) => { for (let i = 1; i < r.length; i++) if (r[i][2] >= tau) { const a = r[i - 1], b = r[i], f = (tau - a[2]) / (b[2] - a[2] || 1); return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f]; } return null; };
+    for (let n = Math.floor(tauLo / T) - 1; n <= Math.ceil(tauHi / T); n++) {
+      const tau = ph + n * T; let prev = null; ctx.beginPath();
+      for (const r of rays) {
+        const p = r.length > 1 && r[0][2] <= tau && r[r.length - 1][2] >= tau ? find(r, tau) : null;
+        if (p && prev && Math.hypot(p[0] - prev[0], p[1] - prev[1]) < 180) ctx.lineTo(X(p[0]), Y(p[1]));
+        else if (p) ctx.moveTo(X(p[0]), Y(p[1]));
+        prev = p;
+      }
+      ctx.stroke();
+    }
+    ctx.fillStyle = dark ? "#f0f0f0" : "#1d2635"; ctx.font = "12px sans-serif"; ctx.textAlign = "left";
+    ctx.fillText("해안 (육지)", 8, 14);
+    ctx.textAlign = "right"; ctx.fillText("먼 바다 (수심 60 m) · 폭 2.4 km", w - 8, h - 8);
+  }
+  cv = SB.canvas(cvEl, draw, { aspect: WY / WX, maxHeight: 520, minHeight: 220 });
+  SB.onTheme(() => cv.redraw());
+  SB.loop(cvEl, (dt) => { t += dt * 1.5; cv.redraw(); });
+})();
+
+/* ===================== 11. 쓰나미 ===================== */
+(function () {
+  const g = SB.G, cvEl = document.getElementById("cv-tsu");
+  let h0 = 4000, Dk = 8000, A0 = 0.6, xp = -1, tSim = 0, run = false;
+  const rH = SB.range("ts-h", (v) => v.toLocaleString() + " m", (v) => { h0 = v; upd(); });
+  const rD = SB.range("ts-d", (v) => v.toLocaleString() + " km", (v) => { Dk = v; upd(); });
+  const rA = SB.range("ts-a", (v) => v.toFixed(1) + " m", (v) => { A0 = v; upd(); });
+  h0 = rH(); Dk = rD(); A0 = rA();
+  document.getElementById("ts-run").onclick = () => { xp = 20e3; tSim = 0; run = true; };
+  const LX = 500e3; // 단면 길이 500 km
+  const hAt = (x) => x < 380e3 ? h0 : x < 470e3 ? h0 + (200 - h0) * ((x - 380e3) / 90e3) : Math.max(1, 200 * (1 - (x - 470e3) / 30e3));
+  function draw(ctx, w, h) {
+    const P = SB.palette();
+    const sx = w / LX, ySea = h * 0.4, sz = (h - ySea - 24) / 7000;
+    const sig0 = 40e3;
+    const amp = (x) => A0 * Math.pow(h0 / hAt(x), 0.25);
+    const sig = (x) => sig0 * Math.sqrt(hAt(x) / h0);
+    const exag = 18;   // px / m
+    const eta = (x) => xp < 0 ? 0 : amp(xp) * Math.exp(-(((x - xp) / sig(xp)) ** 2));
+    ctx.beginPath(); ctx.moveTo(0, h);
+    for (let px = 0; px <= w; px += 2) ctx.lineTo(px, ySea - Math.min(80, eta(px / sx) * exag));
+    ctx.lineTo(w, h); ctx.closePath(); ctx.fillStyle = SB.color("water-soft"); ctx.fill();
+    ctx.beginPath(); for (let px = 0; px <= w; px += 2) { const y = ySea - Math.min(80, eta(px / sx) * exag); px ? ctx.lineTo(px, y) : ctx.moveTo(px, y); }
+    ctx.strokeStyle = SB.color("water"); ctx.lineWidth = 2; ctx.stroke();
+    // 해저
+    ctx.beginPath(); ctx.moveTo(0, h);
+    for (let px = 0; px <= w; px += 2) ctx.lineTo(px, ySea + hAt(px / sx) * sz);
+    ctx.lineTo(w, ySea - 20); ctx.lineTo(w, h); ctx.closePath(); ctx.fillStyle = P.surface; ctx.fill();
+    ctx.strokeStyle = P.axis; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = P.dim; ctx.font = "12px sans-serif"; ctx.textAlign = "left";
+    ctx.fillText("대양 수심 " + h0.toLocaleString() + " m", 8, ySea + h0 * sz - 8 > ySea + 20 ? ySea + h0 * sz - 8 : ySea + 18);
+    ctx.textAlign = "right"; ctx.fillText("대륙붕 → 해안", w - 8, ySea + 40);
+    ctx.textAlign = "left"; ctx.fillText("단면 500 km · 세로 크게 과장", 8, 16);
+    if (xp >= 0) ctx.fillText("발생 후 " + (tSim / 60).toFixed(1) + " 분", 8, 34);
+  }
+  const cv = SB.canvas(cvEl, draw, { aspect: 0.5, maxHeight: 360, minHeight: 240 });
+  function upd() {
+    const c = Math.sqrt(g * h0);
+    SB.stat("ts-c", SB.fmt(c, 3) + "<small>m/s · " + SB.fmt(c * 3.6, 3) + " km/h</small>");
+    SB.stat("ts-time", SB.fmt((Dk * 1000) / c / 3600, 3) + "<small>h</small>");
+    if (xp >= 0) {
+      const hl = hAt(xp);
+      SB.stat("ts-cl", SB.fmt(Math.sqrt(g * hl), 3) + "<small>m/s (h " + SB.fmt(hl, 3) + " m)</small>");
+      SB.stat("ts-hl", SB.fmt(A0 * Math.pow(h0 / hl, 0.25), 3) + "<small>m</small>");
+    } else { SB.stat("ts-cl", "—"); SB.stat("ts-hl", "—"); }
+    cv.redraw();
+  }
+  upd();
+  SB.loop(cvEl, (dt) => {
+    if (!run) return;
+    const step = dt * 240;   // 시뮬레이션 1초 = 실제 240초
+    for (let i = 0; i < 4; i++) { xp += Math.sqrt(g * hAt(xp)) * (step / 4); }
+    tSim += step;
+    if (xp > LX - 4e3) { run = false; xp = LX - 4e3; }
+    upd();
+  });
+})();
+</script>
+</body>
+</html>

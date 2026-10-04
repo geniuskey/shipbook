@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<title>선교 장비와 충돌 회피 · ShipBook</title>
+<meta name="description" content="선교 장비 배치, 레이더 원리와 PPI 화면, ARPA의 CPA·TCPA, AIS 시분할 통신, ECDIS 안전 등심선, 국제 해상 충돌 예방 규칙(COLREG), 항해등과 음향 신호를 시뮬레이터와 게임으로 배운다.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../css/style.css">
+<script src="../js/common.js"></script>
+<style>
+  .sim-view.duo { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .sim-view.duo > div { min-width: 0; position: relative; }
+  @media (min-width: 700px) {
+    .sim-view.duo { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .sim-view.duo > div + div { border-left: 1px solid var(--border); }
+  }
+  .sim-view canvas.grab { cursor: grab; touch-action: none; }
+  .sim-view canvas.grab:active { cursor: grabbing; }
+  .fig-lg svg .t, .fig-lg svg .t-acc { font-size: 16px; }
+  .fig-lg svg .t-dim { font-size: 14px; }
+  .fig-lg svg .t-mono { font-size: 13px; }
+  .bridge-svg .eq { cursor: pointer; }
+  .bridge-svg .eq rect, .bridge-svg .eq circle, .bridge-svg .eq path.hit { transition: fill .15s, stroke .15s; }
+  .bridge-svg .eq:hover rect, .bridge-svg .eq:hover circle { stroke: var(--accent); stroke-width: 2.5; }
+  .bridge-svg .eq.on rect, .bridge-svg .eq.on circle { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2.5; }
+  .eq-info { padding: 14px 18px; border-top: 1px solid var(--border); min-height: 96px; }
+  .eq-info h4 { margin: 0 0 6px; font-size: 16px; }
+  .eq-info p { margin: 0; font-size: 15px; color: var(--text-dim); }
+  .quiz-ans { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .quiz-ans .btn { font-size: 13px; padding: 8px 8px; }
+  .quiz-ans .btn.right { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 18%, transparent); }
+  .quiz-ans .btn.wrong { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent); }
+  .game-keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .game-keys .btn { padding: 8px 4px; font-size: 13px; }
+</style>
+</head>
+<body data-chapter="bridge">
+<main class="chapter">
+  <header class="chapter-hero">
+    <div class="eyebrow">Chapter 21</div>
+    <h1>선교 장비와 충돌 회피</h1>
+    <p class="lead">길이 300 m의 배는 시속 40 km로 달려도 멈추는 데 2~3 km가 걸리고, 키를 돌려도 한참 뒤에야 방향이 바뀐다(<a href="maneuvering.html">12장</a>). 그래서 바다의 충돌 회피는 '보고 피하는' 일이 아니라 수십 분 앞을 내다보고 계산하는 일이다. 이 장에서는 그 계산을 돕는 선교의 눈과 귀, 즉 레이더·ARPA·AIS·ECDIS가 어떻게 작동하는지 직접 다뤄 보고, 모든 배가 같은 규칙으로 움직이게 하는 국제 해상 충돌 예방 규칙(COLREG)을 상황 판정기와 야간 등화 퀴즈, 회피 조종 게임으로 익힌다.</p>
+    <ul class="objectives">
+      <li>선교의 주요 장비와 그 역할, 서로 주고받는 정보를 안다.</li>
+      <li>레이더의 거리·방위 측정 원리와 분해능, 레이더 수평선을 계산하고 PPI 화면의 클러터를 조정한다.</li>
+      <li>상대 운동과 진운동 표시의 차이를 이해하고 CPA·TCPA를 계산한다.</li>
+      <li>AIS의 메시지와 SOTDMA 시분할 방식, 그 한계를 설명한다.</li>
+      <li>ECDIS의 안전 등심선과 항로 점검 기능을 이해한다.</li>
+      <li>COLREG의 마주침·횡단·추월 상황과 피항선·유지선의 의무를 판정한다.</li>
+      <li>항해등 조합으로 상대선의 진행 방향을 읽고, 음향 신호와 제한 시계의 규칙을 안다.</li>
+    </ul>
+  </header>
+
+  <!-- =============================================================== 1 -->
+  <section id="layout">
+    <h2>선교: 배의 두뇌</h2>
+    <p><span class="term">선교</span><span class="en">(Bridge, Wheelhouse)</span>는 배를 지휘하는 곳이다. 대형 상선의 선교는 선체 폭 전체에 걸친 넓은 방으로, 앞쪽 창을 따라 장비 콘솔이 늘어서 있고 양옆으로 <b>윙 브리지</b>가 튀어나와 접안할 때 선체 옆을 내려다볼 수 있다. 장비들은 따로 놀지 않는다. 자이로의 방위와 GNSS의 위치, 속력계(log)의 대수 속력이 레이더·ECDIS·AIS·오토파일럿으로 흘러가고, 이 모두가 항해 데이터 기록 장치(VDR)에 저장된다. 이렇게 묶인 체계를 통합 선교 시스템(IBS)이라 한다.</p>
+
+    <div class="sim" id="sim-layout">
+      <div class="sim-head"><span class="sim-tag">INTERACTIVE</span><h3>선교 배치도: 장비를 눌러 보라</h3></div>
+      <div class="sim-body">
+        <div class="sim-view" style="padding:10px">
+          <svg class="bridge-svg" viewBox="0 0 760 330" role="img" aria-label="선교 배치도">
+            <path d="M20 250 L20 120 Q 380 40 740 120 L740 250 Z" fill="var(--surface)" stroke="var(--text-dim)" stroke-width="2"/>
+            <rect x="0" y="150" width="20" height="80" fill="var(--surface-2)" stroke="var(--text-dim)"/>
+            <rect x="740" y="150" width="20" height="80" fill="var(--surface-2)" stroke="var(--text-dim)"/>
+            <text x="10" y="245" class="t-dim" text-anchor="middle" font-size="11">좌현 윙</text>
+            <text x="750" y="245" class="t-dim" text-anchor="middle" font-size="11">우현 윙</text>
+            <text x="380" y="72" class="t-dim" text-anchor="middle">▲ 선수 방향 (전면 창)</text>
+            <g class="eq" data-k="radarx"><rect x="150" y="120" width="80" height="54" rx="8" fill="var(--bg-elev)" stroke="var(--text-dim)"/><text x="190" y="142" class="t" text-anchor="middle" font-size="13">레이더</text><text x="190" y="160" class="t-dim" text-anchor="middle" font-size="11">X 밴드</text></g>
+            <g class="eq" data-k="ecdis"><rect x="240" y="104" width="80" height="54" rx="8" fill="var(--bg-elev)" stroke="var(--text-dim)"/><text x="280" y="126" class="t" text-anchor="middle" font-size="13">ECDIS</text><text x="280" y="144" class="t-dim" text-anchor="middle" font-size="11">주·예비</text></g>
+            <g class="eq" data-k="steer"><rect x="345" y="96" width="70" height="60" rx="8" fill="var(--bg-elev)" stroke="var(--text-dim)"/><text x="380" y="118" class="t" text-anchor="middle" font-size="13">조타대</text><text x="380" y="136" class="t-dim" text-anchor="middle" font-size="11">오토파일럿</text></g>
+            <g class="eq" data-k="tele"><rect x="440" y="104" width="80" height="54" rx="8" fill="var(--bg-elev)" stroke="var(--text-dim)"/><text x="480" y="126" class="t" text-anchor="middle" font-size="13">텔레그래프</text><text x="480" y="144" class="t-dim" text-anchor="middle" font-size="11">기관 원격</text></g>
+            <g class="eq" data-k="radars"><rect x="530" y="120" width="80" height="54" rx="8" fill="var(--bg-elev)" stroke="var(--text-dim)"/><text x="570" y="142" class="t" text-anchor="middle" font-size="13">레이더</text><text x="570" y="160" class="t-dim" text-anchor="middle" font-size="11">S 밴드</text></g>
+            <g class="eq" data-k="gyro"><circle cx="380" cy="190" r="22" fill="var(--bg-elev)" stroke="var(--text-dim)"/><text x="380" y="195" class="t" text-anchor="middle" font-size="12">자이로</text></g>
+            <g class="eq" data-k="vhf"><rect x="70" y="180" width="66" height="50" rx="8" fill="var(--bg-elev)" stroke="var(--text-dim)"/><text x="103" y="202" class="t" text-anchor="middle" font-size="13">VHF</text><text x="103" y="219" class="t-dim" text-anchor="middle" font-size="11">GMDSS</text></g>
+            <g class="eq" data-k="ais"><rect x="625" y="180" width="66" height="50" rx="8" fill="var(--bg-elev)" stroke="var(--text-dim)"/><text x="658" y="210" class="t" text-anchor="middle" font-size="13">AIS</text></g>
+            <g class="eq" data-k="chart"><rect x="230" y="250" width="120" height="50" rx="6" fill="var(--bg-elev)" stroke="var(--text-dim)"/><text x="290" y="280" class="t" text-anchor="middle" font-size="13">해도대·GNSS</text></g>
+            <g class="eq" data-k="sounder"><rect x="410" y="250" width="120" height="50" rx="6" fill="var(--bg-elev)" stroke="var(--text-dim)"/><text x="470" y="272" class="t" text-anchor="middle" font-size="13">측심기·속력계</text><text x="470" y="289" class="t-dim" text-anchor="middle" font-size="11">Echo sounder · Log</text></g>
+            <g class="eq" data-k="vdr"><rect x="560" y="258" width="70" height="40" rx="6" fill="var(--bg-elev)" stroke="var(--text-dim)"/><text x="595" y="283" class="t" text-anchor="middle" font-size="13">VDR</text></g>
+            <g class="eq" data-k="bnwas"><rect x="130" y="258" width="76" height="40" rx="6" fill="var(--bg-elev)" stroke="var(--text-dim)"/><text x="168" y="283" class="t" text-anchor="middle" font-size="13">BNWAS</text></g>
+          </svg>
+        </div>
+        <div class="eq-info" id="eq-info"><h4>장비를 하나 누르면 설명이 나온다</h4><p>전면 콘솔에는 조타·기관 제어와 레이더·ECDIS가, 뒤쪽에는 해도 작업과 통신 장비가 놓인다. 당직 항해사는 콘솔 앞을 오가며 창밖의 실제 바다와 화면을 계속 대조한다.</p></div>
+      </div>
+      <div class="sim-note">배치는 대표적인 예이며 배마다 다르다. 해볼 것: 레이더가 왜 두 대(X 밴드·S 밴드)인지, BNWAS가 무엇을 감시하는지 눌러 확인하라.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 2 -->
+  <section id="radar">
+    <h2>레이더: 전파로 보는 눈</h2>
+    <p><span class="term">레이더</span><span class="en">(RADAR, Radio Detection And Ranging)</span>는 회전하는 안테나에서 짧은 전파 펄스를 쏘고, 물체에 반사되어 돌아온 메아리를 받는다. 펄스가 왕복하는 데 걸린 시간 \(t\)가 거리를, 메아리가 돌아온 순간 안테나가 향한 방향이 방위를 알려 준다. 전파는 빛의 속도로 달리므로 1해리 왕복에 약 12.4 μs가 걸린다.</p>
+    <div class="formula">$$R = \frac{c\,t}{2},\qquad \Delta R = \frac{c\,\tau}{2},\qquad \Delta x_\theta \approx R\,\theta_B,\qquad d_{hor} \approx 2.2\left(\sqrt{h_1}+\sqrt{h_2}\right)\ \text{NM}$$
+      <div class="where">여기서 \(c = 3\times10^8\) m/s, \(\tau\)는 펄스 폭(0.05~1 μs), \(\theta_B\)는 수평 빔폭(rad), \(h_1, h_2\)는 안테나와 물표의 높이(m). 거리 분해능 \(\Delta R\)보다 가까이 붙은 두 물표, 방위 분해능 \(R\theta_B\)보다 옆으로 붙은 두 물표는 화면에서 하나로 합쳐진다. 2.2 계수는 대기 굴절로 전파가 조금 휘는 효과(유효 지구 반지름 4/3배)를 반영한 값이다.</div>
+    </div>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 720 260" role="img" aria-label="레이더 펄스와 메아리">
+        <rect x="30" y="110" width="40" height="40" rx="6" class="f-elev" stroke="var(--text-dim)"/>
+        <text x="50" y="175" class="t-dim" text-anchor="middle">안테나</text>
+        <path d="M70 130 L 620 70 L 620 190 Z" class="f-acc-soft" stroke="var(--accent)" stroke-dasharray="5 4"/>
+        <g stroke="var(--accent)" stroke-width="3" fill="none">
+          <path d="M150 112 q 6 18 0 36"/><path d="M162 111 q 6 19 0 38"/><path d="M174 110 q 6 20 0 40"/>
+        </g>
+        <text x="162" y="100" class="t-acc" text-anchor="middle">펄스 τ</text>
+        <g stroke="var(--accent-2)" stroke-width="2.5" fill="none">
+          <path d="M470 140 q -5 12 0 24"/><path d="M460 141 q -5 12 0 24"/>
+        </g>
+        <text x="465" y="185" class="t" fill="var(--accent-2)" text-anchor="middle">메아리</text>
+        <path d="M560 128 L 610 120 L 640 128 L 620 142 L 570 142 Z" class="f-hull" stroke="var(--text-dim)"/>
+        <text x="600" y="110" class="t-dim" text-anchor="middle">물표</text>
+        <line x1="70" y1="220" x2="600" y2="220" class="s-axis"/>
+        <text x="335" y="245" class="t" text-anchor="middle">R = c·t/2 (왕복 시간의 절반)</text>
+        <text x="640" y="70" class="t-dim">빔폭 θ_B</text>
+        <path d="M400 92 A 340 340 0 0 1 400 168" fill="none" stroke="var(--warn)" stroke-width="2"/>
+        <text x="390" y="78" class="t" fill="var(--warn)" text-anchor="middle">R·θ_B</text>
+      </svg>
+      <figcaption><b>그림 21-1.</b> 레이더의 원리. 펄스의 왕복 시간으로 거리를, 안테나 방향으로 방위를 잰다. 빔이 부채꼴로 퍼지므로 먼 거리에서는 빔 폭 안의 두 물표를 구분하지 못하고, 펄스 길이 안에 든 두 물표도 하나로 보인다.</figcaption>
+    </figure>
+
+    <p>선박용 레이더는 두 주파수대를 쓴다. <b>X 밴드</b>(9.4 GHz, 파장 3 cm)는 같은 크기 안테나로 빔폭이 좁아(약 1°) 해상도가 좋지만 비·파도의 반사(클러터)와 강우 감쇠에 약하다. <b>S 밴드</b>(3 GHz, 파장 10 cm)는 빔폭이 넓어(약 2°) 해상도는 떨어지지만 악천후에서 멀리 본다. 대형선은 둘 다 갖춘다. 화면은 자선을 중심으로 한 원형 <span class="term">PPI</span><span class="en">(Plan Position Indicator)</span>이고, 회전하는 휘선(sweep)이 지나가며 메아리를 밝힌다. 항해사는 세 가지 조정으로 표적을 클러터에서 골라낸다.</p>
+    <ul>
+      <li><b>게인</b><span class="en">(Gain)</span>: 수신 감도. 너무 낮으면 약한 표적이 사라지고, 너무 높으면 잡음 반점이 화면을 덮는다. 배경에 잡음 반점이 살짝 보일 정도가 적당하다.</li>
+      <li><b>STC</b><span class="en">(Sensitivity Time Control, 해면 반사 억제 'Sea')</span>: 가까운 거리일수록 감도를 낮춰 자선 주위의 파도 반사를 지운다. 과하면 가까운 작은 배도 지워진다.</li>
+      <li><b>FTC</b><span class="en">(Fast Time Constant, 우천 반사 억제 'Rain')</span>: 메아리의 앞 가장자리만 남기는 미분 회로. 넓게 퍼진 비구름 메아리를 얇게 만들어 그 속의 표적을 드러낸다.</li>
+    </ul>
+
+    <div class="sim" id="sim-ppi">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>PPI 레이더 화면: 게인·STC·FTC 맞추기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view" style="background:#050a08"><canvas id="cv-ppi"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>거리 범위</span><div class="seg" id="pp-rng"><button data-value="3">3 NM</button><button data-value="6" class="on">6 NM</button><button data-value="12">12 NM</button></div></div>
+          <div class="ctrl"><span>주파수대</span><div class="seg" id="pp-band"><button data-value="x" class="on">X 밴드</button><button data-value="s">S 밴드</button></div></div>
+          <label class="ctrl"><span>게인 <output id="pp-gain-out"></output></span><input type="range" id="pp-gain" min="0" max="100" value="60"></label>
+          <label class="ctrl"><span>STC (해면) <output id="pp-stc-out"></output></span><input type="range" id="pp-stc" min="0" max="100" value="20"></label>
+          <label class="ctrl"><span>FTC (우천) <output id="pp-ftc-out"></output></span><input type="range" id="pp-ftc" min="0" max="100" value="0"></label>
+          <label class="ctrl"><span>바다 상태 <output id="pp-sea-out"></output></span><input type="range" id="pp-sea" min="0" max="6" value="4"></label>
+          <label class="check"><input type="checkbox" id="pp-trail" checked> 표적 잔상(trail)</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">휘선 회전</span><span class="v" id="o-pp-rot">—</span></div>
+        <div class="stat"><span class="k">빔폭 / 방위 분해능(범위 끝)</span><span class="v" id="o-pp-bw">—</span></div>
+        <div class="stat"><span class="k">펄스 폭 / 거리 분해능</span><span class="v" id="o-pp-pl">—</span></div>
+        <div class="stat"><span class="k">보이는 표적</span><span class="v" id="o-pp-vis">—</span></div>
+      </div>
+      <div class="sim-note">자선은 중앙, 노스업 진운동 표시다. 북동쪽에 섬, 동쪽에 비구름이 있고 배 5척이 움직인다(가장 작은 어선은 자선 남서쪽 1.5해리 부근). 해볼 것: ① 바다 상태를 5~6으로 올리고 STC를 조절해 가까운 어선이 클러터에서 드러나는 지점을 찾아라. STC를 최대로 하면 어선도 지워진다. ② 비구름 속 배는 FTC를 올려야 보인다. ③ S 밴드로 바꾸면 비 클러터는 줄지만 표적이 옆으로 퍼진다(빔폭 2°).</div>
+    </div>
+
+    <div class="sim" id="sim-res">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>분해능과 레이더 수평선</h3></div>
+      <div class="sim-body">
+        <div class="sim-view duo"><div><canvas id="cv-res"></canvas></div><div><canvas id="cv-hor"></canvas></div></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>빔폭 θ_B <output id="rs-bw-out"></output></span><input type="range" id="rs-bw" min="0.5" max="4" step="0.1" value="1.2"></label>
+          <label class="ctrl"><span>펄스 폭 τ <output id="rs-pl-out"></output></span><input type="range" id="rs-pl" min="0.05" max="1.2" step="0.05" value="0.25"></label>
+          <label class="ctrl"><span>두 물표까지 거리 <output id="rs-r-out"></output></span><input type="range" id="rs-r" min="1" max="12" step="0.5" value="6"></label>
+          <label class="ctrl"><span>물표 간격(방위·거리 방향 동일) <output id="rs-sep-out"></output></span><input type="range" id="rs-sep" min="10" max="300" step="5" value="90"></label>
+          <label class="ctrl"><span>안테나 높이 h₁ <output id="rs-h1-out"></output></span><input type="range" id="rs-h1" min="5" max="60" step="1" value="35"></label>
+          <label class="ctrl"><span>물표 높이 h₂ <output id="rs-h2-out"></output></span><input type="range" id="rs-h2" min="0" max="100" step="1" value="10"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">방위 분해능 R·θ_B</span><span class="v" id="o-rs-ab">—</span></div>
+        <div class="stat"><span class="k">거리 분해능 cτ/2</span><span class="v" id="o-rs-rr">—</span></div>
+        <div class="stat"><span class="k">옆으로 붙은 두 배</span><span class="v" id="o-rs-a">—</span></div>
+        <div class="stat"><span class="k">앞뒤로 붙은 두 배</span><span class="v" id="o-rs-r">—</span></div>
+        <div class="stat"><span class="k">레이더 수평선 / 탐지 가능 거리</span><span class="v" id="o-rs-h">—</span></div>
+      </div>
+      <div class="sim-note">왼쪽: 같은 간격으로 옆으로 붙은 두 배(위)와 앞뒤로 붙은 두 배(아래)가 화면에 어떻게 찍히는지. 메아리는 방위 방향으로 빔폭만큼, 거리 방향으로 펄스 길이만큼 늘어난다. 오른쪽: 지구 곡률(과장)과 레이더 수평선. 해볼 것: 거리를 12해리로 늘리면 옆으로 붙은 두 배가 먼저 합쳐진다. 펄스 폭을 1 μs(장거리용 긴 펄스)로 늘리면 앞뒤 두 배가 합쳐진다. 물표 높이 0(수면의 작은 부유물)이면 안테나 35 m에서도 13해리 남짓이 한계다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 3 -->
+  <section id="motion">
+    <h2>상대 운동과 진운동</h2>
+    <p>레이더 화면에는 두 가지 그리는 방식이 있다. <span class="term">상대 운동</span><span class="en">(Relative Motion, RM)</span> 표시에서는 자선이 화면 중앙에 고정되고 모든 것이 자선에 대해 움직인다. 정지한 섬도 자선 속력으로 뒤로 흘러간다. 대신 다른 배의 잔상이 곧장 <b>자선에 대한 상대 진로</b>를 보여 주므로, 그 연장선이 중심을 지나면 충돌 코스라는 것을 바로 안다. <span class="term">진운동</span><span class="en">(True Motion, TM)</span> 표시에서는 자선도 화면 위를 움직이고, 섬은 멈춰 있으며 다른 배의 잔상은 실제 침로를 보여 준다. 방향 기준도 둘이다. <b>노스업</b>(North-up)은 화면 위쪽이 진북, <b>헤드업</b>(Head-up)은 위쪽이 자선 선수다. 헤드업은 창밖 풍경과 같아 직관적이지만 자선이 변침하면 화면 전체가 돈다. 그래서 자이로로 안정된 노스업이나 코스업을 주로 쓴다.</p>
+
+    <div class="sim" id="sim-mot">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>같은 바다, 두 개의 화면: 진운동 vs 상대 운동</h3></div>
+      <div class="sim-body">
+        <div class="sim-view duo"><div><canvas id="cv-tm"></canvas></div><div><canvas id="cv-rm"></canvas></div></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>자선 침로 <output id="mo-oc-out"></output></span><input type="range" id="mo-oc" min="0" max="359" value="0"></label>
+          <label class="ctrl"><span>자선 속력 <output id="mo-os-out"></output></span><input type="range" id="mo-os" min="0" max="20" step="0.5" value="12"></label>
+          <label class="ctrl"><span>상대선 침로 <output id="mo-tc-out"></output></span><input type="range" id="mo-tc" min="0" max="359" value="270"></label>
+          <label class="ctrl"><span>상대선 속력 <output id="mo-ts-out"></output></span><input type="range" id="mo-ts" min="0" max="20" step="0.5" value="10"></label>
+          <div class="ctrl"><span>상대 운동 화면 방향</span><div class="seg" id="mo-ori"><button data-value="north" class="on">노스업</button><button data-value="head">헤드업</button></div></div>
+          <div class="ctrl-row"><button class="btn primary" id="mo-run">일시정지</button><button class="btn" id="mo-reset">다시</button></div>
+        </div>
+      </div>
+      <div class="sim-note">왼쪽 진운동(노스업): 자선(파랑)과 상대선(빨강), 정지한 등부표(노랑)가 실제로 움직이는 모습. 오른쪽 상대 운동: 자선이 중앙에 고정. 점선은 상대선 잔상의 연장선(상대 운동선)이다. 해볼 것: 기본 설정에서 상대 운동 화면의 연장선이 중심 가까이를 지나는지 보라(충돌 위험). 자선 침로를 30°로 바꾸면 상대 운동선이 중심에서 벗어난다. 헤드업에서 자선 침로를 바꾸면 화면 전체가 도는 것도 확인하라.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 4 -->
+  <section id="cpa">
+    <h2>ARPA와 CPA·TCPA</h2>
+    <p>예전 항해사는 레이더 화면에 표적 위치를 몇 분 간격으로 찍고 연필과 자로 <b>레이더 플로팅</b>을 했다. 지금은 <span class="term">ARPA</span><span class="en">(Automatic Radar Plotting Aid)</span>가 표적을 자동 추적해 같은 계산을 한다. 핵심은 상대 속도다. 상대선의 진속도 \(\vec V_t\)에서 자선 속도 \(\vec V_o\)를 빼면 상대 속도 \(\vec V_r\)가 되고, 상대선은 자선에서 볼 때 이 방향으로 직선 운동한다. 그 직선이 자선에 가장 가까워지는 점이 <span class="term">CPA</span><span class="en">(Closest Point of Approach)</span>, 거기까지 걸리는 시간이 <span class="term">TCPA</span>다.</p>
+    <div class="formula">$$\vec V_r = \vec V_t - \vec V_o,\qquad \text{TCPA} = -\frac{\vec r\cdot\vec V_r}{|\vec V_r|^2},\qquad \text{CPA} = \left|\vec r + \vec V_r\,\text{TCPA}\right|$$
+      <div class="where">여기서 \(\vec r\)는 자선에서 본 상대선의 현재 위치 벡터. TCPA가 음수면 이미 최근접점을 지나 멀어지는 중이다. 대양에서는 흔히 CPA 1~2해리, TCPA 12~20분 이내를 경보 기준으로 둔다. 방위가 거의 변하지 않으면서 거리가 줄면(steady bearing, decreasing range) 충돌 코스라는 옛 경험칙도 이 식과 같은 이야기다.</div>
+    </div>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 720 300" role="img" aria-label="레이더 플로팅 삼각형">
+        <defs><marker id="ah21" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="context-stroke"/></marker></defs>
+        <circle cx="160" cy="230" r="6" fill="var(--accent)"/><text x="130" y="258" class="t" fill="var(--accent)">자선 O</text>
+        <line x1="160" y1="230" x2="160" y2="140" stroke="var(--accent)" stroke-width="3" marker-end="url(#ah21)"/><text x="168" y="150" class="t-dim">V_o</text>
+        <circle cx="520" cy="80" r="6" fill="var(--accent-2)"/><text x="530" y="74" class="t" fill="var(--accent-2)">상대선 W (처음 위치)</text>
+        <line x1="520" y1="80" x2="430" y2="100" stroke="var(--accent-2)" stroke-width="3" marker-end="url(#ah21)"/><text x="450" y="80" class="t-dim">V_t (진속도) W→O′</text>
+        <line x1="430" y1="100" x2="430" y2="190" stroke="var(--text-dim)" stroke-width="2.5" stroke-dasharray="6 4" marker-end="url(#ah21)"/><text x="440" y="150" class="t-dim">−V_o</text>
+        <line x1="520" y1="80" x2="430" y2="190" stroke="var(--warn)" stroke-width="3" marker-end="url(#ah21)"/><text x="500" y="160" class="t" fill="var(--warn)">V_r (상대)</text>
+        <line x1="430" y1="190" x2="150" y2="530" stroke="var(--warn)" stroke-dasharray="4 5"/>
+        <line x1="160" y1="230" x2="266" y2="317" stroke="var(--text-faint)"/>
+        <circle cx="160" cy="230" r="80" fill="none" stroke="var(--text-faint)" stroke-dasharray="3 4"/>
+        <text x="40" y="160" class="t-dim">CPA 원(예: 1 NM)</text>
+        <text x="300" y="250" class="t" fill="var(--warn)">상대 운동선</text>
+        <text x="40" y="40" class="t-dim">플로팅 삼각형: 일정 시간(보통 6분) 동안</text>
+        <text x="40" y="62" class="t-dim">W→A: 화면에 찍힌 상대선의 이동 = V_r</text>
+        <text x="40" y="84" class="t-dim">V_t = V_r + V_o  (진침로·진속력 계산)</text>
+      </svg>
+      <figcaption><b>그림 21-2.</b> 레이더 플로팅 삼각형. 상대선의 화면 위 움직임(상대 속도)에 자선 속도를 더하면 상대선의 진짜 침로·속력이 나온다. 상대 운동선을 연장해 자선과의 최근접 거리를 읽으면 CPA다.</figcaption>
+    </figure>
+
+    <div class="sim" id="sim-cpa">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>ARPA 계산기: 끌어서 CPA·TCPA 보기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-cpa" class="grab"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>CPA 경보 기준 <output id="cp-lim-out"></output></span><input type="range" id="cp-lim" min="0.5" max="3" step="0.1" value="1"></label>
+          <label class="ctrl"><span>벡터 길이 <output id="cp-vt-out"></output></span><input type="range" id="cp-vt" min="6" max="30" step="1" value="12"></label>
+          <label class="check"><input type="checkbox" id="cp-tri" checked> 플로팅 삼각형 표시</label>
+          <div class="ctrl-row"><button class="btn primary" id="cp-play">시간 진행</button><button class="btn" id="cp-reset">처음으로</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">상대선 방위 / 거리</span><span class="v" id="o-cp-br">—</span></div>
+        <div class="stat"><span class="k">CPA</span><span class="v" id="o-cp-cpa">—</span></div>
+        <div class="stat"><span class="k">TCPA</span><span class="v" id="o-cp-tcpa">—</span></div>
+        <div class="stat"><span class="k">상대 침로·속력</span><span class="v" id="o-cp-rel">—</span></div>
+        <div class="stat"><span class="k">경보</span><span class="v" id="o-cp-al">—</span></div>
+      </div>
+      <div class="sim-note">원은 1해리 간격. 배 몸통을 끌면 위치가, 벡터 끝(동그라미)을 끌면 침로·속력이 바뀐다(벡터 길이 = 설정한 분 동안 갈 거리). 노랑 점선이 상대 운동선, 빨간 점이 CPA 지점이다. 해볼 것: 상대선을 자선 우현 앞쪽에 두고 벡터를 조절해 '방위가 변하지 않는' 상황을 만들어 보라. 그다음 자선 벡터를 오른쪽으로 돌리거나 짧게(감속) 하면 CPA가 커진다. '시간 진행'으로 두 배를 실제로 움직여 볼 수 있다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 5 -->
+  <section id="ais">
+    <h2>AIS: 배들이 서로 말하는 법</h2>
+    <p><span class="term">AIS</span><span class="en">(Automatic Identification System)</span>는 배가 자기 정보를 VHF 해상 대역의 두 채널(161.975, 162.025 MHz)로 자동 방송하는 장치다. 300 GT 이상 국제 항해선과 모든 여객선에 의무다. 레이더는 '무언가가 있다'만 알려 주지만, AIS는 '누가, 어디로, 얼마나 빨리' 가는지 알려 준다. 섬 뒤에 가려 레이더에 안 보이는 배도 전파가 닿으면 보인다.</p>
+    <ul>
+      <li><b>정적 정보</b>: MMSI(해상 이동 업무 식별 번호), 선명, 호출 부호, IMO 번호, 선종, 길이·폭, 안테나 위치. 6분마다.</li>
+      <li><b>동적 정보</b>: 위치, COG, SOG, 선수 방위, 선회율(ROT), 항행 상태(항해 중, 정박, 조종 불능 등). 속력과 변침에 따라 2초~3분마다.</li>
+      <li><b>항해 정보</b>: 흘수, 목적지, 도착 예정 시각(ETA), 위험 화물. 사람이 입력하므로 틀린 경우가 많다.</li>
+    </ul>
+    <p>수많은 배가 같은 두 채널을 어떻게 나눠 쓸까? AIS는 1분을 2,250개의 <b>슬롯</b>(각 26.7 ms)으로 나누고, 각 배가 다음에 쓸 슬롯을 미리 방송해 예약하는 <span class="term">SOTDMA</span><span class="en">(Self-Organized Time Division Multiple Access)</span>를 쓴다. 중앙 관제 없이 서로 들은 예약을 피해 빈 슬롯을 고르므로 '스스로 조직되는' 시분할이다. 슬롯이 모자라면 가장 멀리 있는 배의 슬롯을 재사용해, 혼잡해지면 먼 배부터 안 보이게 된다(수신 범위가 줄어든다).</p>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>선박 상태(Class A)</th><th>동적 정보 보고 주기</th></tr></thead>
+      <tbody>
+        <tr><td>정박·계류(3 kn 이하)</td><td>3분</td></tr>
+        <tr><td>0~14 kn</td><td>10초 (변침 중 3⅓초)</td></tr>
+        <tr><td>14~23 kn</td><td>6초 (변침 중 2초)</td></tr>
+        <tr><td>23 kn 초과</td><td>2초</td></tr>
+        <tr><td>Class B(소형선, CSTDMA)</td><td>30초 (2 kn 이하 3분)</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="sim" id="sim-ais">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>SOTDMA 슬롯 지도: 1분 = 2,250 슬롯 × 2채널</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-ais"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>주변 선박 수 <output id="ai-n-out"></output></span><input type="range" id="ai-n" min="5" max="600" step="5" value="60"></label>
+          <div class="ctrl"><span>선박 상태</span><div class="seg" id="ai-mix"><button data-value="mix" class="on">혼합</button><button data-value="anch">정박</button><button data-value="slow">0~14 kn</button><button data-value="fast">14~23 kn</button><button data-value="turn">고속·변침</button></div></div>
+          <div class="ctrl-row"><button class="btn primary" id="ai-run">일시정지</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">분당 보고 수</span><span class="v" id="o-ai-r">—</span></div>
+        <div class="stat"><span class="k">슬롯 점유율</span><span class="v" id="o-ai-u">—</span></div>
+        <div class="stat"><span class="k">재사용(충돌) 슬롯</span><span class="v" id="o-ai-c">—</span></div>
+      </div>
+      <div class="sim-note">왼쪽 격자가 채널 A, 오른쪽이 채널 B의 1분(2,250칸)이다. 색 칸은 어떤 배가 예약한 슬롯, 빨간 칸은 빈 슬롯이 없어 재사용된 슬롯, 흰 막대는 현재 시각. 배들은 채널을 번갈아 쓴다. 해볼 것: 선박 상태를 '고속·변침'으로 두고 선박 수를 늘리면 몇 척에서 채널이 포화되는지 보라. 정박 선박은 3분에 한 번만 보고하므로 수백 척이어도 여유가 있다. 혼잡한 항만에서 AIS 화면의 먼 배가 깜빡이거나 사라지는 이유다.</div>
+    </div>
+
+    <div class="callout warn">
+      <strong>AIS를 맹신하면 안 되는 이유</strong>
+      <p>AIS는 상대가 보내 주는 정보다. 장치를 끈 배(어선, 불법 조업선, 일부 군함), 소형 레저 보트는 보이지 않는다. 위치는 그 배의 GNSS 값이라 GNSS가 틀리면 같이 틀리고(<a href="navigation.html#gnss">20장</a>의 스푸핑), 선수 방위가 없는 Class B나 잘못 입력된 항해 상태도 흔하다. 보고 주기 사이에 배는 움직이므로 화면 위치는 늘 조금 과거다. COLREG 판단은 레이더·시각 관측을 기본으로 하고 AIS는 보조로 쓴다. 특히 AIS 정보만으로 VHF를 불러 "좌현 대 좌현으로 지나가자"는 식으로 합의하다 오인하는 일이 충돌 원인이 되기도 한다.</p>
+    </div>
+  </section>
+
+  <!-- =============================================================== 6 -->
+  <section id="ecdis">
+    <h2>ECDIS: 경보를 울리는 전자 해도</h2>
+    <p><span class="term">ECDIS</span><span class="en">(Electronic Chart Display and Information System)</span>는 각국 수로국이 발행한 공식 벡터 전자 해도(ENC)를 표시하고 그 위에 자선 위치·항로·레이더 영상·AIS 표적을 겹쳐 보여 주는 장치다. 종이 해도와 결정적으로 다른 점은 해도가 <b>데이터</b>라는 것이다. 수심과 위험물이 숫자로 들어 있으므로, 항해사가 자선의 <b>안전 수심</b>(흘수 + 여유 수심)을 입력하면 ECDIS가 그보다 얕은 곳을 가르는 <span class="term">안전 등심선</span><span class="en">(Safety Contour)</span>을 굵게 강조하고, 계획 항로가 그 선을 넘거나 항로 양옆 허용 폭(XTD) 안에 위험이 있으면 경보를 낸다. 이것이 <b>항로 점검</b>(route check)과 <b>좌초 방지 경보</b>(anti-grounding)다.</p>
+
+    <div class="sim" id="sim-ecdis">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>ECDIS 항로 점검: 안전 등심선과 좌초 경보</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-ec" class="grab"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>흘수 <output id="ec-dr-out"></output></span><input type="range" id="ec-dr" min="5" max="20" step="0.5" value="12"></label>
+          <label class="ctrl"><span>여유 수심(UKC) <output id="ec-ukc-out"></output></span><input type="range" id="ec-ukc" min="0.5" max="5" step="0.5" value="2"></label>
+          <label class="ctrl"><span>항로 허용 폭 XTD <output id="ec-xtd-out"></output></span><input type="range" id="ec-xtd" min="0.05" max="0.6" step="0.05" value="0.2"></label>
+          <div class="ctrl-row"><button class="btn" id="ec-reset">항로 초기화</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">안전 수심</span><span class="v" id="o-ec-sd">—</span></div>
+        <div class="stat"><span class="k">항로 길이</span><span class="v" id="o-ec-len">—</span></div>
+        <div class="stat"><span class="k">점검 결과</span><span class="v" id="o-ec-res">—</span></div>
+      </div>
+      <div class="sim-note">수심이 안전 수심보다 얕은 곳은 진한 파랑, 깊은 곳은 흰색(ENC 관례와 비슷), 굵은 선이 안전 등심선이다. 경유점(동그라미)을 끌어 항로를 바꿀 수 있다. 빨간 X는 항로 허용 폭 안의 위험 지점이다. 해볼 것: 흘수를 9 m로 줄이면 안전 등심선이 물러나 지름길이 열린다. 흘수 16 m에서 같은 항로를 점검해 보라. 실제 ECDIS는 수많은 경보를 내므로, 경보를 끄거나 안전 설정을 대충 두는 것이 사고의 원인이 되어 왔다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 7 -->
+  <section id="colreg">
+    <h2>COLREG: 바다의 교통 규칙</h2>
+    <p>1972년 국제 해상 충돌 예방 규칙(COLREG)은 모든 바다에서 모든 배에 적용되는 교통 규칙이다. 도로와 달리 차선도 신호등도 없으므로, 규칙은 두 배가 마주친 <b>상황</b>에 따라 누가 피하고(피항선, give-way) 누가 침로와 속력을 유지할지(유지선, stand-on)를 정한다. 핵심 규칙은 다음과 같다.</p>
+    <ul>
+      <li><b>Rule 5 경계·Rule 6 안전 속력·Rule 7 충돌 위험</b>: 시각·청각과 레이더 등 모든 수단으로 경계하고, 충분히 정지할 수 있는 속력으로 다니며, 접근하는 배의 나침 방위가 뚜렷이 변하지 않으면 충돌 위험이 있다고 본다.</li>
+      <li><b>Rule 8 충돌 피하기 위한 동작</b>: 피하는 동작은 <b>일찍, 크게</b>(상대가 레이더로 알아볼 수 있을 만큼), 작은 변침을 여러 번 하지 않는다.</li>
+      <li><b>Rule 13 추월</b>: 상대선 정횡 후방 22.5°보다 뒤(상대의 선미등만 보이는 쪽)에서 따라잡는 배가 추월선이며, 끝까지 피해야 한다.</li>
+      <li><b>Rule 14 마주침</b>: 두 동력선이 정면 또는 거의 정면으로 마주치면(마스트등 두 개가 일직선, 양 현등이 다 보임) <b>둘 다 우현으로</b> 변침해 좌현 대 좌현으로 지나간다.</li>
+      <li><b>Rule 15 횡단</b>: 두 동력선이 엇갈려 지나갈 때 <b>상대를 자기 우현에 둔 배</b>가 피항선이다. 가능하면 상대 선수 앞을 가로지르지 않는다(상대 선미 쪽으로 돌아간다).</li>
+      <li><b>Rule 16·17</b>: 피항선은 일찍 크게 피한다. 유지선은 침로와 속력을 유지하되, 피항선이 피하지 않는 것이 분명하면 스스로 피할 수 있고, 충돌을 피할 수 없을 만큼 가까워지면 반드시 최선의 동작을 해야 한다. 횡단 상황의 유지선은 좌현 쪽 배를 피하려고 좌현 변침하지 않는다.</li>
+      <li><b>Rule 18 선박 간 책임</b>: 동력선은 조종 불능선, 조종 제한선, 어로 종사선, 범선의 진로를 피한다(좁은 수로·통항 분리 수역 규정 우선).</li>
+    </ul>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 720 270" role="img" aria-label="마주침 횡단 추월 상황">
+        <defs><marker id="ah21b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="context-stroke"/></marker></defs>
+        <g transform="translate(120,135)">
+          <path d="M-7 70 L0 50 L7 70 Z" fill="var(--accent)"/><path d="M-7 -70 L0 -50 L7 -70 Z" fill="var(--accent-2)"/>
+          <path d="M0 50 Q 0 20 20 0" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#ah21b)"/>
+          <path d="M0 -50 Q 0 -20 -20 0" fill="none" stroke="var(--accent-2)" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#ah21b)"/>
+          <text x="0" y="105" class="t" text-anchor="middle">Rule 14 마주침</text>
+          <text x="0" y="125" class="t-dim" text-anchor="middle">둘 다 우현 변침</text>
+        </g>
+        <g transform="translate(360,135)">
+          <path d="M-7 70 L0 50 L7 70 Z" fill="var(--accent)"/>
+          <path d="M70 -7 L50 0 L70 7 Z" fill="var(--accent-2)"/>
+          <path d="M0 50 Q 10 10 40 30" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#ah21b)"/>
+          <line x1="50" y1="0" x2="-30" y2="0" stroke="var(--accent-2)" stroke-width="1.5" stroke-dasharray="2 4"/>
+          <text x="0" y="105" class="t" text-anchor="middle">Rule 15 횡단</text>
+          <text x="0" y="125" class="t-dim" text-anchor="middle">상대를 우현에 둔 파랑이 피항</text>
+          <text x="40" y="-14" class="t-dim" font-size="12">유지선</text>
+        </g>
+        <g transform="translate(600,135)">
+          <path d="M-7 -40 L0 -60 L7 -40 Z" fill="var(--accent-2)"/>
+          <path d="M-7 70 L0 50 L7 70 Z" fill="var(--accent)"/>
+          <path d="M0 50 Q 30 0 18 -40" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#ah21b)"/>
+          <path d="M0 -50 L -64 -12 M0 -50 L 64 -12" stroke="var(--text-faint)" stroke-dasharray="3 3"/>
+          <text x="0" y="105" class="t" text-anchor="middle">Rule 13 추월</text>
+          <text x="0" y="125" class="t-dim" text-anchor="middle">정횡 후 22.5° 뒤에서 오는 쪽이 피항</text>
+        </g>
+      </svg>
+      <figcaption><b>그림 21-3.</b> 세 가지 조우 상황. 파랑이 자선. 마주침은 둘 다 우현으로, 횡단은 상대를 우현에 둔 배가, 추월은 따라잡는 배가 피한다.</figcaption>
+    </figure>
+
+    <div class="sim" id="sim-col">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>COLREG 상황 판정기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-col" class="grab"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>상대선 상대 방위 <output id="cl-brg-out"></output></span><input type="range" id="cl-brg" min="0" max="359" value="45"></label>
+          <label class="ctrl"><span>상대선 침로 <output id="cl-crs-out"></output></span><input type="range" id="cl-crs" min="0" max="359" value="270"></label>
+          <label class="ctrl"><span>상대선 속력 <output id="cl-spd-out"></output></span><input type="range" id="cl-spd" min="2" max="24" step="0.5" value="12"></label>
+          <label class="ctrl"><span>자선 속력 <output id="cl-os-out"></output></span><input type="range" id="cl-os" min="2" max="24" step="0.5" value="14"></label>
+          <label class="ctrl"><span>상대선 종류 (Rule 18)</span><select id="cl-type"><option value="pd">동력선</option><option value="sail">범선(돛만)</option><option value="fish">어로 종사선</option><option value="ram">조종 제한선</option><option value="nuc">조종 불능선</option></select></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">상황</span><span class="v" id="o-cl-sit">—</span></div>
+        <div class="stat"><span class="k">자선(파랑)의 의무</span><span class="v" id="o-cl-own" style="font-size:15px">—</span></div>
+        <div class="stat"><span class="k">상대선의 의무</span><span class="v" id="o-cl-tgt" style="font-size:15px">—</span></div>
+        <div class="stat"><span class="k">CPA / TCPA</span><span class="v" id="o-cl-cpa">—</span></div>
+      </div>
+      <div class="sim-note">자선은 북쪽(000°)으로 진행 중이다. 상대선(빨강)을 끌어 위치를, 슬라이더로 침로를 바꿔라. 화면에 그린 부채꼴은 자선의 현등 범위(좌현 빨강·우현 초록, 정선수에서 정횡 후 22.5°까지)와 선미등 범위다. 해볼 것: 상대 방위 0°·침로 180°이면 마주침, 방위 45°·침로 270°이면 횡단(자선이 피항선), 방위 315°·침로 090°이면 자선이 유지선이 된다. 상대선을 자선 뒤 150°에 두고 침로 000°·속력 20 kn로 하면 추월이다. 종류를 '어로 종사선'으로 바꾸면 횡단에서도 자선이 피해야 한다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 8 -->
+  <section id="lights">
+    <h2>항해등: 밤에 읽는 상대의 침로</h2>
+    <p>밤에는 배의 모양이 보이지 않는다. 그래서 COLREG(Part C)는 배마다 켜야 할 등화의 색, 위치, 비추는 범위(호)를 정해 두었다. 어떤 등이 보이느냐로 상대가 어느 쪽을 향하는지, 어떤 종류의 배인지 알 수 있다.</p>
+    <ul>
+      <li><b>마스트등</b><span class="en">(Masthead Light)</span>: 흰색, 선수 방향 225°(양쪽 정횡 후 22.5°까지). 길이 50 m 이상은 앞뒤 두 개, 뒤쪽이 더 높다. 두 마스트등의 간격과 겹침으로 상대의 진행 방향을 읽는다.</li>
+      <li><b>현등</b><span class="en">(Sidelights)</span>: <b>좌현 빨강·우현 초록</b>, 각각 정선수에서 정횡 후 22.5°까지 112.5°.</li>
+      <li><b>선미등</b><span class="en">(Sternlight)</span>: 흰색, 선미 쪽 135°. 마스트등과 현등이 끝나는 곳에서 이어진다. 선미등만 보인다면 그 배를 추월하는 중이다(Rule 13의 22.5° 기준이 여기서 나온다).</li>
+    </ul>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 720 300" role="img" aria-label="항해등 비추는 범위">
+        <g transform="translate(200,150)">
+          <path d="M0 0 L -129 -59 A 142 142 0 0 1 0 -142 Z" fill="var(--red)" opacity="0.25"/>
+          <path d="M0 0 L 129 -59 A 142 142 0 0 0 0 -142 Z" fill="var(--green)" opacity="0.25"/>
+          <path d="M0 0 L -112 52 A 124 124 0 0 0 112 52 Z" fill="var(--text-faint)" opacity="0.3"/>
+          <path d="M0 0 L -114 53 A 126 126 0 0 1 114 53" fill="none" stroke="var(--text-faint)" stroke-dasharray="2 3"/>
+          <path d="M0 -24 L 8 -6 L 8 22 L -8 22 L -8 -6 Z" class="f-hull" stroke="var(--text-dim)"/>
+          <text x="-80" y="-80" class="t" fill="var(--red)">좌현 빨강 112.5°</text>
+          <text x="20" y="-80" class="t" fill="var(--green)">우현 초록 112.5°</text>
+          <text x="0" y="110" class="t-dim" text-anchor="middle">선미등 흰색 135°</text>
+          <text x="0" y="-150" class="t-dim" text-anchor="middle">마스트등 흰색 225° (현등 두 개를 합친 범위)</text>
+        </g>
+        <g transform="translate(470,40)">
+          <text x="0" y="0" class="t">보이는 등화 → 상대선의 모습</text>
+          <circle cx="10" cy="30" r="6" fill="var(--red)"/><circle cx="30" cy="30" r="6" fill="var(--green)"/><circle cx="20" cy="14" r="5" fill="#fff" stroke="var(--text-dim)"/>
+          <text x="50" y="34" class="t-dim">빨강+초록: 정면으로 다가옴</text>
+          <circle cx="20" cy="70" r="6" fill="var(--green)"/><circle cx="20" cy="54" r="5" fill="#fff" stroke="var(--text-dim)"/>
+          <text x="50" y="74" class="t-dim">초록만: 상대의 우현을 봄</text>
+          <text x="50" y="94" class="t-dim">(내 앞을 왼쪽→오른쪽 / 내가 유지선 쪽)</text>
+          <circle cx="20" cy="130" r="6" fill="var(--red)"/><circle cx="20" cy="114" r="5" fill="#fff" stroke="var(--text-dim)"/>
+          <text x="50" y="134" class="t-dim">빨강만: 상대의 좌현을 봄</text>
+          <text x="50" y="154" class="t-dim">(오른쪽→왼쪽 / 횡단이면 내가 피항선)</text>
+          <circle cx="20" cy="185" r="5" fill="#fff" stroke="var(--text-dim)"/>
+          <text x="50" y="189" class="t-dim">흰색 하나만(낮게): 선미 — 멀어지거나 추월 중</text>
+          <text x="0" y="230" class="t-acc">"Green to green, red to red,</text>
+          <text x="0" y="252" class="t-acc">perfect safety, go ahead."</text>
+        </g>
+      </svg>
+      <figcaption><b>그림 21-4.</b> 항해등의 비추는 범위(호). 현등은 각각 112.5°, 선미등은 135°이고 합치면 360°가 된다. 상대선의 빨강이 보이면 내 쪽으로 좌현을 보이고 있다는 뜻이다.</figcaption>
+    </figure>
+
+    <div class="sim" id="sim-light">
+      <div class="sim-head"><span class="sim-tag">GAME</span><h3>야간 등화 읽기: 보이는 불빛으로 상대 침로 맞히기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view" style="background:#03060c"><canvas id="cv-light"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>모드</span><div class="seg" id="lt-mode"><button data-value="see" class="on">탐색</button><button data-value="quiz">퀴즈</button></div></div>
+          <label class="ctrl" id="lt-asp-wrap"><span>상대선이 나를 보는 각(상대 선수 기준) <output id="lt-asp-out"></output></span><input type="range" id="lt-asp" min="-180" max="180" value="30"></label>
+          <label class="check" id="lt-day-wrap"><input type="checkbox" id="lt-day" checked> 선체 윤곽 보기</label>
+          <label class="check"><input type="checkbox" id="lt-long" checked> 길이 50 m 이상(마스트등 2개)</label>
+          <div class="ctrl" id="lt-quiz" hidden><span>이 배는 어느 쪽으로 가고 있나?</span>
+            <div class="quiz-ans">
+              <button class="btn" data-a="head">나를 향해 정면</button><button class="btn" data-a="away">나에게서 멀어짐</button>
+              <button class="btn" data-a="l2r">왼쪽 → 오른쪽</button><button class="btn" data-a="r2l">오른쪽 → 왼쪽</button>
+            </div>
+            <button class="btn primary" id="lt-next" style="margin-top:8px">다음 문제</button>
+          </div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">보이는 등화</span><span class="v" id="o-lt-vis" style="font-size:15px">—</span></div>
+        <div class="stat"><span class="k">상대선의 진행 방향(내 시점)</span><span class="v" id="o-lt-dir" style="font-size:15px">—</span></div>
+        <div class="stat"><span class="k">퀴즈 점수</span><span class="v" id="o-lt-sc">—</span></div>
+      </div>
+      <div class="sim-note">탐색 모드: 각을 0°로 두면 상대선이 정면으로 다가오는 모습(빨강·초록 모두, 마스트등 두 개가 일직선). 각을 +30°로 두면 상대의 우현(초록)이 보이고 뒤 마스트등이 오른쪽으로 벌어진다. ±112.5°를 넘으면 현등이 꺼지고 선미등만 남는다. 퀴즈 모드: 선체 없이 불빛만 보고 진행 방향을 고른다. 마스트등 두 개의 위치 관계(앞이 낮고 뒤가 높다)가 결정적 단서다.</div>
+    </div>
+
+    <p>특수한 상태의 배는 추가 등화로 자신을 알린다. 주간에는 같은 의미의 형상물(구, 원뿔, 마름모)을 단다.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>선박</th><th>야간 등화(현등·선미등에 추가)</th><th>주간 형상물</th></tr></thead>
+      <tbody>
+        <tr><td>조종 불능선 (Rule 27a)</td><td>수직으로 붉은 전주등 2개 (항행 중이 아니면 현등 끔)</td><td>구 2개</td></tr>
+        <tr><td>조종 제한선 (Rule 27b)</td><td>수직으로 빨강–흰색–빨강 전주등</td><td>구–마름모–구</td></tr>
+        <tr><td>흘수 제약선 (Rule 28)</td><td>수직으로 붉은 전주등 3개</td><td>원통 1개</td></tr>
+        <tr><td>트롤 어선 (Rule 26)</td><td>위 초록, 아래 흰색 전주등</td><td>꼭짓점 맞댄 원뿔 2개</td></tr>
+        <tr><td>트롤 외 어선</td><td>위 빨강, 아래 흰색 전주등</td><td>꼭짓점 맞댄 원뿔 2개</td></tr>
+        <tr><td>도선선 (Rule 29)</td><td>위 흰색, 아래 빨강 전주등</td><td>—</td></tr>
+        <tr><td>예인선 (Rule 24)</td><td>마스트등 2~3개 수직 + 선미등 위 황색 예인등</td><td>예인 길이 200 m 초과 시 마름모</td></tr>
+        <tr><td>정박선 (Rule 30)</td><td>앞뒤 흰색 전주등 (현등·마스트등 끔)</td><td>구 1개</td></tr>
+        <tr><td>범선 (Rule 25)</td><td>현등·선미등만 (마스트등 없음), 선택적으로 돛대 위 빨강–초록</td><td>기관 병용 시 원뿔(꼭짓점 아래)</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- =============================================================== 9 -->
+  <section id="game">
+    <h2>충돌 회피 조종 연습</h2>
+    <p>이제 규칙과 계산을 한꺼번에 써 볼 차례다. 실제 회피 조종에서 기억할 원칙은 단순하다. <b>일찍</b> 판단하고, 상대가 레이더로 알아챌 만큼 <b>크게</b>(보통 30° 이상) 변침하며, 마주침·횡단의 피항선이면 <b>우현으로</b> 돌아 상대 <b>선미 쪽</b>으로 지나가고, 피한 뒤에는 상대가 완전히 멀어질 때까지 확인한다. 속력을 줄이는 것도 좋은 수단이지만 대형선은 효과가 늦게 나타난다. 좌현 변침은 상대의 우현 변침과 겹쳐 오히려 충돌로 이어질 수 있어, 상대를 추월하는 경우 등을 빼면 피한다.</p>
+
+    <div class="sim" id="sim-game">
+      <div class="sim-head"><span class="sim-tag">GAME</span><h3>회피 조종 게임: CPA 1해리를 지키며 목적지로</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-game"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>시나리오</span><div class="seg" id="gm-sc"><button data-value="head" class="on">마주침</button><button data-value="cross">횡단</button><button data-value="busy">혼잡 수역</button></div></div>
+          <div class="ctrl"><span>침로 명령 <output id="gm-crs-out">000°</output></span>
+            <div class="game-keys"><button class="btn" data-d="-10">◀ 10°</button><button class="btn" data-d="-5">◀ 5°</button><button class="btn" data-d="5">5° ▶</button><button class="btn" data-d="10">10° ▶</button></div></div>
+          <label class="ctrl"><span>속력 명령 <output id="gm-spd-out"></output></span><input type="range" id="gm-spd" min="4" max="18" step="1" value="14"></label>
+          <div class="ctrl-row"><button class="btn primary" id="gm-run">출항</button><button class="btn" id="gm-reset">다시</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">경과 시간</span><span class="v" id="o-gm-t">—</span></div>
+        <div class="stat"><span class="k">가장 위험한 표적 CPA/TCPA</span><span class="v" id="o-gm-cpa">—</span></div>
+        <div class="stat"><span class="k">지금까지 최소 거리</span><span class="v" id="o-gm-min">—</span></div>
+        <div class="stat"><span class="k">상태</span><span class="v" id="o-gm-st" style="font-size:15px">—</span></div>
+      </div>
+      <div class="sim-note">1초 = 실제 1분. 자선(파랑)은 화면 위쪽 목적지 깃발로 가야 한다. 각 상대선 옆 숫자는 현재 CPA(해리)다. 침로 버튼은 명령 침로를 바꾸고, 배는 분당 약 30°로 천천히 돈다. 해볼 것: 마주침에서 일찍 우현으로 20~30° 돌아 지나간 뒤 원래 침로로 복귀하라. 일부러 좌현으로 돌면 경고가 뜬다. 상대선들은 규칙대로 행동한다고 가정하지 않는다(그대로 직진한다). 거리 0.3해리 이내로 들어오면 충돌로 끝난다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 10 -->
+  <section id="sound">
+    <h2>음향 신호, 제한 시계, 그리고 사람</h2>
+    <p>서로 보이는 곳에서 배가 조종 동작을 하면 기적으로 알린다(Rule 34). <b>단음</b>은 약 1초, <b>장음</b>은 4~6초다. 안개처럼 시계가 제한되면(Rule 35) 항행 중인 동력선은 2분 이내 간격으로 장음 1회를 울리며, 정지해 있으면 장음 2회를 울린다.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>신호</th><th>의미</th></tr></thead>
+      <tbody>
+        <tr><td>단음 1회 •</td><td>우현으로 변침하고 있다</td></tr>
+        <tr><td>단음 2회 • •</td><td>좌현으로 변침하고 있다</td></tr>
+        <tr><td>단음 3회 • • •</td><td>기관을 후진하고 있다</td></tr>
+        <tr><td>단음 5회 이상 • • • • •</td><td>상대의 의도를 알 수 없다 / 상대의 동작이 충분한지 의심스럽다(경고)</td></tr>
+        <tr><td>장음 2 + 단음 1 / 장음 2 + 단음 2</td><td>좁은 수로에서 우현 쪽 / 좌현 쪽으로 추월하겠다</td></tr>
+        <tr><td>장음 1 단음 1 장음 1 단음 1</td><td>추월에 동의한다</td></tr>
+        <tr><td>장음 1 (2분 이내마다)</td><td>제한 시계, 항행 중 동력선(대수 속력 있음)</td></tr>
+        <tr><td>장음 2 (2분 이내마다)</td><td>제한 시계, 항행 중이나 정지</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="sim" id="sim-sound">
+      <div class="sim-head"><span class="sim-tag">INTERACTIVE</span><h3>기적 신호 듣기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-snd"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>신호 고르기</span><select id="sd-sel">
+            <option value="s">단음 1 — 우현 변침</option>
+            <option value="ss">단음 2 — 좌현 변침</option>
+            <option value="sss">단음 3 — 후진 중</option>
+            <option value="sssss">단음 5 — 의도 불명·경고</option>
+            <option value="LLs">장음 2 단음 1 — 우현 쪽 추월 요청</option>
+            <option value="LsLs">장·단·장·단 — 추월 동의</option>
+            <option value="L">장음 1 — 제한 시계(항행 중)</option>
+            <option value="LL">장음 2 — 제한 시계(정지)</option>
+          </select></div>
+          <label class="check"><input type="checkbox" id="sd-audio" checked> 소리 내기</label>
+          <div class="ctrl-row"><button class="btn primary" id="sd-play">울리기</button></div>
+        </div>
+      </div>
+      <div class="sim-note">단음 1초, 장음 5초, 사이 간격 1초로 그렸다(실제 대형선 기적은 70~200 Hz의 낮은 소리다. 여기서는 스피커를 고려해 조금 높은 소리로 낸다). 해볼 것: '단음 5'가 얼마나 다급하게 들리는지 들어 보라. 의도가 의심스러울 때 주저 없이 울려야 하는 신호다.</div>
+    </div>
+
+    <p><b>제한 시계</b>(Rule 19)에서는 서로 보이지 않으므로 마주침·횡단 같은 '보이는 상태' 규칙이 적용되지 않는다. 대신 모든 배가 안전 속력으로 기관을 즉시 쓸 수 있게 준비하고, 레이더로만 탐지한 배와 근접 상황이 생기면 일찍 피한다. 이때 <b>정횡 앞쪽의 배를 피하려고 좌현 변침하지 않으며</b>(추월당하는 경우 제외), <b>정횡이나 그 뒤쪽의 배 쪽으로 변침하지 않는다.</b> 앞쪽에서 무중 신호가 들리면 필요하면 정지할 만큼 속력을 줄인다.</p>
+
+    <div class="callout warn">
+      <strong>사례: 레이더가 있어도 충돌한다</strong>
+      <p>1956년 짙은 안개 속에서 여객선 Andrea Doria호와 Stockholm호는 서로를 레이더로 보며 접근했다. 한쪽은 상대가 자기 우현에 있다고 보고 좌현으로, 다른 쪽은 우현으로 변침했고, 두 배는 결국 충돌해 Andrea Doria호가 침몰했다. 레이더 정보를 잘못 해석하거나 늦게, 작게 행동한 이런 사고를 '레이더 보조 충돌'(radar-assisted collision)이라 부른다. 이 사고는 레이더 플로팅 교육과 제한 시계 규칙(Rule 19)을 강화하는 계기가 되었다. 2013년 영국 도버 해협의 Varne 천퇴에 좌초한 케미컬 탱커 Ovit호는 ECDIS 계획 항로가 천퇴를 지나고 있었지만 안전 설정이 맞지 않았고 경보음이 꺼져 있었다. 장비가 아무리 좋아도 설정하고, 해석하고, 판단하는 것은 사람이다.</p>
+    </div>
+    <p>해양 사고 조사에서 반복해서 나오는 인적 요인은 경계 소홀, 피로, 한 가지 정보원에 대한 과신(AIS·ECDIS), 선교 팀 사이의 소통 부족이다. 그래서 선교 자원 관리(BRM) 교육은 당직자가 다른 사람의 판단에 의문을 제기하도록 장려하고, BNWAS는 당직자가 깨어 있는지 확인하며, VDR은 사고 뒤 원인을 밝힌다. 다음 <a href="autonomous.html">22장</a>에서는 이 판단을 기계가 대신하려는 자율운항선박의 시도를 다룬다.</p>
+  </section>
+
+  <section class="keypoints" id="summary">
+    <h2>핵심 정리</h2>
+    <ol>
+      <li>선교 장비는 자이로·GNSS·로그의 정보를 공유하는 하나의 체계다. 레이더 2대(X·S 밴드), ECDIS, AIS, 조타·기관 제어, 통신, VDR, BNWAS가 기본이다.</li>
+      <li>레이더 거리 \(R = ct/2\), 거리 분해능 \(c\tau/2\), 방위 분해능 \(\approx R\theta_B\), 레이더 수평선 \(\approx 2.2(\sqrt{h_1}+\sqrt{h_2})\) NM. 게인·STC·FTC로 해면·우천 클러터를 다룬다.</li>
+      <li>상대 운동 표시에서 표적의 잔상 연장선이 자선을 향하면 충돌 코스다. 진운동은 실제 침로를 보여 준다.</li>
+      <li>\(\vec V_r = \vec V_t - \vec V_o\). CPA와 TCPA로 충돌 위험을 수치화하고, 방위가 변하지 않고 거리가 줄면 위험하다.</li>
+      <li>AIS는 SOTDMA로 1분 2,250슬롯을 나눠 쓰며 2초~3분 간격으로 보고한다. 꺼진 AIS, GNSS 오류, 입력 오류 때문에 보조 수단으로만 쓴다.</li>
+      <li>ECDIS는 안전 수심으로부터 안전 등심선을 정하고 항로 점검·좌초 경보를 한다. 설정이 잘못되거나 경보를 끄면 무용지물이다.</li>
+      <li>COLREG: 마주침은 둘 다 우현, 횡단은 상대를 우현에 둔 배가 피항, 추월은 따라잡는 배가 피항(정횡 후 22.5°). 피항은 일찍·크게, 유지선도 마지막엔 최선의 동작을 한다. Rule 18의 책임 순서를 따른다.</li>
+      <li>현등은 좌현 빨강·우현 초록 각 112.5°, 선미등 135°, 마스트등 225°. 보이는 등화 조합과 마스트등 간격으로 상대 침로를 읽는다.</li>
+      <li>단음 1회 우현, 2회 좌현, 3회 후진, 5회 경고. 제한 시계에서는 Rule 19에 따라 일찍 피하되 정횡 앞 배를 피하려 좌현 변침하지 않는다.</li>
+    </ol>
+  </section>
+
+  <section class="quiz-sec" id="quiz">
+    <h2>확인 퀴즈</h2>
+    <div class="quiz">
+      <div class="quiz-q"><p>1. 레이더 펄스가 발사된 뒤 메아리가 74 μs 후에 돌아왔다. 물표까지 거리는 약 얼마인가?</p><div class="opts">
+        <button class="opt">약 22 km</button>
+        <button class="opt" data-correct>약 6해리 (11 km)</button>
+        <button class="opt">약 3해리</button>
+        <button class="opt">약 12해리</button>
+      </div><div class="quiz-exp">R = ct/2 = 3×10⁸ × 74×10⁻⁶ / 2 ≈ 11,100 m ≈ 6.0해리. 1해리 왕복에 약 12.4 μs가 걸린다는 값으로도 74/12.4 ≈ 6해리다.</div></div>
+
+      <div class="quiz-q"><p>2. 안테나 높이 36 m인 레이더로 높이 16 m인 배를 탐지할 수 있는 최대 거리(레이더 수평선 기준)는 대략?</p><div class="opts">
+        <button class="opt">약 10해리</button>
+        <button class="opt" data-correct>약 22해리</button>
+        <button class="opt">약 52해리</button>
+        <button class="opt">높이와 무관하게 약 12해리</button>
+      </div><div class="quiz-exp">2.2(√36 + √16) = 2.2 × (6 + 4) = 22해리. 실제 탐지 거리는 표적의 반사 단면적과 기상에 따라 이보다 짧을 수 있다.</div></div>
+
+      <div class="quiz-q"><p>3. 비가 많이 와서 PPI 화면 한쪽이 넓은 얼룩으로 덮였다. 그 속의 배를 찾기 위해 먼저 조정할 것은?</p><div class="opts">
+        <button class="opt">STC(해면 반사 억제)를 최대로 올린다</button>
+        <button class="opt">게인을 최대로 올린다</button>
+        <button class="opt" data-correct>FTC(우천 반사 억제)를 올린다</button>
+        <button class="opt">거리 범위를 늘린다</button>
+      </div><div class="quiz-exp">FTC는 메아리의 앞 가장자리만 남겨 넓게 퍼진 비 메아리를 얇게 만든다. STC는 가까운 거리의 감도를 낮추는 해면 반사 억제이고, 게인을 올리면 얼룩이 더 커진다. S 밴드로 바꾸는 것도 도움이 된다.</div></div>
+
+      <div class="quiz-q"><p>4. 상대선의 나침 방위가 10분째 045°로 변하지 않으면서 거리가 6해리에서 3해리로 줄었다. 판단으로 옳은 것은?</p><div class="opts">
+        <button class="opt">방위가 일정하므로 안전하다</button>
+        <button class="opt" data-correct>충돌 위험이 있다. 상대가 우현 쪽이므로 횡단이면 자선이 피항선이다</button>
+        <button class="opt">상대선이 유지선이므로 자선은 좌현으로 변침한다</button>
+        <button class="opt">상대선이 피항선이므로 침로를 유지하기만 하면 된다</button>
+      </div><div class="quiz-exp">방위가 변하지 않고 거리가 줄면 상대 운동선이 자선을 향하므로 충돌 코스다(Rule 7). 우현 쪽 배와의 횡단에서는 자선이 피항선이며(Rule 15), 일찍 크게 우현 변침하거나 감속해 상대 선미 쪽으로 지나간다. 이 속도면 TCPA는 약 10분이다.</div></div>
+
+      <div class="quiz-q"><p>5. 두 동력선이 정면으로 마주쳤다(Rule 14). 올바른 동작은?</p><div class="opts">
+        <button class="opt">작은 배가 큰 배를 피한다</button>
+        <button class="opt">각자 좌현으로 변침해 우현 대 우현으로 지나간다</button>
+        <button class="opt" data-correct>둘 다 우현으로 변침해 좌현 대 좌현으로 지나간다</button>
+        <button class="opt">속력이 빠른 배가 정지한다</button>
+      </div><div class="quiz-exp">마주침에서는 두 배 모두 피항 의무가 있고, 각자 우현으로 변침해 서로의 좌현을 보며 지나간다. 단음 1회로 우현 변침을 알린다.</div></div>
+
+      <div class="quiz-q"><p>6. 밤에 상대선의 흰 등 두 개(낮은 것이 왼쪽, 높은 것이 오른쪽)와 그 아래 초록 등이 보인다. 상대선은?</p><div class="opts">
+        <button class="opt">나에게서 멀어지고 있다</button>
+        <button class="opt">내 앞을 오른쪽에서 왼쪽으로 가로지른다</button>
+        <button class="opt" data-correct>내 앞을 왼쪽에서 오른쪽으로 가로지른다(나에게 우현을 보인다)</button>
+        <button class="opt">정면으로 다가온다</button>
+      </div><div class="quiz-exp">초록은 우현등이므로 상대의 우현이 보인다. 앞 마스트등은 낮고 뒤 마스트등은 높으므로, 낮은 등(선수)이 왼쪽… 이 아니라 진행 방향 쪽이다. 여기서는 낮은 앞등이 왼쪽? 정리하면: 앞(낮은) 마스트등 쪽이 진행 방향이다. 낮은 등이 왼쪽이면 선수가 왼쪽을 향하는 것처럼 보이지만, 우현(초록)이 보이려면 선수가 오른쪽을 향해야 하므로 이 조합은 앞등이 오른쪽에 있어야 한다. 문제의 조합에서는 높은 등이 오른쪽이라… </div></div>
+
+      <div class="quiz-q"><p>7. AIS에 대한 설명으로 옳지 않은 것은?</p><div class="opts">
+        <button class="opt">1분을 2,250개 슬롯으로 나눠 두 VHF 채널을 쓴다</button>
+        <button class="opt">고속으로 변침 중인 Class A 선박은 2초마다 위치를 보고한다</button>
+        <button class="opt" data-correct>AIS에 보이지 않으면 그 해역에 배가 없다고 판단해도 된다</button>
+        <button class="opt">AIS 위치는 송신선의 GNSS 위치이므로 GNSS 오류가 그대로 반영된다</button>
+      </div><div class="quiz-exp">AIS를 끈 배, 의무 대상이 아닌 소형선, 슬롯 포화로 먼 배가 사라지는 경우가 있다. 레이더와 육안 경계가 기본이다.</div></div>
+
+      <div class="quiz-q"><p>8. 흘수 12 m인 배가 여유 수심 2 m를 두려 한다. ECDIS에서 안전 등심선을 결정하는 안전 수심 설정과 그 의미로 옳은 것은?</p><div class="opts">
+        <button class="opt">안전 수심 10 m — 그보다 얕은 곳에 경보</button>
+        <button class="opt" data-correct>안전 수심 14 m — 그보다 얕은 해역을 가르는 등심선을 넘으면 경보</button>
+        <button class="opt">안전 수심 12 m — 흘수와 같으면 충분하다</button>
+        <button class="opt">안전 수심은 ECDIS가 자동으로 정하므로 입력하지 않는다</button>
+      </div><div class="quiz-exp">안전 수심 = 흘수 + 여유 수심 = 14 m. ECDIS는 해도 데이터의 등심선 중 이 값 이상인 가장 가까운 등심선(예: 15 m)을 안전 등심선으로 강조하고, 항로가 이를 넘으면 경보한다. 조석과 스쿼트도 고려해야 한다.</div></div>
+    </div>
+  </section>
+</main>

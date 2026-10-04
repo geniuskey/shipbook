@@ -1,0 +1,1410 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<title>손상 복원성과 구획 · ShipBook</title>
+<meta name="description" content="부가 중량법과 상실 부력법, 투과율, 수밀 격벽과 마진 라인, 진행 침수, 가항 길이와 구획 계수, 비대칭 침수와 교차 침수, 확률론적 손상 복원성, 이중 선체와 타이타닉을 시뮬레이터로 배운다.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../css/style.css">
+<script src="../js/common.js"></script>
+<style>
+  .sim-view.duo { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .sim-view.duo > div { min-width: 0; position: relative; }
+  @media (min-width: 700px) {
+    .sim-view.duo { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .sim-view.duo > div + div { border-left: 1px solid var(--border); }
+  }
+  .sim-view canvas.grab { cursor: pointer; touch-action: none; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .fig-lg svg .t, .fig-lg svg .t-acc { font-size: 15px; }
+  .fig-lg svg .t-dim { font-size: 13px; }
+</style>
+</head>
+<body data-chapter="damage">
+<main class="chapter">
+  <header class="chapter-hero">
+    <div class="eyebrow">Chapter 05</div>
+    <h1>손상 복원성과 구획</h1>
+    <p class="lead">배는 언젠가 부딪히고 긁히고 찢어진다. 충돌이나 좌초로 선체에 구멍이 났을 때, 배가 곧바로 가라앉지 않고 버티게 해 주는 것은 선체를 여러 방으로 나누는 수밀 격벽이다. 이 장에서는 물이 들어온 배의 새 흘수와 트림을 계산하는 두 가지 방법에서 출발해, 격벽을 어디에 몇 개 세워야 하는지를 정하는 가항 길이, 한쪽으로만 물이 찬 배의 횡경사와 교차 침수, 그리고 오늘날 국제 규칙의 바탕인 확률론적 손상 복원성까지 차례로 만져 본다. 마지막에는 타이타닉의 구획을 직접 침수시켜 본다.</p>
+    <ul class="objectives">
+      <li>부가 중량법과 상실 부력법으로 침수 후 흘수를 계산하고, 두 방법의 GM이 다른 이유를 설명한다.</li>
+      <li>투과율의 의미를 알고, 수밀 격벽·격벽 갑판·마진 라인의 관계로 생존 여부를 판정한다.</li>
+      <li>구멍 크기와 깊이로 유입량을 추정하고, 배수 펌프가 왜 큰 구멍을 이길 수 없는지 이해한다.</li>
+      <li>가항 길이 곡선과 구획 계수로 격벽 간격을 검사한다.</li>
+      <li>비대칭 침수가 만드는 횡경사와 교차 침수 장치의 효과, 손상 후 GZ 곡선의 변화를 읽는다.</li>
+      <li>달성 구획 지수 \(A=\sum p_i s_i\)의 의미를 알고, 격벽 배치가 \(A\)를 어떻게 바꾸는지 실험한다.</li>
+      <li>이중 선저·이중 선체의 역할과 타이타닉 이후 SOLAS가 생겨난 과정을 안다.</li>
+    </ul>
+  </header>
+
+  <!-- =============================================================== 1 -->
+  <section id="methods">
+    <h2>물이 들어온 배: 부가 중량법과 상실 부력법</h2>
+    <p>선체에 구멍이 나서 한 구획에 바닷물이 들어왔다고 하자. 구멍이 수면 아래에 있으면 물은 구획 안의 수위가 바깥 수면과 같아질 때까지 들어온다. 그 사이 배는 가라앉아 흘수가 늘어나고, 그러면 바깥 수면이 올라가 물이 조금 더 들어온다. 결국 배는 새로운 평형 상태에 이른다. 이 평형을 구하는 방법은 두 가지다.</p>
+    <ul>
+      <li><b>부가 중량법</b><span class="en">(Added Weight Method)</span>: 들어온 물을 배에 새로 실린 <em>화물</em>로 본다. 배수량이 늘고, 무게중심 \(G\)가 물 쪽으로 옮겨 가며, 구획 안 물의 자유수면 효과를 빼 주어야 한다. 물의 양이 흘수에 따라 달라지므로 반복 계산이 필요하다.</li>
+      <li><b>상실 부력법</b><span class="en">(Lost Buoyancy Method)</span>: 침수 구획을 아예 <em>배가 아닌 곳</em>, 바다의 일부로 본다. 배의 무게와 \(G\)는 그대로이고, 그 구획이 내던 부력과 수선면이 사라진다. 남은 선체가 같은 무게를 떠받치려면 더 가라앉아야 한다.</li>
+    </ul>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 760 270" role="img" aria-label="부가 중량법과 상실 부력법 비교">
+        <text x="100" y="22" class="t-acc" text-anchor="middle">부가 중량법</text>
+        <text x="480" y="22" class="t-acc" text-anchor="middle">상실 부력법</text>
+        <rect x="0" y="120" width="760" height="150" class="f-water"/>
+        <line x1="0" y1="120" x2="380" y2="120" class="s-water"/><line x1="390" y1="120" x2="760" y2="120" class="s-water"/>
+        <!-- left barge -->
+        <rect x="40" y="60" width="300" height="130" class="f-surface" stroke-width="1.5"/>
+        <rect x="150" y="120" width="70" height="70" fill="var(--water)" opacity="0.55"/>
+        <line x1="150" y1="60" x2="150" y2="190" class="s-line"/><line x1="220" y1="60" x2="220" y2="190" class="s-line"/>
+        <line x1="20" y1="105" x2="360" y2="105" class="s-line" stroke-dasharray="5 4"/>
+        <text x="345" y="100" class="t-mono" text-anchor="end">처음 흘수선</text>
+        <path d="M185 30 v44" stroke="var(--accent-2)" stroke-width="3" marker-end="url(#ar1)"/>
+        <text x="195" y="44" class="t-dim">+w (물 무게)</text>
+        <text x="190" y="214" class="t-dim" text-anchor="middle">Δ → Δ + w, G 이동, 자유수면 보정</text>
+        <text x="190" y="236" class="t-dim" text-anchor="middle">수선면은 그대로(A_w 전체)</text>
+        <!-- right barge -->
+        <rect x="420" y="60" width="300" height="130" class="f-surface" stroke-width="1.5"/>
+        <rect x="530" y="60" width="70" height="130" fill="var(--canvas-bg)" stroke="var(--text-dim)" stroke-dasharray="4 3"/>
+        <rect x="530" y="120" width="70" height="70" class="f-water"/>
+        <line x1="400" y1="105" x2="740" y2="105" class="s-line" stroke-dasharray="5 4"/>
+        <text x="565" y="150" class="t-dim" text-anchor="middle">바다의</text><text x="565" y="168" class="t-dim" text-anchor="middle">일부</text>
+        <text x="570" y="214" class="t-dim" text-anchor="middle">Δ, G 그대로, 부력·수선면 상실</text>
+        <text x="570" y="236" class="t-dim" text-anchor="middle">남은 선체가 더 잠겨 보충</text>
+        <text x="380" y="262" class="t-mono" text-anchor="middle">두 방법의 새 흘수는 같다</text>
+        <defs><marker id="ar1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent-2)"/></marker></defs>
+      </svg>
+      <figcaption><b>그림 5-1.</b> 같은 침수를 보는 두 관점. 왼쪽은 물을 실은 화물로, 오른쪽은 구획을 잃어버린 선체로 본다. 점선은 침수 전 흘수선, 파란 선은 침수 후 흘수선이다.</figcaption>
+    </figure>
+
+    <p>길이 \(L\), 폭 \(B\), 흘수 \(T\)인 상자형 바지선의 가운데에 길이 \(l\)의 구획이 침수되었다고 하자. 상실 부력법으로 보면, 사라진 수선면은 \(\mu l B\)이고 남은 수선면 \((L-\mu l)B\)가 잃어버린 부력 \(\mu l B T\)를 보충해야 하므로</p>
+    <div class="formula">$$\delta T = \frac{\mu\, l\, T}{L-\mu\, l},\qquad GM_{LB} = \frac{T+\delta T}{2} + \frac{(L-\mu l)\,B^3}{12\,L\,B\,T} - KG$$
+      <div class="where">\(\mu\): 투과율, \(\delta T\): 평행 침하량. 상실 부력법에서 \(BM = I_{remain}/\nabla_0\): 남은 수선면의 2차 모멘트를 <em>원래</em> 배수 용적으로 나눈다.</div>
+    </div>
+    <p>부가 중량법으로 계산해도 침하량은 정확히 같다. 그러나 GM은 다르게 나온다. 부가 중량법의 배수량은 \(\Delta+w\)로 커졌기 때문이다. 둘이 같은 물리를 묘사한다면 같아야 하는 것은 GM 자체가 아니라 <b>복원 모멘트</b> \(\Delta\cdot GM\)이다. 실제로 \(\Delta\,GM_{LB} = (\Delta+w)\,GM_{AW}\)가 성립한다. 손상 복원성 규칙은 배의 무게가 변하지 않는 상실 부력법을 기본으로 쓴다.</p>
+
+    <h3>투과율</h3>
+    <p>구획이 텅 비어 있지 않으면 물이 들어갈 자리는 줄어든다. 구획 부피 중 물이 찰 수 있는 비율을 <span class="term">투과율</span><span class="en">(Permeability, μ)</span>이라 한다. 강재·기관·화물이 차지한 부피는 물이 들어가지 못한다.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>구획</th><th>대표 투과율 μ</th><th>비고</th></tr></thead>
+      <tbody>
+        <tr><td>빈 공간, 밸러스트 탱크, 거주구</td><td>0.95</td><td>구조 부재만 차지</td></tr>
+        <tr><td>기관실</td><td>0.85</td><td>주기관·보기·배관</td></tr>
+        <tr><td>건화물 창(만재)</td><td>0.6~0.7</td><td>화물 종류에 따라 크게 다름</td></tr>
+        <tr><td>액체 화물 탱크</td><td>0~0.95</td><td>가득 찬 탱크는 물이 들어올 자리가 없다</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="sim" id="sim-methods">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>두 계산법 나란히 놓기: 상자형 바지선</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-methods"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>침수 구획 길이 l <output id="me-l-out"></output></span><input type="range" id="me-l" min="5" max="40" step="1" value="15"></label>
+          <label class="ctrl"><span>투과율 μ <output id="me-mu-out"></output></span><input type="range" id="me-mu" min="0.5" max="1" step="0.05" value="0.9"></label>
+          <label class="ctrl"><span>무게중심 높이 KG <output id="me-kg-out"></output></span><input type="range" id="me-kg" min="4" max="8" step="0.1" value="6"></label>
+          <div class="ctrl"><span>강조</span><div class="seg" id="me-view"><button data-value="aw" class="on">부가 중량</button><button data-value="lb">상실 부력</button></div></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">침하량 δT</span><span class="v" id="o-me-dt">—</span></div>
+        <div class="stat"><span class="k">GM (부가 중량)</span><span class="v" id="o-me-gmaw">—</span></div>
+        <div class="stat"><span class="k">GM (상실 부력)</span><span class="v" id="o-me-gmlb">—</span></div>
+        <div class="stat"><span class="k">Δ·GM 비교</span><span class="v" id="o-me-mom">—</span></div>
+      </div>
+      <div class="sim-note">바지선 L 100 m, B 16 m, 처음 흘수 6 m. 해볼 것: ① 두 GM이 다른데도 마지막 칸의 복원 모멘트 Δ·GM은 같다는 것을 확인하자. ② 구획 길이를 40 m로 늘리면 GM이 크게 줄어든다. 수선면을 잃는 것(BM 감소)과 자유수면 효과가 같은 현상의 두 얼굴이다. ③ KG를 높여 GM이 음수가 되는 지점을 찾아보자. 침수가 침몰보다 먼저 전복을 부를 수 있다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 2 -->
+  <section id="bulkheads">
+    <h2>수밀 격벽과 마진 라인</h2>
+    <p>배를 길이 방향으로 나누는 강철 벽을 <span class="term">수밀 격벽</span><span class="en">(Watertight Bulkhead)</span>이라 한다. 한 구획에 물이 들어와도 격벽이 막아 주므로, 배는 그 구획의 부력만 잃는다. 모든 상선에는 최소한 다음 격벽이 있다.</p>
+    <ul>
+      <li><b>충돌 격벽</b><span class="en">(Collision Bulkhead)</span>: 선수에서 대략 0.05L~0.08L 뒤. 정면 충돌로 선수가 부서져도 그 뒤는 지킨다.</li>
+      <li><b>선미 격벽</b><span class="en">(Aft Peak Bulkhead)</span>: 프로펠러 축이 선체를 뚫고 나가는 선미관을 감싼다.</li>
+      <li><b>기관실 앞뒤 격벽</b>: 가장 크고 중요한 구획인 기관실을 나눈다.</li>
+      <li><b>화물창 격벽</b>: 선박 길이에 따라 개수가 늘어난다.</li>
+    </ul>
+    <p>격벽이 올라가는 가장 높은 갑판을 <span class="term">격벽 갑판</span><span class="en">(Bulkhead Deck)</span>이라 한다. 침수 후 수면이 격벽 갑판을 넘으면 물은 갑판 위로 흘러 다음 구획으로 넘어가고, 격벽은 더 이상 의미가 없다. 그래서 고전적인 결정론적 구획 규칙은 격벽 갑판 바로 아래, 선측에서 <b>76 mm 아래</b>에 <span class="term">마진 라인</span><span class="en">(Margin Line)</span>을 긋고, 침수 후 흘수선이 이 선에 닿지 않을 것을 요구했다.</p>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 760 250" role="img" aria-label="수밀 격벽 배치와 마진 라인">
+        <rect x="0" y="140" width="760" height="110" class="f-water"/>
+        <path d="M70 62 Q380 82 700 50 L725 60 L712 140 Q706 190 680 200 L110 200 Q80 196 70 170 Z" class="f-surface" stroke-width="1.5"/>
+        <path d="M70 68 Q380 88 703 56" fill="none" stroke="var(--accent-2)" stroke-width="1.6" stroke-dasharray="6 4"/>
+        <line x1="0" y1="140" x2="760" y2="140" class="s-water"/>
+        <g stroke="var(--text)" stroke-width="2.4">
+          <line x1="110" y1="74" x2="110" y2="198"/><line x1="230" y1="78" x2="230" y2="200"/><line x1="350" y1="78" x2="350" y2="200"/>
+          <line x1="470" y1="76" x2="470" y2="200"/><line x1="590" y1="70" x2="590" y2="200"/><line x1="660" y1="62" x2="660" y2="200"/>
+        </g>
+        <text x="90" y="230" class="t-dim" text-anchor="middle">선미 피크</text>
+        <text x="170" y="180" class="t-dim" text-anchor="middle">기관실</text>
+        <text x="290" y="180" class="t-dim" text-anchor="middle">화물창 3</text>
+        <text x="410" y="180" class="t-dim" text-anchor="middle">화물창 2</text>
+        <text x="530" y="180" class="t-dim" text-anchor="middle">화물창 1</text>
+        <text x="690" y="230" class="t-dim" text-anchor="middle">선수 피크</text>
+        <text x="660" y="44" class="t-acc" text-anchor="middle">충돌 격벽</text>
+        <text x="380" y="62" class="t" text-anchor="middle" style="paint-order:stroke;stroke:var(--bg-elev);stroke-width:5px">격벽 갑판(현호를 따라 휜다)</text>
+        <text x="380" y="104" class="t-dim" text-anchor="middle" style="fill:var(--accent-2);paint-order:stroke;stroke:var(--surface);stroke-width:5px">마진 라인 = 격벽 갑판 선측 − 76 mm</text>
+        <text x="20" y="134" class="t-mono">흘수선</text>
+      </svg>
+      <figcaption><b>그림 5-2.</b> 일반 화물선의 수밀 격벽 배치. 격벽 갑판은 선수미로 갈수록 올라가는 현호(sheer)를 가지므로, 트림이 생기면 선수나 선미의 마진 라인이 먼저 위협받는다. (마진 라인은 그림에서 과장해 그렸다.)</figcaption>
+    </figure>
+
+    <p>침수 후 평형은 두 조건으로 구한다. 남은 선체의 배수 용적이 원래와 같아야 하고(평행 침하), 남은 선체의 부심이 \(G\)와 같은 세로 위치에 와야 한다(트림). 실제 선형에서는 단면적이 높이에 따라 변하므로, 흘수와 트림을 조금씩 바꿔 가며 두 조건을 동시에 맞추는 반복 계산(뉴턴법)을 쓴다.</p>
+    <div class="formula">$$\int_{L}\big[A(x,z)-\mu\,A_f(x,z)\big]\,dx=\nabla_0,\qquad \int_{L}x\,\big[A(x,z)-\mu\,A_f(x,z)\big]\,dx=\nabla_0\,x_G,\qquad z=T_m+x\tan\theta$$
+      <div class="where">\(A(x,z)\): 위치 \(x\)의 단면이 수면 \(z\)까지 잠긴 면적, \(A_f\): 침수 구획 안의 같은 면적, \(T_m\): 중앙 흘수, \(\theta\): 트림 각.</div>
+    </div>
+
+    <div class="sim" id="sim-flood">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>구획 침수 시뮬레이터: 격벽을 옮기고, 구획을 터뜨리자</h3></div>
+      <div class="sim-body">
+        <div class="sim-view"><canvas id="cv-flood" class="grab"></canvas><span class="hint">격벽 끌기 · 구획 클릭 = 침수</span></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>처음 흘수 <output id="fl-T-out"></output></span><input type="range" id="fl-T" min="6" max="10" step="0.1" value="8.5"></label>
+          <div class="ctrl"><span>화물창 투과율</span><div class="seg" id="fl-mu"><button data-value="0.6">0.6</button><button data-value="0.7" class="on">0.7</button><button data-value="0.95">0.95 (빈 창)</button></div></div>
+          <div class="ctrl"><span>격벽</span><div class="btn-row"><button class="btn" id="fl-add">격벽 추가</button><button class="btn" id="fl-del">격벽 제거</button><button class="btn" id="fl-reset">복구</button></div></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">침수 구획</span><span class="v" id="o-fl-n">—</span></div>
+        <div class="stat"><span class="k">중앙 침하량</span><span class="v" id="o-fl-sink">—</span></div>
+        <div class="stat"><span class="k">트림</span><span class="v" id="o-fl-trim">—</span></div>
+        <div class="stat"><span class="k">마진 라인 최소 여유</span><span class="v" id="o-fl-mg">—</span></div>
+        <div class="stat"><span class="k">판정</span><span class="v" id="o-fl-ok">—</span></div>
+      </div>
+      <div class="sim-note">길이 150 m, 폭 24 m, 깊이 13 m 일반 화물선(방형 계수 약 0.72). 선미 피크·선수 피크의 투과율은 0.95, 기관실은 0.85로 고정이다. 해볼 것: ① 가운데 화물창 하나를 클릭하면 배는 거의 평행하게 가라앉는다. ② 선수 피크와 화물창 1을 함께 터뜨리면 큰 선수 트림이 생기고 선수의 마진 라인이 먼저 잠긴다. ③ 격벽 하나를 제거해 두 구획을 합치고 같은 실험을 해 보자. 격벽 하나가 생존과 침몰을 가른다. ④ 흘수를 늘리면(만재) 여유 건현이 줄어 같은 손상에도 위험해진다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 3 -->
+  <section id="progressive">
+    <h2>진행 침수: 구멍으로 들어오는 물</h2>
+    <p>앞 절은 물이 다 들어온 뒤의 <em>최종</em> 평형만 보았다. 실제 사고에서 중요한 것은 그 과정, 즉 시간이다. 수면 아래 깊이 \(h\)에 있는 면적 \(A\)의 구멍으로 들어오는 유량은 토리첼리 정리에 유출 계수를 곱한 식으로 추정한다.</p>
+    <div class="formula">$$Q = C_d\,A\,\sqrt{2\,g\,\Delta h},\qquad \Delta h = (T - z_h) - \max(0,\ h_{in}-z_h)$$
+      <div class="where">\(C_d\approx 0.6\): 날카로운 구멍의 유출 계수, \(z_h\): 구멍의 높이(용골 기준), \(h_{in}\): 구획 안 수위. 안쪽 수위가 구멍보다 높아지면 안팎 수위 차만큼만 물을 민다.</div>
+    </div>
+    <p>수심 5 m에 지름 1 m(약 0.79 m²)의 구멍이 나면 \(Q \approx 0.6\times0.79\times\sqrt{2\times9.81\times5}\approx 4.7\ \text{m}^3/\text{s}\), 시간당 약 17,000 m³다. 대형 상선의 빌지 펌프는 대개 시간당 수백 m³ 수준이다. 펌프는 작은 누수를 감당하기 위한 것이지, 충돌로 생긴 큰 구멍을 이기기 위한 것이 아니다. 큰 구멍 앞에서 배를 지키는 것은 격벽이다.</p>
+
+    <div class="sim" id="sim-prog">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>구멍 대 펌프: 시간에 따른 수위와 흘수</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view duo"><div><canvas id="cv-prog"></canvas></div><div><canvas id="cv-progc"></canvas></div></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>구멍 면적 <output id="pg-a-out"></output></span><input type="range" id="pg-a" min="0" max="100" step="1" value="40"></label>
+          <label class="ctrl"><span>구멍 깊이(수면 아래) <output id="pg-d-out"></output></span><input type="range" id="pg-d" min="0.5" max="8" step="0.1" value="5"></label>
+          <label class="ctrl"><span>펌프 용량 <output id="pg-p-out"></output></span><input type="range" id="pg-p" min="0" max="3000" step="50" value="400"></label>
+          <div class="ctrl"><span>시간 배속</span><div class="seg" id="pg-sp"><button data-value="20">×20</button><button data-value="100" class="on">×100</button><button data-value="500">×500</button></div></div>
+          <div class="btn-row"><button class="btn primary" id="pg-run">손상 발생</button><button class="btn" id="pg-reset">리셋</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">경과 시간</span><span class="v" id="o-pg-t">—</span></div>
+        <div class="stat"><span class="k">유입량 Q</span><span class="v" id="o-pg-q">—</span></div>
+        <div class="stat"><span class="k">구획 수위</span><span class="v" id="o-pg-h">—</span></div>
+        <div class="stat"><span class="k">흘수</span><span class="v" id="o-pg-T">—</span></div>
+        <div class="stat"><span class="k">상태</span><span class="v" id="o-pg-st">—</span></div>
+      </div>
+      <div class="sim-note">길이 25 m, 폭 24 m 화물창(μ 0.7) 하나가 손상된 150 m 화물선. 들어온 물은 부가 중량으로 다뤄 흘수를 늘린다. 해볼 것: ① 구멍을 0.03 m²(손바닥 두 개 크기) 정도로 줄이면 400 m³/h 펌프로도 수위를 붙잡을 수 있다. ② 0.5 m²만 되어도 펌프는 거의 의미가 없다. ③ 구멍을 얕게 하면 유입이 느려지고, 안쪽 수위가 구멍 위로 올라가면 유입이 급격히 줄어드는 것을 그래프에서 확인하자.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 4 -->
+  <section id="floodable">
+    <h2>가항 길이 곡선과 구획 계수</h2>
+    <p>어떤 위치를 중심으로 한 구획이 침수되었을 때, 흘수선이 마진 라인에 꼭 닿는 구획 길이를 그 위치의 <span class="term">가항 길이</span><span class="en">(Floodable Length)</span>라 한다. 이것을 배 길이를 따라 그리면 <b>가항 길이 곡선</b>이 된다. 선체 가운데는 단면이 크고 트림이 잘 안 생기므로 곡선이 높고, 선수미 쪽으로 가면 작은 침수에도 트림이 커져 곡선이 낮아진다. 아주 끝에서는 선형이 가늘어져 잃는 부력 자체가 작으므로 다시 올라간다.</p>
+    <p>규칙은 여기에 안전 여유를 곱한다. <span class="term">구획 계수</span><span class="en">(Factor of Subdivision, F)</span>를 곱한 \(F\times\)가항 길이를 <b>허용 길이</b><span class="en">(Permissible Length)</span>라 하고, 실제 구획 길이가 그보다 짧아야 한다. \(F=1\)이면 한 구획 침수에 견디고, \(F=0.5\)이면 이웃한 두 구획이 함께 침수되어도 견딘다는 뜻이다. 과거 여객선 규칙은 배가 길고 승객이 많을수록 작은 \(F\)를 요구했다.</p>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 760 270" role="img" aria-label="가항 길이 곡선과 삼각형 작도">
+        <line x1="60" y1="220" x2="720" y2="220" class="s-axis"/><line x1="60" y1="220" x2="60" y2="30" class="s-axis"/>
+        <path d="M60 60 C110 140 160 150 230 120 C320 70 440 70 520 120 C590 160 640 150 720 50" fill="none" stroke="var(--accent)" stroke-width="2.4"/>
+        <path d="M60 140 C110 180 160 185 230 170 C320 145 440 145 520 170 C590 190 640 185 720 135" fill="none" stroke="var(--accent-2)" stroke-width="2" stroke-dasharray="6 4"/>
+        <g fill="var(--ok)" fill-opacity="0.18" stroke="var(--ok)" stroke-width="1.5">
+          <path d="M300 220 L345 130 L390 220 Z"/><path d="M390 220 L432 136 L474 220 Z"/>
+        </g>
+        <path d="M474 220 L530 108 L586 220 Z" fill="var(--bad)" fill-opacity="0.18" stroke="var(--bad)" stroke-width="1.5"/>
+        <g stroke="var(--text)" stroke-width="2"><line x1="300" y1="216" x2="300" y2="232"/><line x1="390" y1="216" x2="390" y2="232"/><line x1="474" y1="216" x2="474" y2="232"/><line x1="586" y1="216" x2="586" y2="232"/></g>
+        <text x="700" y="44" class="t" text-anchor="end" fill="var(--accent)">가항 길이</text>
+        <text x="716" y="128" class="t" text-anchor="end">허용 길이 = F × 가항 길이</text>
+        <text x="345" y="250" class="t-dim" text-anchor="middle">통과</text>
+        <text x="432" y="250" class="t-dim" text-anchor="middle">통과</text>
+        <text x="530" y="250" class="t-dim" text-anchor="middle">불합격</text>
+        <text x="40" y="40" class="t-mono" text-anchor="end">l</text>
+        <text x="720" y="250" class="t-mono" text-anchor="end">x</text>
+        <text x="60" y="250" class="t-mono">AP</text>
+      </svg>
+      <figcaption><b>그림 5-3.</b> 삼각형 작도. 격벽 두 개를 밑변으로 하고 높이가 구획 길이와 같은 이등변 삼각형을 그린다. 꼭짓점(구획 중앙, 높이 = 구획 길이)이 허용 길이 곡선 아래에 있으면 합격이다.</figcaption>
+    </figure>
+
+    <div class="sim" id="sim-flen">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>가항 길이 곡선 그리기와 격벽 간격 검사 (격벽을 끌어 보자)</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-flen" class="grab"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>투과율 μ</span><div class="seg" id="fn-mu"><button data-value="0.6">0.6</button><button data-value="0.85" class="on">0.85</button><button data-value="0.95">0.95</button></div></div>
+          <label class="ctrl"><span>구획 계수 F <output id="fn-F-out"></output></span><input type="range" id="fn-F" min="0.3" max="1" step="0.05" value="0.6"></label>
+          <label class="ctrl"><span>흘수 <output id="fn-T-out"></output></span><input type="range" id="fn-T" min="6.5" max="10" step="0.5" value="8.5"></label>
+          <div class="btn-row"><button class="btn" id="fn-add">격벽 추가</button><button class="btn" id="fn-del">격벽 제거</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">격벽 수</span><span class="v" id="o-fn-n">—</span></div>
+        <div class="stat"><span class="k">중앙부 가항 길이</span><span class="v" id="o-fn-mid">—</span></div>
+        <div class="stat"><span class="k">합격 구획</span><span class="v" id="o-fn-ok">—</span></div>
+      </div>
+      <div class="sim-note">위는 선체와 격벽, 아래는 같은 x축 위의 가항 길이(실선)와 허용 길이(점선), 각 구획의 삼각형이다. 곡선은 각 위치마다 구획 길이를 이분법으로 바꿔 가며 앞 절의 평형 계산을 반복해 얻는다. 해볼 것: ① F를 1에서 0.5로 낮추면 허용 길이가 반으로 줄어 격벽이 더 촘촘해야 한다. ② 투과율이 작으면(화물이 꽉 찬 창) 곡선이 올라간다. ③ 흘수를 늘려 건현을 줄이면 곡선 전체가 내려앉는다. 건현과 구획은 서로를 대신한다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 5 -->
+  <section id="asym">
+    <h2>비대칭 침수와 교차 침수</h2>
+    <p>선측 충돌은 흔히 한쪽 현의 날개 탱크<span class="en">(Wing Tank)</span>나 이중 선측 공간만 터뜨린다. 그러면 물의 무게가 중심선에서 떨어진 곳에 실려 배가 그쪽으로 기운다. 작은 각에서 횡경사는 다음과 같다.</p>
+    <div class="formula">$$\tan\varphi \approx \frac{w\,y_w}{\Delta'\,GM'}$$
+      <div class="where">\(w\): 들어온 물의 무게, \(y_w\): 물의 중심선에서의 거리, \(\Delta'\), \(GM'\): 침수 후 배수량과 (자유수면 보정한) GM.</div>
+    </div>
+    <p>횡경사는 그 자체로 위험하다. 갑판 끝이 잠기면 복원력이 급격히 줄고, 기울어진 쪽의 개구부(통풍통, 문)로 물이 들어가 침수가 번진다. 구명정을 내리기도 어려워진다. 그래서 양현 탱크를 큰 관으로 연결하고 밸브를 달아, 손상 시 반대쪽 탱크에 일부러 물을 넣어 경사를 바로잡는 <span class="term">교차 침수 장치</span><span class="en">(Cross-Flooding Arrangement)</span>를 둔다. 경사는 사라지는 대신 배는 더 가라앉는다. SOLAS는 교차 침수가 가능한 한 60초 안에 끝나도록 요구하고, 그보다 오래 걸리면 중간 단계의 복원성도 따로 확인하게 한다.</p>
+
+    <div class="sim" id="sim-cross">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>날개 탱크 침수와 교차 침수 밸브</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view duo"><div><canvas id="cv-cross"></canvas></div><div><canvas id="cv-crossc"></canvas></div></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>교차 침수관 단면적 <output id="cr-a-out"></output></span><input type="range" id="cr-a" min="0.05" max="1" step="0.05" value="0.3"></label>
+          <label class="ctrl"><span>KG <output id="cr-kg-out"></output></span><input type="range" id="cr-kg" min="7.5" max="10" step="0.1" value="9"></label>
+          <div class="btn-row"><button class="btn primary" id="cr-hit">충돌(우현 손상)</button><button class="btn" id="cr-valve">밸브 열기</button><button class="btn" id="cr-reset">리셋</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">시간</span><span class="v" id="o-cr-t">—</span></div>
+        <div class="stat"><span class="k">횡경사</span><span class="v" id="o-cr-heel">—</span></div>
+        <div class="stat"><span class="k">흘수</span><span class="v" id="o-cr-T">—</span></div>
+        <div class="stat"><span class="k">GM′</span><span class="v" id="o-cr-gm">—</span></div>
+        <div class="stat"><span class="k">밸브</span><span class="v" id="o-cr-v">—</span></div>
+      </div>
+      <div class="sim-note">폭 24 m 선박의 길이 24 m, 폭 3 m 날개 탱크(μ 0.95)가 이중 선저 위에 양현으로 있다. 우현 탱크는 1.5 m² 구멍으로 바다와 통한다. 해볼 것: ① 충돌 후 밸브를 닫아 둔 채 경사가 안정되는 것을 보자. ② 밸브를 열면 좌현 탱크로 물이 건너가 경사가 줄고 흘수가 는다. ③ 관을 가늘게 하면 평형까지 몇 분이 걸린다. 그 동안 배는 기운 채로 버텨야 한다. ④ KG를 높이면 같은 손상에도 경사가 훨씬 커진다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 6 -->
+  <section id="gz">
+    <h2>손상 시 GZ 곡선</h2>
+    <p><a href="stability.html">3장</a>의 GZ 곡선은 손상 후에도 같은 방법으로 그릴 수 있다. 상실 부력법이라면 배의 무게와 \(G\)는 그대로 두고, 경사각마다 침수 구획의 잠긴 부분을 뺀 나머지 선체로 부력과 부심을 계산하면 된다. 손상 후 곡선은 대개 세 가지가 달라진다.</p>
+    <ul>
+      <li><b>평행 침하</b>로 건현이 줄어 갑판 끝이 더 일찍 잠긴다. 최대 GZ가 작아지고 더 작은 각에서 나타난다.</li>
+      <li><b>수선면 상실</b>로 BM이 줄어 초기 기울기(GM)가 작아진다.</li>
+      <li><b>비대칭 침수</b>면 곡선이 아래로 밀려 0이 아닌 각에서 평형(\(GZ=0\))이 생긴다. 복원 범위도 그만큼 줄어든다.</li>
+    </ul>
+    <p>SOLAS의 생존 확률 \(s\)는 바로 이 손상 후 GZ 곡선으로 계산한다. 최종 평형 경사, 최대 GZ, 복원 범위가 클수록 \(s\)가 1에 가까워진다(7절).</p>
+
+    <div class="sim" id="sim-gzd">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>손상 전·후 GZ 곡선 비교</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view duo"><div><canvas id="cv-gzs"></canvas></div><div><canvas id="cv-gzc"></canvas></div></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>손상 구역</span><div class="seg" id="gd-type"><button data-value="hold" class="on">중앙 화물창</button><button data-value="wing">우현 날개 탱크</button><button data-value="db">이중 선저</button></div></div>
+          <label class="ctrl"><span>손상 길이 / L <output id="gd-f-out"></output></span><input type="range" id="gd-f" min="0.05" max="0.3" step="0.01" value="0.15"></label>
+          <label class="ctrl"><span>KG <output id="gd-kg-out"></output></span><input type="range" id="gd-kg" min="7" max="10" step="0.1" value="8.6"></label>
+          <label class="ctrl"><span>그림의 횡경사 <output id="gd-h-out"></output></span><input type="range" id="gd-h" min="-10" max="60" step="1" value="20"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">평형 경사</span><span class="v" id="o-gd-eq">—</span></div>
+        <div class="stat"><span class="k">GZmax 손상 전→후</span><span class="v" id="o-gd-max">—</span></div>
+        <div class="stat"><span class="k">복원 범위</span><span class="v" id="o-gd-rng">—</span></div>
+        <div class="stat"><span class="k">GM 손상 전→후</span><span class="v" id="o-gd-gm">—</span></div>
+      </div>
+      <div class="sim-note">B 24 m, D 13 m, T 8.5 m 단면이 길이 방향으로 같다고 본 2차원 근사다(트림은 무시). 손상 길이 비율만큼의 길이에서 해당 구역이 잠긴 부분의 부력을 잃는다. 날개 탱크 μ 0.95, 화물창 0.7, 이중 선저 0.95. 해볼 것: ① 날개 탱크를 고르면 곡선이 아래로 내려가 평형 경사가 생긴다. ② 이중 선저 침수는 낮은 곳의 부력만 잃어 오히려 GM이 조금 커질 수도 있다. ③ KG를 올리며 손상 후 GZ가 사라지는 지점을 찾아보자.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 7 -->
+  <section id="probabilistic">
+    <h2>확률론적 손상 복원성 (SOLAS 2009)</h2>
+    <p>가항 길이와 구획 계수는 "몇 개 구획 침수에 견디는가"를 묻는 결정론적 방법이다. 그러나 실제 사고에서 구멍이 어디에, 얼마나 길게 날지는 우연이다. 2009년부터 화물선과 여객선 모두에 적용되는 SOLAS 제II-1장은 이 우연을 정면으로 다룬다. 가능한 모든 손상 경우 \(i\)에 대해</p>
+    <ul>
+      <li>\(p_i\): 그 손상(특정 구획 또는 이웃한 구획 묶음)이 일어날 확률. 실제 충돌 통계에서 얻은 손상 위치·길이 분포로 계산한다.</li>
+      <li>\(s_i\): 그 손상을 입었을 때 살아남을 확률. 손상 후 GZ 곡선의 평형 경사, 최대 GZ, 복원 범위로 계산한다.</li>
+    </ul>
+    <div class="formula">$$A=\sum_i p_i\,s_i \;\ge\; R,\qquad s_{final}=K\left[\frac{GZ_{max}}{0.12}\cdot\frac{Range}{16}\right]^{1/4},\qquad R = 1-\frac{128}{L_s+152}$$
+      <div class="where">\(A\): 달성 구획 지수(Attained Subdivision Index), \(R\): 요구 구획 지수(화물선, \(L_s>100\) m), \(L_s\): 구획 길이(m). \(GZ_{max}\)는 0.12 m, 복원 범위는 16°를 상한으로 자르고, \(K\)는 평형 경사에 따른 감점이다. 실제 \(A\)는 세 흘수(만재·부분·경하)의 가중 평균이다.</div>
+    </div>
+    <p>\(A\)는 "무작위로 손상을 입었을 때 살아남을 확률"로 읽을 수 있다. 격벽을 어디에 몇 개 두느냐에 따라 \(p_i\)의 분할이 달라지고, 좁은 구획이 많으면 큰 손상이 여러 구획을 동시에 뚫어 \(s\)가 0이 되기 쉽다. 정답이 하나가 아니므로 설계자는 \(A\)를 높이는 배치를 찾아 이리저리 격벽을 옮겨 본다. 아래 시뮬레이터의 아래쪽 그림은 손상 중심 위치(가로)와 손상 길이(세로) 평면이다. 각 삼각형·마름모가 하나의 손상 경우이고, 그 넓이에 확률 밀도를 곱한 것이 \(p_i\)다.</p>
+
+    <div class="sim" id="sim-prob">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>격벽 배치로 달성 지수 A 올리기 (격벽을 끌어 보자)</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-prob" class="grab"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>흘수 <output id="pr-T-out"></output></span><input type="range" id="pr-T" min="7" max="10" step="0.25" value="8.5"></label>
+          <div class="btn-row"><button class="btn" id="pr-add">격벽 추가</button><button class="btn" id="pr-del">격벽 제거</button><button class="btn" id="pr-reset">처음 배치</button></div>
+          <label class="check"><input type="checkbox" id="pr-lbl" checked> 경우별 p·s 표시</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">달성 지수 A</span><span class="v" id="o-pr-A">—</span></div>
+        <div class="stat"><span class="k">요구 지수 R</span><span class="v" id="o-pr-R">—</span></div>
+        <div class="stat"><span class="k">판정</span><span class="v" id="o-pr-ok">—</span></div>
+        <div class="stat"><span class="k">손상 경우 수</span><span class="v" id="o-pr-n">—</span></div>
+      </div>
+      <div class="sim-note">아래 그림의 색: s = 1 초록, 0 &lt; s &lt; 1 노랑, s = 0 빨강. 진할수록 p가 크고, 숫자는 그 경우의 p·s다. 간단화한 모델이다. 손상 중심은 선체 길이에 고르게, 손상 길이는 0~45 m에서 길수록 드물게(삼각 분포) 일어난다고 본다. 생존 확률 s는 GZ 대신 침수 평형의 마진 라인 여유로 정했다(여유 1 m 이상이면 1, 잠기면 0, 사이는 선형). 투과율은 모두 0.85. 해볼 것: ① 격벽을 하나씩 추가하며 A가 어떻게 오르는지 보자. 어느 순간부터는 덜 오른다. ② 격벽을 한쪽에 몰면 큰 구획이 생겨 그 구획의 s가 0이 된다. ③ 흘수를 늘리면 같은 배치에서도 A가 떨어진다. 실제 규칙이 여러 흘수를 함께 보는 이유다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 8 -->
+  <section id="double">
+    <h2>이중 선저·이중 선체와 좌초</h2>
+    <p>가로 격벽이 길이 방향의 침수를 막는다면, 선체 바닥과 옆면을 두 겹으로 만드는 것은 구멍이 화물창까지 닿지 않게 한다. <span class="term">이중 선저</span><span class="en">(Double Bottom)</span>는 바닥판 위에 1~2 m 높이로 내저판을 하나 더 깐 구조다. 좌초로 바닥이 찢어져도 이중 선저 탱크만 침수되고 화물창은 마른 채로 남는다. 이중 선저 안은 밸러스트·연료 탱크로 쓰인다.</p>
+    <p>유조선은 1989년 알래스카 해역의 대형 기름 유출 사고 이후 미국 OPA 90과 MARPOL 규정에 따라 <span class="term">이중 선체</span><span class="en">(Double Hull)</span>가 의무화되었다. 화물 탱크를 선측과 선저에서 대략 2 m씩 떨어뜨려 감싸는 구조다. 이 공간은 충돌·좌초 시 완충대이자 밸러스트 탱크가 된다. 다만 이중 선체 공간이 비대칭으로 침수되면 앞 절의 횡경사 문제가 생긴다.</p>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 760 260" role="img" aria-label="단일 선체와 이중 선체 단면">
+        <rect x="0" y="80" width="760" height="180" class="f-water"/>
+        <line x1="0" y1="80" x2="760" y2="80" class="s-water"/>
+        <path d="M60 30 L60 200 Q60 220 80 220 L300 220 Q320 220 320 200 L320 30" class="f-surface" stroke-width="2"/>
+        <rect x="64" y="34" width="252" height="182" fill="var(--warn)" fill-opacity="0.25"/>
+        <text x="190" y="130" class="t" text-anchor="middle">화물</text>
+        <text x="190" y="250" class="t-dim" text-anchor="middle">단일 선체: 바닥이 찢기면 곧 화물창</text>
+        <path d="M440 30 L440 200 Q440 220 460 220 L680 220 Q700 220 700 200 L700 30" class="f-surface" stroke-width="2"/>
+        <path d="M470 30 L470 190 L670 190 L670 30" fill="var(--warn)" fill-opacity="0.25" stroke="var(--text)" stroke-width="2"/>
+        <g fill="var(--accent-soft)"><rect x="443" y="34" width="25" height="183"/><rect x="672" y="34" width="25" height="183"/><rect x="470" y="192" width="200" height="25"/></g>
+        <text x="570" y="120" class="t" text-anchor="middle">화물</text>
+        <text x="570" y="208" class="t-mono" text-anchor="middle">이중 선저 (≈ B/20)</text>
+        <text x="728" y="120" class="t-mono" text-anchor="middle" transform="rotate(90 728 120)">이중 선측 ≈ 2 m</text>
+        <text x="570" y="250" class="t-dim" text-anchor="middle">이중 선체: 바깥 판이 찢겨도 안쪽 판이 화물을 지킨다</text>
+      </svg>
+      <figcaption><b>그림 5-4.</b> 단일 선체와 이중 선체 단면. 이중 선저 높이는 규칙에서 대략 B/20 이상(최소 0.76 m 안팎), 유조선 이중 선체 폭은 대략 2 m로 정한다. 정확한 값은 선종과 선박 크기에 따라 다르다.</figcaption>
+    </figure>
+
+    <div class="sim" id="sim-ground">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>좌초·충돌 시나리오: 안쪽 판이 버티는가</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-ground"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>사고</span><div class="seg" id="gr-type"><button data-value="ground" class="on">좌초(선저)</button><button data-value="coll">충돌(선측)</button></div></div>
+          <label class="ctrl"><span>관통 깊이 <output id="gr-p-out"></output></span><input type="range" id="gr-p" min="0" max="4" step="0.1" value="1.2"></label>
+          <label class="ctrl"><span>이중 구조 두께 <output id="gr-h-out"></output></span><input type="range" id="gr-h" min="0" max="3" step="0.1" value="1.6"></label>
+          <button class="btn primary" id="gr-run">사고 재생</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">침수 공간</span><span class="v" id="o-gr-sp">—</span></div>
+        <div class="stat"><span class="k">침하량</span><span class="v" id="o-gr-dt">—</span></div>
+        <div class="stat"><span class="k">GM 변화</span><span class="v" id="o-gr-gm">—</span></div>
+        <div class="stat"><span class="k">횡경사</span><span class="v" id="o-gr-heel">—</span></div>
+        <div class="stat"><span class="k">남은 건현</span><span class="v" id="o-gr-fb">—</span></div>
+      </div>
+      <div class="sim-note">L 150 m, B 24 m, D 13 m, T 8.5 m, KG 8 m 상자형 근사. 손상 구역 길이는 24 m, 화물창 μ 0.7, 이중 구조 μ 0.95. 이중 구조 두께를 0으로 하면 단일 선체다. 해볼 것: ① 좌초에서 관통 깊이가 이중 선저 높이보다 작으면 침하량이 수 cm에 불과하고 GM은 오히려 오른다(낮은 곳에 물을 실은 것과 같다). ② 관통이 내저판을 넘는 순간 화물창이 침수되어 결과가 급변한다. ③ 충돌에서 이중 선측만 터지면 비대칭 침수로 경사가 생긴다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 9 -->
+  <section id="titanic">
+    <h2>타이타닉과 SOLAS의 탄생</h2>
+    <p>1912년 4월 14일 밤, 북대서양에서 빙산을 스친 타이타닉은 2시간 40분 만에 가라앉았다. 이 배는 15개의 가로 격벽으로 16개 구획을 나누었고, 앞쪽 구획 네 개까지는 침수되어도 뜰 수 있게 설계되었다. 빙산은 우현 선수 쪽 선체를 따라 약 90 m에 걸쳐 판의 이음매를 벌려 놓았고, 앞쪽 다섯 개(일부 기록은 여섯 개) 구획이 동시에 열렸다.</p>
+    <p>문제는 격벽의 높이였다. 격벽은 수밀 갑판 하나(대부분 E 갑판)까지만 올라갔고, 그 위는 위아래로 열려 있었다. 앞 구획들이 물을 받아 선수가 내려가자, 다섯 번째 구획의 수면이 그 뒤 격벽의 꼭대기를 넘었다. 물은 얼음 상자에 붓듯 다음 구획으로 넘쳐 들어갔고, 그다음, 또 그다음으로 이어졌다. 격벽은 침몰을 막지 못하고 늦추기만 했다.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>연도</th><th>사건</th></tr></thead>
+      <tbody>
+        <tr><td>1912</td><td>타이타닉 침몰. 탑승자 2,200여 명 중 1,500여 명 사망. 구명정 정원은 탑승자의 절반 정도였다.</td></tr>
+        <tr><td>1914</td><td>제1차 해상 인명 안전 국제 협약(SOLAS) 채택: 구획, 구명정 정원, 무선 당직, 빙산 순찰.</td></tr>
+        <tr><td>1948·1960·1974</td><td>개정을 거듭해 오늘날의 SOLAS 1974 체계로 정리. 구획 계수와 가항 길이에 기반한 결정론적 규칙.</td></tr>
+        <tr><td>1990</td><td>화물선에 확률론적 손상 복원성 도입.</td></tr>
+        <tr><td>2009</td><td>여객선·화물선 확률론적 규칙 통합(SOLAS 2009, 제II-1장 B 파트).</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="sim" id="sim-titanic">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>타이타닉형 구획 침수: 격벽을 넘는 물</h3></div>
+      <div class="sim-body">
+        <div class="sim-view"><canvas id="cv-titanic"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>빙산이 연 구획 수(선수부터) <output id="ti-k-out"></output></span><input type="range" id="ti-k" min="1" max="7" step="1" value="5"></label>
+          <label class="ctrl"><span>중앙부 격벽 꼭대기 높이 <output id="ti-h-out"></output></span><input type="range" id="ti-h" min="14" max="20" step="0.5" value="17"></label>
+          <div class="btn-row"><button class="btn primary" id="ti-run">충돌 재생</button><button class="btn" id="ti-reset">리셋</button></div>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">단계</span><span class="v" id="o-ti-st">—</span></div>
+        <div class="stat"><span class="k">침수 구획</span><span class="v" id="o-ti-n">—</span></div>
+        <div class="stat"><span class="k">선수 흘수</span><span class="v" id="o-ti-fwd">—</span></div>
+        <div class="stat"><span class="k">결과</span><span class="v" id="o-ti-res">—</span></div>
+      </div>
+      <div class="sim-note">길이 260 m, 폭 28 m, 흘수 10.5 m, 격벽 15개(구획 16개)의 4연돌 여객선 모형이다. 실제 선박의 격벽 위치·높이를 재현한 것이 아니라 비례를 닮게 만든 교육용 모형이며, 투과율은 0.9로 두었다. 맨 앞 두 격벽은 갑판 가까이까지, 나머지는 슬라이더 높이까지 올라간다. 해볼 것: ① 4개 구획 침수는 크게 기울지만 버틴다. ② 5개면 다섯 번째 구획의 물이 뒤 격벽을 넘어 연쇄 침수가 일어난다. ③ 격벽을 20 m까지 올려도 5개 침수에서는 수면이 격벽을 넘는다. 격벽 높이만으로는 부족했고, 손상 범위가 설계 가정(4개)을 넘어선 것이다. ④ 반대로 격벽을 14 m로 낮추면 4개 침수에서도 연쇄 침수가 일어난다.</div>
+    </div>
+    <div class="callout">
+      <strong>타이타닉이 남긴 것</strong>
+      <p>타이타닉 이후의 교훈은 하나로 모인다. "가라앉지 않는 배"는 없다. 그래서 오늘날의 규칙은 생존 확률을 숫자로 요구하고(\(A\ge R\)), 그래도 가라앉을 때를 대비해 모든 탑승자를 위한 구명 설비, 24시간 무선 당직, 승무원 훈련을 함께 요구한다. 구획은 침몰을 막는 장치인 동시에, 사람들이 배를 떠날 <em>시간</em>을 버는 장치다.</p>
+    </div>
+  </section>
+
+  <section class="keypoints" id="summary">
+    <h2>핵심 정리</h2>
+    <ol>
+      <li>침수는 부가 중량법(물 = 화물)과 상실 부력법(구획 = 바다)으로 계산한다. 새 흘수는 같고, GM은 다르지만 복원 모멘트 \(\Delta\cdot GM\)은 같다.</li>
+      <li>투과율 μ는 구획 중 물이 찰 수 있는 비율이다. 빈 공간 0.95, 기관실 0.85, 만재 화물창 0.6~0.7.</li>
+      <li>수밀 격벽은 손상을 한 구획에 가둔다. 침수 후 흘수선이 격벽 갑판 아래 76 mm의 마진 라인을 넘으면 결정론적 기준에서 불합격이다.</li>
+      <li>구멍 유입량은 \(Q=C_dA\sqrt{2g\Delta h}\). 지름 1 m 구멍은 시간당 1만 m³를 넘어 펌프로는 감당할 수 없다.</li>
+      <li>가항 길이는 흘수선이 마진 라인에 닿는 최대 구획 길이다. 허용 길이 = F × 가항 길이이며, 삼각형 작도로 격벽 간격을 검사한다.</li>
+      <li>비대칭 침수는 \(\tan\varphi\approx w y_w/(\Delta' GM')\)의 횡경사를 만든다. 교차 침수는 경사를 줄이는 대신 흘수를 늘린다.</li>
+      <li>SOLAS 2009는 \(A=\sum p_i s_i\ge R\)를 요구한다. \(p\)는 손상 통계, \(s\)는 손상 후 GZ 곡선에서 나온다.</li>
+      <li>이중 선저·이중 선체는 바깥 판의 손상이 화물창까지 닿지 않게 한다. 타이타닉은 격벽이 낮아 물이 차례로 넘쳐 들어가 침몰했고, 그 사고가 SOLAS를 낳았다.</li>
+    </ol>
+  </section>
+
+  <section class="quiz-sec" id="quiz">
+    <h2>확인 퀴즈</h2>
+    <div class="quiz">
+      <div class="quiz-q"><p>Q1. 상자형 바지선(L 100 m, T 6 m) 가운데의 길이 20 m 빈 구획(μ = 1)이 침수되었다. 상실 부력법으로 구한 평행 침하량은?</p><div class="opts">
+        <button class="opt">1.2 m</button><button class="opt" data-correct>1.5 m</button><button class="opt">2.0 m</button><button class="opt">0.75 m</button>
+      </div><div class="quiz-exp">\(\delta T = \mu l T/(L-\mu l) = 20\times6/80 = 1.5\) m. 잃은 부력 \(20 B\times6\)을 남은 수선면 \(80B\)가 메우려면 1.5 m 더 잠겨야 한다. 부가 중량법으로 반복 계산해도 같은 값이 나온다.</div></div>
+
+      <div class="quiz-q"><p>Q2. 같은 침수를 부가 중량법과 상실 부력법으로 계산했다. 반드시 같아야 하는 것은?</p><div class="opts">
+        <button class="opt">GM</button><button class="opt">배수량</button><button class="opt" data-correct>복원 모멘트 Δ·GM과 새 흘수</button><button class="opt">KG</button>
+      </div><div class="quiz-exp">부가 중량법은 배수량이 \(\Delta+w\)로 커지고 KG도 바뀐다. 상실 부력법은 \(\Delta\)와 KG가 그대로다. 두 방법은 같은 물리를 다르게 장부에 적는 것이므로 흘수와 복원 모멘트는 같고, GM 값은 다르다.</div></div>
+
+      <div class="quiz-q"><p>Q3. 만재된 건화물 창의 투과율이 빈 창(0.95)보다 작은(0.6~0.7) 이유는?</p><div class="opts">
+        <button class="opt">화물이 물을 밀어내는 부력을 낸다</button><button class="opt" data-correct>화물이 차지한 부피에는 바닷물이 들어갈 수 없다</button><button class="opt">화물창 격벽이 더 두껍다</button><button class="opt">화물이 구멍을 막는다</button>
+      </div><div class="quiz-exp">투과율은 구획 부피 중 물이 찰 수 있는 비율이다. 화물이 자리를 차지하고 있으면 그만큼 물이 덜 들어오고, 잃는 부력도 줄어든다. 그래서 같은 손상이라도 빈 창이 더 위험하다.</div></div>
+
+      <div class="quiz-q"><p>Q4. 수면 아래 4 m에 0.2 m² 구멍이 났다(C<sub>d</sub> = 0.6). 유입량은 대략?</p><div class="opts">
+        <button class="opt">약 100 m³/h</button><button class="opt">약 500 m³/h</button><button class="opt" data-correct>약 3,800 m³/h</button><button class="opt">약 40,000 m³/h</button>
+      </div><div class="quiz-exp">\(Q=0.6\times0.2\times\sqrt{2\times9.81\times4}=0.6\times0.2\times8.86\approx1.06\) m³/s ≈ 3,800 m³/h. 일반적인 빌지 펌프 용량의 열 배쯤 된다.</div></div>
+
+      <div class="quiz-q"><p>Q5. 구획 계수 F = 0.5가 뜻하는 것은?</p><div class="opts">
+        <button class="opt">구획 길이가 가항 길이의 2배까지 허용된다</button><button class="opt" data-correct>이웃한 두 구획이 함께 침수되어도 견딜 수 있다</button><button class="opt">격벽 높이를 절반으로 해도 된다</button><button class="opt">침수 확률이 50%다</button>
+      </div><div class="quiz-exp">허용 길이 = F × 가항 길이이므로 F = 0.5면 각 구획이 가항 길이의 절반 이하다. 그러면 이웃한 두 구획을 합쳐도 가항 길이를 넘지 않아, 2구획 침수에 견딘다.</div></div>
+
+      <div class="quiz-q"><p>Q6. 우현 날개 탱크가 침수된 배에서 교차 침수 밸브를 열었다. 결과로 옳은 것은?</p><div class="opts">
+        <button class="opt">경사와 흘수가 모두 준다</button><button class="opt" data-correct>경사는 줄고 흘수는 는다</button><button class="opt">경사는 커지고 흘수는 준다</button><button class="opt">아무 변화가 없다</button>
+      </div><div class="quiz-exp">반대쪽 탱크로 물이 건너가 무게가 대칭이 되므로 경사는 준다. 그러나 우현 탱크는 바다와 통해 있어 다시 차오르므로 전체 침수량은 늘고, 배는 더 가라앉는다.</div></div>
+
+      <div class="quiz-q"><p>Q7. SOLAS 2009의 달성 구획 지수 A에서 s<sub>i</sub>가 나타내는 것은?</p><div class="opts">
+        <button class="opt">손상 경우 i가 일어날 확률</button><button class="opt" data-correct>손상 경우 i를 입었을 때 살아남을 확률</button><button class="opt">구획 i의 투과율</button><button class="opt">구획 i의 길이 비율</button>
+      </div><div class="quiz-exp">\(p_i\)가 그 손상이 일어날 확률, \(s_i\)가 그 손상 뒤 살아남을 확률이다. \(s\)는 손상 후 GZ 곡선의 평형 경사, 최대 GZ, 복원 범위로 계산한다. 둘의 곱을 모두 더한 A가 R 이상이어야 한다.</div></div>
+
+      <div class="quiz-q"><p>Q8. 타이타닉 침몰에서 "격벽 높이"가 문제가 된 까닭은?</p><div class="opts">
+        <button class="opt">격벽이 너무 높아 배가 무거웠다</button><button class="opt">격벽에 수밀문이 없었다</button><button class="opt" data-correct>선수 트림으로 수면이 격벽 꼭대기를 넘어 물이 다음 구획으로 차례로 넘쳤다</button><button class="opt">격벽이 길이 방향으로만 있었다</button>
+      </div><div class="quiz-exp">격벽은 한 갑판까지만 올라가고 그 위는 열려 있었다. 다섯 구획이 침수되자 선수가 크게 내려가 수면이 뒤 격벽 꼭대기를 넘었고, 물이 다음 구획으로 넘치는 연쇄가 일어났다.</div></div>
+    </div>
+  </section>
+</main>
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const cssv = (n) => getComputedStyle(document.body).getPropertyValue(n);
+  const font = (sz, mono, w) => (w ? w + " " : "") + sz + "px " + (mono ? cssv("--mono") : cssv("--font"));
+  const sm = (v, u) => v + "<small>" + u + "</small>";
+  const G = 9.81, RHO = 1.025;
+  function label(ctx, s, x, y, c, a, sz, w, base) {
+    ctx.font = font(sz || 12, false, w); ctx.fillStyle = c; ctx.textAlign = a || "left"; ctx.textBaseline = base || "middle"; ctx.fillText(s, x, y);
+  }
+  function mono(ctx, s, x, y, c, a, sz) { ctx.font = font(sz || 11, true); ctx.fillStyle = c; ctx.textAlign = a || "left"; ctx.textBaseline = "middle"; ctx.fillText(s, x, y); }
+  function seg(ctx, x1, y1, x2, y2) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+  function poly(ctx, pts) { ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.closePath(); }
+  function run(name, fn) { try { fn(); } catch (e) { console.error("[" + name + "]", e); } }
+  const waterC = () => SB.color("water") || "#2f8fd0";
+  function alphaFill(ctx, color, a) { ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = color; ctx.fill(); ctx.restore(); }
+  /* s(0~1) → 색: 0 빨강, 0.5 노랑, 1 초록 */
+  function sColor(P, s) { return s >= 0.999 ? P.ok : s <= 0.001 ? P.bad : P.warn; }
+
+  /* ------------------------------------------------------------------
+     선체 모형: 공용 선형(SB.hullHalf)을 단면별로 적분한 표.
+     ship frame: x(선미 −, 선수 +, 중앙 0), z(용골 0, 위 +). 현호(sheer) 포함.
+     ------------------------------------------------------------------ */
+  function makeHull(o) {
+    const L = o.L, B = o.B, D = o.D, NX = o.NX || 100, NZ = 60, full = o.full || 0.7;
+    const sf = o.sheerF != null ? o.sheerF : 0.0167 * L + 0.5, sa = sf / 2;
+    const dx = L / NX, xs = [], deck = [];
+    for (let i = 0; i < NX; i++) { const x = -L / 2 + (i + 0.5) * dx, u = (2 * x) / L; xs.push(x); deck.push(D + (u > 0 ? sf * u * u : sa * u * u)); }
+    const Zt = D + sf + 1, dz = Zt / NZ;
+    const bot = [];
+    const A = xs.map((x, i) => {
+      const row = [0]; let acc = 0, b = null;
+      for (let k = 0; k < NZ; k++) {
+        const zm = (k + 0.5) * dz;
+        const hh = zm > deck[i] ? 0 : SB.hullHalf((2 * x) / L, zm / D, { full });
+        if (b == null && hh > 0.05) b = k * dz;
+        acc += B * hh * dz; row.push(acc);
+      }
+      bot.push(b == null ? deck[i] : b);
+      return row;
+    });
+    const area = (i, z) => {
+      if (z <= 0) return 0;
+      const f = z / dz, k = Math.floor(f);
+      if (k >= NZ) return A[i][NZ];
+      return A[i][k] + (A[i][k + 1] - A[i][k]) * (f - k);
+    };
+    const frac = (i, c) => { const x0 = xs[i] - dx / 2, x1 = xs[i] + dx / 2; return Math.max(0, Math.min(x1, c.b) - Math.max(x0, c.a)) / dx; };
+    function vol(Tm, t, fl) {
+      let V = 0, M = 0;
+      for (let i = 0; i < NX; i++) {
+        const z = Tm + t * xs[i], a0 = area(i, z);
+        let a = a0;
+        if (fl) for (const c of fl) { const f = frac(i, c); if (f) a -= c.mu * f * a0; }
+        V += a * dx; M += a * dx * xs[i];
+      }
+      return [V, M];
+    }
+    const H = { L, B, D, xs, deck, bot, dx, area, vol, NX };
+    H.idx = (x) => SB.clamp(Math.floor((x + L / 2) / dx), 0, NX - 1);
+    H.intact = (T) => { const [V, M] = vol(T, 0, null); return { V, xb: M / V, T }; };
+    /* 평형: 배수 용적 V0, 부심 위치 xb0를 유지하는 (중앙 흘수 Tm, 트림 기울기 t) — 뉴턴법 */
+    H.solve = function (V0, xb0, fl, guess) {
+      let Tm = guess ? guess[0] : V0 / (L * B * 0.7), t = guess ? guess[1] : 0;
+      for (let it = 0; it < 60; it++) {
+        const [V, M] = vol(Tm, t, fl);
+        const f1 = V - V0, f2 = M - V0 * xb0;
+        if (Math.abs(f1) < V0 * 1e-6 && Math.abs(f2) < V0 * L * 1e-7) return { ok: true, Tm, t, it };
+        const h1 = 0.01, h2 = 1e-5;
+        const [Va, Ma] = vol(Tm + h1, t, fl), [Vb, Mb] = vol(Tm, t + h2, fl);
+        const a = (Va - V) / h1, b = (Vb - V) / h2, c = (Ma - M) / h1, d = (Mb - M) / h2;
+        const det = a * d - b * c;
+        if (!isFinite(det) || Math.abs(det) < 1e-9) return { ok: false, Tm, t };
+        const dT = (-f1 * d + b * f2) / det, dt = (-a * f2 + c * f1) / det;
+        const sc = Math.max(1, Math.abs(dT) / 2, Math.abs((dt * L) / 2) / 2);
+        Tm += dT / sc; t += dt / sc;
+        if (Tm > 3 * D || Math.abs(t) > 0.5) return { ok: false, Tm, t };
+      }
+      return { ok: false, Tm, t };
+    };
+    /* 마진 라인(격벽 갑판 − 76 mm)까지 최소 여유 */
+    H.margin = (Tm, t) => { let m = 1e9, at = 0; for (let i = 0; i < NX; i++) { const f = deck[i] - 0.076 - (Tm + t * xs[i]); if (f < m) { m = f; at = xs[i]; } } return { m, at }; };
+    return H;
+  }
+  /* 배 좌표(x,z) → 캔버스. 수면(earth z=0)이 캔버스 y=wy */
+  function mapper(Tm, t, cx, wy, s, ex) {
+    const th = Math.atan(t), sn = Math.sin(th), cs = Math.cos(th), sv = s * (ex || 1);
+    return (x, z) => [cx + (x * cs + (z - Tm) * sn) * s, wy - (-x * sn + (z - Tm) * cs) * sv];
+  }
+  function hullOutline(H, M) {
+    const pts = [], n = H.NX, L = H.L;
+    pts.push(M(-L / 2 - 0.012 * L, H.deck[0]));
+    for (let i = 0; i < n; i++) pts.push(M(H.xs[i], H.deck[i]));
+    pts.push(M(L / 2 + 0.02 * L, H.deck[n - 1] + 0.2));
+    pts.push(M(L / 2, H.bot[n - 1] + (H.deck[n - 1] - H.bot[n - 1]) * 0.35));
+    for (let i = n - 1; i >= 0; i--) pts.push(M(H.xs[i], H.bot[i]));
+    pts.push(M(-L / 2 - 0.012 * L, H.bot[0] + (H.deck[0] - H.bot[0]) * 0.45));
+    return pts;
+  }
+  /* 침수 구획 [a,b] 안의 물(구획 수위 = 바깥 수면) */
+  function floodPoly(H, M, a, b, Tm, t) {
+    const xsS = [Math.max(a, -H.L / 2)]; H.xs.forEach((x) => { if (x > a && x < b) xsS.push(x); }); xsS.push(Math.min(b, H.L / 2));
+    const top = [], bottom = [];
+    xsS.forEach((x) => { const i = H.idx(x), zw = Math.min(H.deck[i], Tm + t * x), zb = H.bot[i]; if (zw > zb) { top.push(M(x, zw)); bottom.push(M(x, zb)); } });
+    return top.length > 1 ? top.concat(bottom.reverse()) : null;
+  }
+  /* 단면 꼭짓점(SB.section과 같은 모양): 선체 좌표 (y, z) */
+  function sectionPts(B, D, r) {
+    const pts = [[-B / 2, D]];
+    for (let i = 0; i <= 8; i++) { const a = Math.PI + (i / 8) * (Math.PI / 2); pts.push([-B / 2 + r + r * Math.cos(a), r + r * Math.sin(a)]); }
+    for (let i = 0; i <= 8; i++) { const a = 1.5 * Math.PI + (i / 8) * (Math.PI / 2); pts.push([B / 2 - r + r * Math.cos(a), r + r * Math.sin(a)]); }
+    pts.push([B / 2, D]);
+    return pts;
+  }
+  /* 단면 좌표 → 캔버스: (cx,wy)=중심선과 수면이 만나는 점, T=그 점의 용골 위 높이, heel(+ 우현 내려감) */
+  function secMap(cx, wy, s, T, heel) {
+    const c = Math.cos(heel), sn = Math.sin(heel);
+    return (y, z) => { const X = y * s, Y = (T - z) * s; return [cx + X * c - Y * sn, wy + X * sn + Y * c]; };
+  }
+
+  /* =================================================== Sim 1: 두 계산법 */
+  run("methods", function () {
+    const L = 100, B = 16, T = 6, D = 10;
+    const gl = SB.range("me-l", (v) => v + " m", upd), gmu = SB.range("me-mu", (v) => v.toFixed(2), upd), gkg = SB.range("me-kg", (v) => v.toFixed(1) + " m", upd);
+    const gv = SB.seg("me-view", upd);
+    let r = null, cv = null;
+    function calc() {
+      const l = gl(), mu = gmu(), KG = gkg(), ml = mu * l;
+      const dT = (ml * T) / (L - ml), T1 = T + dT;
+      const D0 = RHO * L * B * T, w = RHO * ml * B * T1, D1 = D0 + w;
+      const aw = { D: D1, KB: T1 / 2, BM: (B * B) / (12 * T1), KG: (D0 * KG + w * (T1 / 2)) / D1, FS: (ml * B * B) / (12 * L * T1) };
+      aw.GM = aw.KB + aw.BM - aw.KG - aw.FS;
+      const lb = { D: D0, KB: T1 / 2, BM: ((L - ml) * B * B) / (12 * L * T), KG, FS: 0 };
+      lb.GM = lb.KB + lb.BM - lb.KG;
+      return { l, mu, KG, dT, T1, w, aw, lb };
+    }
+    function upd() {
+      r = calc();
+      SB.stat("o-me-dt", sm(r.dT.toFixed(2), "m"));
+      SB.stat("o-me-gmaw", sm(r.aw.GM.toFixed(3), "m"));
+      SB.stat("o-me-gmlb", sm(r.lb.GM.toFixed(3), "m"));
+      SB.stat("o-me-mom", sm(Math.round(r.aw.D * r.aw.GM).toLocaleString() + " / " + Math.round(r.lb.D * r.lb.GM).toLocaleString(), "t·m"));
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(); if (!r) r = calc();
+      const view = gv(), s = (w * 0.8) / L, sv = s * 2.2, cx = w / 2, wy = h * 0.3, top = h * 0.56;
+      const Y = (z) => wy - (z - r.T1) * sv, X = (x) => cx + x * s;
+      // 처음 위치(유령)
+      ctx.strokeStyle = P.faint; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.2;
+      ctx.strokeRect(X(-L / 2), wy - (D - T) * sv, L * s, D * sv); ctx.setLineDash([]);
+      // 선체
+      ctx.fillStyle = P.surface; ctx.fillRect(X(-L / 2), Y(D), L * s, D * sv);
+      ctx.strokeStyle = P.text; ctx.lineWidth = 1.5; ctx.strokeRect(X(-L / 2), Y(D), L * s, D * sv);
+      const xa = X(-r.l / 2), xb = X(r.l / 2);
+      if (view === "lb") {
+        ctx.fillStyle = P.bg; ctx.fillRect(xa, Y(D), xb - xa, D * sv);
+        ctx.save(); ctx.beginPath(); ctx.rect(xa, Y(D), xb - xa, D * sv); ctx.clip();
+        ctx.strokeStyle = P.faint; ctx.lineWidth = 1;
+        for (let k = -20; k < 40; k++) seg(ctx, xa + k * 8, Y(D), xa + k * 8 + D * sv, Y(0));
+        ctx.restore();
+        ctx.strokeStyle = P.dim; ctx.setLineDash([4, 3]); ctx.strokeRect(xa, Y(D), xb - xa, D * sv); ctx.setLineDash([]);
+        label(ctx, "부력 상실", cx, Y(D) - 10, P.accent2, "center", 12, 700);
+      } else {
+        ctx.fillStyle = waterC(); ctx.globalAlpha = 0.55; ctx.fillRect(xa, Y(r.T1), xb - xa, r.T1 * sv); ctx.globalAlpha = 1;
+        ctx.strokeStyle = P.text; seg(ctx, xa, Y(D), xa, Y(0)); seg(ctx, xb, Y(D), xb, Y(0));
+        SB.arrow(ctx, cx, Y(D) - 26, cx, Y(D) + 6, P.accent2, 2.5);
+        label(ctx, "+w = " + Math.round(r.w).toLocaleString() + " t", cx + 8, Y(D) - 18, P.accent2, "left", 12, 700);
+      }
+      // G 표시
+      const gx = X(L * 0.3);
+      ctx.fillStyle = P.text; ctx.beginPath(); ctx.arc(gx, Y(r.KG), 4, 0, 7); ctx.fill();
+      label(ctx, "G", gx + 7, Y(r.KG), P.text, "left", 12, 700);
+      if (view === "aw") {
+        ctx.fillStyle = P.accent2; ctx.beginPath(); ctx.arc(gx - 26, Y(r.aw.KG), 4, 0, 7); ctx.fill();
+        label(ctx, "G′", gx - 34, Y(r.aw.KG), P.accent2, "right", 12, 700);
+      }
+      SB.water(ctx, w, top, wy);
+      ctx.strokeStyle = P.faint; ctx.setLineDash([2, 3]); seg(ctx, X(-L / 2) - 10, wy - r.dT * sv, X(L / 2) + 10, wy - r.dT * sv); ctx.setLineDash([]);
+      label(ctx, "처음 흘수선", X(-L / 2), wy - r.dT * sv - 8, P.dim, "left", 10);
+      label(ctx, "높이 2.2배 과장", w - 8, top - 10, P.dim, "right", 10);
+      // 비교표
+      ctx.fillStyle = P.bg; ctx.fillRect(0, top, w, h - top);
+      ctx.strokeStyle = P.border; seg(ctx, 0, top, w, top);
+      const rows = [["", "부가 중량", "상실 부력"], ["Δ (t)", Math.round(r.aw.D).toLocaleString(), Math.round(r.lb.D).toLocaleString()], ["KB (m)", r.aw.KB.toFixed(3), r.lb.KB.toFixed(3)], ["BM (m)", r.aw.BM.toFixed(3), r.lb.BM.toFixed(3)], ["KG (m)", r.aw.KG.toFixed(3), r.lb.KG.toFixed(3)], ["자유수면 (m)", r.aw.FS.toFixed(3), "—"], ["GM (m)", r.aw.GM.toFixed(3), r.lb.GM.toFixed(3)], ["Δ·GM (t·m)", Math.round(r.aw.D * r.aw.GM).toLocaleString(), Math.round(r.lb.D * r.lb.GM).toLocaleString()]];
+      const rh = (h - top - 12) / rows.length, c1 = Math.min(w * 0.3, 120), c2 = c1 + (w - c1) * 0.45, c3 = c1 + (w - c1) * 0.85;
+      rows.forEach((row, i) => {
+        const y = top + 8 + rh * (i + 0.5);
+        const em = i === 6 || i === 7;
+        label(ctx, row[0], 12, y, i === 0 ? P.dim : P.text, "left", 11, em ? 700 : 400);
+        mono(ctx, row[1], c2, y, i === 0 ? (view === "aw" ? P.accent : P.dim) : view === "aw" ? P.accent : P.text, "right", em ? 12 : 11);
+        mono(ctx, row[2], c3, y, i === 0 ? (view === "lb" ? P.accent : P.dim) : view === "lb" ? P.accent : P.text, "right", em ? 12 : 11);
+      });
+    }
+    cv = SB.canvas($("cv-methods"), draw, { aspect: 0.82, minHeight: 360, maxHeight: 470 });
+    upd();
+  });
+
+  /* =================================================== Sim 2: 구획 침수 시뮬레이터 */
+  run("flood", function () {
+    const L = 150, B = 24, D = 13, H = makeHull({ L, B, D, full: 0.72 });
+    const BH0 = [-66, -40, -12, 16, 42, 66];
+    let EX = 2;
+    let bh = BH0.slice(), fl = new Set(), I = H.intact(8.5), cur = { Tm: 8.5, t: 0 }, tgt = { Tm: 8.5, t: 0 }, res = null, sinking = 0, sinkDir = 1;
+    let geo = { cx: 0, s: 1, wy: 0 }, drag = -1, downP = null, sel = -1, cv = null;
+    const gT = SB.range("fl-T", (v) => v.toFixed(1) + " m", () => { I = H.intact(gT()); cur = { Tm: gT(), t: 0 }; solve(); });
+    const gMu = SB.seg("fl-mu", () => solve());
+    const comps = () => { const e = [-L / 2 - 3, ...bh, L / 2 + 3]; return e.slice(0, -1).map((a, i) => ({ a, b: e[i + 1] })); };
+    const muOf = (i, n) => (i === 0 || i === n - 1 ? 0.95 : i === 1 ? 0.85 : Number(gMu()));
+    const nameOf = (i, n, short) => (i === 0 ? (short ? "AP" : "선미 피크") : i === n - 1 ? (short ? "FP" : "선수 피크") : i === 1 ? (short ? "E/R" : "기관실") : (short ? "" : "화물창 ") + (n - 1 - i));
+    function solve() {
+      const cs = comps(), n = cs.length;
+      const list = [...fl].sort((a, b) => a - b).map((i) => ({ a: cs[i].a, b: cs[i].b, mu: muOf(i, n) }));
+      sinking = 0;
+      if (!list.length) { res = { ok: true, Tm: gT(), t: 0, m: H.margin(gT(), 0).m }; tgt = { Tm: gT(), t: 0 }; }
+      else {
+        const r = H.solve(I.V, I.xb, list, [gT(), 0]);
+        const m = r.ok ? H.margin(r.Tm, r.t) : { m: -99, at: 0 };
+        res = { ok: r.ok, Tm: r.Tm, t: r.t, m: m.m, at: m.at };
+        if (r.ok) tgt = { Tm: r.Tm, t: r.t };
+        else { sinking = 1; let sx = 0, sw = 0; list.forEach((c) => { sx += (c.a + c.b) / 2 * (c.b - c.a); sw += c.b - c.a; }); sinkDir = sx >= 0 ? 1 : -1; }
+      }
+      upd();
+    }
+    function upd() {
+      const cs = comps(), n = cs.length;
+      SB.stat("o-fl-n", fl.size ? [...fl].sort((a, b) => b - a).map((i) => nameOf(i, n, false)).join(", ") : "없음");
+      if (!res || !res.ok) {
+        SB.stat("o-fl-sink", "—"); SB.stat("o-fl-trim", "—"); SB.stat("o-fl-mg", "—");
+        SB.stat("o-fl-ok", '<span style="color:var(--bad)">침몰</span>'); return;
+      }
+      SB.stat("o-fl-sink", sm((res.Tm - gT()).toFixed(2), "m"));
+      const tr = res.t * L;
+      SB.stat("o-fl-trim", Math.abs(tr) < 0.05 ? sm("0", "m") : sm(Math.abs(tr).toFixed(2), "m " + (tr > 0 ? "선수" : "선미")));
+      SB.stat("o-fl-mg", sm(res.m.toFixed(2), "m"));
+      SB.stat("o-fl-ok", res.m >= 0 ? '<span style="color:var(--ok)">생존</span>' : '<span style="color:var(--bad)">마진 라인 잠김</span>');
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), cs = comps(), n = cs.length, short = w < 560;
+      const s = (w - 24) / (L * 1.06), cx = w / 2, wy = h * 0.46;
+      EX = w < 560 ? 3 : 2; geo = { cx, s, wy };
+      const M = mapper(cur.Tm, cur.t, cx, wy, s, EX);
+      // 처음 흘수선(배에 고정된 선)
+      const hull = hullOutline(H, M);
+      poly(ctx, hull); ctx.fillStyle = P.surface; ctx.fill();
+      // 구획 색(투과율 표시) + 침수
+      fl.forEach((i) => { const fp = floodPoly(H, M, cs[i].a, cs[i].b, cur.Tm, cur.t); if (fp) { poly(ctx, fp); alphaFill(ctx, waterC(), 0.6); } });
+      poly(ctx, hull); ctx.strokeStyle = P.text; ctx.lineWidth = 1.5; ctx.stroke();
+      // 마진 라인(과장해서 0.35 m 아래에 그림)
+      ctx.strokeStyle = P.accent2; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.2; ctx.beginPath();
+      H.xs.forEach((x, i) => { const p = M(x, H.deck[i] - 0.35); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }); ctx.stroke(); ctx.setLineDash([]);
+      // 설계 흘수선
+      ctx.strokeStyle = P.faint; ctx.setLineDash([3, 3]); const a1 = M(-L / 2, gT()), a2 = M(L / 2, gT()); seg(ctx, a1[0], a1[1], a2[0], a2[1]); ctx.setLineDash([]);
+      // 격벽
+      bh.forEach((x, k) => {
+        const i = H.idx(x), p1 = M(x, H.bot[i]), p2 = M(x, H.deck[i]);
+        ctx.strokeStyle = k === drag ? P.accent : k === sel ? P.accent : P.text; ctx.lineWidth = k === drag ? 3.5 : 2.5; seg(ctx, p1[0], p1[1], p2[0], p2[1]);
+        ctx.fillStyle = k === drag || k === sel ? P.accent : P.dim; ctx.beginPath(); ctx.arc(p2[0], p2[1] - 7, 5, 0, 7); ctx.fill();
+      });
+      // 구획 이름
+      cs.forEach((c, i) => {
+        const xm = (Math.max(c.a, -L / 2) + Math.min(c.b, L / 2)) / 2, p = M(xm, D * 0.78);
+        const nm = nameOf(i, n, short || c.b - c.a < 16);
+        label(ctx, nm, p[0], p[1], fl.has(i) ? P.accent : P.dim, "center", short ? 10 : 11, fl.has(i) ? 700 : 400);
+        if (!short) mono(ctx, "μ " + muOf(i, n), p[0], p[1] + 14, P.faint, "center", 10);
+      });
+      SB.water(ctx, w, h, wy);
+      // 판정
+      let msg, col;
+      if (!fl.size) { msg = "구획을 클릭해 침수시켜 보자"; col = P.dim; }
+      else if (!res.ok) { msg = sinking > 1.5 ? "침몰: 남은 부력으로 무게를 떠받칠 수 없다" : "남은 선체로 평형을 찾지 못함 → 침몰"; col = P.bad; }
+      else if (res.m < 0) { msg = "마진 라인 잠김: 물이 격벽 갑판을 넘어 번진다"; col = P.bad; }
+      else { msg = "평형 · 마진 라인까지 " + res.m.toFixed(2) + " m"; col = P.ok; }
+      label(ctx, msg, 12, 16, col, "left", short ? 11 : 13, 700);
+      if (!short) label(ctx, "높이 " + EX + "배 과장 · 빨간 점선 = 마진 라인 · 회색 점선 = 처음 흘수선", w - 10, 16, P.dim, "right", 10);
+    }
+    cv = SB.canvas($("cv-flood"), draw, { aspect: 0.44, minHeight: 250, maxHeight: 400 });
+    const pickX = (p) => (p.x - geo.cx) / geo.s;
+    SB.drag(cv.canvas, {
+      down(p) {
+        downP = p; drag = -1;
+        const M = mapper(cur.Tm, cur.t, geo.cx, geo.wy, geo.s, EX);
+        bh.forEach((x, k) => { const q = M(x, D * 0.5); if (Math.abs(q[0] - p.x) < 12) drag = k; });
+        if (drag >= 0) { sel = drag; cv.redraw(); }
+      },
+      move(p) {
+        if (drag < 0) return;
+        const lo = drag > 0 ? bh[drag - 1] + 6 : -L / 2 + 4, hi = drag < bh.length - 1 ? bh[drag + 1] - 6 : L / 2 - 4;
+        bh[drag] = SB.clamp(pickX(p), lo, hi); solve(); cv.redraw();
+      },
+      up(p) {
+        if (drag < 0 && downP && Math.hypot(p.x - downP.x, p.y - downP.y) < 6) {
+          const x = pickX(p), cs = comps(), i = cs.findIndex((c) => x >= c.a && x < c.b);
+          if (i >= 0 && Math.abs(x) < L / 2 + 2) { fl.has(i) ? fl.delete(i) : fl.add(i); if (!fl.size) cur = { Tm: cur.Tm, t: cur.t }; solve(); }
+        }
+        drag = -1; cv.redraw();
+      },
+    });
+    $("fl-add").addEventListener("click", () => {
+      if (bh.length >= 12) return;
+      const cs = comps(); let bi = 1, bl = 0;
+      cs.forEach((c, i) => { if (i > 0 && i < cs.length - 1 && c.b - c.a > bl) { bl = c.b - c.a; bi = i; } });
+      bh.splice(bi, 0, (cs[bi].a + cs[bi].b) / 2); bh.sort((a, b) => a - b); fl.clear(); sel = -1; solve();
+    });
+    $("fl-del").addEventListener("click", () => {
+      if (bh.length <= 2) return;
+      const k = sel >= 0 ? sel : Math.floor(bh.length / 2);
+      bh.splice(k, 1); fl.clear(); sel = -1; solve();
+    });
+    $("fl-reset").addEventListener("click", () => { bh = BH0.slice(); fl.clear(); sel = -1; cur = { Tm: gT(), t: 0 }; solve(); });
+    SB.loop(cv.canvas, (dt) => {
+      if (sinking) {
+        sinking += dt; cur.Tm += 1.6 * dt; cur.t += sinkDir * 0.012 * dt;
+        if (cur.Tm > D + 12) { cur.Tm = D + 12; }
+        cv.redraw(); return;
+      }
+      const k = Math.min(1, dt * 2.2), dT = tgt.Tm - cur.Tm, dtt = tgt.t - cur.t;
+      if (Math.abs(dT) > 1e-4 || Math.abs(dtt) > 1e-6) { cur.Tm += dT * k; cur.t += dtt * k; cv.redraw(); }
+    });
+    solve();
+  });
+
+  /* =================================================== Sim 3: 진행 침수 */
+  run("prog", function () {
+    const L = 150, B = 24, D = 13, T0 = 8.5, Awp = L * B * 0.82, l = 25, mu = 0.7, Ac = mu * l * B, Cd = 0.6;
+    const PTS = sectionPts(B, D, B * 0.08);
+    const area = (v) => 0.01 * Math.pow(10, v / 40);
+    const ga = SB.range("pg-a", (v) => { const a = area(v); return (a < 0.1 ? a.toFixed(3) : a.toFixed(2)) + " m²"; }, reset);
+    const gd = SB.range("pg-d", (v) => v.toFixed(1) + " m", reset);
+    const gp = SB.range("pg-p", (v) => v.toLocaleString() + " m³/h", () => {});
+    const gsp = SB.seg("pg-sp", () => {});
+    let st, cvS, cvC, running = false;
+    function reset() { st = { t: 0, V: 0, Q: 0, hist: [[0, 0, T0]], done: "", T: T0, hin: 0 }; running = false; show(); if (cvS) { cvS.redraw(); cvC.redraw(); } }
+    function step(dt) {
+      const A = area(ga()), zh = T0 - gd(), Qp = gp() / 3600;
+      const T = T0 + st.V / Awp, hin = st.V / Ac;
+      st.T = T; st.hin = hin;
+      if (T >= D) { st.done = "침몰(갑판 침수)"; running = false; return; }
+      const head = T - zh - Math.max(0, hin - zh);
+      const Q = head > 0 ? Cd * A * Math.sqrt(2 * G * head) : 0;
+      st.Q = Q;
+      const dV = (Q - (st.V > 0 || Q > Qp ? Qp : Q)) * dt;
+      st.V = Math.max(0, st.V + dV);
+      st.t += dt;
+      if (Q <= Qp && st.V <= 0) { st.done = "펌프가 이김"; running = false; }
+      else if (Q > 0 && Math.abs(Q - Qp) < 0.002 * Math.max(Q, 0.01) && st.t > 60) { st.done = "유입 = 배수"; running = false; }
+      else if (head < 0.003 && Qp === 0) { st.done = "평형(안팎 수위 같음)"; running = false; }
+    }
+    function show() {
+      const t = st.t;
+      SB.stat("o-pg-t", t < 3600 ? sm((t / 60).toFixed(1), "분") : sm((t / 3600).toFixed(2), "시간"));
+      SB.stat("o-pg-q", sm(Math.round(st.Q * 3600).toLocaleString(), "m³/h"));
+      SB.stat("o-pg-h", sm(st.hin.toFixed(2), "m"));
+      SB.stat("o-pg-T", sm(st.T.toFixed(2), "m"));
+      SB.stat("o-pg-st", st.done ? st.done : running ? "침수 중" : "대기");
+    }
+    function drawS(ctx, w, h) {
+      const P = SB.palette(), s = Math.min((w * 0.7) / B, (h * 0.78) / (D + 2)), cx = w / 2, wy = h * 0.42;
+      const T = st.T, M = secMap(cx, wy, s, T, 0), zh = T0 - gd();
+      const hp = PTS.map((p) => M(p[0], p[1]));
+      poly(ctx, hp); ctx.fillStyle = P.surface; ctx.fill();
+      // 구획 안 물
+      if (st.hin > 0.001) { const wp = SB.clipPoly(PTS, 0, 1, Math.min(st.hin, D)); if (wp.length > 2) { poly(ctx, wp.map((p) => M(p[0], p[1]))); alphaFill(ctx, waterC(), 0.6); } }
+      poly(ctx, hp); ctx.strokeStyle = P.text; ctx.lineWidth = 1.6; ctx.stroke();
+      // 구멍
+      const hpnt = M(B / 2, zh);
+      ctx.fillStyle = P.bad; ctx.fillRect(hpnt[0] - 3, hpnt[1] - 5, 6, 10);
+      if (st.Q > 0 && running) { const len = SB.clamp(Math.sqrt(st.Q) * 22, 8, w * 0.25); SB.arrow(ctx, hpnt[0] + 26, hpnt[1], hpnt[0] - len, hpnt[1], P.accent2, 3); }
+      label(ctx, "구멍", hpnt[0] + 8, hpnt[1] - 14, P.bad, "left", 11, 700);
+      SB.water(ctx, w, h, wy);
+      // 갑판 높이 표시
+      const dk = M(-B / 2, D);
+      label(ctx, "건현 " + (D - T).toFixed(2) + " m", dk[0], dk[1] - 10, P.text, "left", 11, 700);
+      label(ctx, "구획 수위 " + st.hin.toFixed(2) + " m", cx, M(0, Math.max(st.hin, 0.5))[1] - 10, P.accent, "center", 11, 700);
+    }
+    function drawC(ctx, w, h) {
+      const P = SB.palette(), tmaxS = Math.max(1800, st.t * 1.15), tm = tmaxS / 60;
+      const hs = st.hist;
+      SB.chart(ctx, { x: 46, y: 14, w: w - 60, h: h - 58 }, {
+        x: [0, tm], y: [0, D + 1], xLabel: "시간 (분)", yLabel: "높이 (m)",
+        series: [{ data: hs.map((p) => [p[0] / 60, p[1]]), color: P.accent, width: 2.4 }, { data: hs.map((p) => [p[0] / 60, p[2]]), color: P.accent2, width: 2.2 }],
+        hlines: [{ y: D, color: P.bad, label: "갑판(깊이 13 m)" }, { y: T0 - gd(), color: P.faint, label: "구멍 높이" }],
+      });
+      label(ctx, "— 구획 수위", 54, 22, P.accent, "left", 11, 700);
+      label(ctx, "— 흘수", 54, 38, P.accent2, "left", 11, 700);
+    }
+    reset();
+    cvS = SB.canvas($("cv-prog"), drawS, { aspect: 0.85, minHeight: 260, maxHeight: 340 });
+    cvC = SB.canvas($("cv-progc"), drawC, { aspect: 0.85, minHeight: 260, maxHeight: 340 });
+    $("pg-run").addEventListener("click", () => { reset(); running = true; show(); });
+    $("pg-reset").addEventListener("click", reset);
+    let acc = 0;
+    SB.loop(cvS.canvas, (dt) => {
+      if (!running) return;
+      const simDt = dt * Number(gsp()), n = Math.ceil(simDt / 0.5);
+      for (let i = 0; i < n && running; i++) step(simDt / n);
+      acc += simDt; if (acc > st.t / 200 || !running) { st.hist.push([st.t, st.hin, st.T]); acc = 0; }
+      show(); cvS.redraw(); cvC.redraw();
+    });
+  });
+
+  /* =================================================== Sim 4: 가항 길이 곡선 */
+  run("flen", function () {
+    const L = 150, B = 24, D = 13, H = makeHull({ L, B, D, full: 0.72 });
+    let bh = [-66, -42, -18, 6, 30, 52, 66], curve = [], I = null, drag = -1, cv = null, geo = { x0: 0, s: 1 };
+    const gmu = SB.seg("fn-mu", compute);
+    const gF = SB.range("fn-F", (v) => v.toFixed(2), () => { upd(); cv && cv.redraw(); });
+    const gT = SB.range("fn-T", (v) => v.toFixed(1) + " m", compute);
+    function flen(xc, mu) {
+      let lo = 0, hi = L;
+      for (let k = 0; k < 18; k++) {
+        const l = (lo + hi) / 2, a = Math.max(-L / 2 - 2, xc - l / 2), b = Math.min(L / 2 + 2, xc + l / 2);
+        const r = H.solve(I.V, I.xb, [{ a, b, mu }], [gT(), 0]);
+        if (r.ok && H.margin(r.Tm, r.t).m > 0) lo = l; else hi = l;
+      }
+      return lo;
+    }
+    function compute() {
+      I = H.intact(gT()); const mu = Number(gmu());
+      curve = []; for (let x = -72; x <= 72.01; x += 4) curve.push([x, flen(x, mu)]);
+      upd(); if (cv) cv.redraw();
+    }
+    const fAt = (x) => { for (let i = 0; i < curve.length - 1; i++) if (x <= curve[i + 1][0]) { const [x0, y0] = curve[i], [x1, y1] = curve[i + 1]; return y0 + ((y1 - y0) * (x - x0)) / (x1 - x0); } return curve[curve.length - 1][1]; };
+    const comps = () => { const e = [-L / 2, ...bh, L / 2]; return e.slice(0, -1).map((a, i) => ({ a, b: e[i + 1] })); };
+    function upd() {
+      const F = gF(); let ok = 0; const cs = comps();
+      cs.forEach((c) => { if (c.b - c.a <= F * fAt((c.a + c.b) / 2)) ok++; });
+      SB.stat("o-fn-n", sm(bh.length, "개"));
+      SB.stat("o-fn-mid", sm(fAt(0).toFixed(1), "m"));
+      SB.stat("o-fn-ok", '<span style="color:var(' + (ok === cs.length ? "--ok" : "--bad") + ')">' + ok + " / " + cs.length + "</span>");
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), F = gF(), padL = 44, padR = 14, s = (w - padL - padR) / L, X = (x) => padL + (x + L / 2) * s;
+      geo = { x0: padL, s };
+      // 선체 측면(위쪽 띠)
+      const sh = Math.min(h * 0.26, (w - padL - padR) * 0.16), sy = 10, ss = sh / (H.deck[H.NX - 1] + 1);
+      const M = (x, z) => [X(x), sy + sh - z * ss];
+      const hull = hullOutline(H, M);
+      poly(ctx, hull); ctx.fillStyle = P.surface; ctx.fill(); ctx.strokeStyle = P.text; ctx.lineWidth = 1.2; ctx.stroke();
+      ctx.strokeStyle = waterC(); ctx.lineWidth = 1.4; seg(ctx, X(-L / 2) - 6, M(0, gT())[1], X(L / 2) + 6, M(0, gT())[1]);
+      bh.forEach((x, k) => { const i = H.idx(x), p1 = M(x, H.bot[i]), p2 = M(x, H.deck[i]); ctx.strokeStyle = k === drag ? P.accent : P.text; ctx.lineWidth = k === drag ? 3.5 : 2.2; seg(ctx, p1[0], p1[1], p2[0], p2[1]); ctx.fillStyle = k === drag ? P.accent : P.dim; ctx.beginPath(); ctx.arc(p2[0], p2[1] - 6, 5, 0, 7); ctx.fill(); });
+      // 아래 차트
+      const top = sy + sh + 22, box = { x: padL, y: top, w: w - padL - padR, h: h - top - 40 };
+      const ymax = 90;
+      const ch = SB.chart(ctx, box, {
+        x: [-L / 2, L / 2], y: [0, ymax], xLabel: "선체 길이 위치 x (m, 중앙 0, 선수 +)", xFmt: (v) => String(v),
+        series: [{ data: curve, color: P.accent, width: 2.4 }, { data: curve.map(([x, y]) => [x, F * y]), color: P.accent2, width: 2, dash: [6, 4] }],
+      });
+      ctx.save(); ctx.translate(12, box.y + box.h / 2); ctx.rotate(-Math.PI / 2); label(ctx, "구획 길이 l (m)", 0, 0, P.dim, "center", 12); ctx.restore();
+      comps().forEach((c) => {
+        const xm = (c.a + c.b) / 2, l = c.b - c.a, ok = l <= F * fAt(xm);
+        const col = ok ? P.ok : P.bad;
+        ctx.beginPath(); ctx.moveTo(ch.X(c.a), ch.Y(0)); ctx.lineTo(ch.X(xm), ch.Y(Math.min(l, ymax))); ctx.lineTo(ch.X(c.b), ch.Y(0)); ctx.closePath();
+        alphaFill(ctx, col, 0.16); ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = col; ctx.beginPath(); ctx.arc(ch.X(xm), ch.Y(Math.min(l, ymax)), 3.5, 0, 7); ctx.fill();
+      });
+      label(ctx, "가항 길이", box.x + 6, box.y + 10, P.accent, "left", 11, 700);
+      label(ctx, "허용 길이 = F × 가항 길이", box.x + 6, box.y + 26, P.accent2, "left", 11, 700);
+      // 격벽 위치 세로선
+      ctx.strokeStyle = P.faint; ctx.setLineDash([2, 3]); bh.forEach((x) => seg(ctx, X(x), sy + sh, X(x), box.y + box.h)); ctx.setLineDash([]);
+    }
+    compute();
+    cv = SB.canvas($("cv-flen"), draw, { aspect: 0.72, minHeight: 330, maxHeight: 470 });
+    SB.drag(cv.canvas, {
+      down(p) { drag = -1; bh.forEach((x, k) => { if (Math.abs(geo.x0 + (x + L / 2) * geo.s - p.x) < 12) drag = k; }); if (drag < 0) return false; cv.redraw(); },
+      move(p) { if (drag < 0) return; const lo = drag > 0 ? bh[drag - 1] + 4 : -L / 2 + 3, hi = drag < bh.length - 1 ? bh[drag + 1] - 4 : L / 2 - 3; bh[drag] = SB.clamp((p.x - geo.x0) / geo.s - L / 2, lo, hi); upd(); cv.redraw(); },
+      up() { drag = -1; cv.redraw(); },
+    });
+    $("fn-add").addEventListener("click", () => { if (bh.length >= 14) return; const cs = comps(); let bi = 0, bl = 0; cs.forEach((c, i) => { if (c.b - c.a > bl) { bl = c.b - c.a; bi = i; } }); bh.push((cs[bi].a + cs[bi].b) / 2); bh.sort((a, b) => a - b); upd(); cv.redraw(); });
+    $("fn-del").addEventListener("click", () => { if (bh.length <= 2) return; const cs = comps(); let bi = 0, bl = 1e9; for (let k = 0; k < bh.length; k++) { const l = cs[k].b - cs[k].a + cs[k + 1].b - cs[k + 1].a; if (l < bl) { bl = l; bi = k; } } bh.splice(bi, 1); upd(); cv.redraw(); });
+  });
+
+  /* =================================================== Sim 5: 교차 침수 */
+  run("cross", function () {
+    const L = 150, B = 24, D = 13, T0 = 8.5, b = 3, l = 24, mu = 0.95, hdb = 1.6, ys = B / 2 - b / 2, Ah = 1.5, Cd = 0.6;
+    const V0 = L * B * T0, Vmax = mu * l * b * (D - hdb), PTS = sectionPts(B, D, B * 0.08);
+    const ga = SB.range("cr-a", (v) => v.toFixed(2) + " m²", () => {});
+    const gkg = SB.range("cr-kg", (v) => v.toFixed(1) + " m", () => { if (!st.hit) { eq(); show(); cvS.redraw(); } });
+    let st, cvS, cvC;
+    function reset() { st = { t: 0, Vs: 0, Vp: 0, valve: false, hit: false, hist: [[0, 0]], T: T0, phi: 0, GM: 0, es: 0, ep: 0, Qd: 0 }; eq(); $("cr-valve").textContent = "밸브 열기"; show(); if (cvS) { cvS.redraw(); cvC.redraw(); } }
+    function eq() {
+      const KG = gkg(), V = V0 + st.Vs + st.Vp, T = V / (L * B);
+      const hs = st.Vs / (mu * l * b), hp = st.Vp / (mu * l * b);
+      const KGn = (V0 * KG + st.Vs * (hdb + hs / 2) + st.Vp * (hdb + hp / 2)) / V;
+      const FS = ((hs > 0.01 ? 1 : 0) + (hp > 0.01 ? 1 : 0)) * (mu * l * b * b * b) / 12 / V;
+      const GM = T / 2 + (B * B) / (12 * T) - KGn - FS;
+      let tp = GM > 0.02 ? ((st.Vs - st.Vp) * ys) / (V * GM) : Math.sign(st.Vs - st.Vp + 1e-9) * 0.7;
+      tp = SB.clamp(tp, -0.7, 0.7);
+      st.T = T; st.GM = GM; st.phi = Math.atan(tp); st.hs = hs; st.hp = hp;
+      st.es = hdb + hs - T - ys * tp; st.ep = hdb + hp - T + ys * tp;
+    }
+    function step(dt) {
+      eq();
+      const head = -st.es, Qh = Math.sign(head) * Cd * Ah * Math.sqrt(2 * G * Math.abs(head));
+      let Qd = 0;
+      if (st.valve) { const dh = st.es - st.ep; Qd = Math.sign(dh) * Cd * ga() * Math.sqrt(2 * G * Math.abs(dh)); }
+      st.Qd = Qd;
+      st.Vs = SB.clamp(st.Vs + (Qh - Qd) * dt, 0, Vmax); st.Vp = SB.clamp(st.Vp + Qd * dt, 0, Vmax);
+      st.t += dt;
+    }
+    function show() {
+      SB.stat("o-cr-t", sm(st.t < 600 ? st.t.toFixed(0) : (st.t / 60).toFixed(1), st.t < 600 ? "s" : "분"));
+      const hd = SB.deg(st.phi);
+      SB.stat("o-cr-heel", sm(Math.abs(hd).toFixed(1), "° " + (hd > 0.05 ? "우현" : hd < -0.05 ? "좌현" : "")));
+      SB.stat("o-cr-T", sm(st.T.toFixed(2), "m"));
+      SB.stat("o-cr-gm", sm(st.GM.toFixed(2), "m"));
+      SB.stat("o-cr-v", st.valve ? '<span style="color:var(--ok)">열림</span>' : "닫힘");
+    }
+    function drawS(ctx, w, h) {
+      const P = SB.palette(), s = Math.min((w * 0.66) / B, (h * 0.62) / D), cx = w / 2, wy = h * 0.46, phi = st.phi;
+      const M = secMap(cx, wy, s, st.T, phi);
+      const hp = PTS.map((p) => M(p[0], p[1]));
+      poly(ctx, hp); ctx.fillStyle = P.surface; ctx.fill();
+      const tank = (sg) => SB.clipPoly(SB.clipPoly(PTS, -sg, 0, -(B / 2 - b)), 0, -1, -hdb);
+      const cph = Math.cos(phi), sph = Math.sin(phi);
+      [[1, st.es], [-1, st.ep]].forEach(([sg, e]) => {
+        const tp = tank(sg);
+        poly(ctx, tp.map((p) => M(p[0], p[1]))); ctx.strokeStyle = P.dim; ctx.lineWidth = 1; ctx.stroke();
+        const vol = sg > 0 ? st.Vs : st.Vp;
+        if (vol > 1) { const wp = SB.clipPoly(tp, -sph, cph, e + st.T * cph); if (wp.length > 2) { poly(ctx, wp.map((p) => M(p[0], p[1]))); alphaFill(ctx, waterC(), 0.65); } }
+      });
+      // 내저판, 교차 침수관
+      ctx.strokeStyle = P.dim; ctx.lineWidth = 1.2; let a = M(-B / 2 + 1, hdb), c = M(B / 2 - 1, hdb); seg(ctx, a[0], a[1], c[0], c[1]);
+      a = M(-ys, hdb * 0.5); c = M(ys, hdb * 0.5);
+      ctx.strokeStyle = st.valve ? waterC() : P.faint; ctx.lineWidth = 4; seg(ctx, a[0], a[1], c[0], c[1]);
+      const vm = M(0, hdb * 0.5); ctx.fillStyle = st.valve ? P.ok : P.bad; ctx.beginPath(); ctx.arc(vm[0], vm[1], 5, 0, 7); ctx.fill();
+      if (st.valve && Math.abs(st.Qd) > 0.05) { const d = Math.sign(st.Qd); const p1 = M(d * 4, hdb * 0.5 + 0.9), p2 = M(-d * 4, hdb * 0.5 + 0.9); SB.arrow(ctx, p1[0], p1[1], p2[0], p2[1], P.accent, 2); }
+      poly(ctx, hp); ctx.strokeStyle = P.text; ctx.lineWidth = 1.6; ctx.stroke();
+      if (st.hit) { const hpnt = M(B / 2, hdb + 1.5); ctx.fillStyle = P.bad; ctx.beginPath(); ctx.arc(hpnt[0], hpnt[1], 5, 0, 7); ctx.fill(); }
+      // G 와 연직선
+      SB.water(ctx, w, h, wy);
+      label(ctx, "좌현", 10, 16, P.dim, "left", 11); label(ctx, "우현", w - 10, 16, P.dim, "right", 11);
+      label(ctx, (SB.deg(phi) >= 0 ? "" : "−") + Math.abs(SB.deg(phi)).toFixed(1) + "°", cx, 18, P.text, "center", 14, 700);
+      if (st.GM <= 0.02) label(ctx, "GM ≤ 0: 전복 위험", cx, 38, P.bad, "center", 12, 700);
+    }
+    function drawC(ctx, w, h) {
+      const P = SB.palette(), tmax = Math.max(240, st.t * 1.1) / 60, hs = st.hist;
+      const ymax = Math.max(12, ...hs.map((p) => p[1] + 2));
+      SB.chart(ctx, { x: 44, y: 14, w: w - 58, h: h - 58 }, {
+        x: [0, tmax], y: [0, ymax], xLabel: "시간 (분)", yLabel: "횡경사 (°)",
+        series: [{ data: hs.map((p) => [p[0] / 60, p[1]]), color: P.accent, width: 2.4 }],
+        hlines: [{ y: 7, color: P.warn, label: "7°" }],
+      });
+    }
+    reset();
+    cvS = SB.canvas($("cv-cross"), drawS, { aspect: 0.85, minHeight: 260, maxHeight: 340 });
+    cvC = SB.canvas($("cv-crossc"), drawC, { aspect: 0.85, minHeight: 260, maxHeight: 340 });
+    $("cr-hit").addEventListener("click", () => { reset(); st.hit = true; });
+    $("cr-valve").addEventListener("click", () => { st.valve = !st.valve; $("cr-valve").textContent = st.valve ? "밸브 닫기" : "밸브 열기"; show(); });
+    $("cr-reset").addEventListener("click", reset);
+    let acc = 0;
+    SB.loop(cvS.canvas, (dt) => {
+      if (!st.hit) return;
+      const simDt = dt * 10, n = Math.ceil(simDt / 0.05);
+      for (let i = 0; i < n; i++) step(simDt / n);
+      eq(); acc += simDt;
+      if (acc > 2) { st.hist.push([st.t, SB.deg(st.phi)]); acc = 0; if (st.hist.length > 900) st.hist = st.hist.filter((_, i) => i % 2 === 0); }
+      show(); cvS.redraw(); cvC.redraw();
+    });
+  });
+
+  /* =================================================== Sim 6: 손상 GZ */
+  run("gzd", function () {
+    const B = 24, D = 13, T0 = 8.5, hdb = 1.6, wb = 3, PTS = sectionPts(B, D, B * 0.08);
+    const [A0] = SB.polyArea(SB.clipPoly(PTS, 0, 1, T0));
+    const COMP = {
+      hold: { pts: SB.clipPoly(SB.clipPoly(SB.clipPoly(PTS, 1, 0, B / 2 - wb), -1, 0, B / 2 - wb), 0, -1, -hdb), mu: 0.7 },
+      wing: { pts: SB.clipPoly(SB.clipPoly(PTS, -1, 0, -(B / 2 - wb)), 0, -1, -hdb), mu: 0.95 },
+      db: { pts: SB.clipPoly(PTS, 0, 1, hdb), mu: 0.95 },
+    };
+    const gt = SB.seg("gd-type", upd), gf = SB.range("gd-f", (v) => v.toFixed(2), upd), gkg = SB.range("gd-kg", (v) => v.toFixed(1) + " m", upd), gh = SB.range("gd-h", (v) => v + "°", () => cvS && cvS.redraw());
+    let cI = [], cD = [], info = null, cvS, cvC;
+    function buoy(phi, k) {
+      const sn = Math.sin(phi), cs = Math.cos(phi), comp = COMP[gt()], fm = k * gf() * comp.mu;
+      const eff = (c) => { const [a, y, z] = SB.polyArea(SB.clipPoly(PTS, -sn, cs, c)); let A = a, My = a * y, Mz = a * z; if (fm > 0) { const [ac, yc, zc] = SB.polyArea(SB.clipPoly(comp.pts, -sn, cs, c)); A -= fm * ac; My -= fm * ac * yc; Mz -= fm * ac * zc; } return { A, My, Mz }; };
+      let lo = -B - D, hi = B + D;
+      for (let i = 0; i < 50; i++) { const m = (lo + hi) / 2; if (eff(m).A < A0) lo = m; else hi = m; }
+      const r = eff((lo + hi) / 2);
+      return { c: (lo + hi) / 2, yB: r.My / r.A, zB: r.Mz / r.A };
+    }
+    const gzOf = (phi, k) => { const b = buoy(phi, k); return b.yB * Math.cos(phi) + (b.zB - gkg()) * Math.sin(phi); };
+    function analyze(curve) {
+      let eq = null, vanish = null, max = -1e9;
+      for (let i = 0; i < curve.length - 1; i++) { const [a, ga] = curve[i], [b2, gb] = curve[i + 1]; if (eq == null && ga <= 0 && gb > 0) eq = a + ((b2 - a) * -ga) / (gb - ga); if (eq != null && vanish == null && ga > 0 && gb <= 0) vanish = a + ((b2 - a) * ga) / (ga - gb); }
+      if (eq == null && curve[0][1] > 0) eq = null;
+      curve.forEach(([p, g]) => { if (eq != null && p >= eq && g > max) max = g; });
+      return { eq, vanish, max: eq == null ? 0 : max, range: eq == null ? 0 : (vanish == null ? 70 : vanish) - eq };
+    }
+    function slope(phiDeg, k) { const d = SB.rad(1); return (gzOf(SB.rad(phiDeg) + d, k) - gzOf(SB.rad(phiDeg) - d, k)) / (2 * d); }
+    function upd() {
+      cI = []; cD = [];
+      for (let p = -15; p <= 70; p += 1) { cI.push([p, gzOf(SB.rad(p), 0)]); cD.push([p, gzOf(SB.rad(p), 1)]); }
+      const ai = analyze(cI), ad = analyze(cD); info = { ai, ad };
+      SB.stat("o-gd-eq", ad.eq == null ? '<span style="color:var(--bad)">없음(전복)</span>' : sm(ad.eq.toFixed(1), "°"));
+      SB.stat("o-gd-max", sm(ai.max.toFixed(2) + " → " + ad.max.toFixed(2), "m"));
+      SB.stat("o-gd-rng", ad.eq == null ? "0°" : sm(ad.range.toFixed(0), "°"));
+      SB.stat("o-gd-gm", sm(slope(ai.eq || 0, 0).toFixed(2) + " → " + (ad.eq == null ? "—" : slope(ad.eq, 1).toFixed(2)), "m"));
+      if (cvS) { cvS.redraw(); cvC.redraw(); }
+    }
+    function drawS(ctx, w, h) {
+      const P = SB.palette(), phi = SB.rad(gh()), b = buoy(phi, 1), cs = Math.cos(phi), sn = Math.sin(phi);
+      const s = Math.min((w * 0.62) / B, (h * 0.55) / D), cx = w / 2, wy = h * 0.5;
+      const M = secMap(cx, wy, s, b.c / cs, phi), comp = COMP[gt()];
+      const hp = PTS.map((p) => M(p[0], p[1]));
+      poly(ctx, hp); ctx.fillStyle = P.surface; ctx.fill();
+      poly(ctx, comp.pts.map((p) => M(p[0], p[1]))); ctx.strokeStyle = P.accent2; ctx.lineWidth = 1.2; ctx.setLineDash([4, 3]); ctx.stroke(); ctx.setLineDash([]);
+      const wp = SB.clipPoly(comp.pts, -sn, cs, b.c);
+      if (wp.length > 2) { poly(ctx, wp.map((p) => M(p[0], p[1]))); alphaFill(ctx, waterC(), 0.6); }
+      poly(ctx, hp); ctx.strokeStyle = P.text; ctx.lineWidth = 1.6; ctx.stroke();
+      SB.water(ctx, w, h, wy);
+      const g = M(0, gkg()), bb = M(b.yB, b.zB);
+      ctx.strokeStyle = P.faint; ctx.setLineDash([3, 3]); seg(ctx, g[0], g[1] - 60, g[0], g[1] + 80); seg(ctx, bb[0], bb[1] - 90, bb[0], bb[1] + 30); ctx.setLineDash([]);
+      ctx.fillStyle = P.text; ctx.beginPath(); ctx.arc(g[0], g[1], 4.5, 0, 7); ctx.fill(); label(ctx, "G", g[0] + 7, g[1] - 8, P.text, "left", 12, 700);
+      ctx.fillStyle = P.accent; ctx.beginPath(); ctx.arc(bb[0], bb[1], 4.5, 0, 7); ctx.fill(); label(ctx, "B", bb[0] + 7, bb[1] + 10, P.accent, "left", 12, 700);
+      const gz = b.yB * cs + (b.zB - gkg()) * sn;
+      ctx.strokeStyle = gz >= 0 ? P.ok : P.bad; ctx.lineWidth = 3; seg(ctx, g[0], g[1], bb[0], g[1]);
+      label(ctx, "GZ " + gz.toFixed(2) + " m", w / 2, h - 14, gz >= 0 ? P.ok : P.bad, "center", 13, 700);
+      label(ctx, gh() + "°", 10, 16, P.dim, "left", 12, 700);
+    }
+    function drawC(ctx, w, h) {
+      const P = SB.palette(), ys = cI.concat(cD).map((p) => p[1]);
+      const y1 = Math.max(0.5, Math.ceil(Math.max(...ys) * 4) / 4 + 0.25), y0 = Math.min(-0.5, Math.floor(Math.min(...ys) * 4) / 4);
+      const pts = [];
+      if (info && info.ad.eq != null) pts.push({ x: info.ad.eq, y: 0, color: P.accent2, label: "평형 " + info.ad.eq.toFixed(1) + "°" });
+      SB.chart(ctx, { x: 46, y: 14, w: w - 60, h: h - 58 }, {
+        x: [-15, 70], y: [y0, y1], xLabel: "횡경사 φ (°)", yLabel: "GZ (m)",
+        series: [{ data: cI, color: P.faint, width: 2, dash: [6, 4] }, { data: cD, color: P.accent, width: 2.6 }],
+        hlines: [{ y: 0, color: P.axis, dash: [] }], vlines: [{ x: gh(), color: P.faint }], points: pts,
+      });
+      label(ctx, "-- 손상 전", 56, 24, P.dim, "left", 11, 700); label(ctx, "— 손상 후", 56, 40, P.accent, "left", 11, 700);
+    }
+    upd();
+    cvS = SB.canvas($("cv-gzs"), drawS, { aspect: 0.85, minHeight: 260, maxHeight: 340 });
+    cvC = SB.canvas($("cv-gzc"), drawC, { aspect: 0.85, minHeight: 260, maxHeight: 340 });
+  });
+
+  /* =================================================== Sim 7: 확률론적 손상 복원성 */
+  run("prob", function () {
+    const L = 150, B = 24, D = 13, H = makeHull({ L, B, D, full: 0.72 }), MU = 0.85, LMAX = 45;
+    const BH0 = [-66, -40, -12, 16, 42, 66];
+    let bh = BH0.slice(), I = null, cases = [], A = 0, drag = -1, cv = null, geo = { x0: 0, s: 1 };
+    const R = 1 - 128 / (L + 152);
+    const gT = SB.range("pr-T", (v) => v.toFixed(2) + " m", () => { I = H.intact(gT()); compute(); });
+    $("pr-lbl").addEventListener("change", () => cv && cv.redraw());
+    /* p: 손상 중심 x ~ 균일, 길이 l ~ 삼각 분포 f(l) = 2(LMAX−l)/LMAX² */
+    function compute() {
+      if (!I) I = H.intact(gT());
+      const e = [-L / 2, ...bh, L / 2], N = e.length - 1, p = [];
+      for (let i = 0; i < N; i++) p.push(new Array(N).fill(0));
+      const NXg = 300, NLg = 60, dl = LMAX / NLg;
+      const zone = (x) => { for (let k = 0; k < N; k++) if (x < e[k + 1]) return k; return N - 1; };
+      for (let a = 0; a < NXg; a++) {
+        const xc = -L / 2 + ((a + 0.5) * L) / NXg;
+        for (let b = 0; b < NLg; b++) {
+          const l = (b + 0.5) * dl, wgt = ((2 * (LMAX - l)) / (LMAX * LMAX)) * dl / NXg;
+          p[zone(Math.max(-L / 2 + 1e-6, xc - l / 2))][zone(Math.min(L / 2 - 1e-6, xc + l / 2))] += wgt;
+        }
+      }
+      cases = []; A = 0;
+      for (let i = 0; i < N; i++) for (let j = i; j < N; j++) {
+        if (p[i][j] < 1e-6) continue;
+        const a = i === 0 ? -L / 2 - 3 : e[i], b = j === N - 1 ? L / 2 + 3 : e[j + 1];
+        const r = H.solve(I.V, I.xb, [{ a, b, mu: MU }], [gT(), 0]);
+        const m = r.ok ? H.margin(r.Tm, r.t).m : -1;
+        const s = SB.clamp(m / 1.0, 0, 1);
+        cases.push({ i, j, p: p[i][j], s, m }); A += p[i][j] * s;
+      }
+      SB.stat("o-pr-A", A.toFixed(3));
+      SB.stat("o-pr-R", R.toFixed(3));
+      SB.stat("o-pr-ok", A >= R ? '<span style="color:var(--ok)">A ≥ R 합격</span>' : '<span style="color:var(--bad)">A < R 불합격</span>');
+      SB.stat("o-pr-n", cases.length);
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), padL = 44, padR = 14, s = (w - padL - padR) / L, X = (x) => padL + (x + L / 2) * s;
+      geo = { x0: padL, s };
+      const e = [-L / 2, ...bh, L / 2];
+      const sh = Math.min(h * 0.24, (w - padL - padR) * 0.15), sy = 26, ss = sh / (H.deck[H.NX - 1] + 1);
+      const M = (x, z) => [X(x), sy + sh - z * ss];
+      const hull = hullOutline(H, M);
+      poly(ctx, hull); ctx.fillStyle = P.surface; ctx.fill();
+      // 단일 구역 s 색
+      ctx.save(); poly(ctx, hull); ctx.clip();
+      cases.filter((c) => c.i === c.j).forEach((c) => { ctx.fillStyle = sColor(P, c.s); ctx.globalAlpha = 0.25; ctx.fillRect(X(e[c.i]), sy, X(e[c.i + 1]) - X(e[c.i]), sh + 4); });
+      ctx.restore(); ctx.globalAlpha = 1;
+      poly(ctx, hull); ctx.strokeStyle = P.text; ctx.lineWidth = 1.2; ctx.stroke();
+      ctx.strokeStyle = waterC(); ctx.lineWidth = 1.4; seg(ctx, X(-L / 2) - 6, M(0, gT())[1], X(L / 2) + 6, M(0, gT())[1]);
+      bh.forEach((x, k) => { const i = H.idx(x), p1 = M(x, H.bot[i]), p2 = M(x, H.deck[i]); ctx.strokeStyle = k === drag ? P.accent : P.text; ctx.lineWidth = k === drag ? 3.5 : 2.2; seg(ctx, p1[0], p1[1], p2[0], p2[1]); ctx.fillStyle = k === drag ? P.accent : P.dim; ctx.beginPath(); ctx.arc(p2[0], p2[1] - 6, 5, 0, 7); ctx.fill(); });
+      label(ctx, "A = " + A.toFixed(3) + "   R = " + R.toFixed(3), padL, 12, A >= R ? P.ok : P.bad, "left", 13, 700);
+      // 손상 평면 (중심 x, 길이 l)
+      const top = sy + sh + 18, box = { x: padL, y: top, w: w - padL - padR, h: h - top - 40 };
+      const ch = SB.chart(ctx, box, { x: [-L / 2, L / 2], y: [0, LMAX], xLabel: "손상 중심 위치 x (m)", series: [] });
+      ctx.save(); ctx.translate(12, box.y + box.h / 2); ctx.rotate(-Math.PI / 2); label(ctx, "손상 길이 (m)", 0, 0, P.dim, "center", 12); ctx.restore();
+      ctx.save(); ctx.beginPath(); ctx.rect(box.x, box.y, box.w, box.h); ctx.clip();
+      const showL = $("pr-lbl").checked;
+      cases.forEach((c) => {
+        const a0 = e[c.i], a1 = e[c.i + 1], b0 = e[c.j], b1 = e[c.j + 1];
+        const pt = (st, en) => [ch.X((st + en) / 2), ch.Y(en - st)];
+        const pts = c.i === c.j ? [pt(a0, a0), pt(a1, a1), pt(a0, a1)] : [pt(a0, b0), pt(a1, b0), pt(a1, b1), pt(a0, b1)];
+        poly(ctx, pts); alphaFill(ctx, sColor(P, c.s), 0.18 + 0.5 * Math.min(1, c.p * 8)); ctx.strokeStyle = P.bg; ctx.lineWidth = 1; ctx.stroke();
+        if (showL && c.p > 0.025) {
+          const cxp = pts.reduce((q, r) => q + r[0], 0) / pts.length, cyp = Math.max(box.y + 10, pts.reduce((q, r) => q + r[1], 0) / pts.length);
+          mono(ctx, (c.p * c.s).toFixed(3), cxp, cyp, P.text, "center", 10);
+        }
+      });
+      ctx.restore();
+      ctx.strokeStyle = P.faint; ctx.setLineDash([2, 3]); bh.forEach((x) => seg(ctx, X(x), sy + sh, X(x), box.y + box.h)); ctx.setLineDash([]);
+    }
+    I = H.intact(8.5); compute();
+    cv = SB.canvas($("cv-prob"), draw, { aspect: 0.74, minHeight: 340, maxHeight: 480 });
+    SB.drag(cv.canvas, {
+      down(p) { drag = -1; bh.forEach((x, k) => { if (Math.abs(geo.x0 + (x + L / 2) * geo.s - p.x) < 12) drag = k; }); if (drag < 0) return false; cv.redraw(); },
+      move(p) { if (drag < 0) return; const lo = drag > 0 ? bh[drag - 1] + 4 : -L / 2 + 3, hi = drag < bh.length - 1 ? bh[drag + 1] - 4 : L / 2 - 3; bh[drag] = SB.clamp((p.x - geo.x0) / geo.s - L / 2, lo, hi); compute(); },
+      up() { drag = -1; cv.redraw(); },
+    });
+    $("pr-add").addEventListener("click", () => { if (bh.length >= 14) return; const e = [-L / 2, ...bh, L / 2]; let bi = 0, bl = 0; for (let i = 0; i < e.length - 1; i++) if (e[i + 1] - e[i] > bl) { bl = e[i + 1] - e[i]; bi = i; } bh.push((e[bi] + e[bi + 1]) / 2); bh.sort((a, b) => a - b); compute(); });
+    $("pr-del").addEventListener("click", () => { if (bh.length <= 1) return; const e = [-L / 2, ...bh, L / 2]; let bi = 0, bl = 1e9; for (let k = 0; k < bh.length; k++) { const l = e[k + 2] - e[k]; if (l < bl) { bl = l; bi = k; } } bh.splice(bi, 1); compute(); });
+    $("pr-reset").addEventListener("click", () => { bh = BH0.slice(); compute(); });
+  });
+
+  /* =================================================== Sim 8: 좌초·충돌 */
+  run("ground", function () {
+    const L = 150, B = 24, D = 13, T = 8.5, KG = 8, l = 24, hdbC = 1.6, PTS = sectionPts(B, D, B * 0.08);
+    const V0 = L * B * T, GM0 = T / 2 + (B * B) / (12 * T) - KG;
+    const gty = SB.seg("gr-type", () => { an = 1; upd(); }), gp = SB.range("gr-p", (v) => v.toFixed(1) + " m", () => { an = 1; upd(); }), gh = SB.range("gr-h", (v) => (v === 0 ? "0 (단일 선체)" : v.toFixed(1) + " m"), () => { an = 1; upd(); });
+    let r = null, an = 1, cv = null;
+    function calc() {
+      const type = gty(), p = gp(), hh = gh();
+      const out = { space: "없음", T1: T, GM: GM0, heel: 0, fl: null };
+      if (p <= 0.001) return out;
+      if (type === "ground") {
+        if (hh > 0 && p < hh) {
+          const Vl = 0.95 * l * B * hh, T1 = T + Vl / (L * B);
+          const KB = (L * B * T1 * T1 / 2 - Vl * hh / 2) / V0;
+          return { space: "이중 선저 탱크", T1, GM: KB + (B * B) / (12 * T) - KG, heel: 0, fl: "db" };
+        }
+        const T1 = (L * T + (0.95 - 0.7) * l * hh) / (L - 0.7 * l);
+        const KB = (L * B * T1 * T1 / 2 - l * B * (0.95 * hh * hh / 2 + 0.7 * (T1 * T1 - hh * hh) / 2)) / V0;
+        const BM = ((L - 0.7 * l) * B * B * B) / 12 / V0;
+        return { space: hh > 0 ? "이중 선저 + 화물창" : "화물창(단일 선저)", T1, GM: KB + BM - KG, heel: 0, fl: "hold" };
+      }
+      if (hh > 0 && p < hh) {
+        const a = 0.95 * l * hh, yw = B / 2 - hh / 2;
+        const T1 = (L * B * T - a * hdbC) / (L * B - a);
+        const Vl = a * (T1 - hdbC);
+        const KB = (L * B * T1 * T1 / 2 - Vl * (hdbC + T1) / 2) / V0;
+        const Acl = L * B - a, ybar = (-a * yw) / Acl;
+        const Icl = (L * B * B * B) / 12 - 0.95 * l * (hh * hh * hh / 12 + hh * yw * yw) - Acl * ybar * ybar;
+        const GM = KB + Icl / V0 - KG;
+        const heel = GM > 0.02 ? Math.atan((Vl * yw) / (V0 * GM)) : 0.6;
+        return { space: "우현 이중 선측", T1, GM, heel, fl: "wing" };
+      }
+      const muE = (0.7 * (B - hh) + 0.95 * hh) / B;
+      const T1 = (L * T - muE * l * hdbC) / (L - muE * l);
+      const KB = (L * B * T1 * T1 / 2 - muE * l * B * (T1 * T1 - hdbC * hdbC) / 2) / V0;
+      const BM = ((L - muE * l) * B * B * B) / 12 / V0;
+      return { space: hh > 0 ? "이중 선측 + 화물창" : "화물창(단일 선측)", T1, GM: KB + BM - KG, heel: 0, fl: "side" };
+    }
+    function upd() {
+      r = calc();
+      const fb = D - r.T1 - (B / 2) * Math.tan(Math.abs(r.heel));
+      SB.stat("o-gr-sp", r.space);
+      SB.stat("o-gr-dt", sm((r.T1 - T).toFixed(2), "m"));
+      SB.stat("o-gr-gm", sm(GM0.toFixed(2) + " → " + r.GM.toFixed(2), "m"));
+      SB.stat("o-gr-heel", sm(SB.deg(r.heel).toFixed(1), "°"));
+      SB.stat("o-gr-fb", fb > 0 ? sm(fb.toFixed(2), "m") : '<span style="color:var(--bad)">갑판 잠김</span>');
+      if (cv) cv.redraw();
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(); if (!r) r = calc();
+      const type = gty(), hh = gh(), p = gp();
+      const k1 = SB.clamp(an * 2, 0, 1), k2 = SB.clamp(an * 2 - 1, 0, 1);
+      const T1 = T + (r.T1 - T) * k2, phi = r.heel * k2;
+      const s = Math.min((w * 0.6) / B, (h * 0.62) / (D + 3)), cx = w * 0.5, wy = h * 0.4;
+      const M = secMap(cx, wy, s, T1, phi), cs = Math.cos(phi), sn = Math.sin(phi);
+      const hp = PTS.map((q) => M(q[0], q[1]));
+      poly(ctx, hp); ctx.fillStyle = P.surface; ctx.fill();
+      // 이중 구조
+      const zdb = type === "ground" ? hh : hdbC, wds = type === "coll" ? hh : 0;
+      const inner = type === "ground" ? (hh > 0 ? SB.clipPoly(PTS, 0, -1, -hh) : PTS) : SB.clipPoly(SB.clipPoly(SB.clipPoly(PTS, 0, -1, -hdbC), 1, 0, B / 2 - wds), -1, 0, B / 2 - wds);
+      poly(ctx, inner.map((q) => M(q[0], q[1]))); ctx.fillStyle = SB.color("warn"); ctx.globalAlpha = 0.14; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = P.dim; ctx.lineWidth = 1.2; ctx.stroke();
+      // 침수 영역
+      if (r.fl && k2 > 0) {
+        let fp = r.fl === "db" ? SB.clipPoly(PTS, 0, 1, hh) : r.fl === "hold" ? PTS : r.fl === "wing" ? SB.clipPoly(SB.clipPoly(PTS, -1, 0, -(B / 2 - hh)), 0, -1, -hdbC) : SB.clipPoly(PTS, 0, -1, -hdbC);
+        const lvl = SB.lerp(r.fl === "db" ? 0 : -T1 * cs, 0, k2);
+        fp = SB.clipPoly(fp, -sn, cs, lvl + T1 * cs);
+        if (fp.length > 2) { poly(ctx, fp.map((q) => M(q[0], q[1]))); alphaFill(ctx, waterC(), 0.65); }
+      }
+      poly(ctx, hp); ctx.strokeStyle = P.text; ctx.lineWidth = 1.6; ctx.stroke();
+      SB.water(ctx, w, h, wy);
+      // 해저와 암초 / 상대 선수
+      if (type === "ground") {
+        const keel = M(2, 0)[1], gy = keel + 26;
+        ctx.fillStyle = P.dim; ctx.globalAlpha = 0.35; ctx.fillRect(0, gy, w, h - gy); ctx.globalAlpha = 1;
+        const tipY = keel - p * s * k1 + (1 - k1) * 30, tx = M(2, 0)[0];
+        ctx.beginPath(); ctx.moveTo(tx - 46, gy); ctx.lineTo(tx - 6, tipY + 6); ctx.lineTo(tx, tipY); ctx.lineTo(tx + 10, tipY + 10); ctx.lineTo(tx + 56, gy); ctx.closePath();
+        ctx.fillStyle = "#6b5f52"; ctx.fill();
+        label(ctx, "암초", tx + 34, gy - 12, P.text, "left", 11, 700);
+      } else {
+        const zc = 7, tip = M(B / 2 - p * k1, zc);
+        ctx.beginPath(); ctx.moveTo(w, tip[1] - 34); ctx.lineTo(tip[0], tip[1]); ctx.lineTo(w, tip[1] + 22); ctx.closePath();
+        ctx.fillStyle = "#4a5266"; ctx.fill(); ctx.strokeStyle = P.text; ctx.lineWidth = 1; ctx.stroke();
+        label(ctx, "상대 선박 선수", w - 8, tip[1] - 44, P.text, "right", 11, 700);
+      }
+      label(ctx, (r.fl ? r.space : "손상 없음") + (k2 >= 1 && r.heel ? " · 경사 " + SB.deg(r.heel).toFixed(1) + "°" : ""), 10, 16, r.fl === "hold" || r.fl === "side" ? P.bad : P.text, "left", 12, 700);
+    }
+    upd();
+    cv = SB.canvas($("cv-ground"), draw, { aspect: 0.7, minHeight: 280, maxHeight: 400 });
+    let playing = false;
+    $("gr-run").addEventListener("click", () => { an = 0; playing = true; });
+    SB.loop(cv.canvas, (dt) => { if (!playing) return; an = Math.min(1, an + dt / 3); if (an >= 1) playing = false; cv.redraw(); });
+  });
+
+  /* =================================================== Sim 9: 타이타닉형 연쇄 침수 */
+  run("titanic", function () {
+    const L = 260, B = 28, D = 18, T = 10.5, MU = 0.9, H = makeHull({ L, B, D, full: 0.68, sheerF: 4 });
+    const I = H.intact(T);
+    const fromFP = [12, 27, 43, 59, 77, 96, 115, 134, 152, 170, 188, 206, 222, 238, 250];
+    const bx = fromFP.map((d) => L / 2 - d);
+    const gk = SB.range("ti-k", (v) => v + "개", reset), gh = SB.range("ti-h", (v) => v.toFixed(1) + " m", reset);
+    const topOf = (k) => (k < 2 ? H.deck[H.idx(bx[k])] - 0.3 : gh());
+    let stages = [], anim = { t: 0, playing: false }, cur = { Tm: T, t: 0, n: 0 }, cv = null, done = false;
+    function computeStages() {
+      const out = []; let n = gk();
+      for (;;) {
+        if (n > bx.length) { out.push({ n, sink: true, why: "모든 구획 침수" }); break; }
+        const r = H.solve(I.V, I.xb, [{ a: bx[n - 1], b: L / 2 + 5, mu: MU }], [T, 0]);
+        if (!r.ok) { out.push({ n, sink: true, why: "남은 부력 부족" }); break; }
+        const m = H.margin(r.Tm, r.t), st = { n, Tm: r.Tm, t: r.t, m: m.m };
+        out.push(st);
+        if (n < bx.length && r.Tm + r.t * bx[n - 1] > topOf(n - 1)) { st.over = n - 1; n++; continue; }
+        if (m.m < 0) { st.sink = true; st.why = "갑판이 잠김"; }
+        break;
+      }
+      return out;
+    }
+    function reset() { stages = computeStages(); anim = { t: 0, playing: false }; cur = { Tm: T, t: 0, n: 0 }; done = false; show(); if (cv) cv.redraw(); }
+    function show() {
+      const last = stages[stages.length - 1];
+      SB.stat("o-ti-st", anim.playing || done ? sm(Math.min(stages.length, Math.floor(anim.t / 1.8) + 1), "/ " + stages.length) : "대기");
+      SB.stat("o-ti-n", sm(cur.n, "개"));
+      SB.stat("o-ti-fwd", done && last.sink ? "—" : sm((cur.Tm + cur.t * (L / 2)).toFixed(1), "m"));
+      SB.stat("o-ti-res", !done ? "—" : last.sink ? '<span style="color:var(--bad)">침몰</span>' : '<span style="color:var(--ok)">부유</span>');
+    }
+    function draw(ctx, w, h) {
+      const P = SB.palette(), s = (w - 20) / (L * 1.08), cx = w / 2, wy = h * 0.5;
+      const M = mapper(cur.Tm, cur.t, cx, wy, s, 1.6);
+      const hull = hullOutline(H, M);
+      // 상부 구조물과 연돌
+      const dh = (x) => H.deck[H.idx(x)];
+      const sup = [M(-L * 0.36, dh(-L * 0.36)), M(L * 0.28, dh(L * 0.28)), M(L * 0.28, dh(L * 0.28) + 8), M(-L * 0.36, dh(-L * 0.36) + 8)];
+      poly(ctx, sup); ctx.fillStyle = "#e9e4d8"; ctx.fill(); ctx.strokeStyle = P.dim; ctx.lineWidth = 1; ctx.stroke();
+      [-0.2, -0.05, 0.1, 0.25].forEach((u) => {
+        const x = L * u * 0.95 - 4, z0 = dh(x) + 8;
+        const f = [M(x - 3, z0), M(x + 3, z0), M(x + 4.5, z0 + 17), M(x - 1.5, z0 + 17)];
+        poly(ctx, f); ctx.fillStyle = "#c9953b"; ctx.fill();
+        const t = [M(x + 3.7, z0 + 13.5), M(x + 4.5, z0 + 17), M(x - 1.5, z0 + 17), M(x - 2.3, z0 + 13.5)];
+        poly(ctx, t); ctx.fillStyle = "#1c1f26"; ctx.fill();
+      });
+      poly(ctx, hull); ctx.fillStyle = "#1f2430"; ctx.fill();
+      ctx.save(); poly(ctx, hull); ctx.clip();
+      const wl = [M(-L, T + 0.1), M(L, T + 0.1), M(L, -5), M(-L, -5)]; poly(ctx, wl); ctx.fillStyle = "#8f2f27"; ctx.fill();
+      ctx.restore();
+      // 침수 구획
+      if (cur.n > 0) { const fp = floodPoly(H, M, bx[Math.min(cur.n, bx.length) - 1] ?? -L / 2, L / 2 + 5, cur.Tm, cur.t); if (fp) { poly(ctx, fp); alphaFill(ctx, waterC(), 0.75); } }
+      poly(ctx, hull); ctx.strokeStyle = P.dim; ctx.lineWidth = 1.2; ctx.stroke();
+      // 격벽
+      bx.forEach((x, k) => {
+        const i = H.idx(x), p1 = M(x, H.bot[i]), p2 = M(x, Math.min(topOf(k), H.deck[i]));
+        ctx.strokeStyle = "#d8dde6"; ctx.lineWidth = 2; seg(ctx, p1[0], p1[1], p2[0], p2[1]);
+        const st = stages.find((q) => q.over === k);
+        if (st && cur.n > k) { ctx.fillStyle = P.accent2; ctx.beginPath(); ctx.arc(p2[0], p2[1], 4, 0, 7); ctx.fill(); }
+      });
+      SB.water(ctx, w, h, wy);
+      label(ctx, "선미", 10, h - 14, P.dim, "left", 11); label(ctx, "선수", w - 10, h - 14, P.dim, "right", 11);
+      const last = stages[stages.length - 1];
+      let msg = "충돌 재생을 눌러 보자 (흰 선 = 격벽 꼭대기, 빨간 점 = 물이 넘친 격벽)", col = P.dim;
+      if (anim.playing || done) {
+        const k = Math.min(stages.length - 1, Math.floor(anim.t / 1.8)), sg = stages[k];
+        if (sg.over != null && k < stages.length - 1) { msg = sg.n + "개 구획 침수 → 수면이 " + (sg.over + 1) + "번 격벽 꼭대기를 넘음"; col = P.warn; }
+        else if (last.sink) { msg = sg.n + "개 구획 침수 → " + last.why + " → 침몰"; col = P.bad; }
+        else { msg = sg.n + "개 구획 침수 → 격벽이 버틴다. 부유"; col = P.ok; }
+      }
+      label(ctx, msg, 10, 16, col, "left", w < 560 ? 11 : 13, 700);
+    }
+    reset();
+    cv = SB.canvas($("cv-titanic"), draw, { aspect: 0.42, minHeight: 230, maxHeight: 420 });
+    $("ti-run").addEventListener("click", () => { reset(); anim.playing = true; });
+    $("ti-reset").addEventListener("click", reset);
+    SB.loop(cv.canvas, (dt) => {
+      if (!anim.playing) return;
+      anim.t += dt;
+      const k = Math.floor(anim.t / 1.8), f = SB.clamp((anim.t - k * 1.8) / 1.4, 0, 1), e = f * f * (3 - 2 * f);
+      const last = stages[stages.length - 1];
+      if (k < stages.length) {
+        const sg = stages[k], prev = k ? stages[k - 1] : { Tm: T, t: 0 };
+        cur.n = Math.min(sg.n, bx.length);
+        if (sg.Tm != null) { cur.Tm = SB.lerp(prev.Tm, sg.Tm, e); cur.t = SB.lerp(prev.t, sg.t, e); }
+      } else if (last.sink) {
+        cur.n = bx.length; cur.Tm += dt * 3; cur.t = Math.min(0.22, cur.t + dt * 0.02);
+        if (cur.Tm > D + 75) { anim.playing = false; }
+        done = true;
+      } else { anim.playing = false; done = true; }
+      show(); cv.redraw();
+    });
+  });
+})();
+
+</script>
+</body>
+</html>

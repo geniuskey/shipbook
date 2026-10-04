@@ -1,0 +1,1246 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<title>복원성 · ShipBook</title>
+<meta name="description" content="무게중심 G, 부심 B, 메타센터 M과 GM, 대각도 GZ 곡선, IMO 복원성 기준과 기상 기준, 횡동요 주기, 경사 시험을 횡단면 계산 시뮬레이터와 3D로 배운다.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../css/style.css">
+<script src="../js/common.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<style>
+  .sim-view canvas.grab { cursor: grab; touch-action: none; }
+  .sim-view canvas.grab:active { cursor: grabbing; }
+  .fig-lg svg .t, .fig-lg svg .t-acc { font-size: 16px; }
+  .fig-lg svg .t-dim { font-size: 14px; }
+  .fig-lg svg .t-mono { font-size: 13px; }
+  .crit { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .crit td, .crit th { padding: 6px 8px; }
+  .crit .pass { color: var(--ok); font-weight: 700; }
+  .crit .fail { color: var(--bad); font-weight: 700; }
+  .stat .v.ok { color: var(--ok); }
+  .stat .v.bad { color: var(--bad); }
+  .stat .v.warn { color: var(--warn); }
+  .crit-wrap { padding: 0 18px 14px; overflow-x: auto; }
+</style>
+</head>
+<body data-chapter="stability">
+<main class="chapter">
+  <header class="chapter-hero">
+    <div class="eyebrow">Chapter 03</div>
+    <h1>복원성</h1>
+    <p class="lead">파도에 한쪽으로 기운 배는 아무도 밀어 주지 않는데도 스스로 다시 일어선다. 물에 잠긴 부분의 모양이 바뀌면서 부력의 작용점이 옮겨 가고, 그 부력과 무게가 한 쌍의 우력을 이루기 때문이다. 이 장에서는 무게중심 G, 부심 B, 메타센터 M이라는 세 점으로 이 현상을 설명하고, 작은 기울기의 GM에서 큰 기울기의 GZ 곡선, 국제 기준(IMO), 횡동요 주기, 그리고 실제 배의 무게중심을 재는 경사 시험까지 다룬다.</p>
+    <ul class="objectives">
+      <li>무게와 부력이 만드는 복원 우력을 G, B, Z 세 점으로 설명하고 GZ를 계산한다.</li>
+      <li>메타센터 반지름 \(BM = I/\nabla\)을 유도하고, 상자형 바지의 \(BM = B^2/(12T)\)로 KM 곡선을 그린다.</li>
+      <li>GM의 부호로 안정·중립·불안정 평형을 구분하고, GM이 음수인 배가 롤 각에서 멈추는 이유를 안다.</li>
+      <li>GZ 곡선에서 최대 GZ, 갑판 끝 침수각, 소실각, 동적 복원성을 읽는다.</li>
+      <li>IMO 2008 IS Code의 일반 기준과 기상 기준을 적용해 합격 여부를 판정한다.</li>
+      <li>GM과 횡동요 주기의 관계(stiff/tender)를 이해하고, 경사 시험으로 KG를 구한다.</li>
+    </ul>
+  </header>
+
+  <!-- =============================================================== 1 -->
+  <section id="couple">
+    <h2>무게와 부력의 우력: G, B, 그리고 GZ</h2>
+    <p><a href="buoyancy.html">2장</a>에서 배가 뜨는 조건을 보았다. 배의 무게 \(W = \Delta g\)와 부력 \(\rho g \nabla\)가 크기가 같아야 한다. 그런데 크기가 같은 두 힘이라도 <b>같은 직선 위에 있지 않으면</b> 배를 돌리는 우력이 된다. 그래서 복원성의 이야기는 두 힘이 어디에 작용하는지에서 시작한다.</p>
+    <ul>
+      <li><span class="term">무게중심 G</span><span class="en">(Centre of Gravity)</span>: 선체, 기관, 화물, 연료, 밸러스트 등 배에 실린 모든 무게의 중심. 화물이 움직이지 않는 한 <b>배에 고정된 점</b>이다. 용골(K)에서 G까지의 높이를 <b>KG</b>라 한다.</li>
+      <li><span class="term">부심 B</span><span class="en">(Centre of Buoyancy)</span>: 물에 잠긴 부피(배수 용적)의 도심. 부력은 이 점을 지나 수직 위로 작용한다. 배가 기울면 잠긴 부분의 모양이 바뀌므로 <b>B는 움직인다</b>.</li>
+    </ul>
+    <p>똑바로 떠 있을 때 G와 B는 모두 중심선 위에 있어 무게와 부력이 한 직선에서 상쇄된다. 배가 우현으로 \(\phi\)만큼 기울면 우현 쪽에 새로 물속으로 들어간 쐐기가 생기고 좌현 쪽 쐐기는 물 밖으로 나온다. 부피가 우현으로 옮겨 갔으므로 B도 우현 쪽 \(B_1\)으로 이동한다. 이제 G를 지나는 무게(아래)와 \(B_1\)을 지나는 부력(위)이 수평 거리 \(GZ\)만큼 떨어져 우력을 이룬다.</p>
+
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 760 330" role="img" aria-label="똑바로 뜬 배와 기운 배의 무게와 부력">
+        <rect x="0" y="190" width="760" height="140" class="f-water"/>
+        <line x1="0" y1="190" x2="760" y2="190" class="s-water"/>
+        <!-- upright -->
+        <g>
+          <path d="M80 110 L80 238 Q80 250 92 250 L268 250 Q280 250 280 238 L280 110 Z" class="f-surface" stroke="var(--text)" stroke-width="1.6"/>
+          <line x1="180" y1="90" x2="180" y2="262" class="s-line" stroke-dasharray="5 4"/>
+          <circle cx="180" cy="160" r="6" fill="var(--accent-2)"/><text x="192" y="158" class="t-acc">G</text>
+          <circle cx="180" cy="222" r="6" fill="var(--accent)"/><text x="192" y="228" class="t">B</text>
+          <line x1="180" y1="166" x2="180" y2="200" stroke="var(--accent-2)" stroke-width="3"/><path d="M172 196 L180 212 L188 196 Z" fill="var(--accent-2)"/>
+          <line x1="180" y1="216" x2="180" y2="186" stroke="var(--accent)" stroke-width="3"/>
+          <text x="180" y="300" class="t" text-anchor="middle">똑바로: G와 B가 한 수직선</text>
+                    <text x="182" y="268" class="t-mono" text-anchor="middle">K</text>
+        </g>
+        <!-- heeled -->
+        <g transform="translate(540 190) rotate(14)">
+          <path d="M-100 -80 L-100 48 Q-100 60 -88 60 L88 60 Q100 60 100 48 L100 -80 Z" class="f-surface" stroke="var(--text)" stroke-width="1.6"/>
+          <line x1="0" y1="-120" x2="0" y2="72" class="s-line" stroke-dasharray="5 4"/>
+          <circle cx="0" cy="-30" r="6" fill="var(--accent-2)"/>
+        </g>
+        <!-- G at heeled pos: rotate (0,-30) by 14deg around (540,190): x=540+30*sin14=547.3, y=190-30*cos14=160.9 -->
+        <text x="522" y="166" class="t-acc">G</text>
+        <circle cx="567" cy="228" r="6" fill="var(--accent)"/><text x="578" y="244" class="t">B₁</text>
+        <circle cx="540" cy="232" r="4" fill="none" stroke="var(--accent)" stroke-width="1.5"/><text x="510" y="246" class="t-dim">B₀</text>
+        <line x1="567" y1="222" x2="567" y2="66" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="4 3"/>
+        <line x1="567" y1="222" x2="567" y2="190" stroke="var(--accent)" stroke-width="3"/><path d="M559 194 L567 178 L575 194 Z" fill="var(--accent)"/>
+        <line x1="547" y1="167" x2="547" y2="205" stroke="var(--accent-2)" stroke-width="3"/><path d="M539 201 L547 217 L555 201 Z" fill="var(--accent-2)"/>
+        <line x1="547" y1="161" x2="567" y2="161" stroke="var(--warn)" stroke-width="4"/>
+        <circle cx="567" cy="161" r="4" fill="var(--warn)"/><text x="574" y="156" class="t">Z</text>
+        <text x="548" y="150" class="t-mono">GZ</text>
+        <circle cx="567" cy="80" r="5" fill="var(--ok)"/><text x="578" y="84" class="t">M</text>
+        <path d="M640 120 A70 70 0 0 0 640 260" fill="none" stroke="var(--ok)" stroke-width="2"/><path d="M632 256 L641 270 L648 254 Z" fill="var(--ok)"/>
+        <text x="660" y="200" class="t">복원 우력</text>
+        <text x="540" y="300" class="t" text-anchor="middle">기울면: B가 B₁으로 이동 → 우력 Δg·GZ</text>
+        <rect x="0" y="190" width="760" height="80" class="f-water"/>
+      </svg>
+      <figcaption><b>그림 3-1.</b> 똑바로 뜬 배(왼쪽)는 무게와 부력이 한 수직선 위에 있다. 기운 배(오른쪽)는 부심이 잠긴 쪽으로 \(B_0 \to B_1\) 이동하고, \(B_1\)을 지나는 부력선이 G를 지나는 무게선에서 GZ만큼 떨어져 배를 되돌리는 우력을 만든다. 부력선이 중심선과 만나는 점이 메타센터 M이다.</figcaption>
+    </figure>
+
+    <div class="formula">$$RM = \Delta\, g\, \overline{GZ}\quad[\mathrm{kN\,m}] \qquad \text{or}\qquad RM = \Delta\,\overline{GZ}\quad[\mathrm{t\,m}]$$
+      <div class="where">\(RM\): 복원 모멘트(Righting Moment), \(\Delta\): 배수량(t), \(\overline{GZ}\): 복원정(Righting Lever, m). 해운에서는 g를 빼고 t·m로 쓰는 일이 많다.</div>
+    </div>
+    <p>GZ가 양수이면 배를 원래대로 돌리는 <b>복원 모멘트</b>, 음수이면 더 넘어뜨리는 <b>전도 모멘트</b>다. 아래 시뮬레이터는 길이 방향으로 단면이 일정한 배(중앙 단면을 그대로 늘인 근사)를 기울이면서, 매 각도마다 <b>잠긴 면적이 처음과 같아지는 수선</b>을 반복 계산(이분법)으로 찾는다. 그 잠긴 다각형의 도심이 곧 부심 B다. 작은 각 공식이 아니라 다각형을 직접 자르는 계산이라 갑판이 물에 잠기는 큰 각에서도 맞다.</p>
+
+    <div class="sim" id="sim-heel">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>횡단면 기울이기: 부심 B는 어디로 가나</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-heel" class="grab"></canvas><span class="hint">좌우로 끌어 기울이기</span></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>횡경사각 φ <output id="hl-phi-out"></output></span><input type="range" id="hl-phi" min="-60" max="60" step="1" value="15"></label>
+          <label class="ctrl"><span>무게중심 높이 KG <output id="hl-kg-out"></output></span><input type="range" id="hl-kg" min="6" max="17" step="0.1" value="12"></label>
+          <label class="ctrl"><span>폭 B <output id="hl-b-out"></output></span><input type="range" id="hl-b" min="20" max="44" step="1" value="32"></label>
+          <label class="ctrl"><span>흘수 T <output id="hl-t-out"></output></span><input type="range" id="hl-t" min="5" max="15" step="0.5" value="11"></label>
+          <label class="check"><input type="checkbox" id="hl-force" checked> 힘 화살표</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">KB₀ / BM₀</span><span class="v" id="o-hl-kb">—</span></div>
+        <div class="stat"><span class="k">GM₀ = KM − KG</span><span class="v" id="o-hl-gm">—</span></div>
+        <div class="stat"><span class="k">GZ (정확)</span><span class="v" id="o-hl-gz">—</span></div>
+        <div class="stat"><span class="k">GM·sinφ (소각 근사)</span><span class="v" id="o-hl-gms">—</span></div>
+        <div class="stat"><span class="k">복원 모멘트 (L = 200 m)</span><span class="v" id="o-hl-rm">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: ① φ를 0°에서 10°까지 올리며 "GZ(정확)"과 "GM·sinφ"가 거의 같음을 확인한다. ② 30° 이상에서 두 값이 벌어지는 이유를 갑판 끝이 잠기는 순간과 연결해 본다. ③ KG를 올려 G가 M 위로 올라가면 GZ의 부호가 바뀌고 화살표가 배를 더 넘어뜨리는 방향이 된다. ④ 폭 B를 넓히면 같은 각에서 B가 훨씬 멀리 이동한다.</div>
+    </div>
+
+    <p>계산에서 눈여겨볼 점이 둘 있다. 첫째, 배가 기울어도 배수 면적(부피)은 그대로이므로 수선은 단순히 중심을 축으로 도는 것이 아니라 아주 조금 오르내린다. 둘째, 작은 각에서 B는 거의 원호를 그리며 움직이고, B를 지나는 수직선은 중심선의 한 점 M을 거의 그대로 지난다. 그 점이 다음 절의 주인공이다.</p>
+  </section>
+
+  <!-- =============================================================== 2 -->
+  <section id="view3d">
+    <h2>입체로 보기: 기운 배 안의 G, B, M</h2>
+    <p>횡단면은 배를 선미에서 바라본 모습이다. 실제 배에서 같은 일이 어떻게 보이는지 입체로 확인해 보자. 반투명한 선체 안에 G(빨강), B(파랑), M(초록)을 표시하고, 수면이 선체를 자르는 <b>수선면</b><span class="en">(Waterplane)</span>을 노랗게 칠했다. 배를 기울이면 수선면이 기운 쪽으로 넓어지고, B가 그쪽으로 따라간다. "자유 횡동요"를 누르면 복원 모멘트만으로 배가 흔들리다 멈추는 모습을 볼 수 있다(GZ는 중앙 단면 계산, 시간은 3배속).</p>
+
+    <div class="sim" id="sim-3d">
+      <div class="sim-head"><span class="sim-tag three">3D</span><h3>기울어지는 배와 세 점</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view three" id="v3d"><span class="hint">끌어서 회전 · 휠로 확대</span></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>횡경사각 φ <output id="t3-phi-out"></output></span><input type="range" id="t3-phi" min="-45" max="45" step="1" value="12"></label>
+          <label class="ctrl"><span>KG <output id="t3-kg-out"></output></span><input type="range" id="t3-kg" min="8" max="14.5" step="0.1" value="11.5"></label>
+          <label class="check"><input type="checkbox" id="t3-wp" checked> 수선면 표시</label>
+          <button class="btn primary" id="t3-roll">자유 횡동요</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">φ</span><span class="v" id="o-t3-phi">—</span></div>
+        <div class="stat"><span class="k">GM₀</span><span class="v" id="o-t3-gm">—</span></div>
+        <div class="stat"><span class="k">GZ</span><span class="v" id="o-t3-gz">—</span></div>
+        <div class="stat"><span class="k">수선면 폭</span><span class="v" id="o-t3-wl">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: ① 배를 끌어 돌려 선수나 선미 정면에서 보면 횡단면 시뮬레이터와 같은 모습이 된다. ② KG를 14 m 가까이 올리고 자유 횡동요를 누르면, 흔들림이 느려지다가 0°가 아닌 각에서 멈춘다(다음 절의 롤 각). ③ KG를 낮추면 흔들림이 빨라진다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 3 -->
+  <section id="metacentre">
+    <h2>메타센터 M과 GM</h2>
+    <p>작은 경사각에서 부심 \(B\)는 원호 위를 움직이고, 그 원의 중심이 <span class="term">메타센터 M</span><span class="en">(Metacentre)</span>이다. 원의 반지름 \(BM\)을 <span class="term">메타센터 반지름</span>이라 한다. G가 M보다 아래에 있으면 \(GZ \approx GM\sin\phi\)이고, 이 \(GM\)이 <span class="term">메타센터 높이</span><span class="en">(Metacentric Height)</span>, 초기 복원성의 척도다.</p>
+
+    <h3>BM = I / ∇의 유도</h3>
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 760 320" role="img" aria-label="경사 시 쐐기 이동과 부심 이동">
+        <path d="M0 204 L760 79.7 L760 320 L0 320 Z" class="f-water"/>
+        <rect x="180" y="70" width="300" height="200" fill="none" stroke="var(--text-faint)" stroke-dasharray="5 4"/>
+        <line x1="60" y1="194.2" x2="700" y2="89.4" class="s-water"/>
+        <line x1="60" y1="150" x2="700" y2="150" stroke="var(--text-faint)" stroke-dasharray="3 4"/>
+        <path d="M180 150 L330 150 L180 174.5 Z" class="f-acc2-soft" stroke="var(--accent-2)"/>
+        <path d="M330 150 L480 150 L480 125.5 Z" class="f-acc-soft" stroke="var(--accent)"/>
+        <circle cx="230" cy="158.2" r="4" fill="var(--accent-2)"/><text x="96" y="222" class="t">g₁ (나온 쐐기)</text>
+        <circle cx="430" cy="141.8" r="4" fill="var(--accent)"/><text x="440" y="98" class="t">g₂ (잠긴 쐐기)</text>
+        <line x1="230" y1="158.2" x2="430" y2="141.8" stroke="var(--text-dim)" stroke-width="1.2" stroke-dasharray="4 3"/>
+        <circle cx="330" cy="210" r="5" fill="var(--accent)"/><text x="296" y="230" class="t">B₀</text>
+        <circle cx="356" cy="207.9" r="5" fill="var(--accent)"/><text x="364" y="228" class="t">B₁</text>
+        <line x1="330" y1="210" x2="356" y2="207.9" stroke="var(--accent)" stroke-width="2.5"/>
+        <circle cx="330" cy="150" r="3" fill="var(--text)"/><text x="312" y="142" class="t-mono">O</text>
+        <line x1="356" y1="208" x2="327" y2="31" stroke="var(--ok)" stroke-width="1.4" stroke-dasharray="5 3"/>
+        <line x1="330" y1="30" x2="330" y2="270" class="s-line" stroke-dasharray="2 3"/>
+        <circle cx="330" cy="49" r="5" fill="var(--ok)"/><text x="308" y="52" class="t">M</text>
+        <text x="338" y="84" class="t-mono">φ</text>
+        <line x1="330" y1="285" x2="480" y2="285" class="s-line"/><line x1="480" y1="279" x2="480" y2="291" class="s-line"/><line x1="330" y1="279" x2="330" y2="291" class="s-line"/>
+        <text x="405" y="304" class="t-mono" text-anchor="middle">y = B/2</text>
+        <text x="520" y="250" class="t">쐐기 면적 v = ½·y·(y·tanφ)</text>
+        <text x="520" y="275" class="t">g₁g₂ = 2·(2y/3) = 4y/3</text>
+        <text x="520" y="300" class="t">BB₁ ∥ g₁g₂</text>
+      </svg>
+      <figcaption><b>그림 3-2.</b> 작은 각 \(\phi\)만큼 기울면 좌현 쐐기(\(g_1\))가 물 밖으로 나오고 같은 크기의 우현 쐐기(\(g_2\))가 잠긴다. 부피 \(v\)가 거리 \(g_1g_2\)만큼 옮겨졌으므로 전체 부심은 그 방향으로 \(BB_1 = v\cdot g_1g_2/\nabla\)만큼 이동한다.</figcaption>
+    </figure>
+    <p>무게중심 이동의 법칙(전체 중 일부 \(v\)가 \(d\)만큼 옮겨지면 전체 중심은 \(v d/\nabla\)만큼 같은 방향으로 옮겨진다)을 부피에 적용한다. 길이 \(dx\)짜리 얇은 조각에서 수선 반폭이 \(y\)이면 쐐기 하나의 단면적은 \(\tfrac12 y^2\tan\phi\), 두 쐐기 도심 사이 거리는 \(\tfrac43 y\)이다. 길이 방향으로 적분하면</p>
+    <div class="formula">$$\nabla\cdot BB_1 = \int_L \tfrac12 y^2\tan\phi\cdot\tfrac43 y\,dx = \tan\phi\int_L \tfrac23 y^3\,dx = I_T\tan\phi$$
+    $$BM = \frac{BB_1}{\tan\phi} = \frac{I_T}{\nabla},\qquad KM = KB + BM,\qquad GM = KM - KG$$
+      <div class="where">\(I_T = \tfrac23\int y^3dx\): 수선면의 중심선에 대한 횡단면 2차 모멘트(m⁴), \(\nabla\): 배수 용적(m³). 직사각형 수선면(길이 L, 폭 B)이면 \(I_T = LB^3/12\).</div>
+    </div>
+    <p>상자형 바지<span class="en">(Box Barge)</span>는 손으로 계산할 수 있는 가장 좋은 예다. 길이 \(L\), 폭 \(B\), 흘수 \(T\)이면 \(\nabla = LBT\), \(I_T = LB^3/12\)이므로</p>
+    <div class="formula">$$KB = \frac{T}{2},\qquad BM = \frac{LB^3/12}{LBT} = \frac{B^2}{12\,T},\qquad KM = \frac{T}{2}+\frac{B^2}{12\,T}$$</div>
+    <div class="callout tip">
+      <strong>계산 예: 폭 32 m, 흘수 11 m 바지</strong>
+      <p>\(KB = 5.5\) m, \(BM = 32^2/(12\times 11) = 7.76\) m, \(KM = 13.26\) m. KG가 12.0 m이면 \(GM = 1.26\) m다. 같은 배의 폭을 10 % 넓혀 35.2 m로 만들면 BM은 \(1.1^2 = 1.21\)배인 9.39 m가 되어 GM이 2.89 m로 두 배 넘게 커진다. 폭은 BM에 <b>제곱</b>으로 들어가므로 복원성에 가장 강력한 설계 변수다.</p>
+    </div>
+    <p>흘수가 바뀌면 KB는 흘수에 비례해 오르고 BM은 흘수에 반비례해 줄어든다. 그래서 KM은 어떤 흘수에서 최솟값을 갖는다(상자형이면 \(dKM/dT = 0\)에서 \(T = B/\sqrt6\)). 선박의 정수 곡선도<span class="en">(Hydrostatic Curves)</span>에는 이렇게 흘수별 KB, BM, KM이 그려져 있고, 적하 계산에서 이 표를 찾아 쓴다.</p>
+
+    <div class="sim" id="sim-km">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>상자형 바지의 KB, BM, KM 곡선</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-km" class="grab"></canvas><span class="hint">그래프를 끌어 흘수 선택</span></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>폭 B <output id="km-b-out"></output></span><input type="range" id="km-b" min="10" max="50" step="1" value="32"></label>
+          <label class="ctrl"><span>흘수 T <output id="km-t-out"></output></span><input type="range" id="km-t" min="2" max="20" step="0.1" value="11"></label>
+          <label class="ctrl"><span>KG <output id="km-kg-out"></output></span><input type="range" id="km-kg" min="4" max="20" step="0.1" value="12"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">KB</span><span class="v" id="o-km-kb">—</span></div>
+        <div class="stat"><span class="k">BM</span><span class="v" id="o-km-bm">—</span></div>
+        <div class="stat"><span class="k">KM</span><span class="v" id="o-km-km">—</span></div>
+        <div class="stat"><span class="k">GM</span><span class="v" id="o-km-gm">—</span></div>
+        <div class="stat"><span class="k">KM 최소 흘수 B/√6</span><span class="v" id="o-km-min">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: ① 흘수를 줄여 가면 BM이 급격히 커져 KM이 다시 올라간다. 가볍게 뜬 넓은 바지가 매우 안정한 이유다. ② KG 수평선이 KM 곡선 위로 나오는 흘수 구간에서는 GM이 음수가 된다. ③ 폭을 바꿔 KM 최솟값의 위치가 \(B/\sqrt6\)을 따라가는지 본다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 4 -->
+  <section id="equilibrium">
+    <h2>안정·중립·불안정 평형과 롤 각</h2>
+    <p>GM의 부호가 평형의 성격을 정한다. 아주 조금 기울였을 때 \(GZ \approx GM\sin\phi\)이므로</p>
+    <ul>
+      <li>\(GM > 0\) (G가 M 아래): 복원 모멘트 → <b>안정 평형</b><span class="en">(Stable)</span>. 오뚝이와 같다.</li>
+      <li>\(GM = 0\) (G = M): 작은 각에서 모멘트가 없다 → <b>중립 평형</b><span class="en">(Neutral)</span>. 기운 채 그대로 있다.</li>
+      <li>\(GM < 0\) (G가 M 위): 전도 모멘트 → <b>불안정 평형</b><span class="en">(Unstable)</span>. 똑바로 서 있을 수 없다.</li>
+    </ul>
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 760 270" role="img" aria-label="G와 M의 위치에 따른 세 가지 평형">
+        <rect x="0" y="150" width="760" height="120" class="f-water"/>
+        <line x1="0" y1="150" x2="760" y2="150" class="s-water"/>
+        <g transform="translate(130 150) rotate(12)">
+          <rect x="-70" y="-60" width="140" height="110" rx="8" class="f-surface" stroke="var(--text)" stroke-width="1.5"/>
+          <line x1="0" y1="-110" x2="0" y2="50" class="s-line" stroke-dasharray="4 3"/>
+          <circle cx="0" cy="-82" r="5" fill="var(--ok)"/><circle cx="0" cy="-20" r="5" fill="var(--accent-2)"/>
+        </g>
+        <text x="152" y="62" class="t">M</text><text x="146" y="128" class="t-acc">G</text>
+        <text x="130" y="232" class="t" text-anchor="middle">GM &gt; 0 : 안정</text>
+        <text x="130" y="254" class="t-dim" text-anchor="middle">기울면 되돌아온다</text>
+        <g transform="translate(380 150) rotate(12)">
+          <rect x="-70" y="-60" width="140" height="110" rx="8" class="f-surface" stroke="var(--text)" stroke-width="1.5"/>
+          <line x1="0" y1="-110" x2="0" y2="50" class="s-line" stroke-dasharray="4 3"/>
+          <circle cx="0" cy="-60" r="7" fill="var(--ok)"/><circle cx="0" cy="-60" r="4" fill="var(--accent-2)"/>
+        </g>
+        <text x="408" y="86" class="t">G = M</text>
+        <text x="380" y="232" class="t" text-anchor="middle">GM = 0 : 중립</text>
+        <text x="380" y="254" class="t-dim" text-anchor="middle">기운 채 머문다</text>
+        <g transform="translate(630 150) rotate(12)">
+          <rect x="-70" y="-60" width="140" height="110" rx="8" class="f-surface" stroke="var(--text)" stroke-width="1.5"/>
+          <line x1="0" y1="-120" x2="0" y2="50" class="s-line" stroke-dasharray="4 3"/>
+          <circle cx="0" cy="-50" r="5" fill="var(--ok)"/><circle cx="0" cy="-100" r="5" fill="var(--accent-2)"/>
+        </g>
+        <text x="664" y="46" class="t-acc">G</text><text x="660" y="104" class="t">M</text>
+        <text x="630" y="232" class="t" text-anchor="middle">GM &lt; 0 : 불안정</text>
+        <text x="630" y="254" class="t-dim" text-anchor="middle">더 넘어간다(→ 롤 각)</text>
+      </svg>
+      <figcaption><b>그림 3-3.</b> 같은 선체, 같은 M에서 G의 높이만 다른 세 경우. G가 M 아래에 있는 한 배는 오뚝이처럼 되돌아온다.</figcaption>
+    </figure>
+    <p>그렇다면 GM이 음수인 배는 곧바로 뒤집힐까? 대개는 그렇지 않다. 기울수록 넓은 쪽 뱃전이 잠기며 수선면 폭이 커지고 B가 더 멀리 이동하기 때문이다. 옆면이 수직인 배<span class="en">(Wall-sided)</span>는 갑판 끝이 잠기기 전까지 정확히</p>
+    <div class="formula">$$GZ = \sin\phi\left(GM + \tfrac12 BM\tan^2\phi\right)$$
+      <div class="where">이 식은 근사가 아니라 옆면이 수직인 단면의 정확한 결과다(갑판 끝 침수 전까지). \(GM < 0\)이면 \(GZ = 0\)이 되는 각 \(\tan\phi_L = \sqrt{-2GM/BM}\)가 존재한다.</div>
+    </div>
+    <p>이 각 \(\phi_L\)을 <span class="term">롤 각</span><span class="en">(Angle of Loll)</span>이라 한다. 배는 좌현이나 우현 어느 한쪽으로 \(\phi_L\)만큼 기운 채 떠 있고, 밀면 반대쪽 롤 각으로 넘어가 "털썩" 하고 눕는다. 화물 이동으로 생긴 경사(<a href="trim.html">4장</a>)와 달리 롤은 <b>방향이 정해지지 않는다</b>는 점이 구별 단서다. 롤 상태에서 반대쪽 탱크에 밸러스트를 채우는 것은 위험하다. 배가 반대로 넘어가는 순간 그 무게가 경사를 키우기 때문이다. 올바른 처치는 G를 낮추는 것(낮은 탱크에 대칭으로 채우기, 높은 곳의 무게 제거)이다.</p>
+
+    <div class="sim" id="sim-equil">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>오뚝이 시험: GM의 부호와 롤 각</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-equil"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>KG <output id="eq-kg-out"></output></span><input type="range" id="eq-kg" min="11" max="15.5" step="0.05" value="12.5"></label>
+          <div class="ctrl"><span>밀기</span><div class="seg" id="eq-push"><button data-value="-1">← 좌현으로</button><button data-value="1" class="on">우현으로 →</button></div></div>
+          <button class="btn primary" id="eq-kick">밀기</button>
+          <button class="btn" id="eq-reset">똑바로 세우기</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">GM₀</span><span class="v" id="o-eq-gm">—</span></div>
+        <div class="stat"><span class="k">평형 상태</span><span class="v" id="o-eq-state">—</span></div>
+        <div class="stat"><span class="k">롤 각 (계산)</span><span class="v" id="o-eq-loll">—</span></div>
+        <div class="stat"><span class="k">√(−2GM/BM) 식</span><span class="v" id="o-eq-wall">—</span></div>
+        <div class="stat"><span class="k">현재 φ</span><span class="v" id="o-eq-phi">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 상자형 단면(폭 32 m, 흘수 11 m, KM 13.26 m). ① KG 12.5 m에서 밀면 0° 주위로 흔들리다 멈춘다. ② KG를 KM에 맞추면(중립) 흔들림이 아주 느려진다. ③ KG 13.6 m 정도로 올리고 똑바로 세운 뒤 살짝 밀면, 0°를 벗어나 롤 각에서 멈춘다. 반대 방향으로 밀면 반대편 롤 각으로 넘어간다. 오른쪽 그래프는 위치 에너지 \(\Delta g\int GZ\,d\phi\)이며 공이 골짜기에 머무는 곳이 평형이다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 5 -->
+  <section id="gzcurve">
+    <h2>대각도 복원성: GZ 곡선</h2>
+    <p>GM은 0°에서의 기울기일 뿐이다. 파도와 바람에 30°, 40°까지 기우는 상황을 판단하려면 각도별 GZ를 모두 그린 <span class="term">GZ 곡선</span><span class="en">(Curve of Statical Stability)</span>이 필요하다. 실제 설계에서는 G 위치와 무관한 <b>교차 곡선</b><span class="en">(Cross Curves, KN)</span>을 먼저 계산해 두고, 적하 상태마다 \(GZ = KN - KG\sin\phi\)로 바꾼다. 아래 시뮬레이터도 같은 방식이다.</p>
+    <div class="formula">$$GZ(\phi) = KN(\phi) - KG\,\sin\phi,\qquad \left.\frac{dGZ}{d\phi}\right|_{\phi=0} = GM$$
+      <div class="where">\(KN\): 용골 K에서 기운 부력선까지의 수평 거리. 선형과 배수량만으로 정해진다.</div>
+    </div>
+    <p>GZ 곡선에서 읽는 값들은 다음과 같다.</p>
+    <ul>
+      <li><b>초기 기울기</b>: 원점에서의 접선은 \(\phi = 1\) rad(57.3°)에서 높이 GM에 닿는다. 곡선이 처음에 이 접선보다 위로 휘면(옆면이 수직인 배) 경사할수록 복원성이 좋아진다.</li>
+      <li><b>갑판 끝 침수각</b><span class="en">(Deck Edge Immersion)</span>: 기운 쪽 갑판 끝이 물에 닿는 각. 그 뒤로는 수선면 폭이 더 늘지 않아 곡선이 꺾여 내려가기 시작한다(대개 이 근처에 변곡점).</li>
+      <li><b>최대 GZ와 그 각</b>: 배가 버틸 수 있는 가장 큰 정적 경사 모멘트.</li>
+      <li><b>소실각</b><span class="en">(Angle of Vanishing Stability)</span>: GZ가 다시 0이 되는 각. 이 각을 넘으면 배는 뒤집힌다. 0°에서 소실각까지를 <b>복원성 범위</b>라 한다.</li>
+      <li><b>곡선 아래 면적</b>: \(\int GZ\,d\phi\)에 \(\Delta g\)를 곱하면 배를 그 각까지 기울이는 데 필요한 일이다. 이것을 <span class="term">동적 복원성</span><span class="en">(Dynamic Stability)</span>이라 하며, 돌풍이나 파도의 에너지를 흡수하는 능력이다.</li>
+    </ul>
+
+    <div class="sim" id="sim-gz">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>GZ 곡선 실험실</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-gz" class="grab"></canvas><span class="hint">그래프 위를 끌어 각도 선택</span></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>KG <output id="gz-kg-out"></output></span><input type="range" id="gz-kg" min="9" max="15" step="0.1" value="12"></label>
+          <label class="ctrl"><span>깊이 D (건현 = D − T) <output id="gz-d-out"></output></span><input type="range" id="gz-d" min="13" max="26" step="0.5" value="18"></label>
+          <label class="ctrl"><span>폭 B <output id="gz-b-out"></output></span><input type="range" id="gz-b" min="24" max="42" step="1" value="32"></label>
+          <label class="check"><input type="checkbox" id="gz-ref" checked> 기준 곡선(KG 12, D 18, B 32) 함께</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">GM₀</span><span class="v" id="o-gz-gm">—</span></div>
+        <div class="stat"><span class="k">갑판 끝 침수각</span><span class="v" id="o-gz-de">—</span></div>
+        <div class="stat"><span class="k">최대 GZ (각)</span><span class="v" id="o-gz-max">—</span></div>
+        <div class="stat"><span class="k">소실각</span><span class="v" id="o-gz-van">—</span></div>
+        <div class="stat"><span class="k">선택 각의 GZ</span><span class="v" id="o-gz-sel">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 흘수 11 m, 둥근 빌지 단면. ① KG를 1 m 올리면 곡선 전체가 \(\sin\phi\)만큼 깎여 내려간다(90°에서 정확히 1 m). ② 깊이 D(건현)를 키우면 GM은 그대로인데 갑판 끝 침수각과 소실각이 크게 늘어난다. 건현이 대각도 복원성을 만든다. ③ 폭을 넓히면 GM은 커지지만 갑판 끝이 일찍 잠겨 소실각은 오히려 줄 수 있다. ④ 그래프를 끌면 왼쪽 아래 작은 단면이 그 각도의 모습을 보여 준다.</div>
+    </div>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>선종(대표적인 값)</th><th class="num">GM 범위</th><th>특징</th></tr></thead>
+      <tbody>
+        <tr><td>대형 컨테이너선 (만재)</td><td class="num">0.5 ~ 2 m</td><td>갑판 적재로 KG가 높다. GM이 작아 횡동요가 느리다.</td></tr>
+        <tr><td>VLCC·벌크선 (만재)</td><td class="num">3 ~ 8 m</td><td>폭이 넓고 화물이 낮다. 매우 "딱딱한" 횡동요.</td></tr>
+        <tr><td>여객선·카페리</td><td class="num">1.5 ~ 3 m</td><td>승객 쾌적성과 손상 복원성 사이의 절충.</td></tr>
+        <tr><td>원목 운반선 (갑판 적재)</td><td class="num">0.15 ~ 0.5 m</td><td>목재 흡수와 결빙으로 KG가 항해 중 오를 수 있다.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- =============================================================== 6 -->
+  <section id="imo">
+    <h2>IMO 비손상 복원성 기준</h2>
+    <p>국제해사기구(IMO)의 <b>2008 비손상 복원성 코드</b><span class="en">(2008 IS Code)</span>는 길이 24 m 이상의 화물선·여객선이 모든 적하 상태에서 만족해야 할 GZ 곡선의 최소 조건을 정한다. 경험적인 기준(라홀라 기준에서 출발)이지만, 오랜 해난 통계를 바탕으로 한 실용적인 문턱이다.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>항목</th><th class="num">기준</th></tr></thead>
+      <tbody>
+        <tr><td>GZ 곡선 아래 면적 0°~30°</td><td class="num">≥ 0.055 m·rad</td></tr>
+        <tr><td>GZ 곡선 아래 면적 0°~40° (또는 0°~φ<sub>f</sub>)</td><td class="num">≥ 0.090 m·rad</td></tr>
+        <tr><td>GZ 곡선 아래 면적 30°~40° (또는 30°~φ<sub>f</sub>)</td><td class="num">≥ 0.030 m·rad</td></tr>
+        <tr><td>30° 이상에서의 GZ</td><td class="num">≥ 0.20 m</td></tr>
+        <tr><td>최대 GZ가 생기는 각</td><td class="num">≥ 25°</td></tr>
+        <tr><td>초기 GM₀ (자유수면 보정 후)</td><td class="num">≥ 0.15 m</td></tr>
+      </tbody>
+    </table></div>
+    <p>\(\phi_f\)는 <span class="term">침수각</span><span class="en">(Downflooding Angle)</span>으로, 기관실 통풍구처럼 닫을 수 없는 개구부가 물에 잠기는 각이다. 그 각을 넘으면 물이 선체로 들어와 GZ 곡선이 의미를 잃으므로, 면적 계산은 40°와 \(\phi_f\) 중 작은 값까지만 한다. 아래 시뮬레이터에서 적하 상태를 바꾸며 어떤 항목이 먼저 무너지는지 확인해 보자. GM 기준은 <a href="trim.html">4장</a>의 자유수면 보정이 끝난 "유효 GM"에 적용한다는 점도 기억해 두자.</p>
+
+    <div class="sim" id="sim-imo">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>IMO 일반 기준 판정기</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-imo"></canvas></div>
+        <div class="sim-controls">
+          <div class="ctrl"><span>예시 상태</span><div class="seg" id="imo-pre"><button data-value="ok" class="on">양호</button><button data-value="high">높은 KG</button><button data-value="low">낮은 건현</button></div></div>
+          <label class="ctrl"><span>KG <output id="imo-kg-out"></output></span><input type="range" id="imo-kg" min="9" max="15" step="0.05" value="12"></label>
+          <label class="ctrl"><span>깊이 D <output id="imo-d-out"></output></span><input type="range" id="imo-d" min="13" max="26" step="0.5" value="18"></label>
+          <label class="ctrl"><span>침수각 φf <output id="imo-f-out"></output></span><input type="range" id="imo-f" min="20" max="70" step="1" value="50"></label>
+        </div>
+      </div>
+      <div class="crit-wrap"><table class="crit" id="imo-table"><tbody></tbody></table></div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">종합 판정</span><span class="v" id="o-imo-all">—</span></div>
+        <div class="stat"><span class="k">GM₀</span><span class="v" id="o-imo-gm">—</span></div>
+        <div class="stat"><span class="k">최대 GZ</span><span class="v" id="o-imo-max">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 폭 32 m, 흘수 11 m 단면. ① "높은 KG"(깊이 17 m, KG 13.05 m)는 GM₀가 약 0.27 m로 기준을 넘고 0°~30° 면적도 충분하지만 30°~40° 면적에서 떨어진다. GM만으로는 부족하다는 뜻이다. ② "낮은 건현"(깊이 15 m, 건현 4 m)은 GM이 크고 면적도 넉넉한데 갑판이 일찍 잠겨 최대 GZ 각이 25°보다 작아진다. ③ 침수각을 30°대로 낮추면 면적 계산이 \(\phi_f\)에서 잘린다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 7 -->
+  <section id="weather">
+    <h2>기상 기준: 강풍과 횡동요가 겹칠 때</h2>
+    <p>일반 기준이 GZ 곡선의 "모양"을 본다면, <span class="term">기상 기준</span><span class="en">(Severe Wind and Rolling Criterion)</span>은 구체적인 시나리오를 계산한다. 배가 옆바람을 정상적으로 받아 \(\phi_0\)만큼 기운 채, 파도에 의해 바람 쪽으로 \(\phi_1\)만큼 흔들려 갔다가 되돌아오는 순간 돌풍이 덮친다는 가정이다.</p>
+    <div class="formula">$$l_{w1} = \frac{P\,A\,Z}{1000\,g\,\Delta},\qquad l_{w2} = 1.5\,l_{w1}$$
+      <div class="where">\(P\): 풍압(기준 504 Pa ≈ 풍속 26 m/s), \(A\): 흘수선 위 측면 투영 면적(m²), \(Z\): A의 도심에서 수면 아래 측면 면적 도심까지의 높이(대략 T/2 아래, m), \(\Delta\): 배수량(t). \(l_{w1}\)은 정상풍, \(l_{w2}\)는 돌풍의 경사 레버(m).</div>
+    </div>
+    <p>판정은 에너지 비교다. 바람 쪽으로 \(\phi_0 - \phi_1\)까지 흔들린 배가 돌풍 레버 \(l_{w2}\)를 받아 반대로 굴러간다. \(l_{w2}\)가 GZ보다 큰 구간에서 바람이 배에 해 준 일이 <b>면적 a</b>, 그 뒤 GZ가 \(l_{w2}\)보다 큰 구간에서 배가 되돌려 줄 수 있는 일이 <b>면적 b</b>이다(\(\phi_2\)는 50°, \(\phi_f\), 두 번째 교점 중 가장 작은 값). 기준은 \(b \ge a\), 그리고 정상풍 경사각 \(\phi_0 \le 16°\)(또는 갑판 끝 침수각의 80 % 중 작은 값)이다. 실제 코드에서 \(\phi_1\)은 선폭·흘수·빌지 킬·KG로 정해지는 경험식으로 구하지만, 여기서는 슬라이더로 직접 정한다.</p>
+
+    <div class="sim" id="sim-wind">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>바람 경사 레버와 면적 a, b</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-wind"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>풍압 P <output id="wd-p-out"></output></span><input type="range" id="wd-p" min="200" max="1500" step="10" value="504"></label>
+          <label class="ctrl"><span>측면 풍압 면적 A <output id="wd-a-out"></output></span><input type="range" id="wd-a" min="1500" max="9000" step="100" value="5000"></label>
+          <label class="ctrl"><span>KG <output id="wd-kg-out"></output></span><input type="range" id="wd-kg" min="11" max="13.6" step="0.05" value="13"></label>
+          <label class="ctrl"><span>횡동요 각 φ₁ <output id="wd-r-out"></output></span><input type="range" id="wd-r" min="5" max="30" step="1" value="20"></label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">l<sub>w1</sub> / l<sub>w2</sub></span><span class="v" id="o-wd-lw">—</span></div>
+        <div class="stat"><span class="k">정상풍 경사 φ₀</span><span class="v" id="o-wd-p0">—</span></div>
+        <div class="stat"><span class="k">면적 a</span><span class="v" id="o-wd-a">—</span></div>
+        <div class="stat"><span class="k">면적 b</span><span class="v" id="o-wd-b">—</span></div>
+        <div class="stat"><span class="k">판정</span><span class="v" id="o-wd-ok">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 폭 32 m, 흘수 11 m, 깊이 18 m, 길이 200 m(배수량 약 7만 t), KG 13.0 m(GM 약 0.3 m). ① 풍압을 태풍급 1,500 Pa까지 올리면 정상풍 경사 φ₀와 면적 a가 커지고 b는 줄어든다. ② 컨테이너를 높이 쌓아 측면 면적 A를 키우는 것도 같은 효과다. 컨테이너선과 카페리가 이 기준에 민감한 이유다. ③ KG를 13.3 m 이상으로 올린 채 풍압·면적을 키우면 φ₀가 16°를 넘거나 a가 b보다 커져 불합격이 된다. 반대로 KG를 낮추면 GZ 곡선이 올라가 여유가 커진다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 8 -->
+  <section id="rolling">
+    <h2>횡동요 주기: stiff와 tender</h2>
+    <p>복원성이 클수록 좋기만 한 것은 아니다. 작은 각에서 배의 횡동요는 복원 모멘트 \(\Delta g\,GM\,\phi\)가 회전 관성에 맞서는 진자 운동이다. 횡동요 관성 반경을 \(k\)(부가 질량 포함)라 하면</p>
+    <div class="formula">$$\Delta k^2\ddot\phi + \Delta g\,GM\,\phi = 0\;\Rightarrow\; T_\phi = \frac{2\pi k}{\sqrt{g\,GM}} \approx \frac{2\,c\,B}{\sqrt{GM}}$$
+      <div class="where">\(k \approx 0.35\)~\(0.45\,B\). 실용식에서 \(c \approx 0.4\)(IMO는 \(c = 0.373 + 0.023B/T - 0.043L/100\)), \(T_\phi\)는 초, B·GM은 m.</div>
+    </div>
+    <p>GM이 큰 배는 짧은 주기로 세게 흔들려 <b>딱딱한 배</b><span class="en">(Stiff Ship)</span>라 하고, GM이 작은 배는 길고 부드럽게 흔들려 <b>여린 배</b><span class="en">(Tender Ship)</span>라 한다. 폭 32 m, \(GM = 1\) m이면 \(T_\phi \approx 25.6\) s, \(GM = 4\) m이면 12.8 s다. 주기가 반으로 줄면 같은 진폭에서 각가속도는 네 배가 되어 선교의 사람, 고박한 컨테이너, 화물창 화물이 큰 횡가속도를 받는다. 반대로 GM이 지나치게 작으면 바람과 화물 이동에 약하다. 그래서 선장은 "충분하지만 지나치지 않은" GM을 찾는다. 또 이 식을 거꾸로 쓰면, 항해 중 횡동요 주기를 재서 GM을 대략 추정할 수 있다.</p>
+    <div class="sim" id="sim-roll">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>stiff ship vs tender ship</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-roll"></canvas></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>왼쪽 배 GM <output id="rl-g1-out"></output></span><input type="range" id="rl-g1" min="0.3" max="6" step="0.1" value="4"></label>
+          <label class="ctrl"><span>오른쪽 배 GM <output id="rl-g2-out"></output></span><input type="range" id="rl-g2" min="0.3" max="6" step="0.1" value="0.8"></label>
+          <label class="ctrl"><span>폭 B <output id="rl-b-out"></output></span><input type="range" id="rl-b" min="15" max="60" step="1" value="32"></label>
+          <button class="btn primary" id="rl-kick">파도 한 번 (15°)</button>
+          <button class="btn" id="rl-pause">일시정지</button>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">주기 T<sub>φ</sub> (왼/오)</span><span class="v" id="o-rl-t">—</span></div>
+        <div class="stat"><span class="k">선교 최대 횡가속도 (왼/오)</span><span class="v" id="o-rl-a">—</span></div>
+        <div class="stat"><span class="k">시간</span><span class="v" id="o-rl-time">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 두 배를 같은 15°로 흔든다(시간 4배속, 감쇠 약간). ① 아래 시간 이력에서 왼쪽 배가 두 번 흔들릴 때 오른쪽 배는 몇 번 흔들리는지 센다. GM이 4배면 주기는 1/2이다. ② 선교 높이(G 위 25 m 가정)의 횡가속도가 GM에 비례해 커지는 것을 본다. ③ 폭을 키우면 같은 GM에서도 주기가 길어진다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== 9 -->
+  <section id="inclining">
+    <h2>경사 시험: 배의 KG를 재는 법</h2>
+    <p>KM은 선형만으로 계산할 수 있지만 KG는 계산만으로는 믿을 수 없다. 수천 개 부재와 장비의 무게를 모두 더하면 오차가 쌓이기 때문이다. 그래서 새 배가 완성되면 <span class="term">경사 시험</span><span class="en">(Inclining Experiment)</span>으로 KG를 직접 잰다. 원리는 이 장의 내용 그대로다. 갑판 위의 알려진 무게 \(w\)를 횡방향으로 \(d\)만큼 옮기면 G가 \(GG_1 = wd/\Delta\)만큼 옮겨지고, 배는 \(G_1\)이 B의 수직선 위에 올 때까지 기운다.</p>
+    <div class="formula">$$\tan\phi = \frac{GG_1}{GM} = \frac{w\,d}{\Delta\,GM}\quad\Rightarrow\quad GM = \frac{w\,d}{\Delta\tan\phi},\qquad KG = KM - GM$$
+      <div class="where">\(\tan\phi = a/l\): 길이 \(l\)의 진자(추)가 눈금판에서 \(a\)만큼 옮겨 간 거리로 잰다. KM은 그 흘수의 정수 곡선에서 읽는다.</div>
+    </div>
+    <figure class="diagram fig-lg">
+      <svg viewBox="0 0 760 300" role="img" aria-label="경사 시험 장치">
+        <rect x="0" y="200" width="760" height="100" class="f-water"/>
+        <line x1="0" y1="200" x2="760" y2="200" class="s-water"/>
+        <g transform="translate(300 200) rotate(3)">
+          <path d="M-200 -110 L-200 50 Q-200 70 -180 70 L180 70 Q200 70 200 50 L200 -110 Z" class="f-surface" stroke="var(--text)" stroke-width="1.6"/>
+          <rect x="-170" y="-140" width="44" height="30" class="f-acc-soft" stroke="var(--accent)"/>
+          <rect x="120" y="-140" width="44" height="30" class="f-acc2-soft" stroke="var(--accent-2)"/>
+          <line x1="0" y1="-110" x2="0" y2="70" class="s-line" stroke-dasharray="4 3"/>
+          <line x1="-60" y1="-100" x2="-60" y2="20" class="s-line"/>
+          <rect x="-110" y="20" width="100" height="10" fill="var(--surface-2)" stroke="var(--text-dim)"/>
+        </g>
+        <path d="M-70 -138 L-90 -138" transform="translate(300 200) rotate(3)" stroke="var(--accent-2)"/>
+        <line x1="134" y1="58" x2="410" y2="58" stroke="var(--accent-2)" stroke-width="2" stroke-dasharray="6 4"/>
+        <path d="M402 52 L414 58 L402 64 Z" fill="var(--accent-2)"/>
+        <text x="270" y="48" class="t" text-anchor="middle">무게 w를 d만큼 이동</text>
+        <!-- pendulum hanging plumb (vertical) from ship point -->
+        <line x1="245" y1="98" x2="245" y2="218" stroke="var(--accent)" stroke-width="2"/>
+        <circle cx="245" cy="220" r="6" fill="var(--accent)"/>
+        <text x="200" y="250" class="t-dim">진자 길이 l</text>
+        <text x="560" y="110" class="t">tanφ = a / l</text>
+        <text x="560" y="140" class="t">GM = w·d / (Δ·tanφ)</text>
+        <text x="560" y="170" class="t">KG = KM − GM</text>
+        <text x="260" y="282" class="t-dim" text-anchor="middle">진자 끝이 눈금판(배에 고정)에서 a만큼 이동</text>
+      </svg>
+      <figcaption><b>그림 3-4.</b> 경사 시험. 갑판의 시험 추를 반대편으로 옮기면 배가 1~3° 기울고, 수직을 유지하는 진자 끝이 배에 고정된 눈금판 위에서 \(a\)만큼 움직인다. 보통 추를 여러 번 옮겨 8개 정도의 측정점을 얻고 직선으로 맞춘다.</figcaption>
+    </figure>
+    <p>시험은 바람과 조류가 약한 날, 계류줄을 느슨하게 하고, 탱크는 비우거나 가득 채워 자유수면을 없앤 상태에서 한다. 측정한 KG에는 시험 추와 아직 싣지 않은 장비가 섞여 있으므로 이를 빼고 더해 <b>경하 상태</b><span class="en">(Lightship)</span>의 KG를 확정한다. 이후 모든 적하 계산이 이 값에서 출발한다.</p>
+
+    <div class="sim" id="sim-incline">
+      <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>경사 시험 실습</h3></div>
+      <div class="sim-body side">
+        <div class="sim-view"><canvas id="cv-incline" class="grab"></canvas><span class="hint">갑판의 추를 좌우로 끌기</span></div>
+        <div class="sim-controls">
+          <label class="ctrl"><span>시험 추 무게 w <output id="ic-w-out"></output></span><input type="range" id="ic-w" min="10" max="60" step="5" value="40"></label>
+          <label class="check"><input type="checkbox" id="ic-ex" checked> 경사 과장(×4) 표시</label>
+          <button class="btn primary" id="ic-rec">측정값 기록</button>
+          <button class="btn" id="ic-clear">기록 지우기</button>
+          <button class="btn" id="ic-new">새 선박</button>
+          <label class="check"><input type="checkbox" id="ic-ans"> 실제 KG 보기</label>
+        </div>
+      </div>
+      <div class="sim-readout">
+        <div class="stat"><span class="k">기울이는 모멘트 w·d</span><span class="v" id="o-ic-m">—</span></div>
+        <div class="stat"><span class="k">진자 편위 a (l = 5 m)</span><span class="v" id="o-ic-a">—</span></div>
+        <div class="stat"><span class="k">측정 점 수</span><span class="v" id="o-ic-n">—</span></div>
+        <div class="stat"><span class="k">추정 GM</span><span class="v" id="o-ic-gm">—</span></div>
+        <div class="stat"><span class="k">추정 KG (KM 8.20 m)</span><span class="v" id="o-ic-kg">—</span></div>
+      </div>
+      <div class="sim-note">해볼 것: 배수량 9,000 t의 배(폭 20 m). ① 추를 오른쪽 끝으로 끌고 "기록", 왼쪽 끝으로 끌고 "기록", 중간 위치에서도 몇 번 기록한다. ② 측정 점이 늘수록 아래 그래프의 직선 기울기(= 1/(Δ·GM))가 안정되고 KG 추정이 실제값에 가까워진다. 진자 눈금에는 ±2 mm 정도의 판독 오차가 들어 있다. ③ "새 선박"으로 KG가 다른 배를 시험해 본다.</div>
+    </div>
+  </section>
+
+  <!-- =============================================================== summary -->
+  <section class="keypoints" id="summary">
+    <h2>핵심 정리</h2>
+    <ol>
+      <li>무게는 G를 지나 아래로, 부력은 B를 지나 위로 작용한다. 배가 기울면 B가 잠긴 쪽으로 이동해 우력 \(\Delta g\,GZ\)가 생긴다.</li>
+      <li>작은 각에서 B의 궤적은 M을 중심으로 한 원호이며 \(BM = I_T/\nabla\). 상자형 바지는 \(KB = T/2\), \(BM = B^2/(12T)\). \(GM = KB + BM - KG\).</li>
+      <li>\(GM > 0\) 안정, \(= 0\) 중립, \(< 0\) 불안정. GM이 음수여도 수선면이 넓어지며 롤 각 \(\tan\phi_L = \sqrt{-2GM/BM}\)에서 멈출 수 있다(옆면 수직 배).</li>
+      <li>GZ 곡선 \(GZ = KN - KG\sin\phi\)에서 초기 기울기(GM), 갑판 끝 침수각, 최대 GZ, 소실각, 면적(동적 복원성)을 읽는다. 건현은 대각도 복원성을 만든다.</li>
+      <li>IMO 일반 기준: 면적 0~30° ≥ 0.055, 0~40° ≥ 0.09, 30~40° ≥ 0.03 m·rad, GZ(30°) ≥ 0.2 m, 최대 GZ 각 ≥ 25°, GM₀ ≥ 0.15 m. 기상 기준은 돌풍 레버에 대해 면적 \(b \ge a\).</li>
+      <li>횡동요 주기 \(T_\phi \approx 2cB/\sqrt{GM}\). GM이 크면 stiff(짧고 격렬), 작으면 tender(길고 부드러움).</li>
+      <li>경사 시험: \(GM = wd/(\Delta\tan\phi)\), \(KG = KM - GM\). 모든 적하 계산의 출발점인 경하 KG를 이렇게 잰다.</li>
+    </ol>
+  </section>
+
+  <!-- =============================================================== quiz -->
+  <section class="quiz-sec" id="quiz">
+    <h2>확인 퀴즈</h2>
+    <div class="quiz">
+      <div class="quiz-q"><p>Q1. 배가 기울 때 위치가 변하는 점은? (화물은 움직이지 않는다고 가정)</p><div class="opts">
+        <button class="opt">무게중심 G</button><button class="opt" data-correct>부심 B</button><button class="opt">용골 K</button><button class="opt">모두 고정이다</button>
+      </div><div class="quiz-exp">G는 배에 실린 무게의 중심이라 화물이 움직이지 않으면 배에 고정되어 있다. B는 잠긴 부피의 도심이므로 잠긴 부분의 모양이 바뀌면 이동한다. 이 이동이 복원 우력을 만든다.</div></div>
+
+      <div class="quiz-q"><p>Q2. 폭 20 m, 흘수 5 m인 상자형 바지의 KM은?</p><div class="opts">
+        <button class="opt">6.67 m</button><button class="opt" data-correct>9.17 m</button><button class="opt">11.67 m</button><button class="opt">4.17 m</button>
+      </div><div class="quiz-exp">\(KB = 2.5\) m, \(BM = 20^2/(12\times5) = 6.67\) m, \(KM = 9.17\) m.</div></div>
+
+      <div class="quiz-q"><p>Q3. 다른 조건이 같을 때 배의 폭을 20 % 늘리면 BM은 대략 몇 배가 되는가?</p><div class="opts">
+        <button class="opt">1.2배</button><button class="opt" data-correct>1.44배</button><button class="opt">1.73배</button><button class="opt">변하지 않는다</button>
+      </div><div class="quiz-exp">\(I_T \propto B^3\), \(\nabla \propto B\)이므로 \(BM \propto B^2\). \(1.2^2 = 1.44\)배다.</div></div>
+
+      <div class="quiz-q"><p>Q4. 정박 중인 배가 어느 날은 좌현으로, 밀어 주면 우현으로 같은 각만큼 기운 채 머문다. 가장 가능성 높은 원인과 처치는?</p><div class="opts">
+        <button class="opt">화물이 좌현에 치우쳤다 — 우현 탱크를 채운다</button>
+        <button class="opt" data-correct>GM이 음수인 롤 상태다 — 낮은 탱크에 대칭으로 밸러스트를 채워 G를 낮춘다</button>
+        <button class="opt">GM이 너무 크다 — 높은 곳에 무게를 싣는다</button>
+        <button class="opt">흘수가 너무 깊다 — 밸러스트를 뺀다</button>
+      </div><div class="quiz-exp">어느 쪽으로든 같은 각만큼 기우는 것은 롤 각의 특징이다. 한쪽 탱크만 채우면 배가 반대로 넘어가는 순간 경사가 커질 수 있다. G를 낮추는 것이 올바른 처치다.</div></div>
+
+      <div class="quiz-q"><p>Q5. 같은 GM에서 건현(깊이 D)을 크게 하면 GZ 곡선에서 주로 무엇이 좋아지는가?</p><div class="opts">
+        <button class="opt">원점의 기울기</button><button class="opt" data-correct>갑판 끝 침수각, 최대 GZ 각, 소실각</button><button class="opt">횡동요 주기</button><button class="opt">아무것도 변하지 않는다</button>
+      </div><div class="quiz-exp">원점 기울기는 GM이라 같다. 갑판 끝이 늦게 잠기므로 수선면이 더 큰 각까지 넓어지고, 곡선이 더 오래 오르며 소실각도 커진다.</div></div>
+
+      <div class="quiz-q"><p>Q6. 어떤 배의 GZ 곡선 아래 면적이 0~30°에서 0.07, 0~40°에서 0.095 m·rad이다. IMO 일반 기준에서 불합격인 항목은?</p><div class="opts">
+        <button class="opt">0~30° 면적</button><button class="opt">0~40° 면적</button><button class="opt" data-correct>30~40° 면적</button><button class="opt">모두 합격</button>
+      </div><div class="quiz-exp">30~40° 면적은 0.095 − 0.07 = 0.025 m·rad로 기준 0.03에 못 미친다. 초기에는 좋아도 30° 이후 GZ가 빨리 줄어드는 배다.</div></div>
+
+      <div class="quiz-q"><p>Q7. 폭 30 m인 배의 횡동요 주기가 24 s로 측정되었다. c = 0.4로 추정한 GM은?</p><div class="opts">
+        <button class="opt">0.5 m</button><button class="opt" data-correct>1.0 m</button><button class="opt">2.0 m</button><button class="opt">4.0 m</button>
+      </div><div class="quiz-exp">\(\sqrt{GM} = 2cB/T_\phi = 2\times0.4\times30/24 = 1.0\), 따라서 GM ≈ 1.0 m.</div></div>
+
+      <div class="quiz-q"><p>Q8. 배수량 9,000 t의 배에서 30 t의 추를 12 m 옮겼더니 길이 5 m 진자가 200 mm 움직였다. GM은?</p><div class="opts">
+        <button class="opt">0.5 m</button><button class="opt">0.8 m</button><button class="opt" data-correct>1.0 m</button><button class="opt">2.0 m</button>
+      </div><div class="quiz-exp">\(\tan\phi = 0.2/5 = 0.04\), \(GM = 30\times12/(9000\times0.04) = 360/360 = 1.0\) m.</div></div>
+    </div>
+  </section>
+</main>
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const cssv = (n) => getComputedStyle(document.body).getPropertyValue(n).trim();
+  const font = (sz, mono, w) => (w ? w + " " : "") + sz + "px " + (mono ? cssv("--mono") : cssv("--font"));
+  const sm = (v, u) => v + "<small>" + u + "</small>";
+  const D2R = Math.PI / 180;
+  const RHO = 1.025;
+  function run(name, fn) { try { fn(); } catch (e) { console.error("[" + name + "]", e); } }
+  function text(ctx, s, x, y, c, a, sz, w, mono) {
+    ctx.font = font(sz || 12, mono, w); ctx.fillStyle = c; ctx.textAlign = a || "left"; ctx.textBaseline = "middle"; ctx.fillText(s, x, y);
+  }
+  function seg(ctx, x1, y1, x2, y2, c, w, dash) {
+    ctx.save(); ctx.strokeStyle = c; ctx.lineWidth = w || 1; if (dash) ctx.setLineDash(dash);
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.restore();
+  }
+  function dot(ctx, x, y, c, r, label, lc, dx, dy) {
+    ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, r || 5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = SB.color("canvas-bg"); ctx.lineWidth = 1.5; ctx.stroke();
+    if (label) text(ctx, label, x + (dx != null ? dx : 9), y + (dy || 0), lc || c, "left", 13, 700);
+  }
+  function setCls(id, cls) { const el = $(id); if (el) { el.classList.remove("ok", "bad", "warn"); if (cls) el.classList.add(cls); } }
+
+  /* ---------------------------------------------------------------- 단면 정수 계산
+     선체 좌표: 원점 = 용골 중심 K, x 우현 +, y 위 +. 길이 방향으로 단면이 일정한 배(프리즘) 근사.
+     경사 φ(+ = 우현이 내려감)에서 수면은 선체 좌표로 −sinφ·x + cosφ·y = c 인 직선.
+     잠긴 면적이 똑바로 떴을 때의 면적 A0와 같아지는 c를 이분법으로 찾는다. */
+  function sectionPts(B, D, r) {
+    if (!r) return [[-B / 2, D], [-B / 2, 0], [B / 2, 0], [B / 2, D]];
+    const pts = [[-B / 2, D]];
+    for (let i = 0; i <= 8; i++) { const a = Math.PI + (i / 8) * (Math.PI / 2); pts.push([-B / 2 + r + r * Math.cos(a), r + r * Math.sin(a)]); }
+    for (let i = 0; i <= 8; i++) { const a = 1.5 * Math.PI + (i / 8) * (Math.PI / 2); pts.push([B / 2 - r + r * Math.cos(a), r + r * Math.sin(a)]); }
+    pts.push([B / 2, D]);
+    return pts;
+  }
+  function makeHull(B, D, T, r) {
+    const pts = sectionPts(B, D, r || 0);
+    const sub = SB.clipPoly(pts, 0, 1, T), pa = SB.polyArea(sub);
+    const A0 = pa[0], KB = pa[2];
+    const bw = T >= (r || 0) ? B : B - 2 * (r - Math.sqrt(Math.max(0, r * r - (r - T) * (r - T))));
+    const BM = (bw * bw * bw) / 12 / A0;
+    return { pts, B, D, T, r: r || 0, A0, KB, BM, KM: KB + BM };
+  }
+  function floatAt(h, phi) {
+    const a = -Math.sin(phi), b = Math.cos(phi);
+    let lo = Infinity, hi = -Infinity;
+    for (const p of h.pts) { const v = a * p[0] + b * p[1]; if (v < lo) lo = v; if (v > hi) hi = v; }
+    for (let i = 0; i < 46; i++) {
+      const c = (lo + hi) / 2, A = SB.polyArea(SB.clipPoly(h.pts, a, b, c))[0];
+      if (A < h.A0) lo = c; else hi = c;
+    }
+    const c = (lo + hi) / 2, sub = SB.clipPoly(h.pts, a, b, c), pa = SB.polyArea(sub);
+    return { c, sub, bx: pa[1], by: pa[2], kn: pa[1] * Math.cos(phi) + pa[2] * Math.sin(phi) };
+  }
+  // 경사각별 표(−maxDeg..maxDeg, step°): 교차 곡선 KN과 수선 위치 c, 부심 (bx,by)
+  function makeTable(h, maxDeg, step) {
+    const n = Math.round(maxDeg / step), rows = [];
+    for (let i = -n; i <= n; i++) { const f = floatAt(h, i * step * D2R); rows.push({ c: f.c, bx: f.bx, by: f.by, kn: f.kn }); }
+    return {
+      step, n, rows,
+      at(phi) {
+        const u = SB.clamp(phi / D2R / step + n, 0, 2 * n - 1e-9), i = Math.floor(u), t = u - i, A = rows[i], B = rows[Math.min(2 * n, i + 1)];
+        return { c: A.c + (B.c - A.c) * t, bx: A.bx + (B.bx - A.bx) * t, by: A.by + (B.by - A.by) * t, kn: A.kn + (B.kn - A.kn) * t };
+      },
+      gz(phi, KG) { return this.at(phi).kn - KG * Math.sin(phi); },
+    };
+  }
+  // 선체 좌표 → 화면 좌표(경사 φ, 수선 c, 중심선·수면 교점 (cx, wy), 축척 s)
+  function view(phi, c, cx, wy, s) {
+    const co = Math.cos(phi), si = Math.sin(phi);
+    return (x, y) => [cx + (x * co + y * si) * s, wy - (-x * si + y * co - c) * s];
+  }
+  function polyPath(ctx, pts, tf) { ctx.beginPath(); pts.forEach((p, i) => { const q = tf(p[0], p[1]); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }); ctx.closePath(); }
+  // 단면 그리기(선체 + 잠긴 부분 + 물)
+  function drawSection(ctx, w, hh, h, phi, f, tf, wy, opt) {
+    const P = SB.palette();
+    polyPath(ctx, h.pts, tf); ctx.fillStyle = P.surface; ctx.fill();
+    if (f && f.sub && f.sub.length > 2) { polyPath(ctx, f.sub, tf); ctx.fillStyle = cssv("--accent-soft"); ctx.fill(); }
+    polyPath(ctx, h.pts, tf); ctx.strokeStyle = P.text; ctx.lineWidth = 1.6; ctx.stroke();
+    if (!opt || opt.cl !== false) { const a = tf(0, -1), b = tf(0, h.D + 3); seg(ctx, a[0], a[1], b[0], b[1], P.faint, 1, [5, 4]); }
+    SB.water(ctx, w, hh, wy, opt && opt.wave ? { wave: opt.wave } : {});
+  }
+
+  /* =========================================================== 1. 횡단면 기울이기 */
+  run("heel", function () {
+    const el = $("cv-heel"); let cv = null;
+    const rd = () => cv && cv.redraw();
+    const gPhi = SB.range("hl-phi", (v) => v + "°", rd);
+    const gKG = SB.range("hl-kg", (v) => v.toFixed(1) + " m", rd);
+    const gB = SB.range("hl-b", (v) => v + " m", rd);
+    const gT = SB.range("hl-t", (v) => v.toFixed(1) + " m", rd);
+    $("hl-force").addEventListener("change", rd);
+    const D = 18, R = 2.0, L = 200;
+    function draw(ctx, w, hh) {
+      const P = SB.palette();
+      const phi = gPhi() * D2R, KG = gKG(), B = gB(), T = gT();
+      const h = makeHull(B, D, T, R), f = floatAt(h, phi);
+      const s = Math.min((w * 0.7) / B, (hh * 0.62) / D);
+      const cx = w * 0.5, wy = hh * 0.52 - (T - D / 2) * s;
+      const tf = view(phi, f.c, cx, wy, s);
+      drawSection(ctx, w, hh, h, phi, f, tf, wy);
+      const G = tf(0, KG), Bp = tf(f.bx, f.by), B0 = tf(0, h.KB), M = tf(0, h.KM);
+      // 부력선과 Z
+      seg(ctx, Bp[0], Bp[1], Bp[0], Math.min(G[1], M[1]) - 24, P.accent, 1.2, [4, 3]);
+      const gz = f.kn - KG * Math.sin(phi);
+      if (Math.abs(phi) > 0.003) {
+        seg(ctx, G[0], G[1], Bp[0], G[1], P.warn, 4);
+        dot(ctx, Bp[0], G[1], P.warn, 3.5, "Z", P.text, gz >= 0 ? 7 : -18, -10);
+      }
+      if ($("hl-force").checked) {
+        const len = Math.max(36, hh * 0.13);
+        SB.arrow(ctx, G[0], G[1], G[0], G[1] + len, P.accent2, 3);
+        SB.arrow(ctx, Bp[0], Bp[1], Bp[0], Bp[1] - len, P.accent, 3);
+        text(ctx, "W = Δg", G[0] + 8, G[1] + len - 6, P.accent2, "left", 11);
+        text(ctx, "부력", Bp[0] + 8, Bp[1] - len + 6, P.accent, "left", 11);
+      }
+      // 초기 메타센터 M (중심선 위), 부심 궤적(작은 각)
+      ctx.strokeStyle = P.faint; ctx.lineWidth = 1; ctx.setLineDash([2, 4]); ctx.beginPath();
+      for (let d = -40; d <= 40; d += 2) { const g = floatAt(h, d * D2R), q = tf(g.bx, g.by); d === -40 ? ctx.moveTo(q[0], q[1]) : ctx.lineTo(q[0], q[1]); }
+      ctx.stroke(); ctx.setLineDash([]);
+      dot(ctx, B0[0], B0[1], P.faint, 3.5, "B₀", P.dim, -24, 0);
+      dot(ctx, M[0], M[1], P.ok, 5.5, "M", P.ok, 9, -9);
+      dot(ctx, G[0], G[1], P.accent2, 6, "G", P.accent2, -20, 0);
+      dot(ctx, Bp[0], Bp[1], P.accent, 6, "B", P.accent, 9, 0);
+      const K = tf(0, 0); text(ctx, "K", K[0] + 4, K[1] + 10, P.dim, "left", 11, 600);
+      text(ctx, "선미에서 본 중앙 단면 (우현 = 오른쪽)", 10, 14, P.dim, "left", 11);
+      // 수치
+      const Delta = RHO * h.A0 * L;
+      SB.stat("o-hl-kb", sm(h.KB.toFixed(2), "m") + " / " + sm(h.BM.toFixed(2), "m"));
+      const GM = h.KM - KG;
+      SB.stat("o-hl-gm", sm(GM.toFixed(2), "m")); setCls("o-hl-gm", GM > 0.15 ? "ok" : GM > 0 ? "warn" : "bad");
+      SB.stat("o-hl-gz", sm(gz.toFixed(3), "m")); setCls("o-hl-gz", phi === 0 ? null : gz * Math.sign(phi) > 0 ? "ok" : "bad");
+      SB.stat("o-hl-gms", sm((GM * Math.sin(phi)).toFixed(3), "m"));
+      SB.stat("o-hl-rm", sm(SB.fmt(Delta * gz, 3), "t·m") + " <small>(Δ " + Math.round(Delta).toLocaleString() + " t)</small>");
+    }
+    cv = SB.canvas(el, draw, { aspect: 0.72, maxHeight: 470, minHeight: 300 });
+    let x0 = 0, p0 = 0;
+    SB.drag(el, { down(p) { x0 = p.x; p0 = gPhi(); }, move(p) { gPhi.set(SB.clamp(Math.round(p0 + (p.x - x0) * 0.25), -60, 60)); } });
+  });
+
+  /* =========================================================== 2. 3D */
+  run("3d", function () {
+    const el = $("v3d");
+    const T = SB.three(el, { camera: [8.5, 1.5, 2.2], target: [0, 0.05, 0], fov: 36, minDistance: 4, maxDistance: 30 });
+    if (!T) return;
+    const THREE = T.THREE, SC = 20, Bm = 32, Dm = 18, Tm = 11, R = 2.0;
+    const h = makeHull(Bm, Dm, Tm, R), tab = makeTable(h, 60, 0.5);
+    const ship = SB.ship3d(T, { L: 10, B: Bm / SC, D: Dm / SC, T: Tm / SC, full: 0.72, opacity: 0.42 });
+    const sea = SB.sea3d(T, { size: 26, seg: 2, opacity: 0.32 }); sea.update(0, () => 0);
+    // 수선면: 선체 수선 모양(반폭 1)을 만들어 z로 늘인다
+    const sh = new THREE.Shape(), N = 40, zeta = Tm / Dm;
+    for (let i = 0; i <= N; i++) { const xi = -1 + (2 * i) / N; const y = SB.hullHalf(xi, zeta, { full: 0.72 }); i ? sh.lineTo(xi * 5, y) : sh.moveTo(xi * 5, y); }
+    for (let i = N; i >= 0; i--) { const xi = -1 + (2 * i) / N; sh.lineTo(xi * 5, -SB.hullHalf(xi, zeta, { full: 0.72 })); }
+    const wpGeo = new THREE.ShapeGeometry(sh); wpGeo.rotateX(Math.PI / 2);
+    const wp = new THREE.Mesh(wpGeo, new THREE.MeshBasicMaterial({ color: 0xf2c94c, transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false }));
+    wp.position.y = 0.004; T.scene.add(wp);
+    const mk = (c, r) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14), new THREE.MeshBasicMaterial({ color: c, depthTest: false })); m.renderOrder = 5; T.scene.add(m); return m; };
+    const mG = mk(0xd9483b, 0.09), mB = mk(0x2f6fe0, 0.09), mM = mk(0x1f9d55, 0.075);
+    const lineMat = (c) => new THREE.LineBasicMaterial({ color: c, depthTest: false, transparent: true });
+    const mkLine = (c) => { const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]); const l = new THREE.Line(g, lineMat(c)); l.renderOrder = 4; T.scene.add(l); return l; };
+    const lB = mkLine(0x2f6fe0), lG = mkLine(0xd9483b), lZ = mkLine(0xe0a93a);
+    const setLine = (l, a, b) => { const p = l.geometry.attributes.position; p.setXYZ(0, a[0], a[1], a[2]); p.setXYZ(1, b[0], b[1], b[2]); p.needsUpdate = true; };
+    const LG = T.label("G", [0, 0, 0]), LB = T.label("B", [0, 0, 0]), LM = T.label("M", [0, 0, 0]);
+    const gPhi = SB.range("t3-phi", (v) => v + "°", (v) => { phi = v * D2R; omega = 0; rolling = false; btn.textContent = "자유 횡동요"; });
+    const gKG = SB.range("t3-kg", (v) => v.toFixed(1) + " m");
+    const btn = $("t3-roll");
+    let phi = gPhi() * D2R, omega = 0, rolling = false;
+    btn.addEventListener("click", () => {
+      rolling = !rolling; btn.textContent = rolling ? "멈춤" : "자유 횡동요";
+      if (rolling && Math.abs(phi) < 2 * D2R && Math.abs(omega) < 1e-3) phi = 20 * D2R;
+    });
+    const xAt = 4.2; // 점들을 표시할 길이 방향 위치(중앙)
+    let acc = 0;
+    T.onFrame((dt) => {
+      const KG = gKG();
+      if (rolling) {
+        const k = 0.4 * Bm, sub = 8, d = (dt * 3) / sub;
+        for (let i = 0; i < sub; i++) {
+          const a = (-SB.G * tab.gz(phi, KG)) / (k * k) - 0.06 * omega;
+          omega += a * d; phi += omega * d;
+          phi = SB.clamp(phi, -58 * D2R, 58 * D2R);
+        }
+        acc += dt; if (acc > 0.1) { acc = 0; gPhi.el.value = Math.round(phi / D2R); gPhi.el.style.setProperty("--fill", ((Math.round(phi / D2R) + 45) / 90) * 100 + "%"); const o = $("t3-phi-out"); if (o) o.textContent = Math.round(phi / D2R) + "°"; }
+      }
+      const r = tab.at(phi), co = Math.cos(phi), si = Math.sin(phi);
+      ship.group.rotation.x = phi;
+      ship.group.position.set(0, (Tm * co - r.c) / SC, (Tm * si) / SC);
+      const E = (x, y) => [0, (-x * si + y * co - r.c) / SC, (x * co + y * si) / SC];
+      const G = E(0, KG), B = E(r.bx, r.by), M = E(0, h.KM);
+      [mG, mB, mM].forEach((m, i) => { const q = [G, B, M][i]; m.position.set(q[0], q[1], q[2]); });
+      setLine(lB, B, [0, Math.max(M[1], G[1]) + 0.25, B[2]]);
+      setLine(lG, G, [0, G[1] - 0.45, G[2]]);
+      setLine(lZ, G, [0, G[1], B[2]]);
+      LG.pos.set(0, G[1] + 0.02, G[2] - 0.2); LB.pos.set(0, B[1] - 0.04, B[2] + 0.2); LM.pos.set(0, M[1] + 0.12, M[2]);
+      // 수선면 폭: 잠긴 다각형의 수면 위 꼭짓점들
+      const f = floatAt(h, phi); let zmin = Infinity, zmax = -Infinity;
+      f.sub.forEach((p) => { const ey = -p[0] * si + p[1] * co - r.c; if (Math.abs(ey) < 1e-3) { const ez = p[0] * co + p[1] * si; zmin = Math.min(zmin, ez); zmax = Math.max(zmax, ez); } });
+      if (!isFinite(zmin)) { zmin = -Bm / 2; zmax = Bm / 2; }
+      wp.scale.z = (zmax - zmin) / 2 / SC; wp.position.z = (zmax + zmin) / 2 / SC;
+      wp.visible = $("t3-wp").checked;
+      const gz = r.kn - KG * si;
+      SB.stat("o-t3-phi", sm((phi / D2R).toFixed(1), "°"));
+      SB.stat("o-t3-gm", sm((h.KM - KG).toFixed(2), "m")); setCls("o-t3-gm", h.KM - KG > 0 ? "ok" : "bad");
+      SB.stat("o-t3-gz", sm(gz.toFixed(3), "m"));
+      SB.stat("o-t3-wl", sm((zmax - zmin).toFixed(1), "m"));
+    });
+    void xAt;
+  });
+
+  /* =========================================================== 3. KM 곡선 */
+  run("km", function () {
+    const el = $("cv-km"); let cv = null;
+    const rd = () => cv && cv.redraw();
+    const gB = SB.range("km-b", (v) => v + " m", rd);
+    const gT = SB.range("km-t", (v) => v.toFixed(1) + " m", rd);
+    const gKG = SB.range("km-kg", (v) => v.toFixed(1) + " m", rd);
+    let box = null;
+    function draw(ctx, w, hh) {
+      const P = SB.palette(), B = gB(), T = gT(), KG = gKG();
+      const KB = (t) => t / 2, BM = (t) => (B * B) / (12 * t);
+      const data = (fn) => { const a = []; for (let t = 1.5; t <= 20.001; t += 0.1) a.push([t, fn(t)]); return a; };
+      const ymax = 30;
+      const inset = w > 520 ? 150 : 0;
+      box = { x: 50, y: 16, w: w - 50 - 16 - inset, h: hh - 16 - 46 };
+      const C = SB.chart(ctx, box, {
+        x: [0, 20], y: [0, ymax], xLabel: "흘수 T (m)", yLabel: "높이 (m)",
+        series: [
+          { data: data(KB), color: P.accent, width: 2 },
+          { data: data(BM), color: P.warn, width: 2, dash: [6, 4] },
+          { data: data((t) => KB(t) + BM(t)), color: P.ok, width: 3 },
+        ],
+        hlines: [{ y: KG, color: P.accent2, label: "KG", dash: [5, 4] }],
+        vlines: [{ x: T, color: P.dim, dash: [3, 3] }, { x: B / Math.sqrt(6), color: P.faint, dash: [2, 5] }],
+        points: [{ x: T, y: KB(T), color: P.accent }, { x: T, y: BM(T), color: P.warn }, { x: T, y: KB(T) + BM(T), color: P.ok, r: 5 }],
+      });
+      // 범례
+      const lx = box.x + box.w - 140, ly = box.y + 10;
+      [["KB = T/2", P.accent], ["BM = B²/12T", P.warn], ["KM", P.ok]].forEach(([s, c], i) => { seg(ctx, lx, ly + i * 16, lx + 18, ly + i * 16, c, 3); text(ctx, s, lx + 24, ly + i * 16, P.text, "left", 11); });
+      // GM 화살표
+      const km = KB(T) + BM(T);
+      const xg = C.X(T) + 10;
+      if (km < ymax && KG < ymax) SB.arrow(ctx, xg, C.Y(KG), xg, C.Y(km), km > KG ? P.ok : P.bad, 2);
+      text(ctx, "GM", xg + 6, (C.Y(KG) + C.Y(Math.min(km, ymax))) / 2, km > KG ? P.ok : P.bad, "left", 12, 700);
+      // 단면 인셋
+      if (inset) {
+        const ix = w - inset + 6, iw = inset - 18, s = Math.min(iw / 50, (hh * 0.7) / 22);
+        const cx = ix + iw / 2, base = hh * 0.5 + 11 * s;
+        const bw = B * s, d = Math.max(T + 3, 12) * s;
+        ctx.fillStyle = P.surface; ctx.strokeStyle = P.text; ctx.lineWidth = 1.4;
+        ctx.fillRect(cx - bw / 2, base - d, bw, d); ctx.strokeRect(cx - bw / 2, base - d, bw, d);
+        ctx.fillStyle = cssv("--water-soft"); ctx.fillRect(ix - 4, base - T * s, iw + 8, T * s + 14);
+        seg(ctx, ix - 4, base - T * s, ix + iw + 4, base - T * s, cssv("--water"), 1.6);
+        const yk = (v) => base - v * s;
+        dot(ctx, cx, yk(KB(T)), P.accent, 4, "B", P.accent);
+        if (km < 24) dot(ctx, cx, yk(km), P.ok, 4, "M", P.ok);
+        if (KG < 24) dot(ctx, cx, yk(KG), P.accent2, 4, "G", P.accent2, -16);
+        text(ctx, "B " + B + " m", cx, base + 26, P.dim, "center", 11);
+      }
+      SB.stat("o-km-kb", sm(KB(T).toFixed(2), "m"));
+      SB.stat("o-km-bm", sm(BM(T).toFixed(2), "m"));
+      SB.stat("o-km-km", sm(km.toFixed(2), "m"));
+      SB.stat("o-km-gm", sm((km - KG).toFixed(2), "m")); setCls("o-km-gm", km - KG > 0.15 ? "ok" : km - KG > 0 ? "warn" : "bad");
+      SB.stat("o-km-min", sm((B / Math.sqrt(6)).toFixed(2), "m") + " <small>(이때 KB = BM)</small>");
+    }
+    cv = SB.canvas(el, draw, { aspect: 0.62, maxHeight: 420, minHeight: 280 });
+    const pick = (p) => { if (!box) return; const t = SB.clamp(((p.x - box.x) / box.w) * 20, 2, 20); gT.set(Math.round(t * 10) / 10); };
+    SB.drag(el, { down: pick, move: pick });
+  });
+
+  /* =========================================================== 4. 안정·중립·불안정 */
+  run("equil", function () {
+    const el = $("cv-equil"); let cv = null;
+    const Bm = 32, Dm = 18, Tm = 11;
+    const h = makeHull(Bm, Dm, Tm, 0), tab = makeTable(h, 70, 0.5);
+    let phi = 0, omega = 0;
+    const gKG = SB.range("eq-kg", (v) => v.toFixed(2) + " m", () => { info(); cv && cv.redraw(); });
+    const gDir = SB.seg("eq-push");
+    $("eq-kick").addEventListener("click", () => { omega += gDir() * 0.035; loop.start(); });
+    $("eq-reset").addEventListener("click", () => { phi = 0; omega = 0; cv.redraw(); });
+    let lollDeg = 0;
+    function info() {
+      const KG = gKG(), GM = h.KM - KG;
+      SB.stat("o-eq-gm", sm(GM.toFixed(2), "m")); setCls("o-eq-gm", GM > 0.02 ? "ok" : GM > -0.02 ? "warn" : "bad");
+      SB.stat("o-eq-state", GM > 0.02 ? "안정" : GM > -0.02 ? "중립" : "불안정 (롤)"); setCls("o-eq-state", GM > 0.02 ? "ok" : GM > -0.02 ? "warn" : "bad");
+      lollDeg = 0;
+      if (GM < -0.02) { for (let d = 0.5; d <= 70; d += 0.1) { if (tab.gz(d * D2R, KG) > 0) { lollDeg = d; break; } } }
+      SB.stat("o-eq-loll", GM < -0.02 ? (lollDeg ? sm("±" + lollDeg.toFixed(1), "°") : "전복") : "—");
+      SB.stat("o-eq-wall", GM < 0 ? sm("±" + (Math.atan(Math.sqrt((-2 * GM) / h.BM)) / D2R).toFixed(1), "°") : "—");
+    }
+    function draw(ctx, w, hh) {
+      const P = SB.palette(), KG = gKG();
+      const wide = w > 560, sw = wide ? w * 0.55 : w, sh2 = wide ? hh : hh * 0.6;
+      // 단면
+      const r = tab.at(phi), s = Math.min((sw * 0.62) / Bm, (sh2 * 0.6) / Dm);
+      const cx = sw * 0.5, wy = sh2 * 0.5 - (Tm - Dm / 2) * s;
+      ctx.save(); ctx.beginPath(); ctx.rect(0, 0, sw, sh2); ctx.clip();
+      const tf = view(phi, r.c, cx, wy, s), f = floatAt(h, phi);
+      drawSection(ctx, sw, sh2, h, phi, f, tf, wy);
+      const G = tf(0, KG), Bp = tf(r.bx, r.by), M = tf(0, h.KM);
+      seg(ctx, Bp[0], Bp[1], Bp[0], Math.min(G[1], M[1]) - 18, P.accent, 1.2, [4, 3]);
+      if (Math.abs(phi) > 0.01) seg(ctx, G[0], G[1], Bp[0], G[1], P.warn, 3.5);
+      dot(ctx, M[0], M[1], P.ok, 5, "M", P.ok, -20);
+      dot(ctx, G[0], G[1], P.accent2, 6, "G", P.accent2, -20);
+      dot(ctx, Bp[0], Bp[1], P.accent, 5.5, "B", P.accent);
+      text(ctx, "φ = " + (phi / D2R).toFixed(1) + "°", 10, 14, P.text, "left", 13, 700, true);
+      ctx.restore();
+      // 위치 에너지 곡선 U(φ) = ∫GZ dφ
+      const bx = wide ? { x: sw + 44, y: 20, w: w - sw - 56, h: hh - 66 } : { x: 46, y: sh2 + 12, w: w - 60, h: hh - sh2 - 52 };
+      const U = []; let u = 0, umin = 0, umax = 0.0001;
+      for (let d = 0; d <= 60; d += 0.5) { if (d > 0) u += tab.gz(d * D2R, KG) * 0.5 * D2R; U.push([d, u]); }
+      const full = U.slice().reverse().map(([d, v]) => [-d, v]).concat(U.slice(1));
+      full.forEach(([, v]) => { umin = Math.min(umin, v); umax = Math.max(umax, v); });
+      const pad = (umax - umin) * 0.15 + 0.001;
+      const C = SB.chart(ctx, bx, { x: [-60, 60], y: [umin - pad, umax + pad], xLabel: "φ (°)", yFmt: (v) => v.toFixed(2), series: [{ data: full, color: P.accent, width: 2.2 }], vlines: lollDeg ? [{ x: lollDeg, color: P.bad }, { x: -lollDeg, color: P.bad }] : [] });
+      const ud = Math.abs(phi / D2R), uv = full.find(([d]) => d >= phi / D2R - 0.25) || full[full.length - 1];
+      void ud;
+      ctx.fillStyle = P.accent2; ctx.beginPath(); ctx.arc(C.X(phi / D2R), C.Y(uv[1]) - 7, 7, 0, Math.PI * 2); ctx.fill();
+      text(ctx, "∫GZ dφ (m·rad)", bx.x + 4, bx.y + 6, P.dim, "left", 11);
+      SB.stat("o-eq-phi", sm((phi / D2R).toFixed(1), "°"));
+    }
+    cv = SB.canvas(el, draw, { aspect: 0.6, maxHeight: 440, minHeight: 360 });
+    info();
+    const k = 0.4 * Bm;
+    const loop = SB.loop(el, (dt) => {
+      const KG = gKG(), sub = 6, d = (dt * 4) / sub;
+      for (let i = 0; i < sub; i++) {
+        const a = (-SB.G * tab.gz(phi, KG)) / (k * k) - 0.1 * omega;
+        omega += a * d; phi += omega * d;
+        if (Math.abs(phi) > 68 * D2R) { phi = Math.sign(phi) * 68 * D2R; omega = 0; }
+      }
+      cv.redraw();
+    });
+  });
+
+  /* =========================================================== 5. GZ 곡선 */
+  function gzStats(tab, KG, h) {
+    const pts = []; let gmax = -1e9, amax = 0, van = null, de = null;
+    for (let d = 0; d <= 90; d += 1) { const g = tab.gz(d * D2R, KG); pts.push([d, g]); if (g > gmax) { gmax = g; amax = d; } }
+    for (let i = 1; i < pts.length; i++) if (pts[i][0] > amax && pts[i - 1][1] > 0 && pts[i][1] <= 0) { const [d0, g0] = pts[i - 1], [d1, g1] = pts[i]; van = d0 + (g0 / (g0 - g1)) * (d1 - d0); break; }
+    void h; void de;
+    return { pts, gmax, amax, van };
+  }
+  // 갑판 끝(우현) 침수: 선체 좌표 (B/2, D)가 수면 아래 → −sinφ·B/2 + cosφ·D ≤ c
+  function deckEdge(tab, h) { for (let d = 0.5; d <= 90; d += 0.5) { const r = tab.at(d * D2R); if (-Math.sin(d * D2R) * (h.B / 2) + Math.cos(d * D2R) * h.D <= r.c) return d; } return null; }
+  const tabCache = {};
+  function tabFor(B, D, T, r) { const key = [B, D, T, r].join(","); if (!tabCache[key]) { const h = makeHull(B, D, T, r); tabCache[key] = { h, tab: makeTable(h, 90, 1) }; } return tabCache[key]; }
+
+  run("gz", function () {
+    const el = $("cv-gz"); let cv = null, sel = 30, box = null;
+    const rd = () => cv && cv.redraw();
+    const gKG = SB.range("gz-kg", (v) => v.toFixed(1) + " m", rd);
+    const gD = SB.range("gz-d", (v) => v.toFixed(1) + " m", rd);
+    const gB = SB.range("gz-b", (v) => v + " m", rd);
+    $("gz-ref").addEventListener("change", rd);
+    const T = 11, R = 2.0;
+    function draw(ctx, w, hh) {
+      const P = SB.palette(), KG = gKG();
+      const { h, tab } = tabFor(gB(), gD(), T, R), st = gzStats(tab, KG, h), de = deckEdge(tab, h);
+      const ref = tabFor(32, 18, T, R), rst = gzStats(ref.tab, 12, ref.h);
+      const GM = h.KM - KG;
+      const ymax = Math.max(1.5, Math.ceil((Math.max(st.gmax, rst.gmax, GM) + 0.3) * 2) / 2), ymin = -1;
+      box = { x: 52, y: 16, w: w - 52 - 16, h: hh - 16 - 46 };
+      const series = [];
+      if ($("gz-ref").checked) series.push({ data: rst.pts, color: P.faint, width: 1.6, dash: [6, 4] });
+      series.push({ data: st.pts.map(([d, g]) => [d, Math.max(0, g)]), color: P.accent, width: 0.01, fill: cssv("--accent-soft") });
+      series.push({ data: st.pts, color: P.accent, width: 2.6 });
+      series.push({ data: [[0, 0], [57.3, GM]], color: P.ok, width: 1.4, dash: [4, 3] });
+      const vl = [];
+      if (de) vl.push({ x: de, color: P.warn, label: "갑판 끝 " + de.toFixed(1) + "°" });
+      if (st.van) vl.push({ x: st.van, color: P.bad, label: "소실 " + st.van.toFixed(0) + "°" });
+      const C = SB.chart(ctx, box, {
+        x: [0, 90], y: [ymin, ymax], xLabel: "횡경사각 φ (°)", yLabel: "GZ (m)", xTicks: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90],
+        series, vlines: vl.concat([{ x: 57.3, color: P.faint, dash: [2, 4] }]),
+        hlines: [{ y: 0, color: P.axis, dash: [] }],
+        points: [{ x: st.amax, y: st.gmax, color: P.accent2, r: 5, label: "GZmax " + st.gmax.toFixed(2) + " m" }, { x: 57.3, y: GM, color: P.ok, r: 4, label: "GM" }],
+      });
+      // 선택 각
+      const gs = tab.gz(sel * D2R, KG);
+      seg(ctx, C.X(sel), box.y, C.X(sel), box.y + box.h, P.text, 1, [1, 3]);
+      dot(ctx, C.X(sel), C.Y(gs), P.text, 4);
+      // 인셋 단면
+      const iw = Math.min(140, w * 0.28), ih = Math.min(iw * 0.75, box.h * 0.3);
+      const ib = { x: box.x + 8, y: box.y + box.h - ih - 8 };
+      ctx.save(); ctx.beginPath(); ctx.rect(ib.x, ib.y, iw, ih); ctx.fillStyle = P.bg; ctx.fill(); ctx.strokeStyle = P.border; ctx.lineWidth = 1; ctx.stroke(); ctx.clip();
+      const phi = sel * D2R, f = floatAt(h, phi), s = Math.min((iw * 0.55) / h.B, (ih * 0.55) / h.D);
+      const wy = ib.y + ih * 0.55, tf = view(phi, f.c, ib.x + iw / 2, wy, s);
+      polyPath(ctx, h.pts, tf); ctx.fillStyle = P.surface; ctx.fill(); polyPath(ctx, f.sub, tf); ctx.fillStyle = cssv("--accent-soft"); ctx.fill();
+      polyPath(ctx, h.pts, tf); ctx.strokeStyle = P.text; ctx.lineWidth = 1.2; ctx.stroke();
+      ctx.fillStyle = cssv("--water-soft"); ctx.fillRect(ib.x, wy, iw, ih); seg(ctx, ib.x, wy, ib.x + iw, wy, cssv("--water"), 1.4);
+      const G = tf(0, KG), Bp = tf(f.bx, f.by);
+      seg(ctx, G[0], G[1], Bp[0], G[1], P.warn, 2.5);
+      dot(ctx, G[0], G[1], P.accent2, 3.5); dot(ctx, Bp[0], Bp[1], P.accent, 3.5);
+      ctx.restore();
+      text(ctx, sel + "°", ib.x + 6, ib.y + 12, P.text, "left", 12, 700, true);
+      SB.stat("o-gz-gm", sm(GM.toFixed(2), "m")); setCls("o-gz-gm", GM > 0.15 ? "ok" : "bad");
+      SB.stat("o-gz-de", de ? sm(de.toFixed(1), "°") : "—");
+      SB.stat("o-gz-max", sm(st.gmax.toFixed(2), "m") + " <small>@ " + st.amax + "°</small>");
+      SB.stat("o-gz-van", st.van ? sm(st.van.toFixed(1), "°") : st.gmax <= 0 ? "0 (불안정)" : "&gt; 90°");
+      SB.stat("o-gz-sel", sm(gs.toFixed(3), "m") + " <small>@ " + sel + "°</small>");
+    }
+    cv = SB.canvas(el, draw, { aspect: 0.62, maxHeight: 440, minHeight: 300 });
+    const pick = (p) => { if (!box) return; sel = Math.round(SB.clamp(((p.x - box.x) / box.w) * 90, 0, 90)); rd(); };
+    SB.drag(el, { down: pick, move: pick });
+  });
+
+  /* =========================================================== 6. IMO 기준 */
+  function areaTo(tab, KG, a0, a1) { // m·rad, 사다리꼴
+    if (a1 <= a0) return 0; let s = 0; const n = Math.max(4, Math.ceil((a1 - a0) / 0.5)), dd = (a1 - a0) / n;
+    for (let i = 0; i < n; i++) { const x0 = a0 + i * dd, x1 = x0 + dd; s += 0.5 * (tab.gz(x0 * D2R, KG) + tab.gz(x1 * D2R, KG)) * dd * D2R; }
+    return s;
+  }
+  run("imo", function () {
+    const el = $("cv-imo"); let cv = null;
+    const rd = () => cv && cv.redraw();
+    const gKG = SB.range("imo-kg", (v) => v.toFixed(2) + " m", rd);
+    const gD = SB.range("imo-d", (v) => v.toFixed(1) + " m", rd);
+    const gF = SB.range("imo-f", (v) => v + "°", rd);
+    const PRE = { ok: [12.0, 18, 50], high: [13.05, 17, 50], low: [10.8, 15, 50] };
+    SB.seg("imo-pre", (v) => { const p = PRE[v]; gKG.el.value = p[0]; gD.el.value = p[1]; gF.el.value = p[2]; gKG.set(p[0]); gD.set(p[1]); gF.set(p[2]); });
+    const T = 11, R = 2.0, tb = $("imo-table").querySelector("tbody");
+    function draw(ctx, w, hh) {
+      const P = SB.palette(), KG = gKG(), ff = gF();
+      const { h, tab } = tabFor(32, gD(), T, R), st = gzStats(tab, KG, h);
+      const GM = h.KM - KG, a40 = Math.min(40, ff);
+      const A30 = areaTo(tab, KG, 0, 30), A40 = areaTo(tab, KG, 0, a40), A3040 = areaTo(tab, KG, 30, a40);
+      let g30 = -1e9; for (let d = 30; d <= 90; d++) g30 = Math.max(g30, tab.gz(d * D2R, KG));
+      const rows = [
+        ["면적 0°~30°", A30.toFixed(3) + " m·rad", "≥ 0.055", A30 >= 0.055],
+        ["면적 0°~" + a40 + "°", A40.toFixed(3) + " m·rad", "≥ 0.090", A40 >= 0.09],
+        ["면적 30°~" + a40 + "°", A3040.toFixed(3) + " m·rad", "≥ 0.030", a40 > 30 && A3040 >= 0.03],
+        ["30° 이상 최대 GZ", g30.toFixed(3) + " m", "≥ 0.20 m", g30 >= 0.2],
+        ["최대 GZ 각", st.amax + "°", "≥ 25°", st.amax >= 25],
+        ["GM₀", GM.toFixed(2) + " m", "≥ 0.15 m", GM >= 0.15],
+      ];
+      tb.innerHTML = '<tr><th>항목</th><th class="num">값</th><th class="num">기준</th><th>판정</th></tr>' + rows.map((r) => `<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td class="num">${r[2]}</td><td class="${r[3] ? "pass" : "fail"}">${r[3] ? "통과" : "실패"}</td></tr>`).join("");
+      const all = rows.every((r) => r[3]);
+      SB.stat("o-imo-all", all ? "합격" : "불합격 (" + rows.filter((r) => !r[3]).length + "항목)"); setCls("o-imo-all", all ? "ok" : "bad");
+      SB.stat("o-imo-gm", sm(GM.toFixed(2), "m"));
+      SB.stat("o-imo-max", sm(st.gmax.toFixed(2), "m") + " <small>@ " + st.amax + "°</small>");
+      const ymax = Math.max(1, Math.ceil((st.gmax + 0.25) * 4) / 4);
+      const fillTo = (a, b) => st.pts.filter(([d]) => d >= a && d <= b).map(([d, g]) => [d, Math.max(0, g)]);
+      SB.chart(ctx, null, {
+        x: [0, 90], y: [Math.max(-1, Math.min(-0.25, Math.floor(Math.min(...st.pts.map((p) => p[1])) * 4) / 4)), ymax], xLabel: "φ (°)", yLabel: "GZ (m)", xTicks: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90],
+        series: [
+          { data: fillTo(0, 30), color: P.accent, width: 0.01, fill: cssv("--accent-soft") },
+          { data: fillTo(30, a40), color: P.accent2, width: 0.01, fill: cssv("--accent-2-soft") },
+          { data: st.pts, color: P.accent, width: 2.6 },
+        ],
+        vlines: [{ x: 30, color: P.faint }, { x: a40, color: P.faint }, { x: ff, color: P.bad, label: "φf" }],
+        hlines: [{ y: 0.2, color: P.warn, label: "0.20 m" }, { y: 0, color: P.axis, dash: [] }],
+        points: [{ x: st.amax, y: st.gmax, color: P.accent2, r: 5 }],
+      });
+    }
+    cv = SB.canvas(el, draw, { aspect: 0.56, maxHeight: 380, minHeight: 260 });
+  });
+
+  /* =========================================================== 7. 기상 기준 */
+  run("wind", function () {
+    const el = $("cv-wind"); let cv = null;
+    const rd = () => cv && cv.redraw();
+    const gP = SB.range("wd-p", (v) => v + " Pa", rd);
+    const gA = SB.range("wd-a", (v) => v.toLocaleString() + " m²", rd);
+    const gKG = SB.range("wd-kg", (v) => v.toFixed(2) + " m", rd);
+    const gR = SB.range("wd-r", (v) => v + "°", rd);
+    const T = 11, Dm = 18, L = 200, R = 2.0;
+    function draw(ctx, w, hh) {
+      const P = SB.palette(), KG = gKG();
+      const { h, tab } = tabFor(32, Dm, T, R);
+      const Delta = RHO * h.A0 * L;
+      const Ah = gA(), Z = Ah / L / 2 + T / 2; // 풍압 면적 도심(수면 위 Ah/L/2)에서 수면 아래 측면 도심(T/2)까지
+      const lw1 = (gP() * Ah * Z) / (1000 * SB.G * Delta), lw2 = 1.5 * lw1;
+      const gz = (d) => (d >= 0 ? tab.gz(d * D2R, KG) : -tab.gz(-d * D2R, KG));
+      const root = (lv, from, to) => { for (let d = from; d < to; d += 0.1) { const a = gz(d) - lv, b = gz(d + 0.1) - lv; if (a <= 0 && b > 0) return d + (a / (a - b)) * 0.1; } return null; };
+      const p0 = root(lw1, 0, 80);
+      const de = deckEdge(tab, h);
+      let pa = null, pc1 = null, pc2 = null, p2 = null, A = 0, Bb = 0;
+      if (p0 != null) {
+        pa = p0 - gR();
+        pc1 = root(lw2, p0, 80);
+        if (pc1 != null) {
+          for (let d = pc1 + 0.2; d < 89; d += 0.1) { if (gz(d) - lw2 >= 0 && gz(d + 0.1) - lw2 < 0) { pc2 = d; break; } }
+          p2 = Math.min(50, pc2 != null ? pc2 : 90);
+          const step = 0.1;
+          for (let d = pa; d < pc1; d += step) A += (lw2 - gz(d + step / 2)) * step * D2R;
+          for (let d = pc1; d < p2; d += step) Bb += (gz(d + step / 2) - lw2) * step * D2R;
+        }
+      }
+      const data = []; for (let d = -35; d <= 70; d += 0.5) data.push([d, gz(d)]);
+      const fillA = [], fillB = [];
+      const ok = p0 != null && pc1 != null && Bb >= A && p0 <= Math.min(16, de ? 0.8 * de : 16);
+      const ymax = Math.max(1.2, Math.ceil((Math.max(...data.map((p) => p[1])) + 0.2) * 4) / 4);
+      const C = SB.chart(ctx, null, {
+        x: [-35, 70], y: [-1.0, ymax], xLabel: "φ (°)", yLabel: "레버 (m)", xTicks: [-30, -20, -10, 0, 10, 20, 30, 40, 50, 60, 70],
+        series: [{ data, color: P.accent, width: 2.6 }],
+        hlines: [{ y: lw1, color: P.dim, label: "lw1", dash: [5, 4] }, { y: lw2, color: P.accent2, label: "lw2", dash: [] }, { y: 0, color: P.axis, dash: [] }],
+        vlines: [{ x: 0, color: P.axis, dash: [] }],
+      });
+      void fillA; void fillB;
+      // 면적 칠하기
+      const shade = (a, b, col, upperIsLw) => {
+        if (a == null || b == null || b <= a) return;
+        ctx.beginPath(); ctx.moveTo(C.X(a), C.Y(lw2));
+        for (let d = a; d <= b; d += 0.25) ctx.lineTo(C.X(d), C.Y(upperIsLw ? Math.min(gz(d), lw2) : Math.max(gz(d), lw2)));
+        ctx.lineTo(C.X(b), C.Y(lw2)); ctx.closePath(); ctx.fillStyle = col; ctx.fill();
+      };
+      shade(pa, pc1, "rgba(217,72,59,0.30)", true);
+      shade(pc1, p2, "rgba(31,157,85,0.30)", false);
+      if (pa != null) { seg(ctx, C.X(pa), C.box.y, C.X(pa), C.box.y + C.box.h, P.accent2, 1, [3, 3]); text(ctx, "φ₀−φ₁", C.X(pa) + 3, C.box.y + 10, P.accent2, "left", 11); }
+      if (p0 != null) { dot(ctx, C.X(p0), C.Y(lw1), P.dim, 4); text(ctx, "φ₀", C.X(p0) + 4, C.Y(lw1) + 12, P.dim, "left", 11); }
+      if (p2 != null) { seg(ctx, C.X(p2), C.box.y, C.X(p2), C.box.y + C.box.h, P.ok, 1, [3, 3]); text(ctx, "φ₂", C.X(p2) + 3, C.box.y + 10, P.ok, "left", 11); }
+      if (pa != null && pc1 != null) text(ctx, "a", C.X((pa + pc1) / 2 - 3), C.Y(lw2) + 18, P.accent2, "center", 16, 700);
+      if (pc1 != null && p2 != null) text(ctx, "b", C.X((pc1 + p2) / 2), C.Y(lw2) - 14, P.ok, "center", 16, 700);
+      SB.stat("o-wd-lw", sm(lw1.toFixed(3), "m") + " / " + sm(lw2.toFixed(3), "m"));
+      SB.stat("o-wd-p0", p0 != null ? sm(p0.toFixed(1), "°") : "전복"); setCls("o-wd-p0", p0 != null && p0 <= 16 ? "ok" : "bad");
+      SB.stat("o-wd-a", p0 == null ? "—" : pc1 == null ? "<small>돌풍 레버 &gt; GZ 최대</small>" : sm(A.toFixed(4), "m·rad"));
+      SB.stat("o-wd-b", pc1 != null ? sm(Bb.toFixed(4), "m·rad") : "—");
+      SB.stat("o-wd-ok", ok ? "합격 (b ≥ a)" : p0 == null || pc1 == null ? "불합격 (전복)" : p0 > 16 ? "불합격 (φ₀ > 16°)" : "불합격 (a > b)"); setCls("o-wd-ok", ok ? "ok" : "bad");
+    }
+    cv = SB.canvas(el, draw, { aspect: 0.58, maxHeight: 400, minHeight: 280 });
+  });
+
+  /* =========================================================== 8. 횡동요 주기 */
+  run("roll", function () {
+    const el = $("cv-roll"); let cv = null;
+    const g1 = SB.range("rl-g1", (v) => v.toFixed(1) + " m", () => upd());
+    const g2 = SB.range("rl-g2", (v) => v.toFixed(1) + " m", () => upd());
+    const gB = SB.range("rl-b", (v) => v + " m", () => upd());
+    const ships = [{ phi: 0, om: 0 }, { phi: 0, om: 0 }];
+    let t = 0, hist = [], paused = false, amax = [0, 0];
+    const SPEED = 4, H = 25, ZETA = 0.03;
+    const per = (gm) => (2 * 0.4 * gB()) / Math.sqrt(gm);
+    function upd() {
+      SB.stat("o-rl-t", sm(per(g1()).toFixed(1), "s") + " / " + sm(per(g2()).toFixed(1), "s"));
+      const ac = [g1(), g2()].map((gm) => { const w = (2 * Math.PI) / per(gm); return w * w * 15 * D2R * H; });
+      SB.stat("o-rl-a", sm(ac[0].toFixed(2), "m/s²") + " / " + sm(ac[1].toFixed(2), "m/s²"));
+      cv && cv.redraw();
+    }
+    $("rl-kick").addEventListener("click", () => { ships.forEach((s) => { s.phi = 15 * D2R; s.om = 0; }); t = 0; hist = []; paused = false; $("rl-pause").textContent = "일시정지"; });
+    $("rl-pause").addEventListener("click", () => { paused = !paused; $("rl-pause").textContent = paused ? "계속" : "일시정지"; });
+    void amax;
+    function drawShip(ctx, cx, wy, s, phi, label, gm, P) {
+      const B = gB(), D = B * 0.56, T = B * 0.34, hh = makeHullCache(B, D, T);
+      const r = hh.tab.at(phi), f = { sub: SB.clipPoly(hh.h.pts, -Math.sin(phi), Math.cos(phi), r.c) };
+      const tf = view(phi, r.c, cx, wy, s);
+      polyPath(ctx, hh.h.pts, tf); ctx.fillStyle = P.surface; ctx.fill();
+      polyPath(ctx, f.sub, tf); ctx.fillStyle = cssv("--accent-soft"); ctx.fill();
+      polyPath(ctx, hh.h.pts, tf); ctx.strokeStyle = P.text; ctx.lineWidth = 1.4; ctx.stroke();
+      // 마스트·선교
+      const a = tf(0, D), b = tf(0, D + B * 0.5), c1 = tf(-B * 0.3, D), c2 = tf(-B * 0.3, D + B * 0.25), c3 = tf(B * 0.3, D + B * 0.25), c4 = tf(B * 0.3, D);
+      ctx.beginPath(); ctx.moveTo(c1[0], c1[1]); ctx.lineTo(c2[0], c2[1]); ctx.lineTo(c3[0], c3[1]); ctx.lineTo(c4[0], c4[1]); ctx.closePath(); ctx.fillStyle = P.surface; ctx.fill(); ctx.strokeStyle = P.dim; ctx.stroke();
+      seg(ctx, a[0], a[1], b[0], b[1], P.dim, 2);
+      text(ctx, label, cx, 16, P.text, "center", 13, 700);
+      text(ctx, "GM " + gm.toFixed(1) + " m · " + (phi / D2R).toFixed(1) + "°", cx, 34, P.dim, "center", 11, null, true);
+    }
+    const hc = {};
+    function makeHullCache(B, D, T) { const k = B; if (!hc[k]) { const h = makeHull(B, D, T, B * 0.06); hc[k] = { h, tab: makeTable(h, 40, 0.5) }; } return hc[k]; }
+    function draw(ctx, w, hh) {
+      const P = SB.palette(), top = hh * 0.62, B = gB();
+      const s = Math.min((w * 0.3) / B, (top * 0.42) / (B * 0.56 + B * 0.5));
+      const wy = top * 0.62;
+      ctx.save(); ctx.beginPath(); ctx.rect(0, 0, w, top); ctx.clip();
+      SB.water(ctx, w, top, wy);
+      drawShip(ctx, w * 0.25, wy, s, ships[0].phi, "딱딱한 배 (stiff)", g1(), P);
+      drawShip(ctx, w * 0.75, wy, s, ships[1].phi, "여린 배 (tender)", g2(), P);
+      SB.water(ctx, w, top, wy);
+      ctx.restore();
+      seg(ctx, w / 2, 8, w / 2, top - 8, P.border, 1);
+      const bx = { x: 46, y: top + 10, w: w - 62, h: hh - top - 52 };
+      const tmax = 120;
+      SB.chart(ctx, bx, {
+        x: [0, tmax], y: [-16, 16], xLabel: "실제 시간 (s)", yTicks: [-15, 0, 15],
+        series: [{ data: hist.map((p) => [p[0], p[1]]), color: P.accent, width: 2 }, { data: hist.map((p) => [p[0], p[2]]), color: P.accent2, width: 2 }],
+        hlines: [{ y: 0, color: P.axis, dash: [] }],
+      });
+      text(ctx, "φ (°) — 파랑: stiff, 빨강: tender", bx.x + 6, bx.y + 8, P.dim, "left", 11);
+    }
+    cv = SB.canvas(el, draw, { aspect: 0.75, maxHeight: 500, minHeight: 380 });
+    upd();
+    ships.forEach((s) => (s.phi = 15 * D2R));
+    SB.loop(el, (dt) => {
+      if (paused) return;
+      const d = dt * SPEED, B = gB();
+      [g1(), g2()].forEach((gm, i) => {
+        const w0 = (2 * Math.PI) / per(gm), s = ships[i];
+        const sub = 4, dd = d / sub;
+        for (let k = 0; k < sub; k++) { const a = -w0 * w0 * Math.sin(s.phi) - 2 * ZETA * w0 * s.om; s.om += a * dd; s.phi += s.om * dd; }
+      });
+      void B;
+      t += d;
+      if (t <= 120) hist.push([t, ships[0].phi / D2R, ships[1].phi / D2R]);
+      SB.stat("o-rl-time", sm(t.toFixed(0), "s") + " <small>(4배속)</small>");
+      cv.redraw();
+    });
+  });
+
+  /* =========================================================== 9. 경사 시험 */
+  run("incline", function () {
+    const el = $("cv-incline"); let cv = null;
+    const B = 20, D = 10, T = 6, KM = 8.2, DELTA = 9000, LP = 5;
+    const h = makeHull(B, D, T, 1.2);
+    let KGtrue = 6.8, xw = 0, phiShow = 0, recs = [];
+    const gW = SB.range("ic-w", (v) => v + " t", () => cv && cv.redraw());
+    const newShip = () => { KGtrue = 6.3 + Math.random() * 1.0; recs = []; xw = 0; };
+    $("ic-new").addEventListener("click", () => { newShip(); stats(); cv.redraw(); });
+    $("ic-clear").addEventListener("click", () => { recs = []; stats(); cv.redraw(); });
+    $("ic-ans").addEventListener("change", () => stats());
+    $("ic-ex").addEventListener("change", () => cv.redraw());
+    const tanTrue = () => (gW() * xw) / (DELTA * (KM - KGtrue));
+    $("ic-rec").addEventListener("click", () => {
+      const a = LP * 1000 * tanTrue() + SB.randn() * 1.2; // mm, 판독 오차
+      recs.push([gW() * xw, a / 1000 / LP]); stats(); cv.redraw();
+    });
+    let fitGM = null;
+    function stats() {
+      SB.stat("o-ic-n", String(recs.length));
+      fitGM = null;
+      if (recs.length >= 2) {
+        let sxy = 0, sxx = 0; recs.forEach(([m, tn]) => { sxy += m * tn; sxx += m * m; });
+        if (sxx > 0 && sxy > 0) fitGM = sxx / sxy / DELTA; // tan = m/(Δ GM) → 기울기 k = 1/(ΔGM)
+      }
+      SB.stat("o-ic-gm", fitGM ? sm(fitGM.toFixed(3), "m") : "점 2개 이상");
+      let kgTxt = fitGM ? sm((KM - fitGM).toFixed(3), "m") : "—";
+      if ($("ic-ans").checked) kgTxt += " <small>(실제 " + KGtrue.toFixed(3) + ")</small>";
+      SB.stat("o-ic-kg", kgTxt);
+    }
+    let shipBox = null;
+    function draw(ctx, w, hh) {
+      const P = SB.palette();
+      const top = hh * 0.6, tn = tanTrue(), phi = Math.atan(tn), ex = $("ic-ex").checked ? 4 : 1;
+      phiShow = phi * ex;
+      const s = Math.min((w * 0.6) / B, (top * 0.62) / D);
+      const cx = w * 0.42, wy = top * 0.55 - (T - D / 2) * s * 0.4;
+      const f = floatAt(h, phiShow), tf = view(phiShow, f.c, cx, wy, s);
+      ctx.save(); ctx.beginPath(); ctx.rect(0, 0, w, top); ctx.clip();
+      drawSection(ctx, w, top, h, phiShow, f, tf, wy);
+      // 추 (갑판 위)
+      const wsz = 1.6 + gW() / 40;
+      const corners = [[xw - wsz / 2, D], [xw - wsz / 2, D + wsz], [xw + wsz / 2, D + wsz], [xw + wsz / 2, D]];
+      polyPath(ctx, corners, tf); ctx.fillStyle = P.accent2; ctx.fill();
+      const lab = tf(xw, D + wsz + 1.2); text(ctx, gW() + " t", lab[0], lab[1], P.accent2, "center", 11, 700);
+      // 진자: 선체 고정점에서 수직으로
+      const pv = tf(-B * 0.25, D - 0.5), plen = LP * s * 0.75;
+      const bob = [pv[0], pv[1] + plen];
+      // 눈금판(배에 고정, 진자 끝 높이)
+      const sc0 = tf(-B * 0.25 - 2.2, D - 0.5 - LP * 0.75), sc1 = tf(-B * 0.25 + 2.2, D - 0.5 - LP * 0.75);
+      seg(ctx, sc0[0], sc0[1], sc1[0], sc1[1], P.dim, 3);
+      seg(ctx, pv[0], pv[1], bob[0], bob[1], P.accent, 1.5); dot(ctx, bob[0], bob[1], P.accent, 4);
+      ctx.restore();
+      shipBox = { cx, s, tf, phi: phiShow };
+      text(ctx, "Δ 9,000 t · B 20 m · 경사 " + (phi / D2R).toFixed(2) + "°" + (ex > 1 ? " (그림 ×4)" : ""), 10, 14, P.dim, "left", 11);
+      // 진자 확대 인셋 (실제 각)
+      const iw = Math.min(150, w * 0.32), ih = top * 0.7, ix = w - iw - 8, iy = 26;
+      ctx.fillStyle = P.bg; ctx.strokeStyle = P.border; ctx.lineWidth = 1; ctx.fillRect(ix, iy, iw, ih); ctx.strokeRect(ix, iy, iw, ih);
+      const a_mm = LP * 1000 * tn;
+      const px0 = ix + iw / 2, py0 = iy + 14, plen2 = ih - 46, mmToPx = (iw * 0.42) / 250;
+      // 배에 고정된 눈금판: 배가 기울면 진자가 상대적으로 움직인다
+      const ybat = py0 + plen2;
+      seg(ctx, ix + 8, ybat, ix + iw - 8, ybat, P.text, 1.5);
+      for (let m = -250; m <= 250; m += 50) { const xx = px0 + m * mmToPx; seg(ctx, xx, ybat - (m % 100 === 0 ? 7 : 4), xx, ybat, P.text, 1); if (m % 100 === 0) text(ctx, String(m), xx, ybat + 11, P.dim, "center", 9, null, true); }
+      const bx2 = px0 + SB.clamp(a_mm, -260, 260) * mmToPx;
+      seg(ctx, px0, py0, bx2, ybat - 6, P.accent, 1.5); dot(ctx, bx2, ybat - 6, P.accent, 4);
+      text(ctx, "진자 눈금 (mm)", px0, iy + ih - 8, P.dim, "center", 10);
+      // 그래프: tanφ vs w·d
+      const bx = { x: 58, y: top + 12, w: w - 74, h: hh - top - 50 };
+      const mmax = 60 * 9, tmax = 0.06;
+      const series = [];
+      if (fitGM) { const k = 1 / (DELTA * fitGM); series.push({ data: [[-mmax, -mmax * k], [mmax, mmax * k]], color: P.ok, width: 1.6, dash: [5, 4] }); }
+      const C = SB.chart(ctx, bx, {
+        x: [-mmax, mmax], y: [-tmax, tmax], xLabel: "기울이는 모멘트 w·d (t·m)", yLabel: "tanφ", yFmt: (v) => v.toFixed(2), series,
+        hlines: [{ y: 0, color: P.axis, dash: [] }], vlines: [{ x: 0, color: P.axis, dash: [] }],
+        points: recs.map(([m, t2]) => ({ x: m, y: t2, color: P.accent2, r: 4 })),
+      });
+      dot(ctx, C.X(gW() * xw), C.Y(tn), P.accent, 3);
+    }
+    cv = SB.canvas(el, draw, { aspect: 0.95, maxHeight: 600, minHeight: 440 });
+    stats();
+    SB.drag(el, {
+      down(p) { if (!shipBox) return false; if (p.y > el.clientHeight * 0.6) return false; move(p); },
+      move: (p) => move(p),
+    });
+    function move(p) {
+      const { cx, s, phi } = shipBox;
+      xw = SB.clamp((p.x - cx) / s / Math.cos(phi), -B / 2 + 1.5, B / 2 - 1.5);
+      xw = Math.round(xw * 2) / 2;
+      SB.stat("o-ic-m", sm((gW() * xw).toFixed(0), "t·m"));
+      SB.stat("o-ic-a", sm((LP * 1000 * tanTrue()).toFixed(0), "mm"));
+      cv.redraw();
+    }
+    SB.stat("o-ic-m", sm("0", "t·m")); SB.stat("o-ic-a", sm("0", "mm"));
+    gW.el.addEventListener("input", () => { SB.stat("o-ic-m", sm((gW() * xw).toFixed(0), "t·m")); SB.stat("o-ic-a", sm((LP * 1000 * tanTrue()).toFixed(0), "mm")); });
+  });
+})();
+</script>
+</body>
+</html>
