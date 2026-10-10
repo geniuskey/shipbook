@@ -383,3 +383,8 @@ svg .f-water { fill: var(--water-soft); stroke: none; }
 svg .s-water { stroke: var(--water); fill: none; stroke-width: 2; }
 svg .f-hull { fill: var(--hull); }
 svg .f-dim-soft { fill: var(--surface-2); stroke: var(--axis); }
+
+/* Shareable simulator anchor links */
+.sim-link { margin-left: auto; flex: 0 0 auto; font: 12px var(--mono); color: var(--text-faint); }
+.sim-link:hover, .sim-link:focus-visible { color: var(--accent); text-decoration: none; }
+.sim { scroll-margin-top: 1rem; }
