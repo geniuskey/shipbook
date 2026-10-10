@@ -240,7 +240,7 @@
     <p>GM의 부호가 평형의 성격을 정한다. 아주 조금 기울였을 때 \(GZ \approx GM\sin\phi\)이므로</p>
     <ul>
       <li>\(GM > 0\) (G가 M 아래): 복원 모멘트 → <b>안정 평형</b><span class="en">(Stable)</span>. 오뚝이와 같다.</li>
-      <li>\(GM = 0\) (G = M): 작은 각에서 모멘트가 없다 → <b>중립 평형</b><span class="en">(Neutral)</span>. 기운 채 그대로 있다.</li>
+      <li>\(GM = 0\) (G = M): 1차 소각 근사에서 복원 모멘트가 없다 → <b>초기 중립</b><span class="en">(Neutral in the linear approximation)</span>. 유한 각에서 기운 채 머무는지는 고차항을 포함한 GZ로 판단한다.</li>
       <li>\(GM < 0\) (G가 M 위): 전도 모멘트 → <b>불안정 평형</b><span class="en">(Unstable)</span>. 똑바로 서 있을 수 없다.</li>
     </ul>
     <figure class="diagram fig-lg">
@@ -298,7 +298,7 @@
         <div class="stat"><span class="k">√(−2GM/BM) 식</span><span class="v" id="o-eq-wall">—</span></div>
         <div class="stat"><span class="k">현재 φ</span><span class="v" id="o-eq-phi">—</span></div>
       </div>
-      <div class="sim-note">해볼 것: 상자형 단면(폭 32 m, 흘수 11 m, KM 13.26 m). ① KG 12.5 m에서 밀면 0° 주위로 흔들리다 멈춘다. ② KG를 KM에 맞추면(중립) 흔들림이 아주 느려진다. ③ KG 13.6 m 정도로 올리고 똑바로 세운 뒤 살짝 밀면, 0°를 벗어나 롤 각에서 멈춘다. 반대 방향으로 밀면 반대편 롤 각으로 넘어간다. 오른쪽 그래프는 위치 에너지 \(\Delta g\int GZ\,d\phi\)이며 공이 골짜기에 머무는 곳이 평형이다.</div>
+      <div class="sim-note">해볼 것: 상자형 단면(폭 32 m, 흘수 11 m, KM 13.26 m). ① KG 12.5 m에서 밀면 0° 주위로 흔들리다 멈춘다. ② KG를 KM에 맞추면 1차 복원항이 사라진다. 이 상자형 배는 고차 복원항이 남아 유한 각에서 천천히 돌아온다. ③ KG 13.6 m 정도로 올리고 똑바로 세운 뒤 살짝 밀면, 0°를 벗어나 롤 각에서 멈춘다. 반대 방향으로 밀면 반대편 롤 각으로 넘어간다. 오른쪽 그래프는 위치 에너지 \(\Delta g\int GZ\,d\phi\)이며 공이 골짜기에 머무는 곳이 평형이다.</div>
     </div>
   </section>
 
@@ -514,7 +514,7 @@
     <ol>
       <li>무게는 G를 지나 아래로, 부력은 B를 지나 위로 작용한다. 배가 기울면 B가 잠긴 쪽으로 이동해 우력 \(\Delta g\,GZ\)가 생긴다.</li>
       <li>작은 각에서 B의 궤적은 M을 중심으로 한 원호이며 \(BM = I_T/\nabla\). 상자형 바지는 \(KB = T/2\), \(BM = B^2/(12T)\). \(GM = KB + BM - KG\).</li>
-      <li>\(GM > 0\) 안정, \(= 0\) 중립, \(< 0\) 불안정. GM이 음수여도 수선면이 넓어지며 롤 각 \(\tan\phi_L = \sqrt{-2GM/BM}\)에서 멈출 수 있다(옆면 수직 배).</li>
+      <li>초기 소각 기준에서 \(GM > 0\) 안정, \(= 0\) 1차 복원항 없음, \(< 0\) 불안정. 유한 각의 평형은 GZ 고차항도 확인한다. GM이 음수여도 수선면이 넓어지며 롤 각 \(\tan\phi_L = \sqrt{-2GM/BM}\)에서 멈출 수 있다(옆면 수직 배).</li>
       <li>GZ 곡선 \(GZ = KN - KG\sin\phi\)에서 초기 기울기(GM), 갑판 끝 침수각, 최대 GZ, 소실각, 면적(동적 복원성)을 읽는다. 건현은 대각도 복원성을 만든다.</li>
       <li>IMO 일반 기준: 면적 0~30° ≥ 0.055, 0~40° ≥ 0.09, 30~40° ≥ 0.03 m·rad, GZ(30°) ≥ 0.2 m, 최대 GZ 각 ≥ 25°, GM₀ ≥ 0.15 m. 기상 기준은 돌풍 레버에 대해 면적 \(b \ge a\).</li>
       <li>횡동요 주기 \(T_\phi \approx 2cB/\sqrt{GM}\). GM이 크면 stiff(짧고 격렬), 작으면 tender(길고 부드러움).</li>
@@ -833,6 +833,9 @@
     SB.drag(el, { down: pick, move: pick });
   });
 
+  function initialState(GM) {
+    return Math.abs(GM) < 1e-9 ? "초기 중립(1차 복원항 없음)" : GM > 0 ? "안정" : "불안정 (롤)";
+  }
   /* =========================================================== 4. 안정·중립·불안정 */
   run("equil", function () {
     const el = $("cv-equil"); let cv = null;
@@ -847,10 +850,10 @@
     function info() {
       const KG = gKG(), GM = h.KM - KG;
       SB.stat("o-eq-gm", sm(GM.toFixed(2), "m")); setCls("o-eq-gm", GM > 0.02 ? "ok" : GM > -0.02 ? "warn" : "bad");
-      SB.stat("o-eq-state", GM > 0.02 ? "안정" : GM > -0.02 ? "중립" : "불안정 (롤)"); setCls("o-eq-state", GM > 0.02 ? "ok" : GM > -0.02 ? "warn" : "bad");
+      SB.stat("o-eq-state", initialState(GM)); setCls("o-eq-state", GM > 0.02 ? "ok" : GM > -0.02 ? "warn" : "bad");
       lollDeg = 0;
-      if (GM < -0.02) { for (let d = 0.5; d <= 70; d += 0.1) { if (tab.gz(d * D2R, KG) > 0) { lollDeg = d; break; } } }
-      SB.stat("o-eq-loll", GM < -0.02 ? (lollDeg ? sm("±" + lollDeg.toFixed(1), "°") : "전복") : "—");
+      if (GM < -1e-9) { for (let d = 0.5; d <= 70; d += 0.1) { if (tab.gz(d * D2R, KG) > 0) { lollDeg = d; break; } } }
+      SB.stat("o-eq-loll", GM < -1e-9 ? (lollDeg ? sm("±" + lollDeg.toFixed(1), "°") : "전복") : "—");
       SB.stat("o-eq-wall", GM < 0 ? sm("±" + (Math.atan(Math.sqrt((-2 * GM) / h.BM)) / D2R).toFixed(1), "°") : "—");
     }
     function draw(ctx, w, hh) {
